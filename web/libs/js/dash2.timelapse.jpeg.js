@@ -18,7 +18,6 @@ $(document).ready(function(e){
     var currentPlaylist = {}
     var frameSelected = null
     var playIntervalTimer = null
-    var playInterval = 1000 / 30
     var fieldHolderCssHeightModifier = 0
     var canPlay = false;
     var downloaderIsChecking = false
@@ -126,11 +125,13 @@ $(document).ready(function(e){
                 if(!newSelectedFrame)return
                 frameSelected = newSelectedFrame.filename
                 startPlayLoop()
-            },playInterval)
+            },1000/parseInt(fpsSelector.val(),10))
         })
     }
     var playTimelapse = function(){
+        var playPauseText = timelapseWindow.find('.playPauseText')
         canPlay = true
+        playPauseText.text(lang.Pause)
         startPlayLoop()
     }
     var destroyTimelapse = function(){
@@ -142,20 +143,17 @@ $(document).ready(function(e){
         allowKeepChecking = false
     }
     var pauseTimelapse = function(){
+        var playPauseText = timelapseWindow.find('.playPauseText')
         canPlay = false
+        playPauseText.text(lang.Pause)
         clearTimeout(playIntervalTimer)
         playIntervalTimer = null
     }
     var togglePlayPause = function(){
-        var playPauseText = timelapseWindow.find('.playPauseText')
         if(canPlay){
-            canPlay = false
             pauseTimelapse()
-            playPauseText.text(lang.Play)
         }else{
-            canPlay = true
             playTimelapse()
-            playPauseText.text(lang.Pause)
         }
     }
     var iconHtml = function(iconClasses,withSpace){
@@ -272,13 +270,10 @@ $(document).ready(function(e){
         destroyTimelapse()
     })
     fpsSelector
-        .on('slide',function(ev){
-            playInterval = 1000 / ev.value
-        })
         .slider({
-        	formatter: function(value) {
-        		return 'FPS : ' + value;
-        	}
+            formatter: function(value) {
+                return 'FPS : ' + value;
+            }
         });
     $.timelapseJpeg = {
         openWindow: openTimelapseWindow,
