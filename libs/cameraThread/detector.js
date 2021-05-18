@@ -42,16 +42,16 @@ module.exports = function(jsonData,pamDiffResponder){
     globalThreshold = parseInt(jsonData.rawMonitorConfig.details.detector_threshold) || 0
     var regionConfidenceMinimums = {}
     Object.values(regionJson).forEach(function(region){
-        writeToStderr(JSON.stringify(region,null,3))
+        // writeToStderr(JSON.stringify(region,null,3))
         regionConfidenceMinimums[region.name] = region.sensitivity;
     })
     var writeToStderr = function(text){
         fs.appendFileSync('/home/Shinobi/test.log',text + '\n','utf8')
 
     }
-    writeToStderr(JSON.stringify({
-        regionConfidenceMinimums: regionConfidenceMinimums
-    },null,3))
+    // writeToStderr(JSON.stringify({
+    //     regionConfidenceMinimums: regionConfidenceMinimums
+    // },null,3))
     if(typeof pamDiffResponder === 'function'){
       var sendDetectedData = function(detectorObject){
         pamDiffResponder(detectorObject)
@@ -81,7 +81,7 @@ module.exports = function(jsonData,pamDiffResponder){
             })
             return acceptedTriggers
         }catch(err){
-            writeToStderr(err.stack)
+            // writeToStderr(err.stack)
         }
     }
     createPamDiffEngine = function(){
