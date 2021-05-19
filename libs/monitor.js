@@ -72,6 +72,7 @@ module.exports = function(s,config,lang){
     }
     s.sendMonitorStatus = function(e){
         s.group[e.ke].activeMonitors[e.id].monitorStatus = `${e.status}`
+        s.group[e.ke].activeMonitors[e.id].monitorStatusCode = `${e.code}`
         s.tx(Object.assign(e,{f:'monitor_status'}),'GRP_'+e.ke)
     }
     s.getMonitorCpuUsage = function(e,callback){

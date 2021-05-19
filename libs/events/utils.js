@@ -256,7 +256,7 @@ module.exports = (s,config,lang,app,io) => {
         }
         // check modified indifference
         if(
-            filter.indifference !== false &&
+            filter.indifference &&
             eventDetails.confidence < parseFloat(filter.indifference)
         ){
             // fails indifference check for modified indifference
@@ -536,9 +536,9 @@ module.exports = (s,config,lang,app,io) => {
         s.onEventTriggerBeforeFilterExtensions.forEach(function(extender){
             extender(d,filter)
         })
+        const eventDetails = d.details
         const passedEventFilters = checkEventFilters(d,monitorDetails,filter)
         if(!passedEventFilters)return
-        const eventDetails = d.details
         const detailString = JSON.stringify(eventDetails)
         const eventTime = new Date()
         if(
