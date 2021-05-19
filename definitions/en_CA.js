@@ -4437,14 +4437,20 @@ module.exports = function(s,config,lang){
                 "color": "navy",
                 "info": [
                    {
+                       "field": lang.CSS,
                       "name": "detail=css",
                       fieldType:"textarea",
                       "placeholder": "#main_header{background:#b59f00}",
-                      "field": lang.CSS,
                       "description": "",
                       "default": "",
                       "example": "",
                       "possible": ""
+                  },
+                   {
+                       "field": lang.hlsOptions,
+                      "name": "localStorage=hlsOptions",
+                      fieldType:"textarea",
+                      "placeholder": "{}",
                   },
                   {
                       "field": lang['Force Monitors Per Row'],
@@ -6041,7 +6047,7 @@ module.exports = function(s,config,lang){
             },
          }
        },
-       "Montior Configuration Finder": {
+     "Montior Configuration Finder": {
             "section": "Montior Configuration Finder",
             "blocks": {
                 "Search Settings": {

@@ -599,6 +599,8 @@
    "Probe Size": "Probe Size",
    "Stream Type": "Stream Type",
    "# of Allow MJPEG Clients": "# of Allow MJPEG Clients <small>0 for infinite</small>",
+   "hlsOptions": "HLS Options",
+   "hlsOptionsInvalid": "HLS Options are Invalid",
    "HLS Video Encoder": "Video Encoder",
    "HLS Audio Encoder": "Audio Encoder",
    "HLS Segment Length": "Segment Length <small>in Seconds</small>",
