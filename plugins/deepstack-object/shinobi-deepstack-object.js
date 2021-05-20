@@ -58,79 +58,76 @@ const deepStackApiKey = config.deepStack["apiKey"]
 const deepStackProtocol = deepStackIsSSL ? "https" : "http"
 
 const baseUrl = `${deepStackProtocol}://${deepStackHost}:${deepStackPort}/v1`
-const objectDetectionUrl = `${baseUrl}/vision/detection`
 
-s.detectObject = function(buffer,d,tx,frameLocation,callback){
-	const timeStart = new Date()
-	try{
-		const form = {
-			"image": {
-				value: buffer,
-				options: {
-				  filename: 'frame.jpg'
+function deepStackRequest(requestEndpoint,frameBuffer){
+	const fullEndPointUrl = `${baseUrl}${requestEndpoint}` || `/vision/detection`
+	return new Promise((resolve,reject) => {
+		try{
+			const form = {
+				"image": {
+					value: frameBuffer,
+					options: {
+					  filename: 'frame.jpg'
+					}
 				}
 			}
-		}
-
-		if(deepStackApiKey) {
-			form["api_key"] = deepStackApiKey
-		}
-
-		request.post({url:objectDetectionUrl, formData:form}, function(err,res,body){
-			const responseDate = new Date()
-
-			const responseTime = (responseDate.getTime() - timeStart.getTime());
-
-			const response = JSON.parse(body)
-
-			const success = response["success"]
-			const predictions = response["predictions"] || []
-			const mats = []
-
-
-			if(predictions.length > 0) {
-				predictions.forEach(function(v){
-					const label = v["label"]
-					const confidence = v["confidence"]
-					const y_min = v["y_min"]
-					const x_min = v["x_min"]
-					const y_max = v["y_max"]
-					const x_max = v["x_max"]
-					const width = x_max - x_min
-					const height = y_max - y_min
-					mats.push({
-						x: x_min,
-						y: y_min,
-						width: width,
-						height: height,
-						tag: label,
-						confidence: confidence,
-					})
-				})
-				const isObjectDetectionSeparate = d.mon.detector_pam === '1' && d.mon.detector_use_detect_object === '1'
-				const width = parseFloat(isObjectDetectionSeparate  && d.mon.detector_scale_y_object ? d.mon.detector_scale_y_object : d.mon.detector_scale_y)
-				const height = parseFloat(isObjectDetectionSeparate  && d.mon.detector_scale_x_object ? d.mon.detector_scale_x_object : d.mon.detector_scale_x)
-
-				tx({
-					f:'trigger',
-					id:d.id,
-					ke:d.ke,
-					details:{
-						plug:config.plug,
-						name: `DeepStack-Object`,
-						reason:'object',
-						matrices:mats,
-						imgHeight:width,
-						imgWidth:height,
-						time: responseTime
-					},
-					frame: config.saveEventFrame ? buffer : null
-				})
+			if(deepStackApiKey) {
+				form["api_key"] = deepStackApiKey
 			}
+			request.post({url:fullEndPointUrl, formData:form}, function(err,res,body){
+				const response = JSON.parse(body)
+				const success = response["success"]
+				const predictions = response["predictions"] || []
+				resolve(predictions);
+			})
+		}catch(err){
+			resolve([])
+			console.log(err)
+		}
+	})
+}
 
+s.detectObject = async function(frameBuffer,d,tx,frameLocation,callback){
+	const timeStart = new Date()
+	const predictions = await deepStackRequest(`/vision/detection`,frameBuffer)
+	if(predictions.length > 0) {
+		const mats = []
+		predictions.forEach(function(v){
+			const label = v["label"]
+			const confidence = v["confidence"]
+			const y_min = v["y_min"]
+			const x_min = v["x_min"]
+			const y_max = v["y_max"]
+			const x_max = v["x_max"]
+			const width = x_max - x_min
+			const height = y_max - y_min
+			mats.push({
+				x: x_min,
+				y: y_min,
+				width: width,
+				height: height,
+				tag: label,
+				confidence: confidence,
+			})
 		})
-	}catch(err){
-		console.log(err)
+		const isObjectDetectionSeparate = d.mon.detector_pam === '1' && d.mon.detector_use_detect_object === '1'
+		const width = parseFloat(isObjectDetectionSeparate  && d.mon.detector_scale_y_object ? d.mon.detector_scale_y_object : d.mon.detector_scale_y)
+		const height = parseFloat(isObjectDetectionSeparate  && d.mon.detector_scale_x_object ? d.mon.detector_scale_x_object : d.mon.detector_scale_x)
+
+		tx({
+			f:'trigger',
+			id:d.id,
+			ke:d.ke,
+			details:{
+				plug: config.plug,
+				name: `DeepStack-Object`,
+				reason: 'object',
+				matrices: mats,
+				imgHeight: width,
+				imgWidth: height,
+			},
+			frame: config.saveEventFrame ? frameBuffer : null
+		})
 	}
 	callback()
 }
