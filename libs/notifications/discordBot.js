@@ -86,11 +86,14 @@ module.exports = function(s,config,lang){
                             ],d.ke)
                         })
                     }
-                    const {screenShot, isStaticFile} = await s.getRawSnapshotFromMonitor(monitorConfig,{
-                        secondsInward: monitorConfig.details.snap_seconds_inward
-                    })
-                    if(screenShot){
+                    d.screenshotBuffer = d.screenshotBuffer || d.frame
+                    if(!d.screenshotBuffer){
+                        const { screenShot, isStaticFile } = await s.getRawSnapshotFromMonitor(monitorConfig,{
+                            secondsInward: monitorConfig.details.snap_seconds_inward
+                        })
                         d.screenshotBuffer = screenShot
+                    }
+                    if(d.screenshotBuffer){
                         sendMessage({
                             author: {
                               name: s.group[d.ke].rawMonitorConfigurations[d.id].name,
@@ -106,7 +109,7 @@ module.exports = function(s,config,lang){
                             }
                         },[
                             {
-                                attachment: screenShot,
+                                attachment: d.screenshotBuffer,
                                 name: d.screenshotName+'.jpg'
                             }
                         ],d.ke)

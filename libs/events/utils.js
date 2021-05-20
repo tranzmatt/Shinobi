@@ -1,3 +1,4 @@
+const fs = require('fs').promises;
 const moment = require('moment');
 const execSync = require('child_process').execSync;
 const exec = require('child_process').exec;
@@ -16,6 +17,26 @@ module.exports = (s,config,lang,app,io) => {
     const {
         moveCameraPtzToMatrix
     } = require('../control/ptz.js')(s,config,lang)
+    async function saveImageFromEvent(options,frameBuffer){
+        const monitorId = options.mid || options.id
+        const groupKey = options.ke
+        const eventTime = options.time
+        const objectsFound = options.matrices
+        const monitorConfig = Object.assign({id: monitorId},s.group[groupKey].rawMonitorConfigurations[monitorId])
+        const timelapseRecordingDirectory = s.getTimelapseFrameDirectory({mid: monitorId, ke: groupKey})
+        const currentDate = s.formattedTime(eventTime,'YYYY-MM-DD')
+        const filename = s.formattedTime(eventTime) + '.jpg'
+        const location = timelapseRecordingDirectory + currentDate + '/'
+        try{
+            await fs.stat(location)
+        }catch(err){
+            await fs.mkdir(location)
+        }
+        await fs.writeFile(location + filename,frameBuffer)
+        s.createTimelapseFrameAndInsert(monitorConfig,location,filename,eventTime,{
+            objects: objectsFound
+        })
+    }
     const countObjects = async (event) => {
         const matrices = event.details.matrices
         const eventsCounted = s.group[event.ke].activeMonitors[event.id].eventsCounted || {}
@@ -322,6 +343,14 @@ module.exports = (s,config,lang,app,io) => {
             runMultiTrigger(monitorConfig,eventDetails, d, triggerEvent)
         }
         //save this detection result in SQL, only coords. not image.
+        if(d.frame){
+            saveImageFromEvent({
+                ke: d.ke,
+                mid: d.id,
+                time: eventTime,
+                matrices: eventDetails.matrices || [],
+            },d.frame)
+        }
         if(forceSave || (filter.save && monitorDetails.detector_save === '1')){
             s.knexQuery({
                 action: "insert",

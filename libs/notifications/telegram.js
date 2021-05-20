@@ -71,18 +71,21 @@ module.exports = function(s,config,lang){
                             ],d.ke)
                         })
                     }
-                    const {screenShot, isStaticFile} = await s.getRawSnapshotFromMonitor(monitorConfig,{
-                        secondsInward: monitorConfig.details.snap_seconds_inward
-                    })
-                    if(screenShot){
+                    d.screenshotBuffer = d.screenshotBuffer || d.frame
+                    if(!d.screenshotBuffer){
+                        const { screenShot, isStaticFile } = await s.getRawSnapshotFromMonitor(monitorConfig,{
+                            secondsInward: monitorConfig.details.snap_seconds_inward
+                        })
                         d.screenshotBuffer = screenShot
+                    }
+                    if(d.screenshotBuffer){
                         sendMessage({
                             title: lang.Event+' - '+d.screenshotName,
                             description: lang.EventText1+' '+d.currentTimestamp,
                         },[
                             {
                                 type: 'photo',
-                                attachment: screenShot,
+                                attachment: d.screenshotBuffer,
                                 name: d.screenshotName+'.jpg'
                             }
                         ],d.ke)
