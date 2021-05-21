@@ -4,6 +4,7 @@ const execSync = require('child_process').execSync;
 const exec = require('child_process').exec;
 const spawn = require('child_process').spawn;
 const request = require('request');
+const imageSaveEventLock = {};
 // Matrix In Region Libs >
 const SAT = require('sat')
 const V = SAT.Vector;
@@ -20,6 +21,7 @@ module.exports = (s,config,lang,app,io) => {
     async function saveImageFromEvent(options,frameBuffer){
         const monitorId = options.mid || options.id
         const groupKey = options.ke
+        if(imageSaveEventLock[groupKey + monitorId])return;
         const eventTime = options.time
         const objectsFound = options.matrices
         const monitorConfig = Object.assign({id: monitorId},s.group[groupKey].rawMonitorConfigurations[monitorId])
@@ -36,6 +38,9 @@ module.exports = (s,config,lang,app,io) => {
         s.createTimelapseFrameAndInsert(monitorConfig,location,filename,eventTime,{
             objects: objectsFound
         })
+        imageSaveEventLock[groupKey + monitorId] = setTimeout(function(){
+            delete(imageSaveEventLock[groupKey + monitorId])
+        },1000)
     }
     const countObjects = async (event) => {
         const matrices = event.details.matrices
