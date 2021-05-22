@@ -10,6 +10,9 @@ const connectionTester = require('connection-tester')
 const SoundDetection = require('shinobi-sound-detection')
 const async = require("async");
 const URL = require('url')
+const {
+  Worker
+} = require('worker_threads');
 const { copyObject, createQueue, queryStringToObject, createQueryStringFromObject } = require('./common.js')
 module.exports = function(s,config,lang){
     const {
@@ -182,40 +185,31 @@ module.exports = function(s,config,lang){
                         var temporaryImageFile = streamDir + s.gid(5) + '.jpg'
                         var iconImageFile = streamDir + 'icon.jpg'
                         var ffmpegCmd = splitForFFPMEG(`-loglevel warning -re -probesize 100000 -analyzeduration 100000 ${inputOptions.join(' ')} -i "${url}" ${outputOptions.join(' ')} -f image2 -an -vf "fps=1" -vframes 1 "${temporaryImageFile}"`)
-                        fs.writeFileSync(s.getStreamsDirectory(monitor) + 'snapCmd.txt',JSON.stringify({
-                          cmd: ffmpegCmd,
-                          temporaryImageFile: temporaryImageFile,
-                          iconImageFile: iconImageFile,
-                          useIcon: options.useIcon,
-                          rawMonitorConfig: s.group[monitor.ke].rawMonitorConfigurations[monitor.mid],
-                        },null,3),'utf8')
-                        var cameraCommandParams = [
-                          s.mainDirectory + '/libs/cameraThread/snapshot.js',
-                          config.ffmpegDir,
-                          s.group[monitor.ke].activeMonitors[monitor.id].sdir + 'snapCmd.txt'
-                        ]
-                        var snapProcess = spawn('node',cameraCommandParams,{detached: true})
-                        snapProcess.stderr.on('data',function(data){
-                            s.debugLog(data.toString())
+                        const snapProcess = new Worker(__dirname + '/cameraThread/snapshot.js', {
+                            workerData: {
+                                jsonData: {
+                                  cmd: ffmpegCmd,
+                                  temporaryImageFile: temporaryImageFile,
+                                  iconImageFile: iconImageFile,
+                                  useIcon: options.useIcon,
+                                  rawMonitorConfig: s.group[monitor.ke].rawMonitorConfigurations[monitor.mid],
+                              },
+                              ffmpegAbsolutePath: config.ffmpegDir,
+                            }
+                        });
+                        snapProcess.on('message', function(data){
+                            s.debugLog(data)
                         })
-                        snapProcess.on('close',function(data){
+                        snapProcess.on('error', (data) => {
+                            console.log(data)
+                            snapProcess.terminate()
+                        })
+                        snapProcess.on('exit', (code) => {
                             clearTimeout(snapProcessTimeout)
                             sendTempImage()
                         })
                         var snapProcessTimeout = setTimeout(function(){
-                            var pid = snapProcess.pid
-                            if(s.isWin){
-                                spawn("taskkill", ["/pid", pid, '/t'])
-                            }else{
-                                process.kill(-pid, 'SIGTERM')
-                            }
-                            setTimeout(function(){
-                                if(s.isWin === false){
-                                    treekill(pid)
-                                }else{
-                                    snapProcess.kill()
-                                }
-                            },dynamicTimeout)
+                            snapProcess.terminate()
                         },dynamicTimeout)
                     }catch(err){
                         console.log(err)
