@@ -5,7 +5,6 @@
    "description": "Object Detection plugin for DeepStack",
    "main": "shinobi-deepstack-object.js",
    "dependencies": {
-      "dotenv": "^8.2.0",
       "express": "^4.16.2",
       "moment": "^2.19.2",
       "socket.io": "^2.0.4",
