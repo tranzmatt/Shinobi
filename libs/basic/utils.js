@@ -107,6 +107,9 @@ module.exports = (processCwd) => {
                 }else{
                     subscriptionFailed()
                 }
+                s.onSubscriptionCheckExtensions.forEach(function(extender){
+                    extender(hasSubcribed,json)
+                })
             })
         }else{
             subscriptionFailed()
