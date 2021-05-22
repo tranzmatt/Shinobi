@@ -67,12 +67,15 @@
     "targets": [
       "node12"
     ],
-    "scripts": [],
+    "scripts": [
+        "libs/cameraThread/detector.js",
+        "libs/cameraThread/singleCamera.js",
+        "libs/cameraThread/snapshot.js"
+    ],
     "assets": [
-      "definitions/*",
-      "languages/*",
-      "web/*",
-      "test/*"
+      "definitions/**/*",
+      "languages/**/*",
+      "web/**/*"
     ]
   }
 }
