@@ -884,6 +884,7 @@
    "coProcessorTextStarted": "coProcessor has started for CPU only outputs.",
    "coProcessorTextStopped": "coProcessor has ended.",
    "Process Unexpected Exit": "Process Unexpected Exit",
+   "unexpectedExitText": "Information about this exit will be found before this log. Additionally here is the ffmpeg command that was used when the process crashed.",
    "coProcess Unexpected Exit": "coProcess Unexpected Exit",
    "Process Crashed for Monitor": "Process Crashed for Monitor",
    "coProcess Crashed for Monitor": "coProcess Crashed for Monitor",

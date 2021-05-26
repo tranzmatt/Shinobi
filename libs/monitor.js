@@ -724,7 +724,7 @@ module.exports = function(s,config,lang){
         s.group[e.ke].activeMonitors[e.id].spawn_exit = function(){
             if(s.group[e.ke].activeMonitors[e.id].isStarted === true){
                 if(e.details.loglevel!=='quiet'){
-                    s.userLog(e,{type:lang['Process Unexpected Exit'],msg:{msg:lang['Process Crashed for Monitor'],cmd:s.group[e.ke].activeMonitors[e.id].ffmpeg}});
+                    s.userLog(e,{type:lang['Process Unexpected Exit'],msg:{msg:lang.unexpectedExitText,cmd:s.group[e.ke].activeMonitors[e.id].ffmpeg}});
                 }
                 fatalError(e,'Process Unexpected Exit');
                 scanForOrphanedVideos(e,{
