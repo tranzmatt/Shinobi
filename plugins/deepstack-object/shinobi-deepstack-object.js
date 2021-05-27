@@ -35,19 +35,28 @@ if(workerData && workerData.ok === true){
 			return console.log(config.plug,'Plugin start has failed. pluginBase.js was not found.')
 		}
 	}
+	try{
+		s = require('../pluginBase.js')(__dirname,config)
+	}catch(err){
+		console.log(err)
+		try{
+			const {
+				haltMessage,
+				checkStartTime,
+				setStartTime,
+			} = require('../pluginCheck.js')
 
-	const {
-		haltMessage,
-		checkStartTime,
-		setStartTime,
-	} = require('../pluginCheck.js')
-
-	if(!checkStartTime()){
-		console.log(haltMessage,new Date())
-		s.disconnectWebSocket()
-		return
+			if(!checkStartTime()){
+				console.log(haltMessage,new Date())
+				s.disconnectWebSocket()
+				return
+			}
+			setStartTime()
+		}catch(err){
+			console.log(`pluginCheck failed`)
+		}
 	}
-	setStartTime()
+
 }
 // Base Init />>
 
@@ -60,7 +69,7 @@ const deepStackProtocol = deepStackIsSSL ? "https" : "http"
 const baseUrl = `${deepStackProtocol}://${deepStackHost}:${deepStackPort}/v1`
 
 function deepStackRequest(requestEndpoint,frameBuffer){
-	const fullEndPointUrl = `${baseUrl}${requestEndpoint}` || `/vision/detection`
+	const fullEndPointUrl = `${baseUrl}${requestEndpoint || `/vision/detection`}`
 	return new Promise((resolve,reject) => {
 		try{
 			const form = {
@@ -75,9 +84,15 @@ function deepStackRequest(requestEndpoint,frameBuffer){
 				form["api_key"] = deepStackApiKey
 			}
 			request.post({url:fullEndPointUrl, formData:form}, function(err,res,body){
-				const response = JSON.parse(body)
-				const success = response["success"]
-				const predictions = response["predictions"] || []
+				let predictions = []
+				try{
+					const response = JSON.parse(body || {predictions: []})
+					predictions = response["predictions"] || []
+				}catch(err){
+					console.log(res)
+					console.log(err)
+					console.log(body)
+				}
 				resolve(predictions);
 			})
 		}catch(err){
