@@ -6200,5 +6200,64 @@ module.exports = function(s,config,lang){
            },
          }
        },
+     "Events": {
+          "section": "Events",
+          "blocks": {
+              "Saved Logs": {
+                 "name": lang["Search Settings"],
+                 "color": "blue",
+                 "section-pre-class": "col-md-4",
+                 "info": [
+                     {
+                        "id": "eventListWithPics-monitors-list",
+                        "field": lang["Type"],
+                        "fieldType": "select",
+                        "possible": [
+                            {
+                               "name": lang['All Monitors'],
+                               "value": "all"
+                            },
+                            {
+                               "name": lang.Monitors,
+                               "optgroup": []
+                           }
+                        ]
+                     },
+                     {
+                        "id": "eventListWithPics-daterange",
+                        "field": lang['Date Range'],
+                     },
+                     {
+                        "fieldType": "btn-group",
+                        "btns": [
+                            {
+                                "fieldType": "btn",
+                                "class": "btn-success",
+                                "forForm": true,
+                                "attribute": `type="submit"`,
+                                "btnContent": `${lang['Check']}`,
+                            },
+                        ],
+                     }
+                ]
+            },
+            "Events Found": {
+               "name": lang['Events Found'],
+               "color": "green",
+               "section-pre-class": "col-md-8 search-parent",
+               "info": [
+                   {
+                      "field": lang['Search'],
+                      "class": 'search-controller',
+                   },
+                   {
+                       "fieldType": "div",
+                       "id": "eventListWithPics-rows",
+                       "class": "search-body mt-3 row",
+                   }
+               ]
+           },
+         }
+       },
     }
 }
