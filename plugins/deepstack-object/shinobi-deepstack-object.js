@@ -141,7 +141,7 @@ s.detectObject = async function(frameBuffer,d,tx,frameLocation,callback){
 				imgHeight: width,
 				imgWidth: height,
 			},
-			frame: config.saveEventFrame ? frameBuffer : null
+			frame: frameBuffer
 		})
 	}
 	callback()
