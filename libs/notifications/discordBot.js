@@ -143,6 +143,8 @@ module.exports = function(s,config,lang){
                    userDetails.discordbot === '1' &&
                    userDetails.discordbot_token !== ''
                   ){
+                    s.debugLog(`!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`)
+                    s.debugLog(`Discord Connecting ${userDetails.discordbot_token}`)
                     s.group[user.ke].discordBot = new Discord.Client()
                     s.group[user.ke].discordBot.on('ready', () => {
                         s.userLog({
@@ -187,7 +189,8 @@ module.exports = function(s,config,lang){
                 }
             }
             const onMonitorUnexpectedExitForDiscord = (monitorConfig) => {
-                if(monitorConfig.details.notify_discord === '1' && monitorConfig.details.notify_onUnexpectedExit === '1'){
+                const isEnabled = monitorConfig.details.detector_discordbot === '1' || monitorConfig.details.notify_discord === '1'
+                if(isEnabled && monitorConfig.details.notify_onUnexpectedExit === '1'){
                     const ffmpegCommand = s.group[monitorConfig.ke].activeMonitors[monitorConfig.mid].ffmpeg
                     const description = lang['Process Crashed for Monitor'] + '\n' + ffmpegCommand
                     const currentTime = new Date()
