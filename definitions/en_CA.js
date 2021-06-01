@@ -5634,7 +5634,6 @@ module.exports = function(s,config,lang){
                 "section-pre-class": "col-md-4",
                 "info": [
                     {
-                        "id": "monitorStatesSelector",
                         "field": lang["Monitor"],
                         "fieldType": "select",
                         "class": "dark monitors_list",
