@@ -89,6 +89,7 @@ module.exports = function(s,config,lang){
              },
              "Presets": {
                 id: "monSectionPresets",
+               "section-class": "am_notice am_notice_edit",
                "name": lang.Presets,
                "color": "purple",
                 isSection: true,
@@ -110,13 +111,13 @@ module.exports = function(s,config,lang){
                        ]
                    },
                    {
-                       "fieldType": 'ul',
+                       "fieldType": 'div',
                        "id": "monitorPresetsSelection",
                        "class": "mdl-list"
                    },
                    {
                       "fieldType": "btn",
-                      "attribute": `data-toggle="modal" data-target="#schedules"`,
+                      "attribute": `page-open="schedules"`,
                       "class": `btn-info`,
                       "btnContent": `<i class="fa fa-clock-o"></i> &nbsp; ${lang['Schedules']}`,
                    },
@@ -3676,7 +3677,7 @@ module.exports = function(s,config,lang){
                 isAdvanced: true,
                "info": [
                    {
-                       "fieldType": 'ul',
+                       "fieldType": 'div',
                        "id": "monitor_groups",
                        "class": "mdl-list"
                    },
