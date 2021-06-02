@@ -75,9 +75,16 @@ module.exports = function(s,config,lang,app,io){
     if(config.webPaths.home !== '/'){
         app.use('/libs',express.static(s.mainDirectory + '/web/libs'))
     }
-    app.use(s.checkCorrectPathEnding(config.webPaths.home)+'libs',express.static(s.mainDirectory + '/web/libs'))
-    app.use(s.checkCorrectPathEnding(config.webPaths.admin)+'libs',express.static(s.mainDirectory + '/web/libs'))
-    app.use(s.checkCorrectPathEnding(config.webPaths.super)+'libs',express.static(s.mainDirectory + '/web/libs'))
+    [
+        [config.webPaths.home,'libs','/web/libs'],
+        [config.webPaths.admin,'libs','/web/libs'],
+        [config.webPaths.super,'libs','/web/libs'],
+        [config.webPaths.home,'assets','/web/assets'],
+        [config.webPaths.admin,'assets','/web/assets'],
+        [config.webPaths.super,'assets','/web/assets'],
+    ].forEach((piece) => {
+        app.use(s.checkCorrectPathEnding(piece[0])+piece[1],express.static(s.mainDirectory + piece[2]))
+    })
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({extended: true}));
     app.use(function (req,res,next){

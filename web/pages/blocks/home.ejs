@@ -1,0 +1,32 @@
+<body class="bg-darker">
+    <% include home/menuFirst.ejs %>
+    <div class="container-fluid">
+        <div class="row">
+            <% include home/menuSide.ejs %>
+            <main id="pageTabContainer" class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <% include home/initial.ejs %>
+                <% include home/videoPlayer.ejs %>
+                <% include home/monitorsList.ejs %>
+                <% include home/subAccountManager.ejs %>
+                <% include home/accountSettings.ejs %>
+                <% include home/apiKeys.ejs %>
+                <% include home/monitorSettings.ejs %>
+                <% include home/schedules.ejs %>
+                <% include home/monitorStates.ejs %>
+                <% include home/liveGrid.ejs %>
+                <% include home/regionEditor.ejs %>
+                <% include home/timelapseViewer.ejs %>
+                <% include home/eventFilters.ejs %>
+                <% include home/cameraProbe.ejs %>
+                <% include home/onvifScanner.ejs %>
+                <% include home/configFinder.ejs %>
+                <% include home/logViewer.ejs %>
+                <% include home/eventListWithPics.ejs %>
+                <% include confirm.ejs %>
+                <% include help.ejs %>
+            </main>
+        </div>
+    </div>
+    <div style="display:none" id="temp"></div>
+    <a id="floating-back-button" class="go-back" style="display:none"><i class="fa fa-arrow-left"></i></a>
+</body>

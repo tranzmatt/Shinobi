@@ -1,0 +1,100 @@
+<nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse">
+    <div id="menu-side" class="position-sticky">
+        <div class="d-flex flex-row align-items-center p-3 m-3 btn-default rounded shadow-sm cursor-pointer">
+          <div class="lh-1" data-bs-toggle="collapse" data-bs-target=".home-collapse">
+              <img class="me-3" src="libs/img/icon/favicon-196x196.png" width="48" style="border-radius:50%">
+          </div>
+          <div class="flex-grow-1" data-bs-toggle="collapse" data-bs-target=".home-collapse">
+            <h1 class="h6 mb-0 lh-1"><%- $user.mail %></h1>
+            <small><%- lang.Monitors %> : <span class="cameraCount"></span></small>
+          </div>
+          <div class="lh-1">
+              <a class_toggle="compressed-monitor-icons" data-target="#monitorSideList" icon-toggle="fa-th fa-bars" icon-child="i"><i class="fa fa-th"></i></a>
+          </div>
+        </div>
+        <div class="collapse show home-collapse">
+            <div class="mb-3 px-3">
+                <div id="indicator-bars" class="card btn-default p-2 pb-0">
+                    <% [
+                      {
+                          "icon": "microchip",
+                          "name": "cpu",
+                          "label": `<span class="os_cpuCount"><i class="fa fa-spinner fa-pulse"></i></span> ${lang.CPU}<span class="os_cpuCount_trailer"></span> : <span class="os_platform" style="text-transform:capitalize"><i class="fa fa-spinner fa-pulse"></i></span>`,
+                      },
+                      {
+                          "icon": "square",
+                          "name": "ram",
+                          "label": `<span class="os_totalmem used"><i class="fa fa-spinner fa-pulse"></i></span> ${lang.MB} ${lang.RAM}`,
+                      },
+                      {
+                          "icon": "hdd",
+                          "name": "disk",
+                          "label": `<span class="diskUsed" style="letter-spacing:2px;font-weight:100"></span>`,
+                      },
+                  ].forEach((item) => { %>
+                        <div id="indicator-<%- item.name %>" class="mb-2">
+                            <div class="d-flex flex-row text-white mb-1">
+                                <div class="pr-2">
+                                    <i class="fa fa-<%- item.icon %>"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <small><%- item.label %></small>
+                                </div>
+                                <div>
+                                    <small class="indicator-percent"><i class="fa fa-spinner fa-pulse"></i></small>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="progress">
+                                    <div class="progress-bar progress-bar-warning" role="progressbar" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    <% }) %>
+                </div>
+            </div>
+              <ul id="pageTabLinks" class="nav flex-column nav-pills">
+                  <div class="pb-2 px-3" id="home-collapse">
+                      <% let menuItems %>
+                      <% include menuItems.ejs %>
+                      <% menuItems.forEach((item) => {
+                            if(item.divider){ %>
+                                <li><hr class="dropdown-divider"></li>
+                            <% }else{ %>
+                                <li class="nav-item" <%- item.attributes ? item.attributes : '' %> <%- item.pageOpen ? `id="side-menu-link-${item.pageOpen}"` : '' %>>
+                                    <a class="nav-link side-menu-link <%- item.class %>" aria-current="page" <%- item.pageOpen ? `page-open="${item.pageOpen}"` : '' %>>
+                                      <i class="fa fa-<%- item.icon %>"></i> &nbsp; <%- item.label %>
+                                    </a>
+                                    <% if(item.addUl){ %>
+                                        <ul class="btn-default rounded btn-toggle-nav list-unstyled fw-normal ml-3 mt-2 px-2 pb-2 pt-1 <%- item.ulClass ? item.ulClass : '' %>">
+                                            <% if(item.ulItems){
+                                                item.ulItems.forEach((listItem) => { %>
+                                                    <li><a class="text-white <%- listItem.class ? listItem.class : '' %>" <%- listItem.attributes ? listItem.attributes : '' %>><span class="dot dot-<%- listItem.color ? listItem.color : 'blue' %> shadow mr-2"></span><%- listItem.label ? listItem.label : 'Need Label' %></a></li>
+                                            <%  })
+                                               } %>
+                                        </ul>
+                                    <% } %>
+                                </li>
+                          <% } %>
+                      <% }) %>
+                  </div>
+                  <div id="createdTabLinks" class="pb-3 px-3 hidden-empty"></div>
+              </ul>
+          </div>
+          <div>
+              <div class="form-group px-3">
+                 <input class="form-control dark" placeholder="Search Monitors" id="monitors_list_search">
+              </div>
+              <div class="form-group px-3">
+                  <div class="dropdown">
+                   <a class="btn btn-sm btn-block btn-default dropdown-toggle" href="#" role="button" id="monitor-group-selections-opener" data-bs-toggle="dropdown" aria-expanded="false">
+                     <%- lang['Monitor Groups'] %>
+                   </a>
+                   <ul class="dropdown-menu dropdown-menu-dark bg-dark shadow-lg" aria-labelledby="monitor-group-selections-opener" id="monitor-group-selections"></ul>
+                 </div>
+              </div>
+              <ul id="monitorSideList" class="nav flex-column nav-pills pb-3 px-2"></ul>
+          </div>
+          <% window.additionalJsScripts.push('assets/js/bs5.sideMenu.js') %>
+      </div>
+  </nav>
