@@ -177,7 +177,13 @@ $(document).ready(function(){
         var monitor = loadedMonitors[monitorId]
         createMonitorVideosTab(monitor)
         console.log(monitorId)
-    });
+    })
+    .on('click','.export-this-monitor-settings',function(){
+        var monitorId = getRowsMonitorId(this)
+        downloadMonitorConfigurationsToDisk([
+            monitorId
+        ])
+    })
     theBlock
     .find('.export-selected-monitor-settings').click(function(){
         var monitorsSelected = getSelectedMonitors()
@@ -204,12 +210,6 @@ $(document).ready(function(){
         deleteMonitors(monitorsSelected)
     })
     theList
-    .on('click','.export-this-monitor-settings',function(){
-        var monitorId = getRowsMonitorId(this)
-        downloadMonitorConfigurationsToDisk([
-            monitorId
-        ])
-    })
     .on('click','.copy-stream-url',function(e){
         e.preventDefault()
         var el = $(this)
