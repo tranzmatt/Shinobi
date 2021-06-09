@@ -385,6 +385,7 @@ addOnTabReopen('monitorSettings', function () {
 function drawInputMapHtml(options){
     var tmp = ''
     var tempID = generateId()
+    options = options ? options : {}
     if(!options.channel){
         var numberOfChannelsDrawn = $('#monSectionInputMaps .input-map').length
         options.channel = numberOfChannelsDrawn+1
@@ -480,7 +481,7 @@ function drawInputMapHtml(options){
             hidden:true,
             default:'',
             type:'selector',
-            choices: $.ccio.HWAccelChoices
+            choices: HWAccelChoices
         },
         {
             name:'hwaccel_vcodec',
@@ -1153,7 +1154,7 @@ monitorEditorWindow.on('change','.detector_cascade_selection',function(){
 //    });
 //    e.details.val(JSON.stringify(e.detailsVal))
 //})
-monitorEditorWindow.find('.probe_config').click(function(){
+monitorEditorWindow.find('.probe-monitor-settings').click(function(){
     $.pB.submit(buildMonitorURL(),true)
 })
 monitorEditorWindow.find('.import_config').click(function(e){
@@ -1198,11 +1199,11 @@ monitorEditorWindow.find('.save_config').click(function(e){
     form.details = safeJsonParse(form.details)
     downloadJSON(form,'Shinobi_'+monitorId+'_config.json')
 });
-monitorEditorWindow.find('.add_map').click(function(e){
+monitorEditorWindow.find('.add-input-to-monitor-settings').click(function(e){
     showInputMappingFields()
     drawInputMapHtml()
 });
-monitorEditorWindow.find('.add_channel').click(function(e){
+monitorEditorWindow.find('.add-channel-to-monitor-settings').click(function(e){
     drawStreamChannelHtml()
 });
 editorForm.find('[detail="stream_type"]').change(function(e){
