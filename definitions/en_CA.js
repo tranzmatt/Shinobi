@@ -4448,7 +4448,7 @@ module.exports = function(s,config,lang){
                   },
                    {
                        "field": lang.hlsOptions,
-                      "name": "localStorage=hlsOptions",
+                      "attribute": `localStorage="hlsOptions"`,
                       fieldType:"textarea",
                       "placeholder": "{}",
                   },
