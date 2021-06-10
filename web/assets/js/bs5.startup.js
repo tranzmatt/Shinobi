@@ -11,7 +11,7 @@ var diskIndicatorBarUsed = diskIndicator.find('.diskUsed')
 var diskIndicatorPercentText = diskIndicator.find('.indicator-percent')
 var loadedIndicators = {}
 function loadHiddenSectionsInForms(){
-    var boxWrappersHidden = dashboardOptions().boxWrappersHidden || {}
+    window.boxWrappersHidden = dashboardOptions().boxWrappersHidden || {}
     $.each(boxWrappersHidden,function(boxId,hide){
         if(hide){
             $(`#${boxId}`).addClass('hide-box-wrapper')

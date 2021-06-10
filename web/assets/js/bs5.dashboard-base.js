@@ -799,7 +799,7 @@ $(document).ready(function(){
         });
     })
     // only binded on load
-    $('.form-section-header').click(function(e){
+    $('.form-section-header:not(.no-toggle-header)').click(function(e){
         var parent = $(this).parent('.form-group-group')
         var boxWrapper = parent.attr('id')
         parent.toggleClass('hide-box-wrapper')

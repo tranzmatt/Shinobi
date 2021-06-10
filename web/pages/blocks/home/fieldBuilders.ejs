@@ -59,7 +59,7 @@ drawBlock = function(monitorSettings){
  <% }
   %>
   <<%- monitorSettings.isForm ? 'form' : 'div' %> <%- attributes.join(' ') %> style="<%- styles.join(';') %>" class="card form-group-group p-3 bg-dark mb-3 shadow <%- sectionClass.join(' ') %>">
-      <h4 class="form-section-header cursor-pointer mb-3 pb-3 text-white border-bottom-dotted border-color-<%- monitorSettings.color || 'dark' %> <%- monitorSettings.headerClass %>"><%- headerTitle %>
+      <h4 class="form-section-header <%- monitorSettings.headerButtons || monitorSettings.headerTitle && ( monitorSettings.headerTitle.indexOf('<a ') > -1 || monitorSettings.headerTitle.indexOf('<button ') > -1 ) ? 'no-toggle-header' : '' %> cursor-pointer mb-3 pb-3 text-white border-bottom-dotted border-color-<%- monitorSettings.color || 'dark' %> <%- monitorSettings.headerClass %>"><%- headerTitle %>
           <% if(monitorSettings.headerButtons){ %>
               <div class="pull-right">
                   <% monitorSettings.headerButtons.forEach(function(button){ %>
