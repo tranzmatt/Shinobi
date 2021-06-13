@@ -418,19 +418,54 @@ function drawStreamChannelHtml(options){
     monitorStreamChannels.find('.stream-channel').last().find('[channel-detail="stream_vcodec"]').change()
     return tempID;
 }
+function buildMapSelectorOptionsBasedOnAddedMaps(){
+    var baseOptionSet = definitions['Monitor Settings'].blocks.Input.info.find((item) => {return item.name === 'detail=primary_input'}).possible
+    var newOptGroup = [baseOptionSet]
+    var addedInputMaps = monitorEditorWindow.find('.input-map')
+    function replaceMap(string,mapNumber){
+        var newString = string.split(':')
+        newString[0] = `${mapNumber}`
+        return newString.join(':')
+    }
+    function replaceMapInName(string,mapNumber){
+        var newString = string.split('(')
+        newString[1] = replaceMap(newString[1],mapNumber)
+        return newString.join('(')
+    }
+    $.each(addedInputMaps,function(n){
+        var mapNumber = n + 1
+        var newOptionSet = []
+        $.each(baseOptionSet,function(nn,option){
+            newOptionSet.push({
+                "name": replaceMapInName(option.name,mapNumber),
+                "value": replaceMap(option.value,mapNumber)
+            })
+        })
+        newOptGroup[mapNumber] = newOptionSet
+    })
+    return newOptGroup
+}
 function drawInputMapSelectorHtml(options,parent){
     if(!options.map)options.map = '';
-    var html = `<div class="form-group map-row">
-      <label><div><span>${lang['Map']}</span></div>
-          <div>
-          <div class="input-group input-group-sm">
-            <input class="form-control" map-input="map" value="${options.map}" placeholder="0">
-            <div class="input-group-btn">
-                <a class="btn btn-danger delete_map_row">&nbsp;<i class="fa fa-trash-o"></i>&nbsp;</a>
-            </div>
-          </div>
-          </div>
-      </label>
+    var availableInputMapSelections = buildMapSelectorOptionsBasedOnAddedMaps()
+    var html = `<div class="form-group map-row d-flex flex-row">
+        <div class="flex-grow-1">
+            <select class="form-control form-control-sm" map-input="map">`
+                    $.each(availableInputMapSelections,function(n,optgroup){
+                        html += `<optgroup label="${lang['Map']} ${n}">`
+                            $.each(optgroup,function(nn,option){
+                                html += createOptionHtml({
+                                    label: option.name,
+                                    value: option.value,
+                                })
+                            })
+                        html += `</optgroup>`
+                    })
+            html += `</select>
+        </div>
+        <div>
+            <a class="btn btn-danger btn-sm delete_map_row">&nbsp;<i class="fa fa-trash-o"></i>&nbsp;</a>
+        </div>
     </div>`
     parent.prepend(html)
 }

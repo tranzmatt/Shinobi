@@ -6526,11 +6526,6 @@ module.exports = function(s,config,lang){
                         ],
                      },
                      {
-                         "fieldType": "div",
-                         "divContent": `<div class="choices"></div>`,
-
-                     },
-                     {
                         "field": lang["Stream Type"],
                         "name": `channel-detail="stream_type"`,
                         "description": "The method that will used to consume the video stream.",

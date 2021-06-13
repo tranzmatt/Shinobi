@@ -73,13 +73,16 @@ drawBlock = function(monitorSettings){
       </h4>
       <div class="box-wrapper">
   <% if(monitorSettings['input-mapping']){ %>
-      <div class="form-group-group forestgreen" style="display:none" input-mapping="<%- monitorSettings['input-mapping'] %>">
-          <h4><%-lang['Input Feed']%>
-              <div class="pull-right">
-                  <a class="btn btn-success btn-xs add_map_row"><i class="fa fa-plus-square-o"></i></a>
+      <div class="form-group-group btn-default card shadow mb-2" style="display:none" input-mapping="<%- monitorSettings['input-mapping'] %>">
+          <h5 class="card-body d-flex flex-row m-0">
+              <div class="flex-grow-1">
+                  <%-lang['Input Feeds Selected']%>
               </div>
-          </h4>
-          <div class="choices"></div>
+              <div>
+                  <a class="btn btn-success btn-sm add_map_row"><i class="fa fa-plus-square-o"></i></a>
+              </div>
+          </h5>
+          <div class="card-footer pb-0 choices"></div>
       </div>
   <% } %>
   <% if(monitorSettings.blockquote){ %>
