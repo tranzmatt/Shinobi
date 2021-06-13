@@ -544,7 +544,7 @@ function drawSubMenuItems(linkTarget,definitionsBase){
         var sectionId = item.id
         if(!sectionId)return null
         var sectionElement = document.getElementById(`${sectionId}`)
-        if(sectionElement && sectionElement.style.display === "none")return null;
+        if(sectionElement && $(sectionElement).is(":hidden"))return null;
         var parentName = item.parentName
         var completeLabel = `${item.name}`
         return {
