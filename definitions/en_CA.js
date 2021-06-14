@@ -4452,6 +4452,12 @@ module.exports = function(s,config,lang){
                       "possible": ""
                   },
                   {
+                        "field": lang.hlsOptions,
+                        "name": "localStorage=hlsOptions",
+                        fieldType:"textarea",
+                        "placeholder": "{}",
+                  },
+                  {
                       "field": lang['Force Monitors Per Row'],
                       "form-group-class":"st_force_mon_rows_input st_force_mon_rows_1",
                       attribute:'localStorage="montage_use"',
