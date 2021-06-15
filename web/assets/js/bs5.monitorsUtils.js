@@ -326,7 +326,7 @@ function importMonitor(textData){
             $.post(`${getApiPrefix('configureMonitor')}/${monitorId}`,{
                 data: JSON.stringify(v,null,3)
             },function(d){
-                $.ccio.log(d)
+                debugLog(d)
             })
         }
         //zoneminder one monitor

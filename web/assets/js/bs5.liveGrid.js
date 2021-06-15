@@ -353,6 +353,7 @@ function initiateLiveGridPlayer(monitor){
     var details = monitor.details
     var groupKey = monitor.ke
     var monitorId = monitor.mid
+    var loadedMonitor = loadedMonitors[monitorId]
     var loadedPlayer = loadedLiveGrids[monitor.mid]
     var websocketPath = checkCorrectPathEnding(location.pathname) + 'socket.io'
     var containerElement = $(`#monitor_live_${monitor.mid}`)
@@ -417,7 +418,7 @@ function initiateLiveGridPlayer(monitor){
                 var stream = containerElement.find('.stream-element');
                 var onPoseidonError = function(){
                     // setTimeout(function(){
-                        // $.ccio.cx({f:'monitor',ff:'watch_on',id:monitor.mid},user)
+                        // mainSocket.f({f:'monitor',ff:'watch_on',id:monitor.mid})
                     // },5000)
                 }
                 if(!loadedPlayer.PoseidonErrorCount)loadedPlayer.PoseidonErrorCount = 0
@@ -631,6 +632,17 @@ function initiateLiveGridPlayer(monitor){
             },2000)
         })
     }
+    //initiate signal check
+    var signalCheckInterval = (isNaN(loadedMonitor.details.signal_check) ? 10 : parseFloat(monitorConfig.details.signal_check)) * 1000 * 60
+    if(signalCheckInterval > 0){
+        clearInterval(loadedPlayer.signal)
+        loadedPlayer.signal = setInterval(function(){
+            signalCheckLiveStream({
+                mid: monitorId,
+                checkSpeed: 1000,
+            })
+        },signalCheckInterval);
+    }
 }
 function revokeVideoPlayerUrl(monitorId){
     try{
@@ -657,6 +669,7 @@ function closeLiveGridPlayer(monitorId,killElement){
             }
         }
         if(liveGridElements[monitorId])revokeVideoPlayerUrl(monitorId)
+        clearInterval(livePlayerElement.signal)
     }catch(err){
         console.log(err)
     }
@@ -817,6 +830,88 @@ function resetAllLiveGridDimensionsInMemory(monitorId){
     $.each(liveGridElements,function(monitorId,data){
         resetLiveGridDimensionsInMemory(monitorId)
     })
+}
+function signalCheckLiveStream(options){
+    try{
+        var monitorId = options.mid
+        var monitorConfig = loadedMonitors[monitorId]
+        var liveGridData = liveGridElements[monitorId]
+        var monitorItem = liveGridData.monitorItem
+        var monitorDetails = monitorConfig.details
+        var checkCount = 0
+        var base64Data = null;
+        var checkSpeed = options.checkSpeed || 1000
+        function failedStreamCheck(){
+            if(monitorConfig.signal_check_log == 1){
+                logWriterDraw('[mid="'+monitorId+'"]',{
+                    log: {
+                        type: 'Stream Check',
+                        msg: lang.clientStreamFailedattemptingReconnect
+                    }
+                })
+            }
+            mainSocket.f({f:'monitor',ff:'watch_on',id:monitorId});
+        }
+        function succeededStreamCheck(){
+            if(monitorConfig.signal_check_log == 1){
+                logWriterDraw('[mid="'+monitorId+'"]',{
+                    log: {
+                        type: 'Stream Check',
+                        msg : lang.Success
+                    }
+                })
+            }
+        }
+        function executeCheck(){
+            switch(monitorConfig.stream_type){
+                case'b64':case'h265':
+                    monitorItem.resize()
+                break;
+                case'hls':case'flv':case'mp4':
+                    if(monitorItem.find('video')[0].paused){
+                        failedStreamCheck()
+                    }else{
+                        succeededStreamCheck()
+                    }
+                break;
+                default:
+                    if(dashboardOptions().jpeg_on === true){return}
+                    getSnapshot({
+                        monitor: loadedMonitors[monitorId],
+                    },function(url){
+                        base64Data = url;
+                        setTimeout(function(){
+                            getSnapshot({
+                                monitor: loadedMonitors[monitorId],
+                            },function(url){
+                                if(base64Data === url){
+                                    if(checkCount < 3){
+                                        ++checkCount;
+                                        setTimeout(function(){
+                                            executeCheck();
+                                        },checkSpeed)
+                                    }else{
+                                        failedStreamCheck()
+                                    }
+                                }else{
+                                    succeededStreamCheck()
+                                }
+                            });
+                        },checkSpeed)
+                    });
+                break;
+            }
+        }
+        executeCheck();
+    }catch(err){
+        var errorStack = err.stack;
+        function phraseFoundInErrorStack(x){return errorStack.indexOf(x) > -1}
+        if(phraseFoundInErrorStack("The HTMLImageElement provided is in the 'broken' state.")){
+            mainSocket.f({f:'monitor',ff:'watch_on',id:monitorId});
+        }
+        clearInterval(liveGridData.signal);
+        delete(liveGridData.signal);
+    }
 }
 $(document).ready(function(e){
     liveGrid

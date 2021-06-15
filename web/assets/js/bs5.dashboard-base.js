@@ -621,7 +621,7 @@ function buildLogRow(v){
     </div>`
     return html
 }
-function logWriterDraw(id,data,user){
+function logWriterDraw(id,data){
     if(logWriterFloodLock)return debugLog('logWriterFloodLock : Log was dropped');
     var elementTags = '#global-log-stream,'+id+'.monitor_item .logs:visible,'+id+'#tab-monitorSettings:visible .logs'
     if(logWriterFloodTimeout){
