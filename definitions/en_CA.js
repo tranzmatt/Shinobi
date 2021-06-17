@@ -2261,7 +2261,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                       "name": "detail=detector_trigger",
                       "field": lang['Trigger Record'],
-                      "description": "This will order the camera to record if it is set to \"Watch-Only\" when a motion event is detected.",
+                      "description": "This will order the camera to record if it is set to \"Watch-Only\" when an Event is detected.",
                       "default": "0",
                       "example": "",
                       "form-group-class": "h_det_input h_det_1",
