@@ -349,4 +349,7 @@ $('body')
 <% customAutoLoad.superLibsJs.forEach(function(lib){ %>
     <script src="<%-window.libURL%>libs/js/<%-lib%>"></script>
 <% }) %>
+<% customAutoLoad.superRawJs.forEach(function(scriptData){ %>
+    <script><%- scriptData %></script>
+<% }) %>
 </html>
