@@ -243,7 +243,7 @@ $(document).ready(function(e){
                 groupId += 1
                 groups.push({
                     id: groupId,
-                    content: lang.Events
+                    content: name + " | " + lang.Events
                 })
                 groupId += 1
                 loadedTableGroupIds[monitorId] = groupId - 2
