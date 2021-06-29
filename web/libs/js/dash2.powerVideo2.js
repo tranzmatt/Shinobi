@@ -234,9 +234,11 @@ $(document).ready(function(e){
             var groups = []
             var groupId = 1
             Object.keys(powerVideoLoadedVideos).forEach(function(monitorId,n){
+                var mon = Object.values($.ccio.mon).find(m => { return m.mid === monitorId });
+                var name = mon.name;
                 groups.push({
                     id: groupId,
-                    content: monitorId
+                    content: name + " | " + monitorId
                 })
                 groupId += 1
                 groups.push({
