@@ -4012,6 +4012,23 @@ module.exports = function(s,config,lang){
                          }
                       ]
                    },
+                   {
+                      "name": "detail=notify_useRawSnapshot",
+                      "field": lang['Use Raw Snapshot'],
+                      "default": "0",
+                      "example": "1",
+                      "fieldType": "select",
+                      "possible": [
+                         {
+                            "name": lang.No,
+                            "value": "0"
+                         },
+                         {
+                            "name": lang.Yes,
+                            "value": "1"
+                         }
+                      ]
+                   },
                ]
              },
              "Logging": {
