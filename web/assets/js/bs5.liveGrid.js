@@ -633,7 +633,7 @@ function initiateLiveGridPlayer(monitor){
         })
     }
     //initiate signal check
-    var signalCheckInterval = (isNaN(loadedMonitor.details.signal_check) ? 10 : parseFloat(monitorConfig.details.signal_check)) * 1000 * 60
+    var signalCheckInterval = (isNaN(loadedMonitor.details.signal_check) ? 10 : parseFloat(loadedMonitor.details.signal_check)) * 1000 * 60
     if(signalCheckInterval > 0){
         clearInterval(loadedPlayer.signal)
         loadedPlayer.signal = setInterval(function(){
