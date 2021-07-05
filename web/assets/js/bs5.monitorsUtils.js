@@ -466,17 +466,21 @@ function muteMonitorAudio(monitorId){
     var monitorMutes = dashboardOptions().monitorMutes || {}
     monitorMutes[monitorId] = monitorMutes[monitorId] === 1 ? 0 : 1
     dashboardOptions('monitorMutes',monitorMutes)
-    var vidEl = $('.monitor_item[mid="' + monitorId + '"] video')[0]
-    if(monitorMutes[monitorId] === 1){
-        vidEl.muted = true
-    }else{
-        if(masterMute !== 1){
-            if($.ccio.windowFocus && hadFocus){
-                vidEl.muted = false
-            }else{
-                console.error('User must have window active to unmute.')
+    var vidEl = $('.monitor_item[data-mid="' + monitorId + '"] video')[0]
+    try{
+        if(monitorMutes[monitorId] === 1){
+            vidEl.muted = true
+        }else{
+            if(masterMute !== 1){
+                if($.ccio.windowFocus && hadFocus){
+                    vidEl.muted = false
+                }else{
+                    console.error('User must have window active to unmute.')
+                }
             }
         }
+    }catch(err){
+        console.log(err)
     }
     var volumeIcon = monitorMutes[monitorId] !== 1 ? 'volume-up' : 'volume-off'
     $(this).find('i').removeClass('fa-volume-up fa-volume-off').addClass('fa-' + volumeIcon)
