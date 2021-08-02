@@ -142,7 +142,7 @@ module.exports = (s,config,lang) => {
                 // s.debugLog(data.toString())
             })
             snapProcess.on('close',async function(data){
-                // clearTimeout(snapProcessTimeout)
+                clearTimeout(snapProcessTimeout)
                 completeRequest()
             })
             var snapProcessTimeout = setTimeout(function(){
