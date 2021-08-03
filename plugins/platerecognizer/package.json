@@ -1,6 +1,6 @@
 {
    "name": "shinobi-platerecognizer",
-   "author": "Elad Bar",
+   "author": "Moe Alam",
    "version": "1.0.0",
    "description": "Object Detection plugin for DeepStack",
    "main": "shinobi-platerecognizer.js",
