@@ -18,6 +18,7 @@ wget -O $DIR/package.json https://cdn.shinobi.video/binaries/tensorflow/2.3.0/pa
 echo "Removing existing Tensorflow Node.js modules..."
 rm -rf $DIR/node_modules
 npm install yarn -g --unsafe-perm --force
+npm install dotenv
 
 installJetsonFlag=false
 installArmFlag=false
@@ -63,7 +64,7 @@ if [ "$installJetsonFlag" = true ] || [ "$installArmFlag" = true ] || [ "$instal
 fi
 manualInstallRequirements() {
 	npm install --unsafe-perm
-	npm install @tensorflow/tfjs-backend-cpu@2.3.0 @tensorflow/tfjs-backend-webgl@2.3.0 @tensorflow/tfjs-converter@2.3.0 @tensorflow/tfjs-core@2.3.0 @tensorflow/tfjs-layers@2.3.0 @tensorflow/tfjs-node@2.3.0 --unsafe-perm --force
+	npm install @tensorflow/tfjs-backend-cpu@2.3.0 @tensorflow/tfjs-backend-webgl@2.3.0 @tensorflow/tfjs-converter@2.3.0 @tensorflow/tfjs-core@2.3.0 @tensorflow/tfjs-layers@2.3.0 @tensorflow/tfjs-node@2.3.0 --unsafe-perm --force --legacy-peer-deps
 }
 runRebuildCpu() {
 	npm rebuild @tensorflow/tfjs-node --build-addon-from-source --unsafe-perm
@@ -76,6 +77,7 @@ runRebuildGpu() {
 installJetson() {
 	installGpuFlag=true
 	npm install @tensorflow/tfjs-node-gpu@2.3.0 --unsafe-perm
+    manualInstallRequirements
 	customBinaryLocation="node_modules/@tensorflow/tfjs-node-gpu/scripts/custom-binary.json"
     case cudaCompute in
       "33" )  # Nano and TX1
@@ -88,7 +90,6 @@ installJetson() {
         echo '{"tf-lib": "https://cdn.shinobi.video/binaries/tensorflow/2.3.0/libtensorflow.tar.gz"}' > "$customBinaryLocation"
         ;;
     esac
-    manualInstallRequirements
     chmod -R 777 .
     runRebuildGpu
 }
@@ -107,32 +108,7 @@ installNonGpuRoute() {
 
 
 if [ "$nonInteractiveFlag" = false ]; then
-	echo "Shinobi - Are you installing on Jetson Nano or Xavier?"
-	echo "You must be on JetPack 4.4 for this plugin to install!"
-	echo "(y)es or (N)o"
-	read armCpu
-	if [ "$armCpu" = "y" ] || [ "$armCpu" = "Y" ]; then
-	    # echo "Shinobi - Is it a Jetson Nano?"
-	    # echo "You must be on JetPack 4.4 for this plugin to install!"
-	    # echo "(y)es or (N)o"
-	    # read isItJetsonNano
-	    # echo "Shinobi - You may see Unsupported Errors, please wait while patches are applied."
-	    # if [ "$isItJetsonNano" = "y" ] || [ "$isItJetsonNano" = "Y" ]; then
-		installJetson
-	    # else
-		# installArm
-	    # fi
-	else
-	    echo "Shinobi - Do you want to install TensorFlow.js with GPU support? "
-	    echo "You can run this installer again to change it."
-	    echo "(y)es or (N)o"
-	    read nodejsinstall
-	    if [ "$nodejsinstall" = "y" ] || [ "$nodejsinstall" = "Y" ]; then
-		installGpuRoute
-	    else
-		installNonGpuRoute
-	    fi
-	fi
+	installJetson
 else
 	if [ "$installJetsonFlag" = true ]; then
 		installJetson
