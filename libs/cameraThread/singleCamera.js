@@ -21,6 +21,7 @@ var writeToStderr = function(text){
   }
   // fs.appendFileSync('/home/ubuntu/cdn-site/tools/compilers/diycam/Shinobi/test.log',text + '\n','utf8')
 }
+process.logData = writeToStderr
 if(!process.argv[2] || !process.argv[3]){
     return writeToStderr('Missing FFMPEG Command String or no command operator')
 }
