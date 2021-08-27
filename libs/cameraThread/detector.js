@@ -185,14 +185,17 @@ module.exports = function(jsonData,pamDiffResponder){
     }
 
     function getAcceptedTriggers(data){
-        return getRegionsWithThresholdMet(getRegionsWithMaximumChange(getRegionsWithMinimumChange(data)))
+        return getRegionsWithThresholdMet(
+            getRegionsWithMaximumChange(
+                getRegionsWithMinimumChange(data)
+            )
+        )
     }
 
     function createPamDiffEngine(){
         const regionArray = Object.values(regionJson)
         function buildTriggerEvent(trigger){
             const detectorObject = buildDetectorObject(trigger)
-            logData(`Sending`)
             sendDetectedData(detectorObject)
         }
         if(mergeTriggers === true){
@@ -209,7 +212,7 @@ module.exports = function(jsonData,pamDiffResponder){
             }else{
                 pamDiff.on('diff', (data) => {
                     const acceptedTriggers = getAcceptedTriggers(data.trigger)
-                    logData(acceptedTriggers)
+                    // logData(acceptedTriggers)
                     buildTriggerEvent(mergePamTriggers(acceptedTriggers))
                 })
             }
@@ -359,7 +362,6 @@ module.exports = function(jsonData,pamDiffResponder){
     }
     function createMatricesFromBlobs(trigger){
         trigger.matrices = []
-        logData(trigger)
         trigger.blobs.forEach(function(blob){
             const blobProperties = getPropertiesFromBlob(blob)
             blobProperties.tag = trigger.name
