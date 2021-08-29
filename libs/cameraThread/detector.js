@@ -22,7 +22,7 @@ module.exports = function(jsonData,pamDiffResponder){
         buildTriggerEvent,
         sendDetectedData,
     } = require('./libs/detectorUtils.js')(jsonData,pamDiffResponder)
-    return function(cameraProcess,fallback){
+    return function(cameraProcess){
         if(pamDetectorIsEnabled){
             attachPamPipeDrivers(cameraProcess)
         }

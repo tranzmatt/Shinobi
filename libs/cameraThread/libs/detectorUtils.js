@@ -54,7 +54,6 @@ module.exports = function(jsonData,pamDiffResponder){
         percent : config.sendDetectionDataWithoutTrigger ? 1 : globalSensitivity,
         difference : globalColorThreshold,
         response: "blobs",
-        draw: true,
     }
     const pamDiff = new PamDiff(pamDiffOptions)
     const p2p = new P2P()
@@ -191,8 +190,8 @@ module.exports = function(jsonData,pamDiffResponder){
             )
         )
     }
-    function buildTriggerEvent(trigger){
-        const detectorObject = buildDetectorObject(trigger)
+    function buildTriggerEvent(data){
+        const detectorObject = buildDetectorObject(data)
         sendDetectedData(detectorObject)
     }
     function attachPamPipeDrivers(cameraProcess,onEvent){
@@ -368,6 +367,7 @@ module.exports = function(jsonData,pamDiffResponder){
         mergePamTriggers,
         getPropertiesFromBlob,
         createMatricesFromBlobs,
+        logData,
         // parameters
         pamDetectorIsEnabled,
         noiseFilterArray,
