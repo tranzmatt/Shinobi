@@ -3,6 +3,8 @@ const exec = require('child_process').exec;
 const execSync = require('child_process').execSync;
 const spawn = require('child_process').spawn;
 const treekill = require('tree-kill');
+const { Worker } = require('worker_threads');
+const EventEmitter = require('events');
 module.exports = (s,config,lang) => {
     const {
         mergeDeep,
@@ -348,6 +350,24 @@ Run "npm install ffbinaries" to get this static FFmpeg downloader.`
             })
         }
         return response
+    }
+
+    function createFFmpegWorker(workerData,stdioPipes){
+        workerData.ffmpegDir = config.ffmpegDir
+        const stderr = new EventEmitter()
+        const stdout = new EventEmitter()
+        const stdin = new EventEmitter()
+        stdin.write = function(){}
+        const stdio = []
+        stdioPipes.forEach((pipe) => {
+            stdio.push(new EventEmitter())
+        })
+
+        const worker = new Worker(config.monitorDaemonPath ? config.monitorDaemonPath : __dirname + '/../cameraThread/singleCamera.js');
+        worker.once('message', (message) => {
+          console.log(message);  // Prints 'Hello, world!'.
+        });
+        worker.postMessage('Hello, world!');
     }
     return {
         ffprobe: runFFprobe,

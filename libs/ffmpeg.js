@@ -62,11 +62,7 @@ module.exports = async (s,config,lang,onFinish) => {
                     isAtleatOneDetectorPluginConnected: s.isAtleatOneDetectorPluginConnected
                 }
             },null,3),'utf8')
-            var cameraCommandParams = [
-              config.monitorDaemonPath ? config.monitorDaemonPath : __dirname + '/cameraThread/singleCamera.js',
-              config.ffmpegDir,
-              e.sdir + 'cmd.txt'
-            ]
+            const cameraProcess = createFFmpegWorker(`${e.sdir}cmd.txt`)
             const cameraProcess = spawn('node',cameraCommandParams,{detached: true,stdio: stdioPipes})
             if(config.debugLog === true){
                 cameraProcess.stderr.on('data',(data) => {
