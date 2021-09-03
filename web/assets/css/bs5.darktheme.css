@@ -20,7 +20,7 @@
 .dark .form-select
  {
     background-color: #2b3c4b;
-    border: 1px solid #444;
+    border: 1px solid #2b3c4b;
     color: #fff;
 }
 
@@ -30,7 +30,8 @@
 .dark .form-select:focus
 {
     color: #ddd;
-    background-color: #333;
+    background-color: #2b3c4b;
+    border: 1px solid #222;
     box-shadow: none;
 }
 
