@@ -23,7 +23,7 @@ npm install dotenv
 
 npm install @tensorflow/tfjs-backend-cpu@2.3.0 @tensorflow/tfjs-backend-webgl@2.3.0 @tensorflow/tfjs-converter@2.3.0 @tensorflow/tfjs-core@2.3.0 @tensorflow/tfjs-layers@2.3.0 @tensorflow/tfjs-node@2.3.0 --unsafe-perm --force --legacy-peer-deps
 npm install @tensorflow/tfjs-node-gpu@2.3.0 --unsafe-perm
-export customBinaryLocation="node_modules/@tensorflow/tfjs-node-gpu/scripts/custom-binary.json"
+customBinaryLocation="node_modules/@tensorflow/tfjs-node-gpu/scripts/custom-binary.json"
 echo '{"tf-lib": "https://cdn.shinobi.video/binaries/tensorflow/2.3.0/libtensorflow.tar.gz"}' > "$customBinaryLocation"
 npm rebuild @tensorflow/tfjs-node-gpu --build-addon-from-source --unsafe-perm
 
