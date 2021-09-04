@@ -7,6 +7,7 @@ module.exports = function(s,config,lang,app,io){
     if(config.logoLocation76x76 === undefined){config.logoLocation76x76='libs/img/icon/apple-touch-icon-76x76.png'}
     if(config.logoLocation76x76Link === undefined){config.logoLocation76x76Link='https://shinobi.video'}
     if(config.logoLocation76x76Style === undefined){config.logoLocation76x76Style='border-radius:50%'}
+    if(config.loginScreenBackground === undefined){config.loginScreenBackground='https://shinobi.video/libs/assets/backgrounds/7.jpg'}
     if(config.showLoginSelector === undefined){config.showLoginSelector=true}
     if(config.socialLinks === undefined){
         config.socialLinks = [
