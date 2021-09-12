@@ -653,6 +653,12 @@ module.exports = (s,config,lang,app,io) => {
         if(!passedObjectInRegionCheck)return
 
         //
+        d.doObjectDetection = (
+            eventDetails.reason !== 'object' &&
+            s.isAtleatOneDetectorPluginConnected &&
+            monitorDetails.detector_use_detect_object === '1' &&
+            monitorDetails.detector_use_motion === '1'
+        );
         if(d.doObjectDetection === true){
             sendFramesFromSecondaryOutput(d.ke,d.id)
         }
