@@ -62,6 +62,16 @@ CREATE TRIGGER update_api_modtime
 BEFORE UPDATE ON "API"
 FOR EACH ROW EXECUTE PROCEDURE update_time_column();
 
+CREATE TABLE IF NOT EXISTS "Cloud Timelapse Frames" (
+  "ke" varchar(50) NOT NULL,
+  "mid" varchar(50) NOT NULL,
+  "href" text NOT NULL,
+  "details" text,
+  "filename" varchar(50) NOT NULL,
+  "time" timestamp DEFAULT NULL,
+  "size" int NOT NULL
+)  ;
+
 CREATE TABLE IF NOT EXISTS "Cloud Videos" (
   "mid" varchar(50) NOT NULL,
   "ke" varchar(50) DEFAULT NULL,
@@ -72,7 +82,6 @@ CREATE TABLE IF NOT EXISTS "Cloud Videos" (
   "status" int DEFAULT '0',
   "details" text
 )  ;
-
 /* For status above: COMMENT '0:Complete,1:Read,2:Archive' */
 
 CREATE TABLE IF NOT EXISTS "Events" (
@@ -81,9 +90,47 @@ CREATE TABLE IF NOT EXISTS "Events" (
   "details" text,
   "time" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 )  ;
-
 CREATE TRIGGER update_events_modtime 
 BEFORE UPDATE ON "Events"
+FOR EACH ROW EXECUTE PROCEDURE update_time_column();
+
+CREATE TABLE IF NOT EXISTS "Events Counts" (
+  "ke" varchar(50) NOT NULL,
+  "mid" varchar(50) NOT NULL,
+  "details" text NOT NULL,
+  "time" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "end" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "count" int NOT NULL DEFAULT 1,
+  "tag" varchar(30) DEFAULT NULL
+)  ;
+CREATE TRIGGER update_events_counts_modtime 
+BEFORE UPDATE ON "Events Counts"
+FOR EACH ROW EXECUTE PROCEDURE upd_end_column();
+
+CREATE TABLE IF NOT EXISTS "Files" (
+    "ke" varchar(50) NOT NULL,
+    "mid" varchar(50) NOT NULL,
+    "name" text NOT NULL,
+    "size" float NOT NULL DEFAULT '0',
+    "details" text NOT NULL,
+    "status" int NOT NULL DEFAULT '0',
+    "time" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+)  ;
+CREATE TRIGGER update_files_modtime 
+BEFORE UPDATE ON "Files"
+FOR EACH ROW EXECUTE PROCEDURE update_time_column();
+
+CREATE TABLE IF NOT EXISTS "LoginTokens" (
+  "loginId" varchar(255) DEFAULT '',
+  "type" varchar(25) DEFAULT '',
+  "ke" varchar(50) DEFAULT '',
+  "uid" varchar(50) DEFAULT '',
+  "name" varchar(50) DEFAULT 'Unknown',
+  "lastLogin" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE ("loginId")
+)  ;
+CREATE TRIGGER update_logintokens_modtime 
+BEFORE UPDATE ON "LoginTokens"
 FOR EACH ROW EXECUTE PROCEDURE update_time_column();
 
 CREATE TABLE IF NOT EXISTS "Logs" (
@@ -122,44 +169,6 @@ CREATE TABLE IF NOT EXISTS "Presets" (
   "type" varchar(50) DEFAULT NULL
 )  ;
 
-CREATE TABLE IF NOT EXISTS "Users" (
-  "ke" varchar(50) DEFAULT NULL,
-  "uid" varchar(50) DEFAULT NULL,
-  "auth" varchar(50) DEFAULT NULL,
-  "mail" varchar(100) DEFAULT NULL,
-  "pass" varchar(100) DEFAULT NULL,
-  "details" text,
-   UNIQUE ("mail")
-)  ;
-
-CREATE TYPE vidtype AS ENUM('webm','mp4','null');
-CREATE TABLE IF NOT EXISTS "Videos" (
-  "mid" varchar(50) DEFAULT NULL,
-  "ke" varchar(50) DEFAULT NULL,
-  "ext" vidtype DEFAULT NULL,
-  "time" timestamp NULL DEFAULT NULL,
-  "duration" float DEFAULT NULL,
-  "size" float DEFAULT NULL,
-  "frames" int DEFAULT NULL,
-  "end" timestamp NULL DEFAULT NULL,
-  "status" int DEFAULT '0',
-  "details" text
-)  ;
-/* For status above, COMMENT '0:Building,1:Complete,2:Read,3:Archive' */
-
-CREATE TABLE IF NOT EXISTS "Files" (
-    "ke" varchar(50) NOT NULL,
-    "mid" varchar(50) NOT NULL,
-    "name" text NOT NULL,
-    "size" float NOT NULL DEFAULT '0',
-    "details" text NOT NULL,
-    "status" int NOT NULL DEFAULT '0',
-    "time" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
-)  ;
-CREATE TRIGGER update_files_modtime 
-BEFORE UPDATE ON "Files"
-FOR EACH ROW EXECUTE PROCEDURE update_time_column();
-
 CREATE TABLE IF NOT EXISTS "Schedules" (
   "ke" varchar(50) DEFAULT NULL,
   "name" text,
@@ -167,6 +176,15 @@ CREATE TABLE IF NOT EXISTS "Schedules" (
   "start" varchar(10) DEFAULT NULL,
   "end" varchar(10) DEFAULT NULL,
   "enabled" int NOT NULL DEFAULT '1'
+)  ;
+
+CREATE TABLE IF NOT EXISTS "Timelapse Frames" (
+  "ke" varchar(50) NOT NULL,
+  "mid" varchar(50) NOT NULL,
+  "details" text,
+  "filename" varchar(50) NOT NULL,
+  "time" timestamp NULL DEFAULT NULL,
+  "size" int NOT NULL
 )  ;
 
 CREATE TABLE IF NOT EXISTS "Timelapses" (
@@ -182,37 +200,29 @@ CREATE TRIGGER update_timelapses_modtime
 BEFORE UPDATE ON "Timelapses"
 FOR EACH ROW EXECUTE PROCEDURE upd_end_column();
 
-CREATE TABLE IF NOT EXISTS "Timelapse Frames" (
-  "ke" varchar(50) NOT NULL,
-  "mid" varchar(50) NOT NULL,
+CREATE TABLE IF NOT EXISTS "Users" (
+  "ke" varchar(50) DEFAULT NULL,
+  "uid" varchar(50) DEFAULT NULL,
+  "auth" varchar(50) DEFAULT NULL,
+  "mail" varchar(100) DEFAULT NULL,
+  "pass" varchar(100) DEFAULT NULL,
+  "accountType" int DEFAULT '0',
   "details" text,
-  "filename" varchar(50) NOT NULL,
+   UNIQUE ("mail")
+)  ;
+
+CREATE TYPE vidtype AS ENUM('webm','mp4','null');
+CREATE TABLE IF NOT EXISTS "Videos" (
+  "mid" varchar(50) DEFAULT NULL,
+  "ke" varchar(50) DEFAULT NULL,
+  "ext" vidtype DEFAULT NULL,
   "time" timestamp NULL DEFAULT NULL,
-  "size" int NOT NULL
+  "duration" float DEFAULT NULL,
+  "size" float DEFAULT NULL,
+  "frames" int DEFAULT NULL,
+  "end" timestamp NULL DEFAULT NULL,
+  "status" int DEFAULT '0',
+  "archived" int DEFAULT '0',
+  "details" text
 )  ;
-
-CREATE TABLE IF NOT EXISTS "Cloud Timelapse Frames" (
-  "ke" varchar(50) NOT NULL,
-  "mid" varchar(50) NOT NULL,
-  "href" text NOT NULL,
-  "details" text,
-  "filename" varchar(50) NOT NULL,
-  "time" timestamp DEFAULT NULL,
-  "size" int NOT NULL
-)  ;
-
-CREATE TABLE IF NOT EXISTS "Events Counts" (
-  "ke" varchar(50) NOT NULL,
-  "mid" varchar(50) NOT NULL,
-  "details" text NOT NULL,
-  "time" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "end" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "count" int NOT NULL DEFAULT 1,
-  "tag" varchar(30) DEFAULT NULL
-)  ;
-CREATE TRIGGER update_events_counts_modtime 
-BEFORE UPDATE ON "Events Counts"
-FOR EACH ROW EXECUTE PROCEDURE upd_end_column();
-
-
-
+/* For status above, COMMENT '0:Building,1:Complete,2:Read,3:Archive' */
