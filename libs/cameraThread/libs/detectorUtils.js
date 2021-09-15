@@ -130,7 +130,7 @@ module.exports = function(jsonData,pamDiffResponder){
                 name: trigger.name,
                 reason: 'motion',
                 confidence:trigger.percent,
-                matrices: trigger.matrices,
+                matrices: trigger.matrices.filter(matrix => !!matrix),
                 imgHeight: monitorDetails.detector_scale_y,
                 imgWidth: monitorDetails.detector_scale_x
             }
@@ -318,7 +318,7 @@ module.exports = function(jsonData,pamDiffResponder){
             if(trigger.matrices)matrices.push(...trigger.matrices)
         })
         var average = sum / n
-        if(matrices.length === 0)matrices = null
+        if(matrices === null)matrices = []
         var trigger = {
             name: `multipleRegions`,
             percent: parseInt(average),
