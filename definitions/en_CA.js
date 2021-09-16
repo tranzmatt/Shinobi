@@ -6263,7 +6263,7 @@ module.exports = function(s,config,lang){
            },
          }
        },
-       "Monitor Settings Additional Input Map": {
+     "Monitor Settings Additional Input Map": {
            "section": "Monitor Settings Additional Input Map",
            "blocks": {
               "Connection" : {
@@ -6504,7 +6504,7 @@ module.exports = function(s,config,lang){
              }
          }
        },
-       "Monitor Settings Additional Stream Channel": {
+     "Monitor Settings Additional Stream Channel": {
            "section": "Monitor Settings Additional Stream Channel",
            "blocks": {
               "Stream" : {
@@ -6833,6 +6833,44 @@ module.exports = function(s,config,lang){
                  ]
              }
          }
+       },
+     "Camera Wizard": {
+            "section": "Camera Wizard",
+            "blocks": {
+                "Search Settings": {
+                   "name": lang["FFprobe"],
+                   "color": "blue",
+                   "blockquote": `<i>"${lang['FFmpegTip']}"</i> - FFmpegTips`,
+                   "section-pre-class": "col-md-12",
+                   "info": [
+                       {
+                          "name": "url",
+                          "field": lang['Complete Stream URL'],
+                          "example": "http://192.168.88.126/videostream.cgi or /dev/video0",
+                       },
+                       {
+                          "fieldType": "btn-group",
+                          "btns": [
+                              {
+                                  "fieldType": "btn",
+                                  "forForm": true,
+                                  "class": `btn-block btn-success`,
+                                  "btnContent": `${lang['Check']}`,
+                              },
+                              {
+                                  "fieldType": "btn",
+                                  "class": `btn-default fill`,
+                                  "btnContent": `${lang['Save']}`,
+                              },
+                          ],
+                       },
+                       {
+                           "fieldType": "div",
+                           "class": "output_data",
+                       }
+                  ]
+              },
+           }
        },
     }
 }

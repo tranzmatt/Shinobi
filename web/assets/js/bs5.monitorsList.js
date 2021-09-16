@@ -30,9 +30,9 @@ $(document).ready(function(){
                 </div>
                 <div class="d-flex flex-row">
                     <div class="flex-grow-1">
-                        <a class="badge btn btn-dark export-this-monitor-settings"><i class="fa fa-download"></i> ${lang['Export']}</a>
-                        <a class="badge btn btn-dark open-monitor-settings"><i class="fa fa-wrench"></i> ${lang['Edit']}</a>
-                        <a class="badge btn btn-primary open-videos"><i class="fa fa-film"></i> ${lang['Videos']}</a>
+                        <a href="javascript:console.log('${row.mid} Export')" class="badge btn btn-dark export-this-monitor-settings"><i class="fa fa-download"></i> ${lang['Export']}</a>
+                        <a href="javascript:console.log('${row.mid} Settings')" class="badge btn btn-dark open-monitor-settings"><i class="fa fa-wrench"></i> ${lang['Edit']}</a>
+                        <a href="javascript:console.log('${row.mid} Videos')" class="badge btn btn-primary open-videos"><i class="fa fa-film"></i> ${lang['Videos']}</a>
                         <!-- <a class="badge btn btn-primary duplicate-monitor"><i class="fa fa-copy"></i> ${lang['Duplicate']}</a> -->
                     </div>
                     <div>

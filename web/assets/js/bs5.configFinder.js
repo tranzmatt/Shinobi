@@ -49,7 +49,7 @@ $(document).ready(function(){
                             <small class="d-block text-muted">${lang['Date Updated']} : ${moment(row.dateUpdated).format('DD-MM-YYYY hh:mm:ss A')}</small>
                         </div>
                         <div class="card-footer">
-                            <a class="copy btn btn-block btn-sm btn-primary"><i class="fa fa-download"></i> ${lang.Import}</a>
+                            <a href="javascript:console.log('${row.id} Import')" class="copy btn btn-block btn-sm btn-primary"><i class="fa fa-download"></i> ${lang.Import}</a>
                         </div>
                     </div>
                 </div>`

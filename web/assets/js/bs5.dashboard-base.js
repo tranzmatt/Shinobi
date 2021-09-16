@@ -716,7 +716,7 @@ function drawIndicatorBar(item){
             </div>
         </div>
     </div>`
-    $('#indicator-bars').append(html)
+    $('.disk-indicator-bars').append(html)
 }
 
 // on page load
@@ -732,6 +732,13 @@ function onDashboardReadyExecute(theAction){
 $(document).ready(function(){
     loadMonitorsIntoMemory(function(data){
         $('.cameraCount').text(data.length)
+        var activeCameraCount = data.filter((monitor) => {
+            var monCode = parseInt(monitor.code)
+            return monCode === 9 || monCode === 2 || monCode === 3
+        }).length
+        console.error(activeCameraCount)
+        console.error(data)
+        $('.activeCameraCount').text(activeCameraCount)
         openTab('initial')
         onDashboardReadyExecute()
     })
