@@ -718,7 +718,15 @@ function drawIndicatorBar(item){
     </div>`
     $('.disk-indicator-bars').append(html)
 }
-
+function setInterfaceCounts(monitors){
+    var data = monitors || Object.values(loadedMonitors)
+    var activeCameraCount = data.filter((monitor) => {
+        var monCode = parseInt(monitor.code)
+        return monCode === 9 || monCode === 2 || monCode === 3
+    }).length
+    $('.activeCameraCount').text(activeCameraCount)
+    $('.cameraCount').text(data.length)
+}
 // on page load
 var readyFunctions = []
 function onDashboardReady(theAction){
@@ -731,14 +739,7 @@ function onDashboardReadyExecute(theAction){
 }
 $(document).ready(function(){
     loadMonitorsIntoMemory(function(data){
-        $('.cameraCount').text(data.length)
-        var activeCameraCount = data.filter((monitor) => {
-            var monCode = parseInt(monitor.code)
-            return monCode === 9 || monCode === 2 || monCode === 3
-        }).length
-        console.error(activeCameraCount)
-        console.error(data)
-        $('.activeCameraCount').text(activeCameraCount)
+        setInterfaceCounts(data)
         openTab('initial')
         onDashboardReadyExecute()
     })
