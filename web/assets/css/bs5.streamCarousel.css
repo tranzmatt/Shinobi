@@ -1,0 +1,19 @@
+#stream-carousel{
+    overflow: hidden;
+    height: 400px;
+}
+#stream-carousel iframe{
+    width: 100%;
+    height: 100%;
+}
+#stream-carousel .carousel-block {
+    display: block;
+    transition: 0.2s;
+    overflow: hidden;
+    width: 100%;
+    height: 0px;
+}
+#stream-carousel .carousel-block.active-block{
+    height: 100%;
+    width: 100%;
+}
