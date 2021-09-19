@@ -10,7 +10,14 @@ $(document).ready(function(e){
     var scanForm = onvifScannerWindow.find('form');
     var outputBlock = onvifScannerWindow.find('.onvif_result');
     var sideMenuList = $(`#side-menu-link-onvifScanner  ul`)
-    var checkTimeout
+    var checkTimeout;
+    function addCredentialsToUri(uri,username,password){
+        let newUri = `${uri}`
+        const uriParts = newUri.split('://')
+        uriParts[1] = `${username}:${password}@${uriParts[1]}`
+        newUri = uriParts.join('://')
+        return newUri
+    }
     function drawFoundCamerasSubMenu(){
         var allFound = []
         Object.keys(loadedResults).forEach(function(tempID){
@@ -67,7 +74,7 @@ $(document).ready(function(e){
                 path: pathLocation.pathname,
                 protocol: theLocation.protocol,
                 details: {
-                    auto_host: streamUrl,
+                    auto_host: addCredentialsToUri(streamUrl,currentUsername,currentPassword),
                     muser: currentUsername,
                     mpass: currentPassword,
                     is_onvif: '1',
