@@ -1,4 +1,37 @@
 var loadedVideosInMemory = {}
+function createVideoLinks(video){
+    var details = safeJsonParse(video.details)
+    var queryString = []
+    // if(details.isUTC === true){
+    //     queryString.push('isUTC=true')
+    // }else{
+    //     video.time = s.utcToLocal(video.time)
+    //     video.end = s.utcToLocal(video.end)
+    // }
+    if(queryString.length > 0){
+        queryString = '?' + queryString.join('&')
+    }else{
+        queryString = ''
+    }
+    video.ext = video.ext ? video.ext : 'mp4'
+    if(details.type === 'googd'){
+        video.href = undefined
+    }else if(!video.ext && video.href){
+        video.ext = video.href.split('.')
+        video.ext = video.ext[video.ext.length - 1]
+    }
+    video.filename = formattedTimeForFilename(video.time,null,`YYYY-MM-DDTHH-mm-ss`) + '.' + video.ext;
+    var href = getApiPrefix('videos') + '/'+video.mid+'/'+video.filename;
+    video.actionUrl = href
+    video.links = {
+        deleteVideo : href+'/delete' + queryString,
+        changeToUnread : href+'/status/1' + queryString,
+        changeToRead : href+'/status/2' + queryString
+    }
+    if(!video.href || options.hideRemote === true)video.href = href + queryString
+    video.details = details
+    return video
+}
 function applyEventListToVideos(videos,events){
     var updatedVideos = videos.concat([])
     var currentEvents = events.concat([])
@@ -90,6 +123,10 @@ function drawVideoRowsToList(targetElement,rows){
     })
     liveStamp()
 }
+function loadVideoData(video){
+    delete(video.f)
+    loadedVideosInMemory[`${video.mid}${video.time}`] = video
+}
 function getVideos(options,callback){
     options = options ? options : {}
     var requestQueries = []
@@ -112,9 +149,8 @@ function getVideos(options,callback){
         $.get(`${getApiPrefix(`events`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.join('&')}`,function(eventData){
             var newVideos = applyEventListToVideos(videos,eventData)
             $.each(newVideos,function(n,video){
-                loadedVideosInMemory[`${video.mid}${video.time}`] = video
+                loadVideoData(video)
             })
-            console.log(newVideos)
             callback({videos: newVideos})
         })
     })

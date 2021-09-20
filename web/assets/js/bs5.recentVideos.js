@@ -1,8 +1,8 @@
 $(document).ready(function(){
     var theBlock = $('#recentVideos')
     var theList = $('#recentVideosList')
-    function drawRowToList(row){
-        theList.append(createVideoRow(row))
+    function drawRowToList(row,toBegin){
+        theList[toBegin ? 'prepend' : 'append'](createVideoRow(row))
     }
     function loadVideos(options,callback){
         theList.empty();
@@ -21,5 +21,13 @@ $(document).ready(function(){
         },function(){
             liveStamp()
         })
+    })
+    onWebSocketEvent(function(d){
+        switch(d.f){
+            case'video_build_success':
+                loadVideoData(d)
+                drawRowToList(createVideoLinks(d),true)
+            break;
+        }
     })
 })

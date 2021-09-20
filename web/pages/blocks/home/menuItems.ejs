@@ -4,6 +4,15 @@
             icon: 'home',
             label: lang.Home,
             pageOpen: 'initial',
+            addUl: true,
+            ulItems: [
+                {
+                    label: lang['Carousel in Background'],
+                    class: 'cursor-pointer',
+                    attributes: 'shinobi-switch="backgroundCarousel" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
+                    color: 'grey',
+                },
+            ]
         },
         {
             icon: 'th',

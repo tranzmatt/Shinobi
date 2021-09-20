@@ -3,6 +3,9 @@ $(document).ready(function(){
     var loadedCarouselBlocks = []
     var changeTimer = null;
     var currentCarouselMonitorId = null;
+    function canBackgroundCarousel(){
+        return tabTree && tabTree.name === 'initial' && dashboardOptions().switches.backgroundCarousel === 1
+    }
     function drawCarouselSet(){
         var html = ``
         loadedCarouselBlocks = []
@@ -18,12 +21,13 @@ $(document).ready(function(){
         })
     }
     function loadMonitorInCarousel(monitorId){
+        console.log(`loadMonitorInCarousel`,monitorId)
         currentCarouselMonitorId = `${monitorId}`
         streamCarouselBlock
             .find(`.carousel-block[data-mid="${monitorId}"]`)
             .addClass('active-block')
             .find('iframe')
-            .attr('src',`${getApiPrefix(`embed`)}/${monitorId}/fullscreen|jquery|relative|gui`)
+            .attr('src',`${getApiPrefix(`embed`)}/${monitorId}/fullscreen|jquery|relative`)
     }
     function deloadMonitorInCarousel(monitorId){
         streamCarouselBlock
@@ -39,11 +43,11 @@ $(document).ready(function(){
         loadMonitorInCarousel(nextId)
         setTimeout(function(){
             deloadMonitorInCarousel(oldId)
-        },3000)
+        },6000)
     }
     function setAutoChangerInterval(){
         stopAutoChangerInterval()
-        changeTimer = setInterval(goNextCarouselBlock,10000)
+        changeTimer = setInterval(goNextCarouselBlock,20000)
     }
     function stopAutoChangerInterval(){
         clearTimeout(changeTimer)
@@ -51,7 +55,8 @@ $(document).ready(function(){
     function initCarousel(){
         drawCarouselSet()
         if(loadedCarouselBlocks[0]){
-            loadMonitorInCarousel(currentCarouselMonitorId || loadedCarouselBlocks[0].mid)
+            console.log(loadedCarouselBlocks[0])
+            loadMonitorInCarousel(currentCarouselMonitorId || loadedCarouselBlocks[0])
             setAutoChangerInterval()
         }
     }
@@ -64,5 +69,15 @@ $(document).ready(function(){
     })
     onDashboardReady(function(){
         initCarousel()
+    })
+    $(window).focus(function(){
+        if(canBackgroundCarousel()){
+            initCarousel()
+        }
+    }).blur(function(){
+        if(canBackgroundCarousel()){
+            clearCarouselFrames()
+            stopAutoChangerInterval()
+        }
     })
 })
