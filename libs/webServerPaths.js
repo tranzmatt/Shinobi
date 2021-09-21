@@ -807,6 +807,33 @@ module.exports = function(s,config,lang,app,io){
         },res,req);
     });
     /**
+    * API : Toggle Substream Process on and off
+     */
+    app.get(config.webPaths.apiPrefix+':auth/toggleSubstream/:ke/:id', function (req,res){
+        const response = {ok: false};
+        s.auth(req.params,async (user) => {
+            const groupKey = req.params.ke
+            const monitorId = req.params.id
+            if(
+                user.permissions.control_monitors === "0" ||
+                user.details.sub &&
+                user.details.allmonitors !== '1' &&
+                user.details.monitor_edit.indexOf(monitorId) === -1
+            ){
+                response.msg = user.lang['Not Permitted']
+            }else{
+                const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
+                if(activeMonitor.subStreamProcess){
+                    response.ok = true
+                    spawnSubstreamProcess(activeMonitor)
+                }else{
+                    await destroySubstreamProcess(activeMonitor)
+                }
+            }
+            s.closeJsonResponse(res,response);
+        },res,req);
+    });
+    /**
     * API : Merge Recorded Videos into one file
      */
      app.get(config.webPaths.apiPrefix+':auth/videosMerge/:ke', function (req,res){

@@ -3,8 +3,13 @@ const treekill = require('tree-kill');
 const spawn = require('child_process').spawn;
 module.exports = (s,config,lang) => {
     const {
+        createPipeArray,
         splitForFFPMEG,
+        sanitizedFfmpegCommand,
     } = require('../ffmpeg/utils.js')(s,config,lang)
+    const {
+        buildSubstreamString,
+    } = require('../ffmpeg/builders.js')(s,config,lang)
     const getUpdateableFields = require('./updatedFields.js')
     const processKill = (proc) => {
         const response = {ok: true}
@@ -108,6 +113,12 @@ module.exports = (s,config,lang) => {
             }else{
                 processKill(proc).then((response) => {
                     s.debugLog(`cameraDestroy`,response)
+                    destroySubstreamProcess({
+                        ke: e.ke,
+                        mid: e.id,
+                    }).then((response) => {
+                        if(response.hadSubStream)s.debugLog(`cameraDestroy`,response.closeResponse)
+                    })
                 })
             }
         }
@@ -195,11 +206,71 @@ module.exports = (s,config,lang) => {
             }
         })
     }
+    const spawnSubstreamProcess = function(e){
+        // e = monitorConfig
+        try{
+            const activeMonitor = s.group[e.ke].activeMonitors[e.mid]
+            const ffmpegCommand = [`-progress pipe:5`];
+            ([
+                buildSubstreamString(e),
+            ]).forEach(function(commandStringPart){
+                ffmpegCommand.push(commandStringPart)
+            })
+            // s.onFfmpegCameraStringCreationExtensions.forEach(function(extender){
+            //     extender(e,ffmpegCommand)
+            // })
+            const stdioPipes = createPipeArray({})
+            const ffmpegCommandString = ffmpegCommand.join(' ')
+            activeMonitor.ffmpegSubstream = sanitizedFfmpegCommand(e,ffmpegCommandString)
+            const ffmpegCommandParsed = splitForFFPMEG(ffmpegCommandString)
+            const subStreamProcess = spawn(config.ffmpegDir,ffmpegCommandParsed,{detached: true,stdio: stdioPipes})
+            if(config.debugLog === true){
+                subStreamProcess.stderr.on('data',(data) => {
+                    console.log(`${e.ke} ${e.mid}`)
+                    console.log(data.toString())
+                })
+            }
+            activeMonitor.subStreamProcess = subStreamProcess
+            s.tx({
+                f: 'substream_start',
+                mid: monitorId,
+                ke: groupKey
+            },'GRP_'+r.ke);
+            return subStreamProcess
+        }catch(err){
+            s.systemLog(err)
+            return null
+        }
+    }
+    const destroySubstreamProcess = async function(e){
+        // e = monitorConfig.details.substream
+        const response = {
+            hadSubStream: false,
+            alreadyClosing: false
+        }
+        const activeMonitor = s.group[e.ke].activeMonitors[e.mid]
+        activeMonitor.subStreamProcessClosing = true
+        if(activeMonitor.subStreamProcessClosing){
+            response.alreadyClosing = true
+        }else if(activeMonitor.subStreamProcess){
+            const closeResponse = await processKill(activeMonitor.subStreamProcess)
+            response.hadSubStream = true
+            response.closeResponse = closeResponse
+            delete(activeMonitor.subStreamProcess)
+            s.tx({
+                f: 'substream_end',
+                mid: monitorId,
+                ke: groupKey
+            },'GRP_'+r.ke);
+        }
+        return response
+    }
     return {
         cameraDestroy: cameraDestroy,
         createSnapshot: createSnapshot,
         processKill: processKill,
         addCredentialsToStreamLink: addCredentialsToStreamLink,
         monitorConfigurationMigrator: monitorConfigurationMigrator,
+        spawnSubstreamProcess: spawnSubstreamProcess,
     }
 }
