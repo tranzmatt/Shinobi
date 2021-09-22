@@ -24,6 +24,7 @@ module.exports = function(s,config,lang){
         splitForFFPMEG,
     } = require('./ffmpeg/utils.js')(s,config,lang)
     const {
+        processKill,
         cameraDestroy,
         monitorConfigurationMigrator,
     } = require('./monitor/utils.js')(s,config,lang)
@@ -202,14 +203,14 @@ module.exports = function(s,config,lang){
                         })
                         snapProcess.on('error', (data) => {
                             console.log(data)
-                            snapProcess.terminate()
+                            processKill(snapProcess)
                         })
                         snapProcess.on('exit', (code) => {
                             clearTimeout(snapProcessTimeout)
                             sendTempImage()
                         })
                         var snapProcessTimeout = setTimeout(function(){
-                            snapProcess.terminate()
+                            processKill(snapProcess)
                         },dynamicTimeout)
                     }catch(err){
                         console.log(err)
@@ -909,7 +910,14 @@ module.exports = function(s,config,lang){
                            if(object.substr(object.length - 1) !== '}')theJson += '}'
                            if(object.substr(0,1) !== '{')theJson = '{' + theJson
                            var data = JSON.parse(theJson)
-                           triggerEvent(data)
+                           switch(data.f){
+                               case'trigger':
+                                    triggerEvent(data)
+                               break;
+                               case's.tx':
+                                   s.tx(data.data,data.to)
+                               break;
+                           }
                        })
                    }catch(err){
                        console.log('There was an error parsing a detector event')
