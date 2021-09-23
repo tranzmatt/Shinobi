@@ -27,6 +27,7 @@ module.exports = function(s,config,lang){
         processKill,
         cameraDestroy,
         monitorConfigurationMigrator,
+        attachStreamChannelHandlers,
     } = require('./monitor/utils.js')(s,config,lang)
     const {
         addEventDetailsToString,
@@ -45,7 +46,8 @@ module.exports = function(s,config,lang){
         if(!s.group[e.ke].activeMonitors){s.group[e.ke].activeMonitors={}}
         if(!s.group[e.ke].activeMonitors[e.mid]){s.group[e.ke].activeMonitors[e.mid]={}}
         const activeMonitor = s.group[e.ke].activeMonitors[e.mid]
-
+        activeMonitor.ke = e.ke
+        activeMonitor.mid = e.mid
         if(!activeMonitor.streamIn){activeMonitor.streamIn={}};
         if(!activeMonitor.emitterChannel){activeMonitor.emitterChannel={}};
         if(!activeMonitor.mp4frag){activeMonitor.mp4frag={}};
@@ -992,43 +994,15 @@ module.exports = function(s,config,lang){
             s.group[e.ke].activeMonitors[e.id].spawn.stdout.on('data',frameToStreamPrimary)
         }
         if(e.details.stream_channels && e.details.stream_channels !== ''){
-            var createStreamEmitter = function(channel,number){
-                var pipeNumber = number+config.pipeAddition;
-                if(!s.group[e.ke].activeMonitors[e.id].emitterChannel[pipeNumber]){
-                    s.group[e.ke].activeMonitors[e.id].emitterChannel[pipeNumber] = new events.EventEmitter().setMaxListeners(0);
-                }
-               var frameToStreamAdded
-               switch(channel.stream_type){
-                   case'mp4':
-                       delete(s.group[e.ke].activeMonitors[e.id].mp4frag[pipeNumber])
-                       if(!s.group[e.ke].activeMonitors[e.id].mp4frag[pipeNumber])s.group[e.ke].activeMonitors[e.id].mp4frag[pipeNumber] = new Mp4Frag();
-                       s.group[e.ke].activeMonitors[e.id].spawn.stdio[pipeNumber].pipe(s.group[e.ke].activeMonitors[e.id].mp4frag[pipeNumber],{ end: false })
-                   break;
-                   case'mjpeg':
-                       frameToStreamAdded = function(d){
-                           s.group[e.ke].activeMonitors[e.id].emitterChannel[pipeNumber].emit('data',d)
-                       }
-                   break;
-                   case'flv':
-                       frameToStreamAdded = function(d){
-                           if(!s.group[e.ke].activeMonitors[e.id].firstStreamChunk[pipeNumber])s.group[e.ke].activeMonitors[e.id].firstStreamChunk[pipeNumber] = d;
-                           frameToStreamAdded = function(d){
-                               s.group[e.ke].activeMonitors[e.id].emitterChannel[pipeNumber].emit('data',d)
-                           }
-                           frameToStreamAdded(d)
-                       }
-                   break;
-                   case'h264':
-                       frameToStreamAdded = function(d){
-                           s.group[e.ke].activeMonitors[e.id].emitterChannel[pipeNumber].emit('data',d)
-                       }
-                   break;
-                }
-                if(frameToStreamAdded){
-                    s.group[e.ke].activeMonitors[e.id].spawn.stdio[pipeNumber].on('data',frameToStreamAdded)
-                }
-            }
-            e.details.stream_channels.forEach(createStreamEmitter)
+            e.details.stream_channels.forEach((fields,number) => {
+                attachStreamChannelHandlers({
+                    ke: e.ke,
+                    mid: e.id,
+                    fields: fields,
+                    number: number,
+                    ffmpegProcess: s.group[e.ke].activeMonitors[e.id].spawn,
+                })
+            })
         }
     }
     const catchNewSegmentNames = function(e){

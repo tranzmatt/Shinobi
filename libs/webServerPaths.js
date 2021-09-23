@@ -26,6 +26,10 @@ module.exports = function(s,config,lang,app,io){
         twoFactorVerification,
         ldapLogin,
     } = require('./auth/utils.js')(s,config,lang)
+    const {
+        spawnSubstreamProcess,
+        destroySubstreamProcess,
+    } = require('./monitor/utils.js')(s,config,lang)
     s.renderPage = function(req,res,paths,passables,callback){
         passables.window = {}
         passables.data = req.params
@@ -822,10 +826,11 @@ module.exports = function(s,config,lang,app,io){
             ){
                 response.msg = user.lang['Not Permitted']
             }else{
+                const monitorConfig = s.group[groupKey].rawMonitorConfigurations[monitorId]
                 const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
-                if(activeMonitor.subStreamProcess){
+                if(!activeMonitor.subStreamProcess){
                     response.ok = true
-                    spawnSubstreamProcess(activeMonitor)
+                    spawnSubstreamProcess(monitorConfig)
                 }else{
                     await destroySubstreamProcess(activeMonitor)
                 }

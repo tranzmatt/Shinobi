@@ -692,6 +692,7 @@ module.exports = function(s,config,lang,io){
                                     f: 'monitor_watch_on',
                                     id: d.id,
                                     ke: d.ke,
+                                    subStreamChannel: s.group[d.ke].activeMonitors[d.id].subStreamChannel,
                                     warnings: s.group[d.ke].activeMonitors[d.id].warnings || []
                                 })
                                 s.camera('watch_on',d,cn)

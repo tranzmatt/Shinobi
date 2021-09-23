@@ -1,6 +1,7 @@
 const fs = require('fs');
 const treekill = require('tree-kill');
 const spawn = require('child_process').spawn;
+const events = require('events');
 module.exports = (s,config,lang) => {
     const {
         createPipeArray,
@@ -9,6 +10,7 @@ module.exports = (s,config,lang) => {
     } = require('../ffmpeg/utils.js')(s,config,lang)
     const {
         buildSubstreamString,
+        getDefaultSubstreamFields,
     } = require('../ffmpeg/builders.js')(s,config,lang)
     const getUpdateableFields = require('./updatedFields.js')
     const processKill = (proc) => {
@@ -113,10 +115,7 @@ module.exports = (s,config,lang) => {
             }else{
                 processKill(proc).then((response) => {
                     s.debugLog(`cameraDestroy`,response)
-                    destroySubstreamProcess({
-                        ke: e.ke,
-                        mid: e.id,
-                    }).then((response) => {
+                    destroySubstreamProcess(activeMonitor).then((response) => {
                         if(response.hadSubStream)s.debugLog(`cameraDestroy`,response.closeResponse)
                     })
                 })
@@ -209,13 +208,21 @@ module.exports = (s,config,lang) => {
     const spawnSubstreamProcess = function(e){
         // e = monitorConfig
         try{
+            const monitorConfig = s.group[e.ke].rawMonitorConfigurations[e.mid]
+            const monitorDetails = monitorConfig.details
             const activeMonitor = s.group[e.ke].activeMonitors[e.mid]
+            const channelNumber = 1 + (monitorDetails.stream_channels || []).length
             const ffmpegCommand = [`-progress pipe:5`];
+            activeMonitor.subStreamChannel = channelNumber;
+            const {
+                inputAndConnectionFields,
+                outputFields,
+            } = getDefaultSubstreamFields(monitorConfig);
             ([
-                buildSubstreamString(e),
+                buildSubstreamString(channelNumber + config.pipeAddition,e),
             ]).forEach(function(commandStringPart){
                 ffmpegCommand.push(commandStringPart)
-            })
+            });
             // s.onFfmpegCameraStringCreationExtensions.forEach(function(extender){
             //     extender(e,ffmpegCommand)
             // })
@@ -224,6 +231,13 @@ module.exports = (s,config,lang) => {
             activeMonitor.ffmpegSubstream = sanitizedFfmpegCommand(e,ffmpegCommandString)
             const ffmpegCommandParsed = splitForFFPMEG(ffmpegCommandString)
             const subStreamProcess = spawn(config.ffmpegDir,ffmpegCommandParsed,{detached: true,stdio: stdioPipes})
+            attachStreamChannelHandlers({
+                ke: e.ke,
+                mid: e.mid,
+                fields: Object.assign({},inputAndConnectionFields,outputFields),
+                number: activeMonitor.subStreamChannel,
+                ffmpegProcess: subStreamProcess,
+            })
             if(config.debugLog === true){
                 subStreamProcess.stderr.on('data',(data) => {
                     console.log(`${e.ke} ${e.mid}`)
@@ -233,37 +247,79 @@ module.exports = (s,config,lang) => {
             activeMonitor.subStreamProcess = subStreamProcess
             s.tx({
                 f: 'substream_start',
-                mid: monitorId,
-                ke: groupKey
-            },'GRP_'+r.ke);
+                mid: e.mid,
+                ke: e.ke,
+                channel: activeMonitor.subStreamChannel
+            },'GRP_'+e.ke);
             return subStreamProcess
         }catch(err){
             s.systemLog(err)
             return null
         }
     }
-    const destroySubstreamProcess = async function(e){
+    const destroySubstreamProcess = async function(activeMonitor){
         // e = monitorConfig.details.substream
         const response = {
             hadSubStream: false,
             alreadyClosing: false
         }
-        const activeMonitor = s.group[e.ke].activeMonitors[e.mid]
-        activeMonitor.subStreamProcessClosing = true
         if(activeMonitor.subStreamProcessClosing){
             response.alreadyClosing = true
         }else if(activeMonitor.subStreamProcess){
+            activeMonitor.subStreamProcessClosing = true
+            activeMonitor.subStreamChannel = null;
             const closeResponse = await processKill(activeMonitor.subStreamProcess)
             response.hadSubStream = true
             response.closeResponse = closeResponse
             delete(activeMonitor.subStreamProcess)
             s.tx({
                 f: 'substream_end',
-                mid: monitorId,
-                ke: groupKey
-            },'GRP_'+r.ke);
+                mid: activeMonitor.mid,
+                ke: activeMonitor.ke
+            },'GRP_'+activeMonitor.ke);
+            activeMonitor.subStreamProcessClosing = false
         }
         return response
+    }
+    function attachStreamChannelHandlers(options){
+        const fields = options.fields
+        const number = options.number
+        const ffmpegProcess = options.ffmpegProcess
+        const activeMonitor = s.group[options.ke].activeMonitors[options.mid]
+        const pipeNumber = number + config.pipeAddition;
+        if(!activeMonitor.emitterChannel[pipeNumber]){
+            activeMonitor.emitterChannel[pipeNumber] = new events.EventEmitter().setMaxListeners(0);
+        }
+       let frameToStreamAdded
+       switch(fields.stream_type){
+           case'mp4':
+               delete(activeMonitor.mp4frag[pipeNumber])
+               if(!activeMonitor.mp4frag[pipeNumber])activeMonitor.mp4frag[pipeNumber] = new Mp4Frag();
+               ffmpegProcess.stdio[pipeNumber].pipe(activeMonitor.mp4frag[pipeNumber],{ end: false })
+           break;
+           case'mjpeg':
+               frameToStreamAdded = function(d){
+                   activeMonitor.emitterChannel[pipeNumber].emit('data',d)
+               }
+           break;
+           case'flv':
+               frameToStreamAdded = function(d){
+                   if(!activeMonitor.firstStreamChunk[pipeNumber])activeMonitor.firstStreamChunk[pipeNumber] = d;
+                   frameToStreamAdded = function(d){
+                       activeMonitor.emitterChannel[pipeNumber].emit('data',d)
+                   }
+                   frameToStreamAdded(d)
+               }
+           break;
+           case'h264':
+               frameToStreamAdded = function(d){
+                   activeMonitor.emitterChannel[pipeNumber].emit('data',d)
+               }
+           break;
+        }
+        if(frameToStreamAdded){
+            ffmpegProcess.stdio[pipeNumber].on('data',frameToStreamAdded)
+        }
     }
     return {
         cameraDestroy: cameraDestroy,
@@ -272,5 +328,7 @@ module.exports = (s,config,lang) => {
         addCredentialsToStreamLink: addCredentialsToStreamLink,
         monitorConfigurationMigrator: monitorConfigurationMigrator,
         spawnSubstreamProcess: spawnSubstreamProcess,
+        destroySubstreamProcess: destroySubstreamProcess,
+        attachStreamChannelHandlers: attachStreamChannelHandlers,
     }
 }

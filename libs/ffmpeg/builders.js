@@ -762,10 +762,8 @@ module.exports = (s,config,lang) => {
         }
         return ``
     }
-    const buildSubstreamString = function(monitor){
-        let ffmpegParts = []
-        const channelNumber = config.pipeAddition + 1 + (e.details.stream_channels || []).length
-        const subStreamFields = e.details.substream
+    const getDefaultSubstreamFields = function(monitor){
+        const subStreamFields = s.parseJSON(monitor.details.substream || {input:{},output:{}})
         const inputAndConnectionFields = Object.assign({
            "type":"h264",
            "fulladdress":"",
@@ -775,7 +773,7 @@ module.exports = (s,config,lang) => {
            "stream_loop":"0",
            "rtsp_transport":"",
            "accelerator":"0",
-           "hwaccel":"auto",
+           "hwaccel":"",
            "hwaccel_vcodec":"auto",
            "hwaccel_device":"",
            "cust_input":""
@@ -800,9 +798,20 @@ module.exports = (s,config,lang) => {
            "svf":"",
            "cust_stream":""
        },subStreamFields.output);
-       ffmpegParts.push(createInputMap(monitor,channelNumber,inputAndConnectionFields))
-       ffmpegParts.push(createStreamChannel(monitor,channelNumber,outputFields))
-       return ffmpegParts.join(' ')
+       return {
+           inputAndConnectionFields,
+           outputFields,
+       }
+    }
+    const buildSubstreamString = function(channelNumber,monitor){
+        let ffmpegParts = []
+        const {
+            inputAndConnectionFields,
+            outputFields,
+        } = getDefaultSubstreamFields(monitor)
+        ffmpegParts.push(createInputMap(monitor,channelNumber,inputAndConnectionFields))
+        ffmpegParts.push(createStreamChannel(monitor,channelNumber,outputFields))
+        return ffmpegParts.join(' ')
     }
     return {
         createStreamChannel: createStreamChannel,
@@ -814,6 +823,7 @@ module.exports = (s,config,lang) => {
         buildMainDetector: buildMainDetector,
         buildEventRecordingOutput: buildEventRecordingOutput,
         buildTimelapseOutput: buildTimelapseOutput,
+        getDefaultSubstreamFields: getDefaultSubstreamFields,
         buildSubstreamString: buildSubstreamString,
     }
 }
