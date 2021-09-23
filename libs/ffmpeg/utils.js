@@ -158,8 +158,8 @@ module.exports = (s,config,lang) => {
     const createPipeArray = function(e){
         const stdioPipes = [];
         var times = config.pipeAddition;
-        if(e.details.stream_channels){
-            times+=e.details.stream_channels.length
+        if(e.details && e.details.stream_channels){
+            times += e.details.stream_channels.length
         }
         for(var i=0; i < times; i++){
             stdioPipes.push('pipe')

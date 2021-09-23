@@ -762,6 +762,57 @@ module.exports = (s,config,lang) => {
         }
         return ``
     }
+    const getDefaultSubstreamFields = function(monitor){
+        const subStreamFields = s.parseJSON(monitor.details.substream || {input:{},output:{}})
+        const inputAndConnectionFields = Object.assign({
+           "type":"h264",
+           "fulladdress":"",
+           "sfps":"",
+           "aduration":"",
+           "probesize":"",
+           "stream_loop":"0",
+           "rtsp_transport":"",
+           "accelerator":"0",
+           "hwaccel":"",
+           "hwaccel_vcodec":"auto",
+           "hwaccel_device":"",
+           "cust_input":""
+       },subStreamFields.input);
+       const outputFields = Object.assign({
+           "stream_type":"hls",
+           "rtmp_server_url":"",
+           "rtmp_stream_key":"",
+           "stream_mjpeg_clients":"",
+           "stream_vcodec":"copy",
+           "stream_acodec":"no",
+           "stream_fps":"",
+           "hls_time":"",
+           "preset_stream":"",
+           "hls_list_size":"",
+           "stream_quality":"",
+           "stream_v_br":"",
+           "stream_a_br":"",
+           "stream_scale_x":"",
+           "stream_scale_y":"",
+           "rotate_stream":"no",
+           "svf":"",
+           "cust_stream":""
+       },subStreamFields.output);
+       return {
+           inputAndConnectionFields,
+           outputFields,
+       }
+    }
+    const buildSubstreamString = function(channelNumber,monitor){
+        let ffmpegParts = []
+        const {
+            inputAndConnectionFields,
+            outputFields,
+        } = getDefaultSubstreamFields(monitor)
+        ffmpegParts.push(createInputMap(monitor,channelNumber,inputAndConnectionFields))
+        ffmpegParts.push(createStreamChannel(monitor,channelNumber,outputFields))
+        return ffmpegParts.join(' ')
+    }
     return {
         createStreamChannel: createStreamChannel,
         buildMainInput: buildMainInput,
@@ -772,5 +823,7 @@ module.exports = (s,config,lang) => {
         buildMainDetector: buildMainDetector,
         buildEventRecordingOutput: buildEventRecordingOutput,
         buildTimelapseOutput: buildTimelapseOutput,
+        getDefaultSubstreamFields: getDefaultSubstreamFields,
+        buildSubstreamString: buildSubstreamString,
     }
 }

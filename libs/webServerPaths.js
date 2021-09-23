@@ -26,6 +26,10 @@ module.exports = function(s,config,lang,app,io){
         twoFactorVerification,
         ldapLogin,
     } = require('./auth/utils.js')(s,config,lang)
+    const {
+        spawnSubstreamProcess,
+        destroySubstreamProcess,
+    } = require('./monitor/utils.js')(s,config,lang)
     s.renderPage = function(req,res,paths,passables,callback){
         passables.window = {}
         passables.data = req.params
@@ -811,6 +815,34 @@ module.exports = function(s,config,lang,app,io){
                 })
                 s.closeJsonResponse(res,r);
             })
+        },res,req);
+    });
+    /**
+    * API : Toggle Substream Process on and off
+     */
+    app.get(config.webPaths.apiPrefix+':auth/toggleSubstream/:ke/:id', function (req,res){
+        const response = {ok: false};
+        s.auth(req.params,async (user) => {
+            const groupKey = req.params.ke
+            const monitorId = req.params.id
+            if(
+                user.permissions.control_monitors === "0" ||
+                user.details.sub &&
+                user.details.allmonitors !== '1' &&
+                user.details.monitor_edit.indexOf(monitorId) === -1
+            ){
+                response.msg = user.lang['Not Permitted']
+            }else{
+                const monitorConfig = s.group[groupKey].rawMonitorConfigurations[monitorId]
+                const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
+                if(!activeMonitor.subStreamProcess){
+                    response.ok = true
+                    spawnSubstreamProcess(monitorConfig)
+                }else{
+                    await destroySubstreamProcess(activeMonitor)
+                }
+            }
+            s.closeJsonResponse(res,response);
         },res,req);
     });
     /**
