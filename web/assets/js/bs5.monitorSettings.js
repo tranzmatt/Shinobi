@@ -341,7 +341,7 @@ var copyMonitorSettingsToSelected = function(monitorConfig){
         chosenMonitors[monitor.mid] = monitor;
     })
 }
-var getMonitorEditFormFields = function(){
+window.getMonitorEditFormFields = function(){
     var response = {ok: true}
     var monitorConfig = editorForm.serializeObject()
     var errorsFound = []
@@ -359,6 +359,10 @@ var getMonitorEditFormFields = function(){
         }
     }
     if(monitorConfig.name == ''){errorsFound.push('Monitor Name cannot be blank')}
+    //edit details
+    monitorConfig.details = safeJsonParse(monitorConfig.details)
+    monitorConfig.details.substream = getSubStreamChannelFields()
+
 //    if(monitorConfig.protocol=='rtsp'){monitorConfig.ext='mp4',monitorConfig.type='rtsp'}
     if(errorsFound.length > 0){
         response.ok = false
@@ -535,6 +539,18 @@ function importIntoMonitorEditor(options){
             })
         })
     }
+    // substream
+    $.each(['input','output'],function(n,direction){
+        // detail-substream-input
+        // detail-substream-output
+        var keyName = `detail-substream-${direction}`
+        monitorEditorWindow.find(`[${keyName}]`).each(function(n,el){
+            var key = $(el).attr(keyName);
+            var value = monitorDetails.substream && monitorDetails.substream[direction] ? monitorDetails.substream[direction][key] : ''
+            monitorEditorWindow.find(`[${keyName}="${key}"]`).val(value).change();
+        })
+    })
+    //
     monitorEditorWindow.find('[detail]').each(function(n,v){
         v=$(v).attr('detail');if(!monitorDetails[v]){monitorDetails[v]=''}
     })
@@ -782,6 +798,27 @@ var channelPlacementInit = function(){
         _this.find('[input-mapping]').attr('input-mapping','stream_channel-'+n)
         monitorSectionInputMapsave()
     })
+}
+var getSubStreamChannelFields = function(){
+    var selectedChannels = {
+        input: getPseudoFields('detail-substream-input'),
+        output: getPseudoFields('detail-substream-output')
+    }
+    return selectedChannels
+}
+var getPseudoFields = function(fieldKey,parent){
+    parent = parent || monitorEditorWindow
+    fieldKey = fieldKey || 'detail-substream-input'
+    var fields = {}
+    var fieldsAssociated = parent.find(`[${fieldKey}]`)
+    $.each(fieldsAssociated,function(m,b){
+        var el = $(b);
+        var paramKey = el.attr(fieldKey)
+        var value = el.val()
+        fields[paramKey] = value
+    });
+    console.log(fields)
+    return fields
 }
 var buildMonitorURL = function(){
     var user = monitorEditorWindow.find('[detail="muser"]').val();

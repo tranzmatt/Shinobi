@@ -2,6 +2,7 @@ const fs = require('fs');
 const treekill = require('tree-kill');
 const spawn = require('child_process').spawn;
 const events = require('events');
+const Mp4Frag = require('mp4frag');
 module.exports = (s,config,lang) => {
     const {
         createPipeArray,
@@ -208,11 +209,20 @@ module.exports = (s,config,lang) => {
     const spawnSubstreamProcess = function(e){
         // e = monitorConfig
         try{
+            s.userLog({
+                ke: e.ke,
+                mid: e.mid,
+            },
+            {
+                type: lang["Substream Process"],
+                msg: lang["Process Started"],
+            });
             const monitorConfig = s.group[e.ke].rawMonitorConfigurations[e.mid]
             const monitorDetails = monitorConfig.details
             const activeMonitor = s.group[e.ke].activeMonitors[e.mid]
             const channelNumber = 1 + (monitorDetails.stream_channels || []).length
             const ffmpegCommand = [`-progress pipe:5`];
+            const logLevel = monitorDetails.loglevel ? e.details.loglevel : 'warning'
             activeMonitor.subStreamChannel = channelNumber;
             const {
                 inputAndConnectionFields,
@@ -244,6 +254,35 @@ module.exports = (s,config,lang) => {
                     console.log(data.toString())
                 })
             }
+            if(logLevel !== 'quiet'){
+                subStreamProcess.stderr.on('data',(data) => {
+                    s.userLog({
+                        ke: e.ke,
+                        mid: e.mid,
+                    },
+                    {
+                        type: lang["Substream Process"],
+                        msg: data.toString()
+                    })
+                })
+            }
+            subStreamProcess.on('close',(data) => {
+                if(!activeMonitor.allowDestroySubstream){
+                    subStreamProcess.stderr.on('data',(data) => {
+                        s.userLog({
+                            ke: e.ke,
+                            mid: e.mid,
+                        },
+                        {
+                            type: lang["Substream Process"],
+                            msg: lang["Process Crashed for Monitor"],
+                        })
+                    })
+                    setTimeout(() => {
+                        spawnSubstreamProcess(e)
+                    },2000)
+                }
+            })
             activeMonitor.subStreamProcess = subStreamProcess
             s.tx({
                 f: 'substream_start',

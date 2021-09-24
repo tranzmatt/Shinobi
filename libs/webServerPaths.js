@@ -837,8 +837,10 @@ module.exports = function(s,config,lang,app,io){
                 const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
                 if(!activeMonitor.subStreamProcess){
                     response.ok = true
+                    activeMonitor.allowDestroySubstream = false;
                     spawnSubstreamProcess(monitorConfig)
                 }else{
+                    activeMonitor.allowDestroySubstream = true
                     await destroySubstreamProcess(activeMonitor)
                 }
             }

@@ -809,6 +809,7 @@ module.exports = (s,config,lang) => {
             inputAndConnectionFields,
             outputFields,
         } = getDefaultSubstreamFields(monitor)
+        ffmpegParts.push(`-loglevel ${monitor.details.loglevel || 'warning'}`)
         ffmpegParts.push(createInputMap(monitor,channelNumber,inputAndConnectionFields))
         ffmpegParts.push(createStreamChannel(monitor,channelNumber,outputFields))
         return ffmpegParts.join(' ')

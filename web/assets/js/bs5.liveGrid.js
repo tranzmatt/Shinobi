@@ -77,14 +77,16 @@ function buildStreamElementHtml(streamType){
     }
     return html
 }
-function resetMonitorCanvas(monitorId,initiateAfter){
+function resetMonitorCanvas(monitorId,initiateAfter,subStreamChannel){
     var monitor = loadedMonitors[monitorId]
+    var details = monitor.details
+    var streamType = subStreamChannel ? details.substream ? details.substream.output.stream_type : 'hls' : details.stream_type
     if(!liveGridElements[monitorId])return;
     var streamBlock = liveGridElements[monitorId].monitorItem.find('.stream-block')
     closeLiveGridPlayer(monitorId,false)
     streamBlock.find('.stream-element').remove()
-    streamBlock.append(buildStreamElementHtml(monitor.details.stream_type))
-    if(initiateAfter)initiateLiveGridPlayer(monitor)
+    streamBlock.append(buildStreamElementHtml(streamType))
+    if(initiateAfter)initiateLiveGridPlayer(monitor,subStreamChannel)
 }
 function buildLiveGridBlock(monitor){
     if(monitor.mode === 'stop'){
@@ -98,7 +100,9 @@ function buildLiveGridBlock(monitor){
     var monitorDetails = safeJsonParse(monitor.details)
     var monitorLiveId = `monitor_live_${monitor.mid}`
     var monitorMutes = dashboardOptions().monitorMutes || {}
-    var streamElement = buildStreamElementHtml(monitorDetails.stream_type)
+    var subStreamChannel = monitor.subStreamChannel
+    var streamType = subStreamChannel ? monitorDetails.substream ? monitorDetails.substream.output.stream_type : 'hls' : monitorDetails.stream_type
+    var streamElement = buildStreamElementHtml(streamType)
     if(!loadedLiveGrids[monitor.mid])loadedLiveGrids[monitor.mid] = {}
     var baseHtml = `<div
         id="${monitorLiveId}"
@@ -298,7 +302,7 @@ function loadVideoMiniList(monitorId){
         })
     })
 }
-function drawLiveGridBlock(monitorConfig){
+function drawLiveGridBlock(monitorConfig,subStreamChannel){
     var monitorId = monitorConfig.mid
     if($('#monitor_live_' + monitorId).length === 0){
         var x = 0;
@@ -342,13 +346,13 @@ function drawLiveGridBlock(monitorConfig){
         }catch(re){
             debugLog(re)
         }
-        setCosmeticMonitorInfo(loadedMonitors[monitorId])
+        setCosmeticMonitorInfo(loadedMonitors[monitorId],subStreamChannel)
         setLiveGridOpenCount(1)
     }
-    initiateLiveGridPlayer(loadedMonitors[monitorId])
+    initiateLiveGridPlayer(loadedMonitors[monitorId],subStreamChannel)
     loadVideoMiniList(monitorId)
 }
-function initiateLiveGridPlayer(monitor){
+function initiateLiveGridPlayer(monitor,subStreamChannel){
     var livePlayerElement = loadedLiveGrids[monitor.mid]
     var details = monitor.details
     var groupKey = monitor.ke
@@ -357,11 +361,12 @@ function initiateLiveGridPlayer(monitor){
     var loadedPlayer = loadedLiveGrids[monitor.mid]
     var websocketPath = checkCorrectPathEnding(location.pathname) + 'socket.io'
     var containerElement = $(`#monitor_live_${monitor.mid}`)
+    var streamType = subStreamChannel ? details.substream ? details.substream.output.stream_type : 'hls' : details.stream_type
     if(location.search === '?p2p=1'){
         websocketPath = '/socket.io'
         // websocketQuery.machineId = machineId
     }
-    switch(details.stream_type){
+    switch(streamType){
         case'jpeg':
             startJpegStream(monitorId)
         break;
@@ -381,7 +386,7 @@ function initiateLiveGridPlayer(monitor){
                     uid: $user.uid,
                     ke: monitor.ke,
                     id: monitor.mid,
-//                                channel: channel
+                    channel: subStreamChannel
                 })
                 if(!loadedPlayer.ctx || loadedPlayer.ctx.length === 0){
                     loadedPlayer.ctx = containerElement.find('canvas');
@@ -438,7 +443,8 @@ function initiateLiveGridPlayer(monitor){
                             url: location.origin,
                             path: websocketPath,
                             query: websocketQuery,
-                            onError : onPoseidonError
+                            onError : onPoseidonError,
+                            channel : subStreamChannel
                         })
                         loadedPlayer.Poseidon.start();
                     }catch(err){
@@ -446,7 +452,7 @@ function initiateLiveGridPlayer(monitor){
                         console.log('onTryPoseidonError',err)
                     }
                 }else{
-                    stream.attr('src',getApiPrefix(`mp4`)+'/'+monitor.mid+'/s.mp4?time=' + (new Date()).getTime())
+                    stream.attr('src',getApiPrefix(`mp4`)+'/'+monitor.mid + (subStreamChannel ? `/${subStreamChannel}` : '')+'/s.mp4?time=' + (new Date()).getTime())
                     stream[0].onerror = function(err){
                         console.error(err)
                     }
@@ -477,13 +483,14 @@ function initiateLiveGridPlayer(monitor){
                         hasAudio:false,
                         url: location.origin,
                         path: websocketPath,
+                        channel : subStreamChannel,
                         query: websocketQuery
                     }
                 }else{
                     options = {
                         type: 'flv',
                         isLive: true,
-                        url: getApiPrefix(`flv`)+'/'+monitor.mid+'/s.flv'
+                        url: getApiPrefix(`flv`)+'/'+monitor.mid + (subStreamChannel ? `/${subStreamChannel}` : '')+'/s.flv'
                     }
                 }
                 loadedPlayer.flv = flvjs.createPlayer(options);
@@ -500,7 +507,7 @@ function initiateLiveGridPlayer(monitor){
         case'hls':
             function createSteamNow(){
                 clearTimeout(loadedPlayer.m3uCheck)
-                var url = getApiPrefix(`hls`) + '/' + monitor.mid + '/s.m3u8'
+                var url = getApiPrefix(`hls`) + '/' + monitor.mid + (subStreamChannel ? `/${subStreamChannel}` : '') + '/s.m3u8'
                 $.get(url,function(m3u){
                     if(m3u == 'File Not Found'){
                         loadedPlayer.m3uCheck = setTimeout(function(){
@@ -546,7 +553,7 @@ function initiateLiveGridPlayer(monitor){
         case'mjpeg':
             var liveStreamElement = containerElement.find('.stream-element')
             var setSource = function(){
-                liveStreamElement.attr('src',getApiPrefix(`mjpeg`)+'/'+monitorId)
+                liveStreamElement.attr('src',getApiPrefix(`mjpeg`)+'/'+monitorId + (subStreamChannel ? `/${subStreamChannel}` : ''))
                 liveStreamElement.unbind('ready')
                 liveStreamElement.ready(function(){
                     setTimeout(function(){
@@ -591,14 +598,14 @@ function initiateLiveGridPlayer(monitor){
                       uid: $user.uid,
                       ke: groupKey,
                       id: monitorId,
-//                                channel: channel
+                      channel: subStreamChannel
                   })
                   ws.on('data',function(imageData){
                       player._handle_onChunk(imageData)
                   })
               })
             }else{
-              var url = getApiPrefix(`h265`) + '/' + monitorId + '/s.hevc';
+              var url = getApiPrefix(`h265`) + '/' + monitorId + (subStreamChannel ? `/${subStreamChannel}` : '') + '/s.hevc';
               loadedPlayer.h265HttpStream = player.createHttpStream(url)
             }
         break;
@@ -841,6 +848,8 @@ function signalCheckLiveStream(options){
         var checkCount = 0
         var base64Data = null;
         var checkSpeed = options.checkSpeed || 1000
+        var subStreamChannel = monitor.subStreamChannel
+        var streamType = subStreamChannel ? monitorDetails.substream ? monitorDetails.substream.output.stream_type : 'hls' : monitorDetails.stream_type
         function failedStreamCheck(){
             if(monitorConfig.signal_check_log == 1){
                 logWriterDraw('[mid="'+monitorId+'"]',{
@@ -863,7 +872,7 @@ function signalCheckLiveStream(options){
             }
         }
         function executeCheck(){
-            switch(monitorConfig.stream_type){
+            switch(streamType){
                 case'b64':case'h265':
                     monitorItem.resize()
                 break;
@@ -1056,9 +1065,24 @@ $(document).ready(function(e){
                     },2000)
                 }
             break;
+            case'substream_start':
+                loadedMonitors[d.mid].subStreamChannel = d.channel
+                setTimeout(() => {
+                    resetMonitorCanvas(d.mid,true,d.channel)
+                },3000)
+                console.log(d)
+                console.log('substream_start',d.mid,d)
+            break;
+            case'substream_end':
+                loadedMonitors[d.mid].subStreamChannel = null
+                resetMonitorCanvas(d.mid,true,null)
+                console.log('substream_end',d.mid,d)
+            break;
             case'monitor_watch_on':
                 var monitorId = d.mid || d.id
-                drawLiveGridBlock(loadedMonitors[monitorId])
+                var subStreamChannel = d.subStreamChannel
+                console.log('subStreamChannel',subStreamChannel,d)
+                drawLiveGridBlock(loadedMonitors[monitorId],subStreamChannel)
                 saveLiveGridBlockOpenState(monitorId,$user.ke,1)
             break;
             case'mode_jpeg_off':
