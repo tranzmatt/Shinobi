@@ -531,6 +531,7 @@ function buildDefaultMonitorMenuItems(){
     return `
     <li><a class="dropdown-item launch-live-grid-monitor cursor-pointer">${lang['Live Grid']}</a></li>
     <li><a class="dropdown-item run-live-grid-monitor-pop cursor-pointer">${lang['Pop']}</a></li>
+    <li><a class="dropdown-item toggle-substream cursor-pointer">${lang['Toggle Substream']}</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item open-videos cursor-pointer">${lang['Videos List']}</a></li>
     <!-- <li><a class="dropdown-item cursor-pointer" monitor-action="pvv">${lang['Power Viewer']}</a></li> -->

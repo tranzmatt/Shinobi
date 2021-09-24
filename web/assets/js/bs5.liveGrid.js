@@ -931,6 +931,15 @@ $(document).ready(function(e){
     .resize(function(){
         resetAllLiveGridDimensionsInMemory()
     })
+    .on('click','.toggle-substream',function(){
+        var monitorId = $(this).parents('[data-mid]').attr('data-mid')
+        var monitor = loadedMonitors[monitorId]
+        if(monitor.subStreamToggleLock)return false;
+        monitor.subStreamToggleLock = true
+        $.get(getApiPrefix(`toggleSubstream`)+'/'+monitor.mid,function(data){
+            monitor.subStreamToggleLock = false
+        })
+    })
     .on('click','.launch-live-grid-monitor',function(){
         var monitorId = $(this).parents('[data-mid]').attr('data-mid')
         // if(isMobile){
