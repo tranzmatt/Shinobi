@@ -123,7 +123,6 @@ module.exports = function(s,config,lang,app){
                         }else{
                             Emitter = s.group[req.params.ke].activeMonitors[req.params.id].emitterChannel[chosenChannel]
                         }
-                        console.log('chosenChannel',chosenChannel,Emitter)
                         res.writeHead(200, {
                             'Content-Type': 'multipart/x-mixed-replace; boundary=shinobi',
                             'Cache-Control': 'no-cache',

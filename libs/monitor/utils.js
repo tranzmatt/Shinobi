@@ -241,8 +241,6 @@ module.exports = (s,config,lang) => {
                 },
             });
             const subStreamProcess = spawn(config.ffmpegDir,ffmpegCommandParsed,{detached: true,stdio: stdioPipes})
-            console.log('stdioPipes',stdioPipes.length)
-            console.log('ffmpegCommandParsed',ffmpegCommandParsed)
             attachStreamChannelHandlers({
                 ke: e.ke,
                 mid: e.mid,
@@ -332,7 +330,6 @@ module.exports = (s,config,lang) => {
             activeMonitor.emitterChannel[pipeNumber] = new events.EventEmitter().setMaxListeners(0);
         }
        let frameToStreamAdded
-       console.log(`activeMonitor.emitterChannel[pipeNumber]`,pipeNumber,activeMonitor.emitterChannel[pipeNumber])
        switch(fields.stream_type){
            case'mp4':
                delete(activeMonitor.mp4frag[pipeNumber])
@@ -360,7 +357,6 @@ module.exports = (s,config,lang) => {
            break;
         }
         if(frameToStreamAdded){
-            console.log('pipeNumber',pipeNumber)
             ffmpegProcess.stdio[pipeNumber].on('data',frameToStreamAdded)
         }
     }
