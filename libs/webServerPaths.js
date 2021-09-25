@@ -768,6 +768,7 @@ module.exports = function(s,config,lang,app,io){
                         r[n].currentCpuUsage = activeMonitor.currentCpuUsage
                         r[n].status = activeMonitor.monitorStatus
                         r[n].code = activeMonitor.monitorStatusCode
+                        r[n].subStreamChannel = activeMonitor.subStreamChannel
                     }
                     var buildStreamURL = function(type,channelNumber){
                         var streamURL

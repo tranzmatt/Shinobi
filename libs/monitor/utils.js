@@ -209,21 +209,13 @@ module.exports = (s,config,lang) => {
     const spawnSubstreamProcess = function(e){
         // e = monitorConfig
         try{
-            s.userLog({
-                ke: e.ke,
-                mid: e.mid,
-            },
-            {
-                type: lang["Substream Process"],
-                msg: lang["Process Started"],
-            });
             const monitorConfig = s.group[e.ke].rawMonitorConfigurations[e.mid]
             const monitorDetails = monitorConfig.details
             const activeMonitor = s.group[e.ke].activeMonitors[e.mid]
             const channelNumber = 1 + (monitorDetails.stream_channels || []).length
             const ffmpegCommand = [`-progress pipe:5`];
             const logLevel = monitorDetails.loglevel ? e.details.loglevel : 'warning'
-            activeMonitor.subStreamChannel = channelNumber;
+            const stdioPipes = createPipeArray({}, 2)
             const {
                 inputAndConnectionFields,
                 outputFields,
@@ -233,14 +225,24 @@ module.exports = (s,config,lang) => {
             ]).forEach(function(commandStringPart){
                 ffmpegCommand.push(commandStringPart)
             });
-            // s.onFfmpegCameraStringCreationExtensions.forEach(function(extender){
-            //     extender(e,ffmpegCommand)
-            // })
-            const stdioPipes = createPipeArray({})
             const ffmpegCommandString = ffmpegCommand.join(' ')
             activeMonitor.ffmpegSubstream = sanitizedFfmpegCommand(e,ffmpegCommandString)
             const ffmpegCommandParsed = splitForFFPMEG(ffmpegCommandString)
+            activeMonitor.subStreamChannel = channelNumber;
+            s.userLog({
+                ke: e.ke,
+                mid: e.mid,
+            },
+            {
+                type: lang["Substream Process"],
+                msg: {
+                    msg: lang["Process Started"],
+                    cmd: ffmpegCommandString,
+                },
+            });
             const subStreamProcess = spawn(config.ffmpegDir,ffmpegCommandParsed,{detached: true,stdio: stdioPipes})
+            console.log('stdioPipes',stdioPipes.length)
+            console.log('ffmpegCommandParsed',ffmpegCommandParsed)
             attachStreamChannelHandlers({
                 ke: e.ke,
                 mid: e.mid,
@@ -330,6 +332,7 @@ module.exports = (s,config,lang) => {
             activeMonitor.emitterChannel[pipeNumber] = new events.EventEmitter().setMaxListeners(0);
         }
        let frameToStreamAdded
+       console.log(`activeMonitor.emitterChannel[pipeNumber]`,pipeNumber,activeMonitor.emitterChannel[pipeNumber])
        switch(fields.stream_type){
            case'mp4':
                delete(activeMonitor.mp4frag[pipeNumber])
@@ -357,6 +360,7 @@ module.exports = (s,config,lang) => {
            break;
         }
         if(frameToStreamAdded){
+            console.log('pipeNumber',pipeNumber)
             ffmpegProcess.stdio[pipeNumber].on('data',frameToStreamAdded)
         }
     }

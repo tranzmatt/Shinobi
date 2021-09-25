@@ -117,11 +117,13 @@ module.exports = function(s,config,lang,app){
                         }
 
                         var Emitter
+                        const chosenChannel = parseInt(req.params.channel) + config.pipeAddition
                         if(!req.params.channel){
                             Emitter = s.group[req.params.ke].activeMonitors[req.params.id].emitter
                         }else{
-                            Emitter = s.group[req.params.ke].activeMonitors[req.params.id].emitterChannel[parseInt(req.params.channel)+config.pipeAddition]
+                            Emitter = s.group[req.params.ke].activeMonitors[req.params.id].emitterChannel[chosenChannel]
                         }
+                        console.log('chosenChannel',chosenChannel,Emitter)
                         res.writeHead(200, {
                             'Content-Type': 'multipart/x-mixed-replace; boundary=shinobi',
                             'Cache-Control': 'no-cache',

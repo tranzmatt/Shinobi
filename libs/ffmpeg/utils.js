@@ -155,9 +155,9 @@ module.exports = (s,config,lang) => {
         }
         return sanitizedCmd
     }
-    const createPipeArray = function(e){
+    const createPipeArray = function(e, amountToAdd){
         const stdioPipes = [];
-        var times = config.pipeAddition;
+        var times = amountToAdd ? amountToAdd + config.pipeAddition : config.pipeAddition;
         if(e.details && e.details.stream_channels){
             times += e.details.stream_channels.length
         }
