@@ -21,7 +21,6 @@ $(document).ready(function(){
         })
     }
     function loadMonitorInCarousel(monitorId){
-        console.log(`loadMonitorInCarousel`,monitorId)
         currentCarouselMonitorId = `${monitorId}`
         streamCarouselBlock
             .find(`.carousel-block[data-mid="${monitorId}"]`)
@@ -55,7 +54,6 @@ $(document).ready(function(){
     function initCarousel(){
         drawCarouselSet()
         if(loadedCarouselBlocks[0]){
-            console.log(loadedCarouselBlocks[0])
             loadMonitorInCarousel(currentCarouselMonitorId || loadedCarouselBlocks[0])
             setAutoChangerInterval()
         }
@@ -69,6 +67,17 @@ $(document).ready(function(){
     })
     onDashboardReady(function(){
         initCarousel()
+    })
+    onWebSocketEvent(function(d){
+        switch(d.f){
+            case'detector_trigger':
+                var monitorId = d.id
+                if(tabTree.name === 'initial' && currentCarouselMonitorId !== monitorId){
+                    loadMonitorInCarousel(monitorId)
+                    setAutoChangerInterval()
+                }
+            break;
+        }
     })
     $(window).focus(function(){
         if(canBackgroundCarousel()){

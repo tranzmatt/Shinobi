@@ -294,6 +294,7 @@ function drawVideoCardToMiniList(monitorId,video,skipLimitCheck){
 }
 function loadVideoMiniList(monitorId){
     getVideos({
+        monitorId: monitorId,
         limit: 10,
     },function(data){
         var videos = data.videos
@@ -1079,18 +1080,14 @@ $(document).ready(function(e){
                 setTimeout(() => {
                     resetMonitorCanvas(d.mid,true,d.channel)
                 },3000)
-                console.log(d)
-                console.log('substream_start',d.mid,d)
             break;
             case'substream_end':
                 loadedMonitors[d.mid].subStreamChannel = null
                 resetMonitorCanvas(d.mid,true,null)
-                console.log('substream_end',d.mid,d)
             break;
             case'monitor_watch_on':
                 var monitorId = d.mid || d.id
                 var subStreamChannel = d.subStreamChannel
-                console.log('subStreamChannel',subStreamChannel,d)
                 drawLiveGridBlock(loadedMonitors[monitorId],subStreamChannel)
                 saveLiveGridBlockOpenState(monitorId,$user.ke,1)
             break;
@@ -1147,14 +1144,14 @@ $(document).ready(function(e){
                     if($user.details.event_mon_pop === '1' && (!monitorPop || monitorPop.closed === true)){
                         popOutMonitor(monitorId)
                     }
-                    console.log({
-                        ke: d.ke,
-                        mid: monitorId,
-                        log: {
-                            type: lang['Event Occurred'],
-                            msg: d.details,
-                        }
-                    })
+                    // console.log({
+                    //     ke: d.ke,
+                    //     mid: monitorId,
+                    //     log: {
+                    //         type: lang['Event Occurred'],
+                    //         msg: d.details,
+                    //     }
+                    // })
                 }
             break;
         }

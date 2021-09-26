@@ -59,6 +59,12 @@
             pageOpen: 'monitorsList',
         },
         {
+            icon: 'wrench',
+            label: `${lang['Monitor Settings']}`,
+            pageOpen: 'monitorSettings',
+            addUl: true,
+        },
+        {
             icon: 'gears',
             label: `${lang['Account Settings']}`,
             pageOpen: 'accountSettings',
@@ -68,12 +74,6 @@
             icon: 'group',
             label: `${lang.subAccountManager}`,
             pageOpen: 'subAccountManager',
-            addUl: true,
-        },
-        {
-            icon: 'wrench',
-            label: `${lang['Monitor Settings']}`,
-            pageOpen: 'monitorSettings',
             addUl: true,
         },
         {
@@ -134,6 +134,11 @@
             icon: 'exclamation-circle',
             label: `${lang['Events']}`,
             pageOpen: 'eventListWithPics',
+        },
+        {
+            icon: 'sign-out',
+            label: `${lang['Logout']}`,
+            class: 'logout',
         },
     ]
  %>

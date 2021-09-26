@@ -806,6 +806,12 @@ $(document).ready(function(){
                $(this).show();
         });
     })
+    .on('click','.logout',function(e){
+        $.get(getApiPrefix() + '/logout/'+user.ke+'/'+user.uid,function(data){
+            localStorage.removeItem('ShinobiLogin_'+location.host);
+            location.href = location.href;
+        })
+    })
     // only binded on load
     $('.form-section-header:not(.no-toggle-header)').click(function(e){
         var parent = $(this).parent('.form-group-group')
