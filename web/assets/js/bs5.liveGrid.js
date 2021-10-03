@@ -937,7 +937,7 @@ $(document).ready(function(e){
         var monitor = loadedMonitors[monitorId]
         if(monitor.subStreamToggleLock)return false;
         monitor.subStreamToggleLock = true
-        $.get(getApiPrefix(`toggleSubstream`)+'/'+monitor.mid,function(data){
+        $.get(getApiPrefix(`toggleSubstream`) + '/' + monitor.mid,function(data){
             monitor.subStreamToggleLock = false
         })
     })
@@ -1138,7 +1138,7 @@ $(document).ready(function(e){
                     livePlayerElement.detector_trigger_timeout = setTimeout(function(){
                         monitorElement.removeClass('detector_triggered');
                         liveGridElement.eventObjects.find('.stream-detected-object,.stream-detected-point').remove()
-                    },5000);
+                    },800);
                     playAudioAlert()
                     var monitorPop = monitorPops[monitorId]
                     if($user.details.event_mon_pop === '1' && (!monitorPop || monitorPop.closed === true)){
