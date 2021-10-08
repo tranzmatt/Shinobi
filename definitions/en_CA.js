@@ -7436,6 +7436,132 @@ module.exports = function(s,config,lang){
               },
            }
        },
+       "Monitor Stream Window": {
+           "section": "Monitor Stream Window",
+           // gridBlockClass: "",
+           // streamBlockPreHtml: `<div class="gps-map-info gps-map-details hidden">
+           //     <div><i class="fa fa-compass fa-3x gps-info-bearing"></i></div>
+           //     <div><i class="fa fa-compass fa-3x gps-info-speed"></i></div>
+           //     <div></div>
+           // </div>
+           // <div class="gps-map gps-map-info hidden" id="gps-map-$MONITOR_ID"></div>`,
+           streamBlockHudHtml: `<div class="camera_cpu_usage">
+               <div class="progress">
+                   <div class="progress-bar progress-bar-danger" role="progressbar" style="width: 0px;"><span></span></div>
+               </div>
+           </div>
+           <div class="lamp" title="$MONITOR_MODE"><i class="fa fa-eercast"></i></div>`,
+           streamBlockHudControlsHtml: `<span title="${lang['Currently viewing']}" class="label label-default">
+                <span class="viewers"></span>
+           </span>
+           <a class="btn btn-sm badge btn-warning run-monitor-detection-trigger-test">${lang['Trigger Event']}</a>
+           `,
+           gridBlockAfterContentHtml: `<div class="mdl-card__supporting-text text-center">
+               <div class="indifference detector-fade">
+                   <div class="progress">
+                       <div class="progress-bar progress-bar-danger" role="progressbar"><span></span></div>
+                   </div>
+               </div>
+               <div class="monitor_details">
+                   <div class="pull-left">
+                       <a title="${lang['Options']}" class="btn btn-sm badge btn-secondary toggle-live-grid-monitor-menu"><i class="fa fa-bars"></i></a>
+                       <a title="${lang['Snapshot']}" class="btn btn-sm badge btn-warning snapshot-live-grid-monitor"><i class="fa fa-camera"></i></a>
+                       <a title="${lang['Videos List']}" class="btn btn-sm badge btn-secondary open-videos"><i class="fa fa-film"></i></a>
+                       <a title="${lang['Close']}" class="btn btn-sm badge btn-danger close-live-grid-monitor"><i class="fa fa-times"></i></a>
+                  </div>
+                   <div><span class="monitor_name">$MONITOR_NAME</span></div>
+               </div>
+           </div>
+           <div class="mdl-data_window pull-right">
+               <div class="d-flex flex-row" style="height: 100%;">
+                   <div class="data-menu col-md-6 p-2 videos-mini scrollable"></div>
+                   <div class="data-menu col-md-6 p-2 logs scrollable"></div>
+               </div>
+           </div>`,
+           links: {
+              "Mute Audio": {
+                  "label": lang['Mute Audio'],
+                  "attr": `system="monitorMuteAudioSingle" mid="$MONITOR_ID"`,
+                  "class": "primary",
+                  "icon": '$MONITOR_MUTE_ICON'
+              },
+              "Snapshot": {
+                 "label": lang['Snapshot'],
+                 "class": "primary snapshot-live-grid-monitor",
+                 "icon": "camera"
+              },
+              "Show Logs": {
+                 "label": lang['Show Logs'],
+                 "class": "warning toggle-live-grid-monitor-logs",
+                 "icon": "exclamation-triangle"
+              },
+              "Control": {
+                 "label": lang['Control'],
+                 "class": "default toggle-live-grid-monitor-ptz-controls",
+                 "icon": "arrows"
+              },
+              "Reconnect Stream": {
+                 "label": lang['Reconnect Stream'],
+                 "class": "success signal reconnect-live-grid-monitor",
+                 "icon": "plug"
+              },
+              "Pop": {
+                 "label": lang['Pop'],
+                 "class": "default run-live-grid-monitor-pop",
+                 "icon": "external-link"
+              },
+              "Zoom In": {
+                 "label": lang['Zoom In'],
+                 "attr": `monitor="zoomStreamWithMouse"`,
+                 "class": "default",
+                 "icon": "search-plus"
+              },
+              // "Calendar": {
+              //    "label": lang['Calendar'],
+              //    "attr": `monitor="calendar"`,
+              //    "class": "default ",
+              //    "icon": "calendar"
+              // },
+              // "Power Viewer": {
+              //    "label": lang['Power Viewer'],
+              //    "attr": `monitor="powerview"`,
+              //    "class": "default",
+              //    "icon": "map-marker"
+              // },
+              "Time-lapse": {
+                 "label": lang['Time-lapse'],
+                 "attr": `monitor="timelapseJpeg"`,
+                 "class": "default",
+                 "icon": "angle-double-right"
+              },
+              // "Video Grid": {
+              //    "label": "Video Grid",
+              //    "attr": `monitor="video_grid"`,
+              //    "class": "default",
+              //    "icon": "th"
+              // },
+              "Videos List": {
+                 "label": lang['Videos List'],
+                 "class": "default open-videos",
+                 "icon": "film"
+              },
+              "Monitor Settings": {
+                 "label": lang['Monitor Settings'],
+                 "class": "default open-monitor-settings",
+                 "icon": "wrench"
+              },
+              "Fullscreen": {
+                 "label": lang['Fullscreen'],
+                 "class": "default toggle-live-grid-monitor-fullscreen",
+                 "icon": "arrows-alt"
+              },
+              "Close": {
+                 "label": lang['Close'],
+                 "class": "danger close-live-grid-monitor",
+                 "icon": "times"
+              }
+           }
+       },
        "Monitor Options": {
            "section": "Monitor Options",
            "dropdownClass": "dropdown-menu-dark bg-dark"

@@ -88,6 +88,15 @@ function resetMonitorCanvas(monitorId,initiateAfter,subStreamChannel){
     streamBlock.append(buildStreamElementHtml(streamType))
     if(initiateAfter)initiateLiveGridPlayer(monitor,subStreamChannel)
 }
+function replaceMonitorInfoInHtml(htmlString,monitor){
+    var monitorMutes = dashboardOptions().monitorMutes || {}
+    return htmlString
+        .replaceAll('$GROUP_KEY',monitor.ke)
+        .replaceAll('$MONITOR_ID',monitor.mid)
+        .replaceAll('$MONITOR_MODE',monitor.mode)
+        .replaceAll('$MONITOR_NAME',monitor.name)
+        .replaceAll('$MONITOR_MUTE_ICON',(monitorMutes[monitor.mid] !== 1 ? 'volume-up' : 'volume-off'));
+}
 function buildLiveGridBlock(monitor){
     if(monitor.mode === 'stop'){
         new PNotify({
@@ -99,137 +108,35 @@ function buildLiveGridBlock(monitor){
     }
     var monitorDetails = safeJsonParse(monitor.details)
     var monitorLiveId = `monitor_live_${monitor.mid}`
-    var monitorMutes = dashboardOptions().monitorMutes || {}
     var subStreamChannel = monitor.subStreamChannel
     var streamType = subStreamChannel ? monitorDetails.substream ? monitorDetails.substream.output.stream_type : 'hls' : monitorDetails.stream_type
     var streamElement = buildStreamElementHtml(streamType)
+    var streamBlockInfo = definitions['Monitor Stream Window']
     if(!loadedLiveGrids[monitor.mid])loadedLiveGrids[monitor.mid] = {}
     var baseHtml = `<div
         id="${monitorLiveId}"
         data-ke="${monitor.ke}"
         data-mid="${monitor.mid}"
         data-mode="${monitor.mode}"
-        class="grid-stack-item monitor_item glM${monitor.mid}"
+        class="grid-stack-item monitor_item glM${monitor.mid} ${streamBlockInfo.gridBlockClass || ''}"
     >
         <div class="grid-stack-item-content ui-draggable-handle">
             <div class="stream-block no-padding mdl-card__media mdl-color-text--grey-50">
-                <div class="gps-map-info gps-map-details hidden">
-                    <div><i class="fa fa-compass fa-3x gps-info-bearing"></i></div>
-                    <div><i class="fa fa-compass fa-3x gps-info-speed"></i></div>
-                    <div></div>
-                </div>
-                <div class="gps-map gps-map-info hidden" id="gps-map-${monitor.mid}"></div>
+                ${streamBlockInfo.streamBlockPreHtml || ''}
                 <div class="stream-objects"></div>
                 <div class="stream-hud">
-                    <div class="camera_cpu_usage">
-                        <div class="progress">
-                            <div class="progress-bar progress-bar-danger" role="progressbar" style="width: 0px;"><span></span></div>
-                        </div>
-                    </div>
-                    <div class="lamp" title="${monitor.mode}"><i class="fa fa-eercast"></i></div>
+                    ${streamBlockInfo.streamBlockHudHtml || ''}
                     <div class="controls">
-                        <span title="${lang['Currently viewing']}" class="label label-default">
-                            <span class="viewers"></span>
-                        </span>
-                        <a class="btn btn-sm badge btn-warning run-monitor-detection-trigger-test">${lang['Trigger Event']}</a>
+                        ${streamBlockInfo.streamBlockHudControlsHtml || ''}
                     </div>
                 </div>
                 ${streamElement}
             </div>
         </div>
-        <div class="mdl-card__supporting-text text-center">
-            <div class="indifference detector-fade">
-                <div class="progress">
-                    <div class="progress-bar progress-bar-danger" role="progressbar"><span></span></div>
-                </div>
-            </div>
-            <div class="monitor_details">
-                <div><span class="monitor_name">${monitor.name}</span></div>
-            </div>
-            <div class="btn-group btn-group-sm">`
-            var buttons = {
-               "Mute Audio": {
-                  "label": lang['Mute Audio'],
-                  "attr": `system="monitorMuteAudioSingle" mid="${monitor.mid}"`,
-                  "class": "primary",
-                  "icon": monitorMutes[monitor.mid] !== 1 ? 'volume-up' : 'volume-off'
-               },
-               "Snapshot": {
-                  "label": lang['Snapshot'],
-                  "class": "primary snapshot-live-grid-monitor",
-                  "icon": "camera"
-               },
-               "Show Logs": {
-                  "label": lang['Show Logs'],
-                  "class": "warning toggle-live-grid-monitor-logs",
-                  "icon": "exclamation-triangle"
-               },
-               "Control": {
-                  "label": lang['Control'],
-                  "class": "default toggle-live-grid-monitor-ptz-controls",
-                  "icon": "arrows"
-               },
-               "Reconnect Stream": {
-                  "label": lang['Reconnect Stream'],
-                  "class": "success signal reconnect-live-grid-monitor",
-                  "icon": "plug"
-               },
-               "Pop": {
-                  "label": lang['Pop'],
-                  "class": "default run-live-grid-monitor-pop",
-                  "icon": "external-link"
-               },
-               "Zoom In": {
-                  "label": lang['Zoom In'],
-                  "attr": `monitor="zoomStreamWithMouse"`,
-                  "class": "default",
-                  "icon": "search-plus"
-               },
-               // "Calendar": {
-               //    "label": lang['Calendar'],
-               //    "attr": `monitor="calendar"`,
-               //    "class": "default ",
-               //    "icon": "calendar"
-               // },
-               // "Power Viewer": {
-               //    "label": lang['Power Viewer'],
-               //    "attr": `monitor="powerview"`,
-               //    "class": "default",
-               //    "icon": "map-marker"
-               // },
-               "Time-lapse": {
-                  "label": lang['Time-lapse'],
-                  "attr": `monitor="timelapseJpeg"`,
-                  "class": "default",
-                  "icon": "angle-double-right"
-               },
-               // "Video Grid": {
-               //    "label": "Video Grid",
-               //    "attr": `monitor="video_grid"`,
-               //    "class": "default",
-               //    "icon": "th"
-               // },
-               "Videos List": {
-                  "label": lang['Videos List'],
-                  "class": "default open-videos",
-                  "icon": "film"
-               },
-               "Monitor Settings": {
-                  "label": lang['Monitor Settings'],
-                  "class": "default open-monitor-settings",
-                  "icon": "wrench"
-               },
-               "Fullscreen": {
-                  "label": lang['Fullscreen'],
-                  "class": "default toggle-live-grid-monitor-fullscreen",
-                  "icon": "arrows-alt"
-               },
-               "Close": {
-                  "label": lang['Close'],
-                  "class": "danger close-live-grid-monitor",
-                  "icon": "times"
-               }
-            }
+        ${streamBlockInfo.gridBlockAfterContentHtml || ''}
+        <div class="mdl-overlay-menu-backdrop hidden">
+            <ul class="mdl-overlay-menu list-group">`
+            var buttons = streamBlockInfo.links
             if(!permissionCheck('video_view',monitor.mid)){
                 delete(buttons["Videos List"])
                 delete(buttons["Time-lapse"])
@@ -240,19 +147,12 @@ function buildLiveGridBlock(monitor){
                 delete(buttons["Monitor Settings"])
             }
             $.each(buttons,function(n,v){
-                baseHtml += `<a class="btn btn-${v.class}" ${v.attr} title="${v.label}"><i class="fa fa-${v.icon}"></i></a>`
+                baseHtml += `<li class="list-item"><a class="cursor-pointer ${v.class}" title="${v.label}" ${v.attr}><i class="fa fa-${v.icon}"></i> ${v.label}</a></li>`
             })
-            baseHtml += `</div>
-        </div>
-        <div class="mdl-data_window pull-right">
-            <div class="d-flex flex-row" style="height: 100%;">
-                <div class="data-menu col-md-6 p-2 videos-mini scrollable"></div>
-                <div class="data-menu col-md-6 p-2 logs scrollable"></div>
-            </div>
+            baseHtml += `</ul>
         </div>
     </div>`
-
-    return baseHtml
+    return replaceMonitorInfoInHtml(baseHtml,monitor)
 }
 function drawPtzControlsOnLiveGridBlock(monitorId){
     var monitorItem = $('#monitor_live_' + monitorId)
@@ -994,6 +894,15 @@ $(document).ready(function(e){
     .on('click','.toggle-live-grid-monitor-ptz-controls',function(){
         var monitorItem = $(this).parents('[data-mid]').attr('data-mid')
         drawPtzControlsOnLiveGridBlock(monitorItem)
+    })
+    .on('click','.toggle-live-grid-monitor-menu,.mdl-overlay-menu-backdrop',function(){
+        var monitorItem = $(this).parents('[data-mid]')
+        var monitorId = monitorItem.attr('data-mid')
+        monitorItem.find('.mdl-overlay-menu-backdrop').toggleClass('hidden')
+    })
+    .on('click','.mdl-overlay-menu',function(e){
+        e.stopPropagation()
+        return false;
     })
     .on('click','.toggle-live-grid-monitor-fullscreen',function(){
         var monitorItem = $(this).parents('[data-mid]')

@@ -29,7 +29,7 @@ function drawMonitorIconToMenu(item){
                   <button type="button" class="d-inline-block badge btn btn-default dropdown-toggle dropdown-toggle-split" id="monitorMenuItem${item.mid}" data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
                     <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
                   </button>
-                  <ul class="dropdown-menu ${define["Monitor Options"].dropdownClass} shadow-lg" aria-labelledby="monitorMenuItem${item.mid}">
+                  <ul class="dropdown-menu ${definitions["Monitor Options"].dropdownClass} shadow-lg" aria-labelledby="monitorMenuItem${item.mid}">
                       ${buildDefaultMonitorMenuItems()}
                   </ul>
               </div>

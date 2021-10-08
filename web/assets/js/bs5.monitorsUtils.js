@@ -461,7 +461,7 @@ function drawMatrices(event,options){
 function setMonitorCountOnUI(){
     $('.cameraCount').text(Object.keys(loadedMonitors).length)
 }
-function muteMonitorAudio(monitorId){
+function muteMonitorAudio(monitorId,buttonEl){
     var masterMute = dashboardOptions().switches.monitorMuteAudio
     var monitorMutes = dashboardOptions().monitorMutes || {}
     monitorMutes[monitorId] = monitorMutes[monitorId] === 1 ? 0 : 1
@@ -472,7 +472,7 @@ function muteMonitorAudio(monitorId){
             vidEl.muted = true
         }else{
             if(masterMute !== 1){
-                if($.ccio.windowFocus && hadFocus){
+                if(windowFocus && hadFocus){
                     vidEl.muted = false
                 }else{
                     console.error('User must have window active to unmute.')
@@ -483,7 +483,7 @@ function muteMonitorAudio(monitorId){
         console.log(err)
     }
     var volumeIcon = monitorMutes[monitorId] !== 1 ? 'volume-up' : 'volume-off'
-    $(this).find('i').removeClass('fa-volume-up fa-volume-off').addClass('fa-' + volumeIcon)
+    if(buttonEl)buttonEl.find('i').removeClass('fa-volume-up fa-volume-off').addClass('fa-' + volumeIcon)
 }
 function getAvailableMonitorGroups(){
     var theGroups = {}
@@ -553,7 +553,7 @@ $(document).ready(function(){
         switch(el.attr('system')){
             case'monitorMuteAudioSingle':
                 var monitorId = el.attr('mid')
-                muteMonitorAudio(monitorId)
+                muteMonitorAudio(monitorId,el)
             break;
         }
     })
