@@ -1,11 +1,15 @@
 <main class="page-tab" id="tab-initial">
     <div class="row">
-        <div class="col-md-3 pt-3">
-            <% include infoBlocks.ejs %>
-        </div>
-        <div class="col-md-9">
-            <% include streamCarousel.ejs %>
-            <% include recentVideos.ejs %>
-        </div>
+        <%
+          var drawBlock
+          var buildOptions
+        %>
+        <%
+          include fieldBuilders.ejs
+        %>
+        <% Object.keys(define['Home'].blocks).forEach(function(blockKey){
+              const theBlock = define['Home'].blocks[blockKey];
+              drawBlock(theBlock)
+          }) %>
     </div>
 </main>

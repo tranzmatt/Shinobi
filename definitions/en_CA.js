@@ -7436,5 +7436,241 @@ module.exports = function(s,config,lang){
               },
            }
        },
+       "Monitor Options": {
+           "section": "Monitor Options",
+           "dropdownClass": "dropdown-menu-dark bg-dark"
+       },
+       "SideMenu": {
+           "section": "SideMenu",
+           "blocks": {
+               "Container1": {
+                  // "id": "sidebarMenu",
+                  // "class": "col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse",
+                  "info": [
+                      {
+                          icon: 'home',
+                          label: lang.Home,
+                          pageOpen: 'initial',
+                      },
+                      {
+                          icon: 'th',
+                          label: lang['Live Grid'] + ` &nbsp;
+                          <span class="badge bg-light text-dark rounded-pill align-text-bottom liveGridOpenCount">0</span>`,
+                          pageOpen: 'liveGrid',
+                          addUl: true,
+                          ulItems: [
+                              {
+                                  label: lang['Open All Monitors'],
+                                  class: 'open-all-monitors cursor-pointer',
+                                  color: 'orange',
+                              },
+                              {
+                                  label: lang['Order Streams'],
+                                  class: 'cursor-pointer',
+                                  attributes: 'shinobi-switch="monitorOrder" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
+                                  color: 'grey',
+                              },
+                              {
+                                  label: lang['Mute Audio'],
+                                  class: 'cursor-pointer',
+                                  attributes: 'shinobi-switch="monitorMuteAudio" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
+                                  color: 'grey',
+                              },
+                              {
+                                  label: lang['JPEG Mode'],
+                                  class: 'cursor-pointer',
+                                  attributes: 'shinobi-switch="jpegMode" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
+                                  color: 'grey',
+                              },
+                              {
+                                  label: lang['Stream in Background'],
+                                  class: 'cursor-pointer',
+                                  attributes: 'shinobi-switch="backgroundStream" ui-change-target=".dot" on-class="dot-grey" off-class="dot-green"',
+                                  color: 'grey',
+                              },
+                          ]
+                      },
+                      {
+                          icon: 'video-camera',
+                          label: `${lang.Monitors} &nbsp;
+                          <span class="badge bg-light text-dark rounded-pill align-text-bottom cameraCount"><i class="fa fa-spinner fa-pulse"></i></span>`,
+                          pageOpen: 'monitorsList',
+                      },
+                      {
+                          icon: 'wrench',
+                          label: `${lang['Monitor Settings']}`,
+                          pageOpen: 'monitorSettings',
+                          addUl: true,
+                      },
+                      {
+                          icon: 'gears',
+                          label: `${lang['Account Settings']}`,
+                          pageOpen: 'accountSettings',
+                          addUl: true,
+                      },
+                      {
+                          icon: 'group',
+                          label: `${lang.subAccountManager}`,
+                          pageOpen: 'subAccountManager',
+                          addUl: true,
+                      },
+                      {
+                          icon: 'compass',
+                          label: `${lang['ShinobiHub']}`,
+                          pageOpen: 'configFinder',
+                          addUl: true,
+                      },
+                      {
+                          icon: 'grav',
+                          label: `${lang['Region Editor']}`,
+                          pageOpen: 'regionEditor',
+                          addUl:true
+                      },
+                      {
+                          icon: 'key',
+                          label: `${lang['API Keys']}`,
+                          pageOpen: 'apiKeys',
+                      },
+                      {
+                          icon: 'align-right',
+                          label: `${lang['Monitor States']}`,
+                          pageOpen: 'monitorStates',
+                      },
+                      {
+                          icon: 'clock',
+                          label: `${lang['Schedules']}`,
+                          pageOpen: 'schedules',
+                      },
+                      {
+                          icon: 'fast-forward',
+                          label: `${lang['Time-lapse']}`,
+                          pageOpen: 'timelapseViewer',
+                      },
+                      {
+                          icon: 'filter',
+                          label: `${lang['Event Filters']}`,
+                          pageOpen: 'eventFilters',
+                          addUl:true
+                      },
+                      {
+                          icon: 'search',
+                          label: `${lang['ONVIF Scanner']}`,
+                          pageOpen: 'onvifScanner',
+                          addUl:true
+                      },
+                      {
+                          icon: 'eyedropper',
+                          label: `${lang['FFprobe']}`,
+                          pageOpen: 'cameraProbe',
+                      },
+                      {
+                          icon: 'exclamation-triangle',
+                          label: `${lang['Logs']}`,
+                          pageOpen: 'logViewer',
+                      },
+                      // {
+                      //     icon: 'exclamation-circle',
+                      //     label: `${lang['Events']}`,
+                      //     pageOpen: 'eventListWithPics',
+                      // },
+                      {
+                          icon: 'sign-out',
+                          label: `${lang['Logout']}`,
+                          class: 'logout',
+                      },
+                  ]
+              }
+           }
+       },
+       "Home": {
+           "section": "Home",
+           "blocks": {
+              "Container1": {
+                 "name": "Container1",
+                 "color": "grey",
+                 "noHeader": true,
+                 "noDefaultSectionClasses": true,
+                 "section-class": "col-md-3 pt-3",
+                 "info": [
+                     {
+                         "id": "indicator-bars",
+                         isFormGroupGroup: true,
+                         "noHeader": true,
+                         "noDefaultSectionClasses": true,
+                         "section-class": "card text-white bg-gradient-blue px-3 py-2 mb-3 border-0",
+                         info: [
+                             {
+                                 "fieldType": "div",
+                                 "class": "h6 card-title",
+                                 "text": `<i class="fa fa-th"></i> &nbsp; ${lang['CPU']} & ${lang['RAM']}`
+                             },
+                             {
+                                 "fieldType": "indicatorBar",
+                                 "icon": "microchip",
+                                 "name": "cpu",
+                                 "label": `<span class="os_cpuCount"><i class="fa fa-spinner fa-pulse"></i></span> ${lang.CPU}<span class="os_cpuCount_trailer"></span> : <span class="os_platform" style="text-transform:capitalize"><i class="fa fa-spinner fa-pulse"></i></span>`,
+                             },
+                             {
+                                 "fieldType": "indicatorBar",
+                                 "icon": "square",
+                                 "name": "ram",
+                                 "label": `<span class="os_totalmem used"><i class="fa fa-spinner fa-pulse"></i></span> ${lang.MB} ${lang.RAM}`,
+                             },
+                             {
+                                 id: 'disk-indicator-bars',
+                                 isFormGroupGroup: true,
+                                 "noHeader": true,
+                                 "noDefaultSectionClasses": true,
+                                 "section-class": "disk-indicator-bars",
+                                 info: [
+                                     {
+                                         "fieldType": "div",
+                                         "class": "h6 card-title",
+                                         "divContent": `<i class="fa fa-th"></i> &nbsp; ${lang['CPU']} & ${lang['RAM']}`
+                                     },
+                                     {
+                                         "fieldType": "indicatorBar",
+                                         "icon": "hdd",
+                                         "name": "disk",
+                                         "label": `<span class="diskUsed" style="letter-spacing:2px;font-weight:100"></span>`,
+                                     },
+                                 ]
+                             }
+                         ]
+                     },
+                     {
+                         "fieldType": "div",
+                         "class": "card bg-dark mb-3",
+                         "divContent": `<div class="card-body text-white">
+                             <h5 class="card-title"><i class="fa fa-th text-muted"></i> ${lang['Live Grid']}</h5>
+                             <p class="card-text">${lang.liveGridDescription}</p>
+                             <a href="#" page-open="liveGrid" class="btn btn-primary">${lang.Open}</a>
+                           </div>`
+                     },
+                     {
+                         "fieldType": "div",
+                         "class": "card bg-dark",
+                         "divContent": `<div class="card-body text-white">
+                             <h5 class="card-title"><i class="fa fa-gears text-muted"></i> ${lang['Account Settings']}</h5>
+                             <p class="card-text">${lang.accountSettingsDescription}</p>
+                             <a href="#" page-open="accountSettings" class="btn btn-primary">${lang.Open}</a>
+                           </div>`
+                     },
+                 ]
+            },
+            "Container4": {
+                "name": "Container4",
+                "color": "grey",
+                "noHeader": true,
+                "noDefaultSectionClasses": true,
+                "section-class": "col-md-9",
+                "info": [
+                    {
+                        ejs: 'web/pages/blocks/home/recentVideos',
+                    },
+                ]
+            }
+         }
+      },
     }
 }

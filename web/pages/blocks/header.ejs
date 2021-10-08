@@ -85,11 +85,11 @@
         <link rel="stylesheet" href="<%-window.libURL%>libs/css/<%-lib%>">
     <% }) %>
     <style id="theme">
-        <% details.theme = details.theme || 'Ice-v3' %>
-    <%- include(__dirname + `/web/libs/themes/${details.theme}/style.css`); %>
+        <% details.theme = details.theme || config.defaultTheme %>
+        <%- include(__dirname + `/web/libs/themes/${details.theme}/style.css`); %>
     </style>
     <style id="custom_css">
-    <%= details.css %>
+        <%= details.css %>
     </style>
     <script src="<%-window.libURL%>libs/js/jquery.min.js"></script>
 </head>

@@ -1,8 +1,7 @@
+<% const menuInfo = define.SideMenu.blocks.Container1 %>
 <div class="nav-scroller bg--body shadow-sm">
     <nav id="pageTabLinks" class="nav nav-underline" aria-label="Secondary navigation">
-        <% let menuItems %>
-        <% include menuItems %>
-        <% menuItems.forEach((item) => { %>
+        <% menuInfo.info.forEach((item) => { %>
             <a class="nav-link <%- item.class %>" <%- item.pageOpen ? `page-open="${item.pageOpen}"` : '' %> aria-current="page" href="#"><%- item.label %></a>
         <% }) %>
     </nav>

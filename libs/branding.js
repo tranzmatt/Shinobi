@@ -9,6 +9,7 @@ module.exports = function(s,config,lang,app,io){
     if(config.logoLocation76x76Style === undefined){config.logoLocation76x76Style='border-radius:50%'}
     if(config.loginScreenBackground === undefined){config.loginScreenBackground='https://shinobi.video/libs/assets/backgrounds/7.jpg'}
     if(config.showLoginSelector === undefined){config.showLoginSelector=true}
+    if(config.defaultTheme === undefined)config.defaultTheme = 'Ice-v3';
     if(config.socialLinks === undefined){
         config.socialLinks = [
             {
@@ -30,9 +31,9 @@ module.exports = function(s,config,lang,app,io){
                 icon: 'youtube',
                 href: 'https://www.youtube.com/channel/UCbgbBLTK-koTyjOmOxA9msQ',
                 title: 'YouTube'
-            },
+            }
         ]
-}
+    }
 
     s.getConfigWithBranding = function(domain){
         var configCopy = Object.assign({},config)
