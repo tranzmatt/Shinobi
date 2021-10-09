@@ -1,6 +1,6 @@
 <main class="container page-tab pt-3" id="tab-monitorSettings">
-    <div class="card form-group-group p-3 bg-dark mb-3 shadow">
-        <h4 id="tab-monitorSettings-title" class="monitor-section-header mb-3 pb-3 text-white border-bottom-dotted border-color-blue ">
+    <div class="card form-group-group p-3 <%- define.Theme.isDark ? 'bg-dark' : 'bg-light' %> mb-3 shadow">
+        <h4 id="tab-monitorSettings-title" class="monitor-section-header mb-3 pb-3 <%- define.Theme.isDark ? 'text-white' : '' %> border-bottom-dotted border-color-blue ">
             <%- lang['Monitor Settings'] %> :
             <span><%- lang['Add New'] %></span>
         </h4>

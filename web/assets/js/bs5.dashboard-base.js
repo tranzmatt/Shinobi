@@ -532,7 +532,7 @@ function getAllSectionsFromDefinition(definitionsBase){
 function buildSubMenuItems(listOfItems){
     var html = ''
     $.each(listOfItems,function(n,item){
-        if(item)html += `<li><a class="text-white ${item.class || ''}" ${item.attributes || ''}><span class="${item.hasParent ? 'ml-3' : ''} dot dot-${item.color || 'blue'} mr-2"></span>${item.label}</a></li>`
+        if(item)html += `<li><a class="${definitions.Theme.isDark ? 'text-white' : 'text-dark'} text-decoration-none ${item.class || ''}" ${item.attributes || ''}><span class="${item.hasParent ? 'ml-3' : ''} dot dot-${item.color || 'blue'} mr-2"></span>${item.label}</a></li>`
     })
     return html
 }
@@ -610,7 +610,7 @@ function buildLogRow(v){
     var html = ''
     html += `<div class="card shadow-lg mb-3 px-0 btn-default search-row">
         <div class="card-header">
-            <small class="text-white">${v.info && v.info.type ? v.info.type : v.mid}</small>
+            <small class="${definitions.Theme.isDark ? 'text-white' : ''}">${v.info && v.info.type ? v.info.type : v.mid}</small>
         </div>
         <div class="card-body">
             <div>${jsonToHtmlBlock(v.info.msg)}</div>

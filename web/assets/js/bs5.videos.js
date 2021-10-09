@@ -83,11 +83,11 @@ function createVideoRow(row,classOverride){
     <div class="video-row ${classOverride ? classOverride : `col-md-12 col-lg-6 mb-3`} search-row" data-mid="${row.mid}" data-time="${row.time}">
         <div class="card shadow-lg px-0 btn-default">
             <div class="card-header d-flex flex-row">
-                <div class="flex-grow-1 text-white">
+                <div class="flex-grow-1 ${definitions.Theme.isDark ? 'text-white' : ''}">
                     ${loadedMonitors[row.mid] ? loadedMonitors[row.mid].name : row.mid}
                 </div>
                 <div>
-                    <a class="badge btn btn-primary open-video mr-1" title="${lang['Watch']}"><i class="fa fa-play-circle"></i></a>
+                    <a href="#" class="badge btn btn-primary open-video mr-1" title="${lang['Watch']}"><i class="fa fa-play-circle"></i></a>
                     <a class="badge btn btn-success" download href="${videoEndpoint}" title="${lang['Download']}"><i class="fa fa-download"></i></a>
                     <a class="badge btn btn-danger delete-video" title="${lang['Delete']}"><i class="fa fa-trash-o"></i></a>
                 </div>

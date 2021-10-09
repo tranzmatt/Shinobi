@@ -1,5 +1,12 @@
 module.exports = function(s,config,lang){
-    return {
+    const Theme = {
+        isDark: true,
+    }
+    const mainBackgroundColor = Theme.isDark ? 'bg-dark' : Theme.isDarkDefaultBg || 'bg-light'
+    const textWhiteOnBgDark = Theme.isDark ? 'text-white' : ''
+    return Object.assign({
+        Theme: Theme,
+    },{
         "Monitor Status Codes": {
             "0": "Disabled",
             "1": "Starting",
@@ -7564,15 +7571,15 @@ module.exports = function(s,config,lang){
        },
        "Monitor Options": {
            "section": "Monitor Options",
-           "dropdownClass": "dropdown-menu-dark bg-dark"
+           "dropdownClass": `dropdown-menu-dark ${mainBackgroundColor}`
        },
        "SideMenu": {
            "section": "SideMenu",
            "blocks": {
                "Container1": {
                   // "id": "sidebarMenu",
-                  // "class": "col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse",
-                  "info": [
+                  "class": `col-md-3 col-lg-2 d-md-block ${mainBackgroundColor} sidebar collapse`,
+                  "links": [
                       {
                           icon: 'home',
                           label: lang.Home,
@@ -7705,18 +7712,13 @@ module.exports = function(s,config,lang){
                           class: 'logout',
                       },
                   ]
-              }
-           }
-       },
-       "Home": {
-           "section": "Home",
-           "blocks": {
-              "Container1": {
-                 "name": "Container1",
+              },
+              "SideMenuBeforeList": {
+                 "name": "SideMenuBeforeList",
                  "color": "grey",
                  "noHeader": true,
                  "noDefaultSectionClasses": true,
-                 "section-class": "col-md-3 pt-3",
+                 "section-class": "px-3",
                  "info": [
                      {
                          "id": "indicator-bars",
@@ -7725,11 +7727,6 @@ module.exports = function(s,config,lang){
                          "noDefaultSectionClasses": true,
                          "section-class": "card text-white bg-gradient-blue px-3 py-2 mb-3 border-0",
                          info: [
-                             {
-                                 "fieldType": "div",
-                                 "class": "h6 card-title",
-                                 "text": `<i class="fa fa-th"></i> &nbsp; ${lang['CPU']} & ${lang['RAM']}`
-                             },
                              {
                                  "fieldType": "indicatorBar",
                                  "icon": "microchip",
@@ -7750,24 +7747,40 @@ module.exports = function(s,config,lang){
                                  "section-class": "disk-indicator-bars",
                                  info: [
                                      {
-                                         "fieldType": "div",
-                                         "class": "h6 card-title",
-                                         "divContent": `<i class="fa fa-th"></i> &nbsp; ${lang['CPU']} & ${lang['RAM']}`
-                                     },
-                                     {
                                          "fieldType": "indicatorBar",
                                          "icon": "hdd",
                                          "name": "disk",
                                          "label": `<span class="diskUsed" style="letter-spacing:2px;font-weight:100"></span>`,
                                      },
                                  ]
-                             }
+                             },
+                             {
+                                 "fieldType": "indicatorBar",
+                                 "percent": 0,
+                                 "icon": "video-camera",
+                                 "name": "activeCameraCount",
+                                 "label": `<span class="activeCameraCount"><i class="fa fa-spinner fa-pulse"></i></span> ${lang['Active Monitors']}`,
+                             },
                          ]
-                     },
+                     }
+                 ]
+              }
+           }
+       },
+       "Home": {
+           "section": "Home",
+           "blocks": {
+              "Container1": {
+                 "name": "Container1",
+                 "color": "grey",
+                 "noHeader": true,
+                 "noDefaultSectionClasses": true,
+                 "section-class": "col-md-3 pt-3",
+                 "info": [
                      {
                          "fieldType": "div",
-                         "class": "card bg-dark mb-3",
-                         "divContent": `<div class="card-body text-white">
+                         "class": `card ${mainBackgroundColor} mb-3`,
+                         "divContent": `<div class="card-body ${textWhiteOnBgDark}">
                              <h5 class="card-title"><i class="fa fa-th text-muted"></i> ${lang['Live Grid']}</h5>
                              <p class="card-text">${lang.liveGridDescription}</p>
                              <a href="#" page-open="liveGrid" class="btn btn-primary">${lang.Open}</a>
@@ -7775,8 +7788,8 @@ module.exports = function(s,config,lang){
                      },
                      {
                          "fieldType": "div",
-                         "class": "card bg-dark",
-                         "divContent": `<div class="card-body text-white">
+                         "class": `card ${mainBackgroundColor} mb-3`,
+                         "divContent": `<div class="card-body ${textWhiteOnBgDark}">
                              <h5 class="card-title"><i class="fa fa-gears text-muted"></i> ${lang['Account Settings']}</h5>
                              <p class="card-text">${lang.accountSettingsDescription}</p>
                              <a href="#" page-open="accountSettings" class="btn btn-primary">${lang.Open}</a>
@@ -7798,5 +7811,5 @@ module.exports = function(s,config,lang){
             }
          }
       },
-    }
+  })
 }

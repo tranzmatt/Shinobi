@@ -13,7 +13,7 @@ $(document).ready(function(){
         var streamUrl = libURL + buildStreamUrl(row.mid).replace($user.auth_token,selectedApiKey)
         theList.append(`
         <div data-mid="${row.mid}" class="col-md-4 glM${row.mid}">
-            <div class="text-white mb-3 card shadow-sm btn-default">
+            <div class="${definitions.Theme.isDark ? 'text-white' : 'text-dark'} mb-3 card shadow-sm btn-default">
                 <div class="card monitor-card-preview snapshot launch-live-grid-monitor cursor-pointer" style="background-image:url(${getApiPrefix('icon') + '/' + row.mid})"></div>
               <div class="p-3">
                 <div class="mb-2">

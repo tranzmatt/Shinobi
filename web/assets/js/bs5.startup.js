@@ -118,7 +118,7 @@ $('body')
     dashboardOptions('dropdown_toggle',dropdownToggles)
 })
 .on('click','.logout',function(e){
-    $.get(getApiPrefix() + '/logout/'+user.ke+'/'+user.uid,function(data){
+    $.get(getApiPrefix() + '/logout/'+$user.ke+'/'+$user.uid,function(data){
         localStorage.removeItem('ShinobiLogin_' + location.host);
         location.href = location.href;
     });

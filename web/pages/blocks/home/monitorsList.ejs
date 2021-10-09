@@ -1,6 +1,6 @@
 <main class="container page-tab" id="tab-monitorsList">
-  <div class="my-3 px-3 pt-3 bg-dark text-white rounded shadow-sm">
-    <h4 class="mb-3 pb-3 text-white border-bottom-dotted border-color-blue d-flex flex-row">
+  <div class="my-3 px-3 pt-3 <%- define.Theme.isDark ? 'bg-dark text-white' : 'bg-light' %> rounded shadow-sm">
+    <h4 class="mb-3 pb-3 <%- define.Theme.isDark ? 'text-white' : '' %> border-bottom-dotted border-color-blue d-flex flex-row">
         <div style="flex:8">
             <%- lang['Monitors'] %>
         </div>

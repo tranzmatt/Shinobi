@@ -1,5 +1,5 @@
 <% const menuInfo = define.SideMenu.blocks.Container1 %>
-<nav id="<%- menuInfo.id || 'sidebarMenu' %>" class="<%- menuInfo.class || 'col-md-3 col-lg-2 d-md-block bg-dark sidebar collapse' %>">
+<nav id="<%- menuInfo.id || 'sidebarMenu' %>" class="<%- menuInfo.class || 'col-md-3 col-lg-2 d-md-block sidebar collapse' %>">
     <div id="menu-side" class="position-sticky">
         <div class="d-flex flex-row align-items-center p-3 m-3 btn-default rounded shadow-sm cursor-pointer">
           <div class="lh-1" data-bs-toggle="collapse" data-bs-target=".home-collapse">
@@ -13,10 +13,18 @@
               <a class_toggle="compressed-monitor-icons" data-target="#monitorSideList" icon-toggle="fa-th fa-bars" icon-child="i"><i class="fa fa-th"></i></a>
           </div>
         </div>
+        <%
+          var drawBlock
+          var buildOptions
+        %>
+        <%
+          include fieldBuilders.ejs
+        %>
+        <% drawBlock(define.SideMenu.blocks.SideMenuBeforeList) %>
         <div class="collapse show home-collapse">
               <ul id="pageTabLinks" class="nav flex-column nav-pills">
                   <div class="pb-2 px-3" id="home-collapse">
-                      <% menuInfo.info.forEach((item) => {
+                      <% menuInfo.links.forEach((item) => {
                             if(item.divider){ %>
                                 <li><hr class="dropdown-divider"></li>
                             <% }else{ %>
@@ -28,7 +36,7 @@
                                         <ul class="btn-default rounded btn-toggle-nav list-unstyled fw-normal ml-3 mt-2 px-2 pb-2 pt-1 <%- item.ulClass ? item.ulClass : '' %>">
                                             <% if(item.ulItems){
                                                 item.ulItems.forEach((listItem) => { %>
-                                                    <li><a class="text-white <%- listItem.class ? listItem.class : '' %>" <%- listItem.attributes ? listItem.attributes : '' %>><span class="dot dot-<%- listItem.color ? listItem.color : 'blue' %> shadow mr-2"></span><%- listItem.label ? listItem.label : 'Need Label' %></a></li>
+                                                    <li><a class="<%- define.Theme.isDark ? 'text-white' : '' %> <%- listItem.class ? listItem.class : '' %>" <%- listItem.attributes ? listItem.attributes : '' %>><span class="dot dot-<%- listItem.color ? listItem.color : 'blue' %> shadow mr-2"></span><%- listItem.label ? listItem.label : 'Need Label' %></a></li>
                                             <%  })
                                                } %>
                                         </ul>
