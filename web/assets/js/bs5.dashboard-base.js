@@ -805,9 +805,9 @@ $(document).ready(function(){
             else
                $(this).show();
         });
-    })
-    .on('click','.logout',function(e){
-        $.get(getApiPrefix() + '/logout/'+$user.ke+'/'+$user.uid,function(data){
+    });
+    $('.logout').click(function(e){
+        $.get(getApiPrefix() + '/logout/' + $user.ke + '/' + $user.uid,function(data){
             localStorage.removeItem('ShinobiLogin_'+location.host);
             location.href = location.href;
         })

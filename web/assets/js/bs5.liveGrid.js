@@ -147,7 +147,7 @@ function buildLiveGridBlock(monitor){
                 delete(buttons["Monitor Settings"])
             }
             $.each(buttons,function(n,v){
-                baseHtml += `<li class="list-item"><a class="cursor-pointer ${v.class}" title="${v.label}" ${v.attr}><i class="fa fa-${v.icon}"></i> ${v.label}</a></li>`
+                baseHtml += `<li class="list-item cursor-pointer ${v.class}" title="${v.label}" ${v.attr}><i class="fa fa-${v.icon}"></i> ${v.label}</li>`
             })
             baseHtml += `</ul>
         </div>

@@ -101,6 +101,10 @@
 }
 .monitor_item .mdl-overlay-menu li i{
     float: left;
+    font-size: 1.5em;
+}
+.monitor_item .mdl-overlay-menu li:hover{
+    background: #021B79;
 }
 .monitor_item[mode="Disabled"] .stream-hud .lamp{color:#5d5d5d}
 .monitor_item[mode="Watch Only"] .stream-hud .lamp{color:#5da8e8}

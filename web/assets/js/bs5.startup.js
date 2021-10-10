@@ -120,7 +120,7 @@ $('body')
 .on('click','.logout',function(e){
     $.get(getApiPrefix() + '/logout/'+$user.ke+'/'+$user.uid,function(data){
         localStorage.removeItem('ShinobiLogin_' + location.host);
-        location.href = location.href;
+        location.href = location.href.split('#')[0];
     });
 })
 .on('dblclick','[type="password"],.password_field',function(){
