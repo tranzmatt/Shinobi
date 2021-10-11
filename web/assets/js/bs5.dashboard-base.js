@@ -209,6 +209,19 @@ function fullScreenInit(target){
     }
 }
 
+function saveTabBlipPosition(tabId){
+    var loadedTab = loadedPages[tabId]
+    if(!loadedTab)return;
+    var theDoc = document.documentElement
+    loadedTab.bodyScrollX = parseFloat(`${theDoc.scrollTop}`)
+    loadedTab.bodyScrollY = parseFloat(`${theDoc.scrollLeft}`)
+}
+function loadTabBlipPosition(tabId){
+    var loadedTab = loadedPages[tabId]
+    if(!loadedTab)return;
+    blipTo(loadedTab.bodyScrollX || 0,loadedTab.bodyScrollY || 0)
+}
+
 function blipTo(xPageValue,yPageValue){
     document.documentElement.style.scrollBehavior = 'auto';
     setTimeout(() => window.scrollTo(yPageValue, xPageValue), 5);
@@ -217,6 +230,7 @@ function blipTo(xPageValue,yPageValue){
 
 function openTab(theTab,loadData,backAction,haltTrigger,type){
     loadData = loadData ? loadData : {}
+    saveTabBlipPosition(activeTabName)
     var allTabs = $('.page-tab');
     allTabs.hide().removeClass('tab-active');
     $(`#tab-${theTab}`).show().addClass('tab-active');
@@ -316,7 +330,6 @@ function onTabAway(tabId){
     var loadedTab = loadedPages[tabId]
     if(!loadedTab)return
     var type = loadedTab.type
-    loadedTab.bodyScroll = parseFloat(`${document.documentElement.scrollTop}`);
     switch(type){
         case'videoPlayer':
             pauseVideoPlayer(tabId)
@@ -336,7 +349,7 @@ function onTabReopen(tabId){
     var loadedTab = loadedPages[tabId]
     if(!loadedTab)return
     var type = loadedTab.type
-    blipTo(loadedTab.bodyScroll || 0,0)
+    loadTabBlipPosition(tabId)
     console.log(`onTabReopen`,tabId,type)
     switch(type){
         case'videoPlayer':
@@ -357,7 +370,7 @@ function onTabOpen(tabId){
     var loadedTab = loadedPages[tabId]
     if(!loadedTab)return
     var type = loadedTab.type
-    blipTo(0,0)
+    loadTabBlipPosition(tabId)
     if(addedOnTabOpen[tabId])addedOnTabOpen[tabId](loadedTab)
 }
 
