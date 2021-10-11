@@ -1,5 +1,7 @@
 $(document).ready(function(){
     var streamCarouselBlock = $('#stream-carousel')
+    var streamCarouselBlockInner = streamCarouselBlock.find('.stream-carousel-inner')
+    var streamCarouselBlockLabel = streamCarouselBlock.find('.stream-carousel-label')
     var loadedCarouselBlocks = []
     var changeTimer = null;
     var currentCarouselMonitorId = null;
@@ -10,10 +12,12 @@ $(document).ready(function(){
         var html = ``
         loadedCarouselBlocks = []
         $.each(loadedMonitors,function(id,monitor){
-            loadedCarouselBlocks.push(monitor.mid)
-            html += `<div data-mid="${monitor.mid}" class="carousel-block"><iframe></iframe></div>`
+            if(monitor.mode === 'start' || monitor.mode === 'record'){
+                loadedCarouselBlocks.push(monitor.mid)
+                html += `<div data-mid="${monitor.mid}" class="carousel-block"><iframe></iframe></div>`
+            }
         })
-        streamCarouselBlock.html(html)
+        streamCarouselBlockInner.html(html)
     }
     function clearCarouselFrames(){
         $.each(loadedCarouselBlocks,function(n,monitorId){
@@ -22,14 +26,18 @@ $(document).ready(function(){
     }
     function loadMonitorInCarousel(monitorId){
         currentCarouselMonitorId = `${monitorId}`
-        streamCarouselBlock
+        var loadedMonitor = loadedMonitors[monitorId]
+        var monitorName = loadedMonitor.name
+        var monitorStatus = loadedMonitor.status
+        streamCarouselBlockLabel.html(`${monitorName} : ${monitorStatus}`)
+        streamCarouselBlockInner
             .find(`.carousel-block[data-mid="${monitorId}"]`)
             .addClass('active-block')
             .find('iframe')
             .attr('src',`${getApiPrefix(`embed`)}/${monitorId}/fullscreen|jquery|relative`)
     }
     function deloadMonitorInCarousel(monitorId){
-        streamCarouselBlock
+        streamCarouselBlockInner
             .find(`.carousel-block[data-mid="${monitorId}"]`)
             .removeClass('active-block')
             .find('iframe')
@@ -39,10 +47,14 @@ $(document).ready(function(){
         var oldId = `${currentCarouselMonitorId}`
         var nextId = loadedCarouselBlocks[loadedCarouselBlocks.indexOf(currentCarouselMonitorId) + 1]
         nextId = nextId ? nextId : loadedCarouselBlocks[0]
-        loadMonitorInCarousel(nextId)
-        setTimeout(function(){
-            deloadMonitorInCarousel(oldId)
-        },6000)
+        if(oldId === nextId){
+            clearInterval(changeTimer)
+        }else{
+            loadMonitorInCarousel(nextId)
+            setTimeout(function(){
+                deloadMonitorInCarousel(oldId)
+            },6000)
+        }
     }
     function setAutoChangerInterval(){
         stopAutoChangerInterval()
