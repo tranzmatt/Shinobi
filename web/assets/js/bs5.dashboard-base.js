@@ -209,6 +209,12 @@ function fullScreenInit(target){
     }
 }
 
+function blipTo(xPageValue,yPageValue){
+    document.documentElement.style.scrollBehavior = 'auto';
+    setTimeout(() => window.scrollTo(yPageValue, xPageValue), 5);
+    setTimeout(() => document.documentElement.style.scrollBehavior = 'smooth', 5);
+}
+
 function openTab(theTab,loadData,backAction,haltTrigger,type){
     loadData = loadData ? loadData : {}
     var allTabs = $('.page-tab');
@@ -310,7 +316,7 @@ function onTabAway(tabId){
     var loadedTab = loadedPages[tabId]
     if(!loadedTab)return
     var type = loadedTab.type
-    console.log(`onTabAway`,tabId,type)
+    loadedTab.bodyScroll = parseFloat(`${document.documentElement.scrollTop}`);
     switch(type){
         case'videoPlayer':
             pauseVideoPlayer(tabId)
@@ -330,6 +336,7 @@ function onTabReopen(tabId){
     var loadedTab = loadedPages[tabId]
     if(!loadedTab)return
     var type = loadedTab.type
+    blipTo(loadedTab.bodyScroll || 0,0)
     console.log(`onTabReopen`,tabId,type)
     switch(type){
         case'videoPlayer':
@@ -350,6 +357,7 @@ function onTabOpen(tabId){
     var loadedTab = loadedPages[tabId]
     if(!loadedTab)return
     var type = loadedTab.type
+    blipTo(0,0)
     if(addedOnTabOpen[tabId])addedOnTabOpen[tabId](loadedTab)
 }
 
