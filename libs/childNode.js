@@ -118,6 +118,9 @@ module.exports = function(s,config,lang,app,io){
                             case'created_file_chunk':
                                 if(!s.group[d.ke].activeMonitors[d.mid].childNodeStreamWriters[d.filename]){
                                     d.dir = s.getVideoDirectory(s.group[d.ke].rawMonitorConfigurations[d.mid])
+                                    if (!fs.existsSync(d.dir)) {
+                                        fs.mkdirSync(d.dir, {recursive: true}, (err) => {s.debugLog(err)})
+                                    }
                                     s.group[d.ke].activeMonitors[d.mid].childNodeStreamWriters[d.filename] = fs.createWriteStream(d.dir+d.filename)
                                 }
                                 s.group[d.ke].activeMonitors[d.mid].childNodeStreamWriters[d.filename].write(d.chunk)
