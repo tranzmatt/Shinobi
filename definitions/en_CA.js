@@ -7405,44 +7405,6 @@ module.exports = function(s,config,lang){
              }
          }
        },
-     "Camera Wizard": {
-            "section": "Camera Wizard",
-            "blocks": {
-                "Search Settings": {
-                   "name": lang["FFprobe"],
-                   "color": "blue",
-                   "blockquote": `<i>"${lang['FFmpegTip']}"</i> - FFmpegTips`,
-                   "section-pre-class": "col-md-12",
-                   "info": [
-                       {
-                          "name": "url",
-                          "field": lang['Complete Stream URL'],
-                          "example": "http://192.168.88.126/videostream.cgi or /dev/video0",
-                       },
-                       {
-                          "fieldType": "btn-group",
-                          "btns": [
-                              {
-                                  "fieldType": "btn",
-                                  "forForm": true,
-                                  "class": `btn-block btn-success`,
-                                  "btnContent": `${lang['Check']}`,
-                              },
-                              {
-                                  "fieldType": "btn",
-                                  "class": `btn-default fill`,
-                                  "btnContent": `${lang['Save']}`,
-                              },
-                          ],
-                       },
-                       {
-                           "fieldType": "div",
-                           "class": "output_data",
-                       }
-                  ]
-              },
-           }
-       },
        "Monitor Stream Window": {
            "section": "Monitor Stream Window",
            // gridBlockClass: "",
@@ -7757,9 +7719,11 @@ module.exports = function(s,config,lang){
                              {
                                  "fieldType": "indicatorBar",
                                  "percent": 0,
+                                 "color": 'warning',
+                                 "indicatorPercentClass": 'activeCameraCount',
                                  "icon": "video-camera",
                                  "name": "activeCameraCount",
-                                 "label": `<span class="activeCameraCount"><i class="fa fa-spinner fa-pulse"></i></span> ${lang['Active Monitors']}`,
+                                 "label": lang['Active Monitors'],
                              },
                          ]
                      }

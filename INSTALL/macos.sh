@@ -34,11 +34,6 @@ if [ "$ffmpeginstall" = "y" ]; then
     sudo chmod +x /usr/local/bin/ffserver
 fi
 echo "============="
-if [ ! -e "./shinobi.sqlite" ]; then
-    sudo npm install jsonfile
-    sudo cp sql/shinobi.sample.sqlite shinobi.sqlite
-    sudo node tools/modifyConfiguration.js databaseType=sqlite3
-fi
 echo "Shinobi - Install NPM Libraries"
 sudo npm i npm -g
 sudo npm install --unsafe-perm

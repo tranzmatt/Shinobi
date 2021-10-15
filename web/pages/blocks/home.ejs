@@ -24,6 +24,9 @@
                 <% include home/eventListWithPics.ejs %>
                 <% include confirm.ejs %>
                 <% include help.ejs %>
+                <% customAutoLoad.PageBlocks.forEach(function(block){ %>
+                    <%- include(block) %>
+                <% }) %>
             </main>
         </div>
     </div>
