@@ -22,7 +22,6 @@
    "Storage Use": "Storage Use",
    "Use Raw Snapshot": "Use Raw Snapshot",
    "Login": "Login",
-   "Add Cameras": "Add Cameras",
    "Substream": "Substream",
    "Toggle Substream": "Toggle Substream",
    "Output": "Output",
@@ -1230,5 +1229,11 @@
    "There are no monitors that you can view with this account.":"There are no monitors that you can view with this account.",
    "Delete Monitors and Files": "Delete Monitors and Files",
    "Select atleast one monitor to delete": "Select atleast one monitor to delete.",
-   "Use Built-In":"Use Built-In"
+   "Use Built-In":"Use Built-In",
+   "Add Cameras": "Add Cameras",
+   "Add Camera": "Add Camera",
+   "Delete Camera": "Delete Camera",
+   "Event Rules": "Event Rules",
+   "Zones": "Zones",
+   "Motion Threshold":"Motion Threshold"
 }
