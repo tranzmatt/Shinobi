@@ -248,9 +248,12 @@ function openTab(theTab,loadData,backAction,haltTrigger,type){
     }else{
         floatingBackButton.hide()
     }
-    pageTabLinks.find(`.side-menu-link`).removeClass('page-link-active active')
-    pageTabLinks.find('ul').hide();
-    pageTabLinks.find(`.side-menu-link[page-open="${theTab}"]`).addClass('page-link-active active').parents('li').find('ul').show();
+    var targetUiElement = pageTabLinks.find(`.side-menu-link[page-open="${theTab}"]`)
+    if(targetUiElement.length > 0){
+        pageTabLinks.find(`.side-menu-link`).removeClass('page-link-active active')
+        pageTabLinks.find('ul').hide();
+        targetUiElement.addClass('page-link-active active').parents('li').find('ul').show();        
+    }
     onTabAway(activeTabName)
     activeTabName = `${theTab}`;
     if(!loadedPages[theTab]){
