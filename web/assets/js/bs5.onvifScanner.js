@@ -1,14 +1,12 @@
 $(document).ready(function(e){
     //onvif probe
-    var currentUsername = ''
-    var currentPassword = ''
     var loadedResults = {}
-    var foundMonitors = {}
+    var loadedResultsByIp = {}
     var monitorEditorWindow = $('#tab-monitorSettings')
     var onvifScannerWindow = $('#tab-onvifScanner')
     var onvifScannerResultPane = onvifScannerWindow.find('.onvif_result')
+    var onvifScannerErrorResultPane = onvifScannerWindow.find('.onvif_result_error')
     var scanForm = onvifScannerWindow.find('form');
-    var outputBlock = onvifScannerWindow.find('.onvif_result');
     var sideMenuList = $(`#side-menu-link-onvifScanner  ul`)
     var checkTimeout;
     function addCredentialsToUri(uri,username,password){
@@ -20,8 +18,8 @@ $(document).ready(function(e){
     }
     function drawFoundCamerasSubMenu(){
         var allFound = []
-        Object.keys(loadedResults).forEach(function(tempID){
-            var item = loadedResults[tempID]
+        Object.keys(loadedResults).forEach(function(monitorId){
+            var item = loadedResults[monitorId]
             allFound.push({
                 attributes: `href="#onvif-result-${tempID}" scrollToParent="#tab-onvifScanner"`,
                 class: `scrollTo`,
@@ -41,33 +39,20 @@ $(document).ready(function(e){
             onvifScannerWindow.find('[type="submit"]').prop('disabled',false)
         }
     }
-    var drawProbeResult = function(options){
-        var tempID = generateId()
-        foundMonitors[tempID] = Object.assign({},options);
-        onvifScannerWindow.find('._notfound').remove()
-        setAsLoading(false)
-        var info = options.error ? options.error : options.info ? jsonToHtmlBlock(options.info) : ''
-        var streamUrl = options.error ? '' : 'No Stream URL Found'
-        var launchWebPage = `target="_blank" href="http${options.port == 443 ? 's' : ''}://${options.ip}:${options.port}"`
-        if(options.uri){
-            streamUrl = options.uri
-        }
-        onvifScannerResultPane[options.error ? 'append' : 'prepend'](`
-            <div class="col-md-4 mb-3" onvif_row="${tempID}" id="onvif-result-${tempID}">
-                <div style="display:block" ${options.error ? launchWebPage : ''} class="card shadow btn-default ${options.error ? '' : 'copy'}">
-                    <div class="preview-image card-header" style="background-image:url(${options.snapShot ? 'data:image/png;base64,' + options.snapShot : placeholder.getData(placeholder.plcimg({text: ' ', fsize: 25, bgcolor:'#1f80f9'}))})"></div>
-                    <div class="card-body" ${options.error ? '' : 'style="min-height:190px"'}>
-                        <div>${info}</div>
-                        <div class="url">${streamUrl}</div>
-                    </div>
-                    <div class="card-footer">${options.ip}:${options.port}</div>
-                </div>
-            </div>
-        `)
+    function drawProbeResult(options){
         if(!options.error){
+            var currentUsername = onvifScannerWindow.find('[name="user"]').val()
+            var currentPassword = onvifScannerWindow.find('[name="pass"]').val()
+            var tempID = generateId()
+            var info = options.info ? jsonToHtmlBlock(options.info) : ''
+            var streamUrl = ''
+            var launchWebPage = `target="_blank" href="http${options.port == 443 ? 's' : ''}://${options.ip}:${options.port}"`
+            if(options.uri){
+                streamUrl = options.uri
+            }
             var theLocation = getLocationFromUri(options.uri)
             var pathLocation = theLocation.location
-            loadedResults[tempID] = {
+            var monitorConfigPartial = {
                 mid: tempID + `${options.port}`,
                 host: pathLocation.hostname,
                 port: pathLocation.port,
@@ -82,15 +67,44 @@ $(document).ready(function(e){
                 },
             }
             if(options.isPTZ){
-                loadedResults[tempID].details = Object.assign(loadedResults[tempID].details,{
+                monitorConfigPartial.details = Object.assign(monitorConfigPartial.details,{
                     control: '1',
                     control_url_method: 'ONVIF',
                     control_stop: '1',
                 })
             }
+            var monitorAlreadyAdded = isOnvifRowAlreadyALoadedMonitor(monitorConfigPartial)
+            var monitorId = monitorConfigPartial.mid
+            loadedResults[monitorId] = monitorConfigPartial;
+            loadedResultsByIp[monitorConfigPartial.host] = monitorConfigPartial;
+            onvifScannerResultPane.append(`
+                <div class="col-md-4 mb-3" onvif_row="${tempID}" id="onvif-result-${tempID}">
+                    <div style="display:block" class="card shadow btn-default copy">
+                        <div class="preview-image card-header" style="background-image:url(${options.snapShot ? 'data:image/png;base64,' + options.snapShot : placeholder.getData(placeholder.plcimg({text: ' ', fsize: 25, bgcolor:'#1f80f9'}))})"></div>
+                        <div class="card-body" style="min-height:190px">
+                            <div>${info}</div>
+                            <div class="url">${streamUrl}</div>
+                        </div>
+                        <div class="card-footer">${options.ip}:${options.port}</div>
+                    </div>
+                </div>
+            `)
+            onvifScannerWindow.find('._notfound').remove()
+            setAsLoading(false)
+            drawFoundCamerasSubMenu()
+        }else{
+            if(!loadedResultsByIp[options.ip]){
+                onvifScannerErrorResultPane.append(`
+                    <div onvif_error_row="${options.ip}" class="d-flex flex-row">
+                        <div class="py-2 px-1" style="min-width:170px"><b>${options.ip}:${options.port}</b></div>
+                        <div class="py-2 px-1 flex-grow-1">${options.error}</div>
+                        <div class="py-2 px-1 text-right">
+                            <a target="_blank" class="btn btn-sm btn-secondary" href="http://${options.ip}:${options.port}"><i class="fa fa-external-link"></i></a>
+                        </div>
+                    </div>
+                `)
+            }
         }
-        // console.log(loadedResults[tempID])
-        drawFoundCamerasSubMenu()
     }
     var filterOutMonitorsThatAreAlreadyAdded = function(listOfCameras,callback){
         $.get(getApiPrefix(`monitor`),function(monitors){
@@ -141,13 +155,12 @@ $(document).ready(function(e){
     }
     scanForm.submit(function(e){
         e.preventDefault();
-        currentUsername = onvifScannerWindow.find('[name="user"]').val()
-        currentPassword = onvifScannerWindow.find('[name="pass"]').val()
         loadedResults = {}
-        foundMonitors = {}
+        loadedResultsByIp = {}
         var el = $(this)
         var form = el.serializeObject();
-        outputBlock.empty();
+        onvifScannerResultPane.empty();
+        onvifScannerErrorResultPane.empty();
         setAsLoading(true)
         mainSocket.f({
             f: 'onvif',
@@ -157,17 +170,17 @@ $(document).ready(function(e){
             pass: form.pass
         });
         clearTimeout(checkTimeout)
-        checkTimeout = setTimeout(function(){
-            if(outputBlock.find('.card').length === 0){
+        onvifScannerResultPane = setTimeout(function(){
+            if(onvifScannerResultPane.find('.card').length === 0){
                 setAsLoading(false)
-                outputBlock.append(`<td style="padding: 10px;" class="text-center _notfound text-white epic-text">${lang.sorryNothingWasFound}</td>`)
+                onvifScannerResultPane.append(`<td style="padding: 10px;" class="text-center _notfound text-white epic-text">${lang.sorryNothingWasFound}</td>`)
             }
         },5000)
         return false;
     });
     onvifScannerWindow.on('click','.copy',function(){
         openMonitorEditorPage()
-        el = $(this).parents('[onvif_row]');
+        var el = $(this).parents('[onvif_row]');
         var id = el.attr('onvif_row');
         var onvifRecord = loadedResults[id];
         var streamURL = onvifRecord.details.auto_host

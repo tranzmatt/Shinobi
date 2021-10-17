@@ -71,6 +71,28 @@ function generateId(x){
         t += p.charAt(Math.floor(Math.random() * p.length));
     return t;
 }
+const mergeDeep = function(...objects) {
+  const isObject = obj => obj && typeof obj === 'object';
+
+  return objects.reduce((prev, obj) => {
+    Object.keys(obj).forEach(key => {
+      const pVal = prev[key];
+      const oVal = obj[key];
+
+      if (Array.isArray(pVal) && Array.isArray(oVal)) {
+        prev[key] = pVal.concat(...oVal);
+      }
+      else if (isObject(pVal) && isObject(oVal)) {
+        prev[key] = mergeDeep(pVal, oVal);
+      }
+      else {
+        prev[key] = oVal;
+      }
+    });
+
+    return prev;
+  }, {});
+}
 function dashboardOptions(r,rr,rrr){
     if(!rrr){rrr={};};if(typeof rrr === 'string'){rrr={n:rrr}};if(!rrr.n){rrr.n='ShinobiOptions_'+location.host}
     ii={o:localStorage.getItem(rrr.n)};try{ii.o=JSON.parse(ii.o)}catch(e){ii.o={}}
@@ -252,7 +274,7 @@ function openTab(theTab,loadData,backAction,haltTrigger,type){
     if(targetUiElement.length > 0){
         pageTabLinks.find(`.side-menu-link`).removeClass('page-link-active active')
         pageTabLinks.find('ul').hide();
-        targetUiElement.addClass('page-link-active active').parents('li').find('ul').show();        
+        targetUiElement.addClass('page-link-active active').parents('li').find('ul').show();
     }
     onTabAway(activeTabName)
     activeTabName = `${theTab}`;

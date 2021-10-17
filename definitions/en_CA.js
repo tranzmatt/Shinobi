@@ -6582,6 +6582,17 @@ module.exports = function(s,config,lang){
                    }
                ]
            },
+           "Other Devices": {
+              "name": lang['Other Devices'],
+              "color": "danger",
+              "section-pre-class": "col-md-12",
+              "info": [
+                  {
+                      "fieldType": "div",
+                      "class": "onvif_result_error row",
+                  }
+              ]
+          },
          }
        },
      "Camera Probe": {
