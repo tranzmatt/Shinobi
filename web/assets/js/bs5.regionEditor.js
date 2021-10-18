@@ -45,7 +45,7 @@ $(document).ready(function(e){
         var monitorDetails = Object.assign({},monitor.details)
         var imageWidth = !isNaN(monitorDetails.detector_scale_x) ? parseInt(monitorDetails.detector_scale_x) : 640
         var imageHeight = !isNaN(monitorDetails.detector_scale_y) ? parseInt(monitorDetails.detector_scale_y) : 480
-        monitorDetails.cords = monitorDetails.cords ? safeJsonParse(monitorDetails.cords) || [] : []
+        monitorDetails.cords = monitorDetails.cords ? safeJsonParse(monitorDetails.cords) || {} : {}
         getRegionEditorCanvas()
             .attr('width',imageWidth)
             .attr('height',imageHeight);
@@ -53,8 +53,7 @@ $(document).ready(function(e){
             width: imageWidth,
             height: imageHeight
         });
-        monitorDetails.cords = safeJsonParse(monitorDetails.cords)
-        if(!monitorDetails.cords){
+        if(Object.keys(monitorDetails.cords).length === 0){
             monitorDetails.cords = {}
             monitorDetails.cords[generateId(5)] = createBlankCoorindateObject(lang['Region Name'])
         }
@@ -178,6 +177,10 @@ $(document).ready(function(e){
             drawPointsTable()
         }
     }
+    function getRegionStillImageSwitch(){
+        var dashboardSwitches = dashboardOptions().switches || {}
+        return dashboardSwitches.regionStillImage || '0'
+    }
     regionEditorRegionsList.change(function(e){
         initCanvas();
     })
@@ -254,7 +257,7 @@ $(document).ready(function(e){
         })
         regionViewerDetails.cords = newCoordinates
         regionViewerDetails.cords[randomId] = createBlankCoorindateObject(lang['Region Name'])
-        regionEditorRegionsList.append(`<option value="${randomId}">${randomId}</option>`)
+        regionEditorRegionsList.append(`<option value="${randomId}">${lang['Region Name']}</option>`)
         regionEditorRegionsList.val(randomId)
         regionEditorRegionsList.change()
         return false;
@@ -271,17 +274,12 @@ $(document).ready(function(e){
         initLiveStream()
     })
     $('body')
-    .ready(function(e){
-        var dashboardSwitches = dashboardOptions().switches || {}
-        if(dashboardSwitches.regionStillImage === 1){
-            useRegionStillImage = true
-        }
-    })
     .on('click','.open-region-editor',function(e){
         var monitorId = getMonitorIdFromElement(this)
         var monitor = loadedMonitors[monitorId]
         openTab(`regionEditor`,{},null)
         loadRegionEditor(monitor)
+        initLiveStream()
     });
     regionEditorMonitorsList.change(function(){
         var monitorId = $(this).val()
@@ -289,6 +287,7 @@ $(document).ready(function(e){
         if(monitor)loadRegionEditor(monitor)
     })
     addOnTabOpen('regionEditor', function () {
+        useRegionStillImage = getRegionStillImageSwitch() === 1;
         if(!regionEditorMonitorsList.val()){
             drawMonitorListToSelector(regionEditorMonitorsList,true)
         }
