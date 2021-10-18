@@ -133,7 +133,7 @@ $(document).ready(function(e){
         liveElement.attr('width',regionViewerDetails.detector_scale_x)
         liveElement.attr('height',regionViewerDetails.detector_scale_y)
     }
-    var initCanvas = function(){
+    var initCanvas = function(dontReloadStream){
         var newArray = [];
         var regionEditorRegionsListValue = regionEditorRegionsList.val();
         if(!regionEditorRegionsListValue){
@@ -165,7 +165,7 @@ $(document).ready(function(e){
             regionEditorForm.find('[name="threshold"]').val(cord.threshold)
             regionEditorForm.find('[name="color_threshold"]').val(cord.color_threshold)
             regionEditorWindow.find('.canvas_holder canvas').remove()
-            initLiveStream()
+            if(!dontReloadStream)initLiveStream();
             regionEditorRegionsCanvas.val(newArray.join(','))
             regionEditorRegionsCanvas.canvasAreaDraw({
                 imageUrl: placeholder.getData(placeholder.plcimg({
@@ -182,7 +182,7 @@ $(document).ready(function(e){
         return dashboardSwitches.regionStillImage || '0'
     }
     regionEditorRegionsList.change(function(e){
-        initCanvas();
+        initCanvas(true);
     })
     regionEditorWindow.on('change','[name]',function(){
         var currentRegionId = getCurrentlySelectedRegionId()

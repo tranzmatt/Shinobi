@@ -5990,6 +5990,13 @@ module.exports = function(s,config,lang){
                        "class": `btn-info toggle-region-still-image`,
                        "btnContent": `<i class="fa fa-retweet"></i> &nbsp; ${lang['Live Stream Toggle']}`,
                     },
+                    {
+                       "fieldType": "btn",
+                       forForm: true,
+                       attribute: "href=#",
+                       "class": `btn-success`,
+                       "btnContent": `<i class="fa fa-check"></i> &nbsp; ${lang['Save']}`,
+                    },
                 ]
             },
             "Points": {
