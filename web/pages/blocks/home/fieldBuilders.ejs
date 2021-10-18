@@ -217,7 +217,7 @@ drawBlock = function(monitorSettings){
                 fieldElement = `<form ${attributes.join(' ')} class="${fieldClass.join(' ')}" ></form>`
           break;
           case'table':
-                fieldElement = `<table ${attributes.join(' ')} class="${fieldClass.join(' ')}"><tbody></tbody></table>`
+                fieldElement = `<table ${hidden} ${attributes.join(' ')} class="${fieldClass.join(' ')}"><tbody></tbody></table>`
           break;
           case'number':
                 if(field.numberMin){

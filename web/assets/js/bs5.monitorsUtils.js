@@ -363,7 +363,7 @@ function importMonitor(textData){
         }
     }
 }
-function deleteMonitors(monitorsSelected){
+function deleteMonitors(monitorsSelected,afterDelete){
     $.confirm.create({
         title: lang['Delete']+' '+lang['Monitors'],
         body: '<p>'+lang.DeleteMonitorsText+'</p>',
@@ -375,6 +375,10 @@ function deleteMonitors(monitorsSelected){
                     $.each(monitorsSelected,function(n,monitor){
                         $.get(`${getApiPrefix(`configureMonitor`)}/${monitor.mid}/delete`,function(data){
                             console.log(data)
+                            if(monitorsSelected.length === n + 1){
+                                //last
+                                if(afterDelete)afterDelete(monitorsSelected)
+                            }
                         })
                     })
                 }
@@ -386,6 +390,10 @@ function deleteMonitors(monitorsSelected){
                     $.each(monitorsSelected,function(n,monitor){
                         $.get(`${getApiPrefix(`configureMonitor`)}/${monitor.mid}/delete?deleteFiles=true`,function(data){
                             console.log(data)
+                            if(monitorsSelected.length === n + 1){
+                                //last
+                                if(afterDelete)afterDelete(monitorsSelected)
+                            }
                         })
                     })
                 }

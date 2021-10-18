@@ -7,6 +7,7 @@ $(document).ready(function(e){
     var regionStillImage = regionEditorWindow.find('.toggle-region-still-image');
     var regionEditorCanvasHolder = regionEditorWindow.find('.canvas_holder')
     var regionEditorMonitorsList = $('#region_editor_monitors')
+    var regionEditorLiveView = $('#region_editor_live')
     var useRegionStillImage = false
     var getRegionEditorCanvas = function(){
         return regionEditorWindow.find('canvas')
@@ -21,7 +22,10 @@ $(document).ready(function(e){
         return regionEditorRegionsList.val()
     }
     var regionViewerDetails = {}
-    var createBlankCoorindateObject = function(name){
+    function createBlankCoorindateObject(name){
+        var streamElement = regionEditorLiveView.find('iframe,img')
+        var width = streamElement.width() || 200
+        var height = streamElement.height() || 200
         return {
             name: name,
             sensitivity: 10,
@@ -30,8 +34,9 @@ $(document).ready(function(e){
             color_threshold: 9,
             points: [
                 [0, 0],
-                [0, 100],
-                [100, 0]
+                [0, height],
+                [width, height],
+                [width, 0]
             ]
         }
     }
@@ -51,7 +56,7 @@ $(document).ready(function(e){
         monitorDetails.cords = safeJsonParse(monitorDetails.cords)
         if(!monitorDetails.cords){
             monitorDetails.cords = {}
-            monitorDetails.cords[generateId(5)] = createBlankCoorindateObject('newName')
+            monitorDetails.cords[generateId(5)] = createBlankCoorindateObject(lang['Region Name'])
         }
         regionViewerDetails = monitorDetails;
         initiateRegionList()
@@ -109,14 +114,12 @@ $(document).ready(function(e){
     }
     var initLiveStream = function(){
         var monitorId = getCurrentlySelectedMonitorId()
-        var liveElement = $('#region_editor_live');
         var apiPoint = 'embed'
-        liveElement.find('iframe,img').attr('src','').hide()
+        var liveElement = regionEditorLiveView.find('iframe,img')
+        regionEditorLiveView.find('iframe,img').attr('src','').hide()
         if(useRegionStillImage){
-            liveElement = liveElement.find('img')
             apiPoint = 'jpeg'
         }else{
-            liveElement = liveElement.find('iframe')
             apiPoint = 'embed'
         }
         var apiUrl = `${getApiPrefix(apiPoint)}/${monitorId}`
@@ -250,7 +253,7 @@ $(document).ready(function(e){
             }
         })
         regionViewerDetails.cords = newCoordinates
-        regionViewerDetails.cords[randomId] = createBlankCoorindateObject(randomId)
+        regionViewerDetails.cords[randomId] = createBlankCoorindateObject(lang['Region Name'])
         regionEditorRegionsList.append(`<option value="${randomId}">${randomId}</option>`)
         regionEditorRegionsList.val(randomId)
         regionEditorRegionsList.change()
@@ -258,15 +261,14 @@ $(document).ready(function(e){
     })
     regionStillImage.click(function(e){
         var dashboardSwitches = dashboardOptions().switches || {}
-        console.log(useRegionStillImage)
         if(useRegionStillImage){
             dashboardSwitches.regionStillImage = 1
         }else{
             dashboardSwitches.regionStillImage = "0"
         }
         dashboardOptions('switches',dashboardSwitches)
-        initLiveStream()
         useRegionStillImage = !useRegionStillImage
+        initLiveStream()
     })
     $('body')
     .ready(function(e){

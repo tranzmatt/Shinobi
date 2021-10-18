@@ -5940,8 +5940,8 @@ module.exports = function(s,config,lang){
                 "name": lang["Regions"],
                 "headerTitle": `<span class="cord_name">&nbsp;</span>
                   <div class="pull-right">
-                      <a class="badge btn btn-success btn-sm add">&nbsp;<i class="fa fa-plus"></i>&nbsp;</a>
-                      <a class="badge btn btn-danger btn-sm erase">&nbsp;<i class="fa fa-trash-o"></i>&nbsp;</a>
+                      <a href=# class="btn btn-success btn-sm add"><i class="fa fa-plus"></i></a>
+                      <a href=# class="btn btn-danger btn-sm erase"><i class="fa fa-trash-o"></i></a>
                   </div>`,
                 "color": "orange",
                 "section-pre-class": "col-md-6",
@@ -5979,12 +5979,14 @@ module.exports = function(s,config,lang){
                        "field": lang['Color Threshold'],
                     },
                     {
+                        hidden: true,
                         id: "regions_points",
                         "fieldType": "table",
                         "class": 'table table-striped',
                     },
                     {
                        "fieldType": "btn",
+                       attribute: "href=#",
                        "class": `btn-info toggle-region-still-image`,
                        "btnContent": `<i class="fa fa-retweet"></i> &nbsp; ${lang['Live Stream Toggle']}`,
                     },

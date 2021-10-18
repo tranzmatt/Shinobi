@@ -21,7 +21,7 @@ $(document).ready(function(e){
         Object.keys(loadedResults).forEach(function(monitorId){
             var item = loadedResults[monitorId]
             allFound.push({
-                attributes: `href="#onvif-result-${tempID}" scrollToParent="#tab-onvifScanner"`,
+                attributes: `href="#onvif-result-${monitorId}" scrollToParent="#tab-onvifScanner"`,
                 class: `scrollTo`,
                 color: 'blue',
                 label: item.host + ':' + item.details.onvif_port,
@@ -74,11 +74,14 @@ $(document).ready(function(e){
                 })
             }
             var monitorAlreadyAdded = isOnvifRowAlreadyALoadedMonitor(monitorConfigPartial)
+            if(monitorAlreadyAdded){
+                monitorConfigPartial.mid = monitorAlreadyAdded.mid;
+            }
             var monitorId = monitorConfigPartial.mid
             loadedResults[monitorId] = monitorConfigPartial;
             loadedResultsByIp[monitorConfigPartial.host] = monitorConfigPartial;
             onvifScannerResultPane.append(`
-                <div class="col-md-4 mb-3" onvif_row="${tempID}" id="onvif-result-${tempID}">
+                <div class="col-md-4 mb-3" onvif_row="${monitorId}" id="onvif-result-${monitorId}">
                     <div style="display:block" class="card shadow btn-default copy">
                         <div class="preview-image card-header" style="background-image:url(${options.snapShot ? 'data:image/png;base64,' + options.snapShot : placeholder.getData(placeholder.plcimg({text: ' ', fsize: 25, bgcolor:'#1f80f9'}))})"></div>
                         <div class="card-body" style="min-height:190px">
@@ -105,6 +108,15 @@ $(document).ready(function(e){
                 `)
             }
         }
+    }
+    function isOnvifRowAlreadyALoadedMonitor(onvifRow){
+        var matches = null;
+        $.each(loadedMonitors,function(n,monitor){
+            if(monitor.host === onvifRow.host){
+                matches = monitor
+            }
+        })
+        return matches;
     }
     var filterOutMonitorsThatAreAlreadyAdded = function(listOfCameras,callback){
         $.get(getApiPrefix(`monitor`),function(monitors){
