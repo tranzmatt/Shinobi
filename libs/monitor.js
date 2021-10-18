@@ -500,9 +500,12 @@ module.exports = function(s,config,lang){
         s.checkDetails(e)
         if(e.ke && config.doSnapshot === true){
             if(s.group[e.ke] && s.group[e.ke].rawMonitorConfigurations && s.group[e.ke].rawMonitorConfigurations[e.mid] && s.group[e.ke].rawMonitorConfigurations[e.mid].mode !== 'stop'){
-                var pathDir = s.dir.streams+e.ke+'/'+e.mid+'/'
-                const {screenShot, isStaticFile} = await s.getRawSnapshotFromMonitor(s.group[e.ke].rawMonitorConfigurations[e.mid],options)
-                if(screenShot){
+                if(s.group[e.ke].activeMonitors[e.mid].onvifConnection){
+                    const screenShot = await s.getSnapshotFromOnvif({
+                        username: onvifUsername,
+                        password: onvifPassword,
+                        uri: cameraResponse.uri,
+                    });
                     s.tx({
                         f: 'monitor_snapshot',
                         snapshot: screenShot.toString('base64'),
@@ -511,9 +514,21 @@ module.exports = function(s,config,lang){
                         ke: e.ke
                     },'GRP_'+e.ke)
                 }else{
-                    s.debugLog('Damaged Snapshot Data')
-                    s.tx({f:'monitor_snapshot',snapshot:e.mon.name,snapshot_format:'plc',mid:e.mid,ke:e.ke},'GRP_'+e.ke)
-               }
+                    var pathDir = s.dir.streams+e.ke+'/'+e.mid+'/'
+                    const {screenShot, isStaticFile} = await s.getRawSnapshotFromMonitor(s.group[e.ke].rawMonitorConfigurations[e.mid],options)
+                    if(screenShot){
+                        s.tx({
+                            f: 'monitor_snapshot',
+                            snapshot: screenShot.toString('base64'),
+                            snapshot_format: 'b64',
+                            mid: e.mid,
+                            ke: e.ke
+                        },'GRP_'+e.ke)
+                    }else{
+                        s.debugLog('Damaged Snapshot Data')
+                        s.tx({f:'monitor_snapshot',snapshot:e.mon.name,snapshot_format:'plc',mid:e.mid,ke:e.ke},'GRP_'+e.ke)
+                   }
+                }
             }else{
                 s.tx({f:'monitor_snapshot',snapshot:'Disabled',snapshot_format:'plc',mid:e.mid,ke:e.ke},'GRP_'+e.ke)
             }
