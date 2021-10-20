@@ -57,7 +57,7 @@ $(document).ready(function(){
                           ${eventMatrixHtml}
                       </div>
                       <small class="d-block text-end mt-3">
-                        <a class="go-back btn badge" href="#">${lang['Back']}</a>
+                        <a class="go-back btn badge">${lang['Back']}</a>
                       </small>
                 </div>
             </div>

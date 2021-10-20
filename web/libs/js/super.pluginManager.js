@@ -21,12 +21,12 @@ $(document).ready(function(){
                             <div><pre><b>${lang['Last Modified']} :</b> ${module.lastModified}</pre></div>
                             <div class="mb-2">
                                 ${module.hasInstaller ? `
-                                    <a href="#" class="btn btn-sm btn-info" plugin-manager-action="install">${lang['Run Installer']}</a>
-                                    <a href="#" class="btn btn-sm btn-danger" style="display:none" plugin-manager-action="cancelInstall">${lang['Stop']}</a>
+                                    <a class="btn btn-sm btn-info" plugin-manager-action="install">${lang['Run Installer']}</a>
+                                    <a class="btn btn-sm btn-danger" style="display:none" plugin-manager-action="cancelInstall">${lang['Stop']}</a>
                                 ` : ''}
-                                <a href="#" class="btn btn-sm btn-default" plugin-manager-action="status">${module.properties.disabled ? lang.Enable : lang.Disable}</a>
-                                <a href="#" class="btn btn-sm btn-danger" plugin-manager-action="delete">${lang.Delete}</a>
-                                <a href="#" class="btn btn-sm btn-warning" plugin-manager-action="editConfig">${lang[`Edit Configuration`]}</a>
+                                <a class="btn btn-sm btn-default" plugin-manager-action="status">${module.properties.disabled ? lang.Enable : lang.Disable}</a>
+                                <a class="btn btn-sm btn-danger" plugin-manager-action="delete">${lang.Delete}</a>
+                                <a class="btn btn-sm btn-warning" plugin-manager-action="editConfig">${lang[`Edit Configuration`]}</a>
                             </div>
                             <div class="pl-2 pr-2">
                                 <div class="install-output row">
