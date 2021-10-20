@@ -14,7 +14,7 @@ $(document).ready(function(e){
         return newDetails
     }
     window.drawApiKeyRow = function(row){
-        var html = `<div class="card btn-default text-white mb-3 shadow-sm p-2" api_key="${row.code}">
+        var html = `<div class="card btn-default ${definitions.Theme.isDark ? 'text-white' : ''} mb-3 shadow-sm p-2" api_key="${row.code}">
             <div class="row">
                 <div class="col-md-6">
                     <div>

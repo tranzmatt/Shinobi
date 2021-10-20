@@ -185,7 +185,7 @@ $(document).ready(function(e){
         onvifScannerResultPane = setTimeout(function(){
             if(onvifScannerResultPane.find('.card').length === 0){
                 setAsLoading(false)
-                onvifScannerResultPane.append(`<td style="padding: 10px;" class="text-center _notfound text-white epic-text">${lang.sorryNothingWasFound}</td>`)
+                onvifScannerResultPane.append(`<div class="p-2 text-center ${definitions.Theme.isDark ? 'text-white' : ''} _notfound text-white epic-text">${lang.sorryNothingWasFound}</div>`)
             }
         },5000)
         return false;

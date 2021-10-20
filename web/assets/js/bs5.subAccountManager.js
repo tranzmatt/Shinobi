@@ -119,7 +119,7 @@ $(document).ready(function(){
         })
     }
     var drawSubAccountRow = function(account){
-        var html = `<div class="card btn-default text-white mb-3 shadow-sm p-2" uid="${account.uid}">
+        var html = `<div class="card ${definitions.Theme.isDark ? 'btn-default text-white' : 'bg-light text-dark'} mb-3 shadow-sm p-2" uid="${account.uid}">
             <div>
                 ${account.mail}<br>
                 <small class="text-muted">${account.uid}</small><br>

@@ -40,7 +40,7 @@ $(document).ready(function(){
                             <button type="button" class="d-inline-block badge btn btn-dark dropdown-toggle dropdown-toggle-split" id="monitorMenuItem${row.mid}" data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
                               <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
                             </button>
-                            <ul class="dropdown-menu dropdown-menu-dark bg-dark shadow-lg" aria-labelledby="monitorMenuItem${row.mid}">
+                            <ul class="dropdown-menu ${definitions.Theme.isDark ? 'dropdown-menu-dark bg-dark' : ''} shadow-lg" aria-labelledby="monitorMenuItem${row.mid}">
                                 ${buildDefaultMonitorMenuItems()}
                             </ul>
                         </div>
@@ -59,7 +59,7 @@ $(document).ready(function(){
         var newTabId = `monitorVideos-${monitor.mid}`
         var tabLabel = `<b>${lang['Videos']}</b> : ${monitor.name}`
         var baseHtml = `<main class="container page-tab" id="tab-${newTabId}">
-            <div class="my-3 p-3 bg-dark text-white rounded shadow-sm">
+            <div class="my-3 p-3 ${definitions.Theme.isDark ? 'bg-dark text-white' : 'bg-light text-dark'} rounded shadow-sm">
                   <h6 class="border-bottom-dotted border-bottom-dark pb-2 mb-0 row">
                     <div class="col-md-8">${lang['Videos']} : ${monitor.name}</div>
                     <div class="col-md-4"><input class="form-control form-control-sm btn-dark text-md-end text-sm-center" type="text" id="daterange-${newTabId}" value="01/01/2018 - 01/15/2018" /></div>

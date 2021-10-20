@@ -36,7 +36,7 @@
                                         <ul class="btn-default rounded btn-toggle-nav list-unstyled fw-normal ml-3 mt-2 px-2 pb-2 pt-1 <%- item.ulClass ? item.ulClass : '' %>">
                                             <% if(item.ulItems){
                                                 item.ulItems.forEach((listItem) => { %>
-                                                    <li><a class="<%- define.Theme.isDark ? 'text-white' : '' %> <%- listItem.class ? listItem.class : '' %>" <%- listItem.attributes ? listItem.attributes : '' %>><span class="dot dot-<%- listItem.color ? listItem.color : 'blue' %> shadow mr-2"></span><%- listItem.label ? listItem.label : 'Need Label' %></a></li>
+                                                    <li><a class="<%- define.Theme.isDark ? 'text-white' : 'text-dark' %> <%- listItem.class ? listItem.class : '' %>" <%- listItem.attributes ? listItem.attributes : '' %>><span class="dot dot-<%- listItem.color ? listItem.color : 'blue' %> shadow mr-2"></span><%- listItem.label ? listItem.label : 'Need Label' %></a></li>
                                             <%  })
                                                } %>
                                         </ul>
@@ -57,7 +57,7 @@
                    <a class="btn btn-sm btn-block btn-default dropdown-toggle" href="#" role="button" id="monitor-group-selections-opener" data-bs-toggle="dropdown" aria-expanded="false">
                      <%- lang['Monitor Groups'] %>
                    </a>
-                   <ul class="dropdown-menu dropdown-menu-dark bg-dark shadow-lg" aria-labelledby="monitor-group-selections-opener" id="monitor-group-selections"></ul>
+                   <ul class="dropdown-menu <%- `${define.Theme.isDark ? 'dropdown-menu-dark bg-dark' : ''}` %> shadow-lg" aria-labelledby="monitor-group-selections-opener" id="monitor-group-selections"></ul>
                  </div>
               </div>
               <ul id="monitorSideList" class="nav flex-column nav-pills pb-3 px-2"></ul>

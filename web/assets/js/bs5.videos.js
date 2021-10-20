@@ -59,7 +59,7 @@ function createVideoRow(row,classOverride){
         eventMatrixHtml += `
                 <table class="table table-striped mb-0">
                 <tr>
-                  <th scope="col" class="text-white text-epic">${lang.Events}</th>
+                  <th scope="col" class="${definitions.Theme.isDark ? 'text-white' : ''} text-epic">${lang.Events}</th>
                   <th scope="col" class="text-end"><span class="badge bg-light text-dark rounded-pill">${row.events.length}</span></th>
                 </tr>`
             $.each(row.events,function(n,theEvent){
@@ -72,8 +72,8 @@ function createVideoRow(row,classOverride){
             })
             $.each(objectsFound,function(tag,count){
                 eventMatrixHtml += `<tr>
-                    <td class="text-white" style="text-transform:capitalize">${tag}</td>
-                    <td class="text-end"><span class="badge bg-light text-dark rounded-pill">${count}</span></td>
+                    <td class="${definitions.Theme.isDark ? 'text-white' : ''}" style="text-transform:capitalize">${tag}</td>
+                    <td class="text-end"><span class="badge ${definitions.Theme.isDark ? 'bg-light text-dark' : 'bg-dark text-white'} rounded-pill">${count}</span></td>
                 </tr>`
             })
             eventMatrixHtml += `</table>`
@@ -87,9 +87,9 @@ function createVideoRow(row,classOverride){
                     ${loadedMonitors[row.mid] ? loadedMonitors[row.mid].name : row.mid}
                 </div>
                 <div>
-                    <a href="#" class="badge btn btn-primary open-video mr-1" title="${lang['Watch']}"><i class="fa fa-play-circle"></i></a>
+                    <a class="badge btn btn-primary open-video mr-1" title="${lang['Watch']}"><i class="fa fa-play-circle"></i></a>
                     <a class="badge btn btn-success" download href="${videoEndpoint}" title="${lang['Download']}"><i class="fa fa-download"></i></a>
-                    <a href="#" class="badge btn btn-danger delete-video" title="${lang['Delete']}"><i class="fa fa-trash-o"></i></a>
+                    <a class="badge btn btn-danger delete-video" title="${lang['Delete']}"><i class="fa fa-trash-o"></i></a>
                 </div>
             </div>
             <div class="card-body">

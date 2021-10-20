@@ -35,7 +35,7 @@
                     <button class="btn btn-sm btn-primary dropdown-toggle" type="button" id="monitorsListOptions" data-bs-toggle="dropdown" aria-expanded="false">
                       <i class="fa fa-bars"></i>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-dark bg-dark shadow-lg text-white" aria-labelledby="monitorsListOptions">
+                    <ul class="dropdown-menu shadow-lg <%- `${define.Theme.isDark ? 'dropdown-menu-dark bg-dark text-white' : 'text-dark'}` %>" aria-labelledby="monitorsListOptions">
                       <li><a class="dropdown-item delete-monitor-in-settings-window cursor-pointer"><%- lang.Delete %></a></li>
                       <li><hr class="dropdown-divider"></li>
                       <li><a class="dropdown-item export-from-monitor-settings-window cursor-pointer"><%- lang.Export %></a></li>
