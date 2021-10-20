@@ -3730,27 +3730,6 @@ module.exports = function(s,config,lang){
                    },
                    {
                        hidden: true,
-                      "name": lang['OpenCV Cascades'],
-                      "color": "orange",
-                      id: "monSectionOpenCVCascades",
-                      headerTitle: `${lang['OpenCV Cascades']}<a class="pull-right btn btn-xs btn-default refresh_cascades" title="${lang['Refresh List of Cascades']}">&nbsp;<i class="fa fa-retweet"></i>&nbsp;</a>`,
-                      blockquote: lang.opencvCascadesText,
-                      isSection: true,
-                      isAdvanced: true,
-                      isFormGroupGroup: true,
-                      "section-pre-pre-class": "h_det_input h_det_1",
-                      "section-pre-class": "h_casc_input h_casc_1",
-                      "section-class": "shinobi-detector-opencv shinobi-detector-openalpr shinobi-detector_plug",
-                      "info": [
-                          {
-                              "fieldType": "div",
-                              id: "detector_cascade_list",
-                              style: "max-height: 300px;overflow: auto;"
-                          }
-                      ]
-                  },
-                   {
-                       hidden: true,
                       "name": lang['Traditional Recording'],
                       "input-mapping": "detector_sip_buffer",
                       "color": "orange",
@@ -6308,6 +6287,23 @@ module.exports = function(s,config,lang){
                         "name": "id",
                      },
                      {
+                       "name": "enabled",
+                       "field": lang.Enabled,
+                       "fieldType": "select",
+                       "default": "1",
+                       "possible": [
+                          {
+                             "name": "No",
+                             "value": "0",
+                          },
+                          {
+                             "name": "Yes",
+                             "value": "1",
+                             "selected": true
+                          }
+                       ]
+                     },
+                     {
                         "name": "filter_name",
                         "field": lang['Filter Name'],
                      },
@@ -6346,7 +6342,7 @@ module.exports = function(s,config,lang){
                       "fieldType": "select",
                       "form-group-class": "actions-row",
                       "description": "Make the event do nothing, as if it never happened.",
-                      "default": "No",
+                      "default": "0",
                       "possible": [
                          {
                             "name": "No",
@@ -7553,7 +7549,7 @@ module.exports = function(s,config,lang){
        },
        "Monitor Options": {
            "section": "Monitor Options",
-           "dropdownClass": `dropdown-menu-dark ${mainBackgroundColor}`
+           "dropdownClass": `${Theme.isDark ? 'dropdown-menu-dark' : ''} ${mainBackgroundColor}`
        },
        "SideMenu": {
            "section": "SideMenu",
@@ -7767,7 +7763,7 @@ module.exports = function(s,config,lang){
                          "divContent": `<div class="card-body ${textWhiteOnBgDark}">
                              <h5 class="card-title"><i class="fa fa-th text-muted"></i> ${lang['Live Grid']}</h5>
                              <p class="card-text">${lang.liveGridDescription}</p>
-                             <a href="#" page-open="liveGrid" class="btn btn-primary">${lang.Open}</a>
+                             <a page-open="liveGrid" class="btn btn-primary">${lang.Open}</a>
                            </div>`
                      },
                      {
@@ -7776,7 +7772,7 @@ module.exports = function(s,config,lang){
                          "divContent": `<div class="card-body ${textWhiteOnBgDark}">
                              <h5 class="card-title"><i class="fa fa-gears text-muted"></i> ${lang['Account Settings']}</h5>
                              <p class="card-text">${lang.accountSettingsDescription}</p>
-                             <a href="#" page-open="accountSettings" class="btn btn-primary">${lang.Open}</a>
+                             <a page-open="accountSettings" class="btn btn-primary">${lang.Open}</a>
                            </div>`
                      },
                  ]

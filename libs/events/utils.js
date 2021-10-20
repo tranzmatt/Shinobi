@@ -187,6 +187,7 @@ module.exports = (s,config,lang,app,io) => {
             Object.keys(filters).forEach(function(key){
                 var conditionChain = {}
                 var dFilter = filters[key]
+                if(dFilter.enabled === '0')return;
                 dFilter.where.forEach(function(condition,place){
                     conditionChain[place] = {ok:false,next:condition.p4,matrixCount:0}
                     if(d.details.matrices)conditionChain[place].matrixCount = d.details.matrices.length
@@ -268,6 +269,9 @@ module.exports = (s,config,lang,app,io) => {
                             var value = dFilter.actions[key]
                             filter[key] = parseValue(key,value)
                         })
+                        if(dFilter.actions.record === '1'){
+                            filter.forceRecord = true
+                        }
                     }else{
                         filter.halt = true
                     }
@@ -381,9 +385,8 @@ module.exports = (s,config,lang,app,io) => {
             detector_timeout = parseFloat(monitorDetails.detector_timeout)
         }
         if(
-            filter.record &&
+            (filter.forceRecord || (filter.record && monitorDetails.detector_trigger === '1')) &&
             monitorConfig.mode === 'start' &&
-            monitorDetails.detector_trigger === '1' &&
             (monitorDetails.detector_record_method === 'sip' || monitorDetails.detector_record_method === 'hot')
         ){
             createEventBasedRecording(d,moment(eventTime).subtract(5,'seconds').format('YYYY-MM-DDTHH-mm-ss'))
@@ -595,6 +598,7 @@ module.exports = (s,config,lang,app,io) => {
             webhook : true,
             command : true,
             record : true,
+            forceRecord : false,
             indifference : false,
             countObjects : true
         }
