@@ -17,6 +17,7 @@ var extra = ''
 var current = 1
 var currentItem = list[0]
 var chosenFile = langDir+process.argv[4]+'.json'
+var translateKey = langDir+process.argv[5] || 'trnsl.1.1.20160311T042953Z.341f2f63f38bdac6.c7e5c01fff7f57160141021ca61b60e36ff4d379'
 try{
     newList=require(chosenFile)
 }catch(err){
@@ -49,7 +50,7 @@ var next=function(v){
     if(/<[a-z][\s\S]*>/i.test(source[v])===true){
         extra+='&format=html'
     }
-    var url = 'https://translate.yandex.net/api/v1.5/tr.json/translate?key=trnsl.1.1.20160311T042953Z.341f2f63f38bdac6.c7e5c01fff7f57160141021ca61b60e36ff4d379'+extra+'&lang='+process.argv[3]+'-'+process.argv[4]+'&text='+source[v]
+    var url = 'https://translate.yandex.net/api/v1.5/tr.json/translate?key='+translateKey+extra+'&lang='+process.argv[3]+'-'+process.argv[4]+'&text='+source[v]
     https.request(url, function(data) {
         data.setEncoding('utf8');
         var chunks='';
@@ -59,17 +60,21 @@ var next=function(v){
         data.on('end', () => {
             try{
                 chunks=JSON.parse(chunks)
+                console.log(chunks);
                 if(chunks.html){
                     if(chunks.html[0]){
                         var translation=chunks.html[0]
                     }else{
                         var translation=chunks.html
                     }
-                    
+
                 }else{
                     var translation=chunks.text[0]
                 }
             }catch(err){
+                console.log(`You probably need to set your own translate key.`);
+                console.log(err);
+                console.log(chunks);
                 var translation=source[v]
             }
             newList[v]=translation;
