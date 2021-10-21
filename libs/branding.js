@@ -3,8 +3,16 @@ module.exports = function(s,config,lang,app,io){
     if(config.poweredByShinobi === undefined){config.poweredByShinobi='Powered by Shinobi.Systems'}
     if(config.webPageTitle === undefined){config.webPageTitle='Shinobi'}
     if(config.showLoginCardHeader === undefined){config.showLoginCardHeader=true}
-    if(config.webFavicon === undefined){config.webFavicon='libs/img/icon/favicon.ico'}
-    if(config.logoLocation76x76 === undefined){config.logoLocation76x76='libs/img/icon/apple-touch-icon-76x76.png'}
+    if(config.webFavicon === undefined){config.webFavicon = 'libs/img/icon/favicon.ico'}
+    if(!config.logoLocationAppleTouchIcon)config.logoLocationAppleTouchIcon = 'libs/img/icon/apple-touch-icon.png';
+    if(!config.logoLocation57x57)config.logoLocation57x57 = 'libs/img/icon/apple-touch-icon-57x57.png';
+    if(!config.logoLocation72x72)config.logoLocation72x72 = 'libs/img/icon/apple-touch-icon-72x72.png';
+    if(!config.logoLocation76x76)config.logoLocation76x76 = 'libs/img/icon/apple-touch-icon-76x76.png';
+    if(!config.logoLocation114x114)config.logoLocation114x114 = 'libs/img/icon/apple-touch-icon-114x114.png';
+    if(!config.logoLocation120x120)config.logoLocation120x120 = 'libs/img/icon/apple-touch-icon-120x120.png';
+    if(!config.logoLocation144x144)config.logoLocation144x144 = 'libs/img/icon/apple-touch-icon-144x144.png';
+    if(!config.logoLocation152x152)config.logoLocation152x152 = 'libs/img/icon/apple-touch-icon-152x152.png';
+    if(!config.logoLocation196x196)config.logoLocation196x196 = 'libs/img/icon/favicon-196x196.png';
     if(config.logoLocation76x76Link === undefined){config.logoLocation76x76Link='https://shinobi.video'}
     if(config.logoLocation76x76Style === undefined){config.logoLocation76x76Style='border-radius:50%'}
     if(config.loginScreenBackground === undefined){config.loginScreenBackground='https://shinobi.video/libs/assets/backgrounds/7.jpg'}
@@ -34,7 +42,6 @@ module.exports = function(s,config,lang,app,io){
             }
         ]
     }
-
     s.getConfigWithBranding = function(domain){
         var configCopy = Object.assign({},config)
         if(config.brandingConfig && config.brandingConfig[domain]){

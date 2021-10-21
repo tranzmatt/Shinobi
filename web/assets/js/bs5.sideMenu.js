@@ -16,7 +16,7 @@ function drawMonitorIconToMenu(item){
     var html = `<li class="nav-item monitor-icon monitor_block glM${item.mid}" data-ke="${item.ke}" data-mid="${item.mid}" data-status-code="${item.code}">
         <div title="Monitor ID : ${item.mid}" class="d-flex d-flex-row align-items-center p-2 mt-0 mb-3 mx-0 btn btn-default rounded shadow-sm cursor-pointer">
           <div class="lh-1 text-start">
-            <img class="me-3 snapshot launch-live-grid-monitor" src="${true ? `libs/img/icon/favicon-196x196.png` : getApiPrefix('icon') + '/' + item.mid}">
+            <img class="me-3 snapshot launch-live-grid-monitor" src="${true ? logoLocation196x196 : getApiPrefix('icon') + '/' + item.mid}">
           </div>
           <div class="lh-1 text-start hidden-squeeze">
             <h1 class="h6 mb-0 lh-1"><span class="monitor_name">${item.name}</span></h1>
