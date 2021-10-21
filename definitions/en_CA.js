@@ -7553,6 +7553,7 @@ module.exports = function(s,config,lang){
        },
        "SideMenu": {
            "section": "SideMenu",
+           showMonitors: true,
            "blocks": {
                "Container1": {
                   // "id": "sidebarMenu",
