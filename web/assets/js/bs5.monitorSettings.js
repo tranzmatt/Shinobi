@@ -10,6 +10,7 @@ var monSectionPresets = $('#monSectionPresets')
 var copySettingsSelector = $('#copy_settings')
 var monitorPresetsSelection = $('#monitorPresetsSelection')
 var monitorPresetsNameField = $('#monitorPresetsName')
+var monitorGroupSelectors = $('#monitor_groups')
 var editorForm = monitorEditorWindow.find('form')
 var monitorEditorSelectedMonitor = null
 var fieldsLoaded = {}
@@ -242,6 +243,14 @@ var getSelectedMonitorInfo = function(){
         auth: $user.auth_token,
     }
 }
+function getMonitorGroupsSelected(){
+    var monitorGroupsInSelection = []
+    monitorGroupSelectors.find('input:checked').each(function(n,v){
+        var monitorId = $(v).val()
+        monitorGroupsInSelection.push(monitorId)
+    })
+    return monitorGroupsInSelection
+}
 var differentiateMonitorConfig = function(firstConfig,secondConfig){
     console.log(firstConfig,secondConfig)
     var diffedConfig = {}
@@ -362,7 +371,10 @@ window.getMonitorEditFormFields = function(){
     //edit details
     monitorConfig.details = safeJsonParse(monitorConfig.details)
     monitorConfig.details.substream = getSubStreamChannelFields()
+    monitorConfig.details.groups = getMonitorGroupsSelected()
+    // TODO : Input Maps and Stream Channels
 
+    
 //    if(monitorConfig.protocol=='rtsp'){monitorConfig.ext='mp4',monitorConfig.type='rtsp'}
     if(errorsFound.length > 0){
         response.ok = false
