@@ -553,6 +553,120 @@ function buildDefaultMonitorMenuItems(){
     <li><a class="dropdown-item cursor-pointer" set-mode="start">${lang['Watch-Only']}</a></li>
     <li><a class="dropdown-item cursor-pointer" set-mode="record">${lang.Record}</a></li>`
 }
+function magnifyStream(options){
+    if(!options.p && !options.parent){
+        var el = $(this),
+        parent = el.parents('[mid]')
+    }else{
+        parent = options.p || options.parent
+    }
+    if(!options.attribute){
+        options.attribute = ''
+    }
+    if(options.animate === true){
+        var zoomGlassAnimate = 'animate'
+    }else{
+        var zoomGlassAnimate = 'css'
+    }
+    if(!options.magnifyOffsetElement){
+        options.magnifyOffsetElement = '.stream-block'
+    }
+    if(!options.targetForZoom){
+        options.targetForZoom = '.stream-element'
+    }
+    if(options.auto === true){
+        var streamBlockOperator = 'position'
+    }else{
+        var streamBlockOperator = 'offset'
+    }
+    var magnifiedElement
+    if(!options.videoUrl){
+        if(options.useCanvas === true){
+            magnifiedElement = 'canvas'
+        }else{
+            magnifiedElement = 'iframe'
+        }
+    }else{
+        magnifiedElement = 'video'
+    }
+    if(!options.mon && !options.monitor){
+        var groupKey = parent.attr('ke')//group key
+        var monitorId = parent.attr('mid')//monitor id
+        var sessionKey = parent.attr('auth')//authkey
+        var monitor = $.ccio.mon[groupKey + monitorId + sessionKey]//monitor configuration
+    }else{
+        var monitor = options.mon || options.monitor
+        var groupKey = monitor.ke//group key
+        var monitorId = monitor.mid//monitor id
+        var sessionKey = monitor.auth//authkey
+    }
+    if(options.zoomAmount)zoomAmount = 3
+    if(!zoomAmount)zoomAmount = 3
+    var realHeight = parent.attr('realHeight')
+    var realWidth = parent.attr('realWidth')
+    var height = parseFloat(realHeight) * zoomAmount//height of stream
+    var width = parseFloat(realWidth) * zoomAmount//width of stream
+    var targetForZoom = parent.find(options.targetForZoom)
+    zoomGlass = parent.find(".zoomGlass")
+    var zoomFrame = function(){
+        var magnify_offset = parent.find(options.magnifyOffsetElement)[streamBlockOperator]()
+        var mx = options.pageX - magnify_offset.left
+        var my = options.pageY - magnify_offset.top
+        var rx = Math.round(mx/targetForZoom.width()*width - zoomGlass.width()/2)*-1
+        var ry = Math.round(my/targetForZoom.height()*height - zoomGlass.height()/2)*-1
+        var px = mx - zoomGlass.width()/2
+        var py = my - zoomGlass.height()/2
+        zoomGlass[zoomGlassAnimate]({left: px, top: py}).find(magnifiedElement)[zoomGlassAnimate]({left: rx, top: ry})
+    }
+    var commit = function(height,width){
+        zoomGlass.find(magnifiedElement).css({
+            height: height,
+            width: width
+        })
+        zoomFrame()
+    }
+    if(!height || !width || zoomGlass.length === 0){
+        zoomGlass = parent.find(".zoomGlass")
+        var zoomGlassShell = function(contents){return `<div ${options.attribute} class="zoomGlass">${contents}</div>`}
+        if(!options.videoUrl){
+            $.ccio.snapshot(monitor,function(url,buffer,w,h){
+                parent.attr('realWidth',w)
+                parent.attr('realHeight',h)
+                if(zoomGlass.length === 0){
+                    if(options.useCanvas === true){
+                        parent.append(zoomGlassShell('<canvas class="blenderCanvas"></canvas>'))
+                    }else{
+                        parent.append(zoomGlassShell('<iframe src="'+getApiPrefix('embed')+'/'+monitorId+'/fullscreen|jquery|relative"/><div class="hoverShade"></div>'))
+                    }
+                    zoomGlass = parent.find(".zoomGlass")
+                }
+                commit(h,w)
+            })
+        }else{
+            if(zoomGlass.length === 0){
+                parent.append(zoomGlassShell(`<video src="${options.videoUrl}" preload></video>`))
+            }
+            if(options.setTime){
+                var video = zoomGlass.find('video')[0]
+                video.currentTime = options.setTime
+                height = video.videoHeight
+                width = video.videoWidth
+                parent.attr('realWidth',width)
+                parent.attr('realHeight',height)
+            }
+            commit(height,width)
+        }
+    }else{
+        if(options.setTime){
+            var video = zoomGlass.find('video')
+            var src = video.attr('src')
+            video[0].currentTime = options.setTime
+            if(options.videoUrl !== src)zoomGlass.html(`<video src="${options.videoUrl}" preload></video>`)
+        }
+        commit(height,width)
+    }
+}
+
 $(document).ready(function(){
     $('body')
     .on('click','[system]',function(){

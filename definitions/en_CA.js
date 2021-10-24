@@ -7609,6 +7609,11 @@ module.exports = function(s,config,lang){
                           pageOpen: 'monitorsList',
                       },
                       {
+                          icon: 'map-marker',
+                          label: `${lang['Power Viewer']}`,
+                          pageOpen: 'powerVideo',
+                      },
+                      {
                           icon: 'wrench',
                           label: `${lang['Monitor Settings']}`,
                           pageOpen: 'monitorSettings',
@@ -7792,5 +7797,203 @@ module.exports = function(s,config,lang){
             }
          }
       },
+      "Power Viewer": {
+           "section": lang["Power Viewer"],
+           "blocks": {
+              "Search Settings": {
+                  id: "powerVideoTabs",
+                 "color": "blue",
+                 noHeader: true,
+                 attribute: `tab-chooser-parent`,
+                 "section-pre-class": "col-md-4",
+                 "info": [
+                     {
+                         "color": "blue",
+                         noHeader: true,
+                         isSection: true,
+                         isFormGroupGroup: true,
+                         "info": [
+                             {
+                                "fieldType": "btn-group",
+                                "btns": [
+                                    {
+                                        "fieldType": "btn",
+                                        "class": `btn-primary btn-sm`,
+                                        "attribute": `tab-chooser="monitors"`,
+                                        "btnContent": `${lang['Monitors']}`,
+                                    },
+                                    {
+                                        "fieldType": "btn",
+                                        "class": `btn-primary btn-sm`,
+                                        "attribute": `tab-chooser="settings"`,
+                                        "btnContent": `${lang['Search Settings']}`,
+                                    },
+                                ],
+                             },
+                         ]
+                     },
+                     {
+                         "name": lang["Monitors"],
+                         "color": "blue",
+                         noId: true,
+                         isFormGroupGroup: true,
+                         attribute: `tab-section="monitors"`,
+                         "info": [
+                             {
+                                 "id": "powerVideoMonitorsList",
+                                 "fieldType": "div",
+                                 "class": "list-group",
+                             },
+                         ]
+                     },
+                     {
+                         hidden: true,
+                         "name": lang["Search Settings"],
+                         "color": "blue",
+                         noId: true,
+                         isFormGroupGroup: true,
+                         attribute: `tab-section="settings"`,
+                         "info": [
+                             {
+                                "id": "powerVideoDateRange",
+                                "field": lang['Date Range'],
+                             },
+                             {
+                                "id": "powerVideoVideoLimit",
+                                "field": lang['Video Limit'] + ` (${lang['Per Monitor']})`,
+                                "placeholder": "0",
+                             },
+                             {
+                                "id": "powerVideoEventLimit",
+                                "field": lang['Event Limit'] + ` (${lang['Per Monitor']})`,
+                                "placeholder": "500",
+                             },
+                             {
+                                 id:'powerVideoSet',
+                                 field: lang['Video Set'],
+                                 default:'h264',
+                                 "fieldType": "select",
+                                 possible:[
+                                   {
+                                       "name": lang.Local,
+                                      "value": "local"
+                                   },
+                                   {
+                                      "name": lang.Cloud,
+                                      "value": "cloud"
+                                   },
+                                ]
+                             },
+                         ]
+                     },
+                 ]
+            },
+            "Video Playback": {
+                id: "powerVideoVideoPlayback",
+                noHeader: true,
+               "color": "green",
+               "section-pre-class": "col-md-8 search-parent",
+               "info": [
+                   {
+                      "id": "powerVideoMonitorViews",
+                      "fieldType": "div",
+                   },
+                   {
+                       "id": "powerVideoMonitorControls",
+                       "color": "blue",
+                       noHeader: true,
+                       isSection: true,
+                       isFormGroupGroup: true,
+                       'section-class': 'text-center',
+                       "info": [
+                           {
+                              "fieldType": "btn-group",
+                              "btns": [
+                                  {
+                                      "fieldType": "btn",
+                                      "class": `btn-default btn-sm`,
+                                      "attribute": `powerVideo-control="toggleZoom" title="${lang['Zoom In']}"`,
+                                      "btnContent": `<i class="fa fa-search-plus"></i>`,
+                                  },
+                              ],
+                           },
+                           {
+                              "fieldType": "btn-group",
+                              "btns": [
+                                  {
+                                      "fieldType": "btn",
+                                      "class": `btn-default btn-sm`,
+                                      "attribute": `powerVideo-control="previousVideoAll" title="${lang['Previous Video']}"`,
+                                      "btnContent": `<i class="fa fa-arrow-circle-left"></i>`,
+                                  },
+                                  {
+                                      "fieldType": "btn",
+                                      "class": `btn-danger btn-sm`,
+                                      "attribute": `powerVideo-control="playAll" title="${lang['Play']}"`,
+                                      "btnContent": `<i class="fa fa-play"></i>`,
+                                  },
+                                  {
+                                      "fieldType": "btn",
+                                      "class": `btn-default btn-sm`,
+                                      "attribute": `powerVideo-control="pauseAll" title="${lang['Pause']}"`,
+                                      "btnContent": `<i class="fa fa-pause"></i>`,
+                                  },
+                                  {
+                                      "fieldType": "btn",
+                                      "class": `btn-default btn-sm`,
+                                      "attribute": `powerVideo-control="nextVideoAll" title="${lang['Next Video']}"`,
+                                      "btnContent": `<i class="fa fa-arrow-circle-right"></i>`,
+                                  },
+                              ],
+                           },
+                           {
+                              "fieldType": "btn-group",
+                              "style": "font-family: monospace;",
+                              "btns": [
+                                  {
+                                      "fieldType": "btn",
+                                      "class": `btn-default btn-sm`,
+                                      "attribute": `powerVideo-control="playSpeedAll" data-speed="1"`,
+                                      "btnContent": `1`,
+                                  },
+                                  {
+                                      "fieldType": "btn",
+                                      "class": `btn-default btn-sm`,
+                                      "attribute": `powerVideo-control="playSpeedAll" data-speed="5"`,
+                                      "btnContent": `5`,
+                                  },
+                                  {
+                                      "fieldType": "btn",
+                                      "class": `btn-default btn-sm`,
+                                      "attribute": `powerVideo-control="playSpeedAll" data-speed="10"`,
+                                      "btnContent": `10`,
+                                  },
+                                  {
+                                      "fieldType": "btn",
+                                      "class": `btn-default btn-sm`,
+                                      "attribute": `powerVideo-control="playSpeedAll" data-speed="15"`,
+                                      "btnContent": `15`,
+                                  },
+                              ],
+                           },
+                       ]
+                   },
+               ]
+           },
+           "Time Strip": {
+               id: "powerVideoTimelineStripsContainer",
+               noHeader: true,
+              "color": "green",
+              "section-pre-class": "col-md-12 mt-3",
+              "info": [
+                  {
+                     "id": "powerVideoTimelineStrips",
+                     "fieldType": "div",
+                     "divContent": `<div class="loading"><i class="fa fa-hand-pointer-o"></i><div class="epic-text">${lang['Select a Monitor']}</div></div>`,
+                  },
+              ]
+          }
+         }
+        },
   })
 }
