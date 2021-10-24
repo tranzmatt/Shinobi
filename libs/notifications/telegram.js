@@ -267,7 +267,7 @@ module.exports = function(s,config,lang,getSnapshot){
                       "default": "",
                       "example": "",
                       "possible": ""
-                  },
+                   },
                    {
                        hidden: true,
                       "name": "detail=telegrambot_channel",

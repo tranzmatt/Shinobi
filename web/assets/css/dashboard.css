@@ -230,6 +230,9 @@ body {
 .text-monospace {
     font-family: monospace;
 }
+.text-ellipsis {
+    text-overflow: ellipsis;
+}
 .float{
 
 }

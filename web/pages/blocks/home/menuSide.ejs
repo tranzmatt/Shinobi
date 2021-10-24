@@ -6,12 +6,14 @@
               <img class="me-3" src="<%- window.libURL + config.logoLocation196x196 %>" width="48" style="<%- config.logoLocation76x76Style %>">
           </div>
           <div class="flex-grow-1" data-bs-toggle="collapse" data-bs-target=".home-collapse">
-            <h1 class="h6 mb-0 lh-1"><%- $user.mail %></h1>
+            <h1 class="h6 mb-0 lh-1 text-ellipsis"><%- $user.mail %></h1>
             <small><%- lang.Monitors %> : <span class="cameraCount"></span></small>
           </div>
+          <% if(define.SideMenu.showMonitors){ %>
           <div class="lh-1">
               <a class_toggle="compressed-monitor-icons" data-target="#monitorSideList" icon-toggle="fa-th fa-bars" icon-child="i"><i class="fa fa-th"></i></a>
           </div>
+          <% } %>
         </div>
         <%
           var drawBlock
