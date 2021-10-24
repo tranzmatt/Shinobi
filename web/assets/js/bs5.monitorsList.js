@@ -19,13 +19,13 @@ $(document).ready(function(){
                 <div class="mb-2">
                     <div class="d-flex flex-row">
                         <div class="flex-grow-1">
-                            <span class="monitor_name">${row.name}</span>
+                            <span class="monitor_name" title="${row.mid}">${row.name}</span>
                         </div>
                         <div class="text-right">
                             <input class="form-check-input no-abs m-0" type="checkbox" value="${row.mid}" name="${row.mid}" id="monitorListSelect-${row.mid}">
                         </div>
                     </div>
-                    <small class="text-muted monitor_mid">${row.mid}</small><br>
+                    <small class="text-muted monitor_host">${row.host}</small><br>
                     <small class="text-muted monitor_status">${row.status || lang.Stopped}</small>
                 </div>
                 <div class="d-flex flex-row">
