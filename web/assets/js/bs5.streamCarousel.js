@@ -43,22 +43,36 @@ $(document).ready(function(){
             .find('iframe')
             .attr('src',`about:blank`)
     }
-    function goNextCarouselBlock(){
+    function goNextCarouselBlock(amountToMove,lateDeload){
+        var numberOfBlocks = loadedCarouselBlocks.length - 1;
         var oldId = `${currentCarouselMonitorId}`
-        var nextId = loadedCarouselBlocks[loadedCarouselBlocks.indexOf(currentCarouselMonitorId) + 1]
-        nextId = nextId ? nextId : loadedCarouselBlocks[0]
+        var indexToMoveTo = loadedCarouselBlocks.indexOf(currentCarouselMonitorId) + amountToMove
+        var nextId = loadedCarouselBlocks[indexToMoveTo]
+        if(indexToMoveTo > numberOfBlocks){
+            console.log('above',loadedCarouselBlocks[0],indexToMoveTo,numberOfBlocks)
+            nextId = loadedCarouselBlocks[0]
+            console.log('above',nextId)
+        }else if(indexToMoveTo < 0){
+            console.log('below',loadedCarouselBlocks[numberOfBlocks],indexToMoveTo,numberOfBlocks)
+            nextId = loadedCarouselBlocks[numberOfBlocks]
+            console.log('below',nextId)
+        }
         if(oldId === nextId){
             clearInterval(changeTimer)
         }else{
             loadMonitorInCarousel(nextId)
-            setTimeout(function(){
-                deloadMonitorInCarousel(oldId)
-            },6000)
+            if(lateDeload){
+                setTimeout(function(){
+                    deloadMonitorInCarousel(oldId)
+                },2000)
+            }
         }
     }
     function setAutoChangerInterval(){
         stopAutoChangerInterval()
-        changeTimer = setInterval(goNextCarouselBlock,20000)
+        changeTimer = setInterval(function(){
+            goNextCarouselBlock(1,true)
+        },20000)
     }
     function stopAutoChangerInterval(){
         clearTimeout(changeTimer)
@@ -90,6 +104,14 @@ $(document).ready(function(){
                 }
             break;
         }
+    })
+    streamCarouselBlock.find('[stream-carousel-go]').click(function(){
+        var el = $(this)
+        var direction = parseInt(el.attr('stream-carousel-go'))
+        console.log(direction)
+        deloadMonitorInCarousel(currentCarouselMonitorId)
+        goNextCarouselBlock(direction)
+        setAutoChangerInterval()
     })
     $(window).focus(function(){
         if(canBackgroundCarousel()){
