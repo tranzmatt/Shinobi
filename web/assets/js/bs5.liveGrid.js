@@ -933,6 +933,15 @@ $(document).ready(function(e){
             openLiveGrid()
         })
     })
+    $('.close-all-monitors').click(function(){
+        $.each(loadedMonitors,function(monitorId,monitor){
+            mainSocket.f({
+                f: 'monitor',
+                ff: 'watch_off',
+                id: monitor.mid
+            })
+        })
+    })
     liveGrid
     .gridstack({
         cellHeight: 80,

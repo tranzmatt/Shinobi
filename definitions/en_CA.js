@@ -7577,6 +7577,11 @@ module.exports = function(s,config,lang){
                                   color: 'orange',
                               },
                               {
+                                  label: lang['Close All Monitors'],
+                                  class: 'close-all-monitors cursor-pointer',
+                                  color: 'red',
+                              },
+                              {
                                   label: lang['Order Streams'],
                                   class: 'cursor-pointer',
                                   attributes: 'shinobi-switch="monitorOrder" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
