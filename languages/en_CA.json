@@ -1242,6 +1242,8 @@
    "Attach Snapshot": "Attach Snapshot",
    "Invalid Settings": "Invalid Settings",
    "Detection": "Detection",
+   "Playback": "Playback",
+   "Backup": "Backup",
    "Close All Monitors": "Close All Monitors",
    "Cloud": "Cloud"
 }
