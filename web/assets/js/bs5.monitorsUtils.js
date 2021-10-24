@@ -249,7 +249,7 @@ function downloadMonitorConfigurationsToDisk(monitorIds){
     $('#temp').html('<a></a>')
         .find('a')
         .attr('href',dataStr)
-        .attr('download',`Shinobi_Monitors_${$user.ke}_${new Date()}.json`)
+        .attr('download',`${applicationName}_Monitors_${$user.ke}_${new Date()}.json`)
         [0].click()
 }
 
