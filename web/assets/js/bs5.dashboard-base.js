@@ -276,6 +276,10 @@ function openTab(theTab,loadData,backAction,haltTrigger,type){
         pageTabLinks.find('ul').hide();
         targetUiElement.addClass('page-link-active active').parents('li').find('ul').show();
     }
+    //
+    $('[tab-specific-content]').hide()
+    $(`[tab-specific-content="${theTab}"]`).show()
+    //
     onTabAway(activeTabName)
     activeTabName = `${theTab}`;
     if(!loadedPages[theTab]){
