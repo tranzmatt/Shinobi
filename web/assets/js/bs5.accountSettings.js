@@ -1,6 +1,7 @@
 // - tab-return-accountSettings : currently does not function
 
 $(document).ready(function(){
+    var accountSettingsWereSaved = false;
     var theBlock = $('#tab-accountSettings')
     var theContainer = $('#accountSettingsContainer')
     var theForm = $('#settings')
@@ -177,10 +178,15 @@ $(document).ready(function(){
                     $user.details = d.form.details
                 }
                 sortListMonitors()
+                accountSettingsWereSaved = true;
             break;
         }
     })
     addOnTabReopen('accountSettings', function () {
+        if(accountSettingsWereSaved){
+            accountSettingsWereSaved = false;
+            fillFormFields()
+        }
         reDrawMonGroupsInAccountSettings()
     })
 })
