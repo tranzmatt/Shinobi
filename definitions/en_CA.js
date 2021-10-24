@@ -7804,6 +7804,7 @@ module.exports = function(s,config,lang){
                   id: "powerVideoTabs",
                  "color": "blue",
                  noHeader: true,
+                 noDefaultSectionClasses: true,
                  attribute: `tab-chooser-parent`,
                  "section-pre-class": "col-md-4",
                  "info": [
@@ -7891,6 +7892,7 @@ module.exports = function(s,config,lang){
             "Video Playback": {
                 id: "powerVideoVideoPlayback",
                 noHeader: true,
+                noDefaultSectionClasses: true,
                "color": "green",
                "section-pre-class": "col-md-8 search-parent",
                "info": [
