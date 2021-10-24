@@ -182,7 +182,7 @@ $(document).ready(function(e){
             pass: form.pass
         });
         clearTimeout(checkTimeout)
-        onvifScannerResultPane = setTimeout(function(){
+        checkTimeout = setTimeout(function(){
             if(onvifScannerResultPane.find('.card').length === 0){
                 setAsLoading(false)
                 onvifScannerResultPane.append(`<div class="p-2 text-center ${definitions.Theme.isDark ? 'text-white' : ''} _notfound text-white epic-text">${lang.sorryNothingWasFound}</div>`)
