@@ -13,7 +13,7 @@ module.exports = function(s,config){
     //load languages dynamically
     s.copySystemDefaultLanguage = function(){
         //en_CA
-        return Object.assign(lang,{})
+        return Object.assign({},lang)
     }
     s.listOfPossibleLanguages = []
     fs.readdirSync(s.mainDirectory + '/languages').forEach(function(filename){
@@ -31,7 +31,7 @@ module.exports = function(s,config){
             if(!file){
                 try{
                     s.loadedLanguages[rule] = require(s.location.languages+'/'+rule+'.json')
-                    s.loadedLanguages[rule] = Object.assign(s.copySystemDefaultLanguage(),s.loadedLanguages[rule])
+                    s.loadedLanguages[rule] = Object.assign({},s.copySystemDefaultLanguage(),s.loadedLanguages[rule])
                     file = s.loadedLanguages[rule]
                 }catch(err){
                     file = s.copySystemDefaultLanguage()
