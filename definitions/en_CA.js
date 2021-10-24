@@ -7090,7 +7090,7 @@ module.exports = function(s,config,lang){
                  ]
              }
          }
-       },
+     },
      "Monitor Settings Additional Stream Channel": {
            "section": "Monitor Settings Additional Stream Channel",
            "blocks": {
@@ -7419,7 +7419,7 @@ module.exports = function(s,config,lang){
                     },
                  ]
              }
-         }
+          }
        },
        "Monitor Stream Window": {
            "section": "Monitor Stream Window",
