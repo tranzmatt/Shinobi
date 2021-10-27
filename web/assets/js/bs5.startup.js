@@ -99,6 +99,22 @@ function drawAddStorageIndicators(){
         }
     })
 }
+function showLoginNotices(){
+    $.each([
+        {
+            isValid: !$user.details.size || parseInt($user.details.size) < 20000,
+            PNotify: {
+                type:'warning',
+                title: lang['Max Storage Amount'],
+                text: lang.setMaxStorageAmountText,
+            }
+        }
+    ],function(n,notice){
+        if(notice.isValid){
+            new PNotify(notice.PNotify)
+        }
+    })
+}
 $('body')
 .one('click',function(){
     window.hadFocus = true
@@ -197,6 +213,7 @@ $(document).ready(function(){
     loadLocalStorageInputValues()
     loadBoxWrappers()
     drawAddStorageIndicators()
+    showLoginNotices()
     // set onFullScreenChange
     document.addEventListener("fullscreenchange", onFullScreenChange, false);
     document.addEventListener("webkitfullscreenchange", onFullScreenChange, false);
