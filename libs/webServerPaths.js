@@ -974,29 +974,54 @@ module.exports = function(s,config,lang,app,io){
             const monitorId = req.params.id
             const groupKey = req.params.ke
             const hasRestrictions = userDetails.sub && userDetails.allmonitors !== '1';
-            s.sqlQueryBetweenTimesWithPermissions({
-                table: 'Events',
-                user: user,
-                groupKey: req.params.ke,
-                monitorId: req.params.id,
-                startTime: req.query.start,
-                endTime: req.query.end,
-                startTimeOperator: req.query.startOperator,
-                endTimeOperator: req.query.endOperator,
-                limit: req.query.limit,
-                endIsStartTo: true,
-                parseRowDetails: true,
-                noFormat: true,
-                noCount: true,
-                rowName: 'events',
-                preliminaryValidationFailed: (
-                    user.permissions.watch_videos === "0" ||
-                    hasRestrictions &&
-                    (!userDetails.video_view || userDetails.video_view.indexOf(monitorId)===-1)
-                )
-            },(response) => {
-                res.end(s.prettyPrint(response))
-            })
+            const monitorRestrictions = s.getMonitorRestrictions(user.details,monitorId)
+            const preliminaryValidationFailed = (
+                user.permissions.watch_videos === "0" ||
+                hasRestrictions &&
+                (!userDetails.video_view || userDetails.video_view.indexOf(monitorId)===-1)
+            );
+            if(req.query.onlyCount === '1' && !preliminaryValidationFailed){
+                const response = {ok: true}
+                s.knexQuery({
+                    action: "count",
+                    columns: "mid",
+                    table: "Events",
+                    where: [
+                        ['ke','=',groupKey],
+                        ['time','>=',req.query.start],
+                        ['time','<=',req.query.end],
+                        monitorRestrictions
+                    ]
+                },(err,r) => {
+                    if(err){
+                        s.debugLog(err)
+                        response.ok = false
+                    }else{
+                        response.count = r[0]['count(`mid`)']
+                    }
+                    s.closeJsonResponse(res,response)
+                })
+            }else{
+                s.sqlQueryBetweenTimesWithPermissions({
+                    table: 'Events',
+                    user: user,
+                    groupKey: req.params.ke,
+                    monitorId: req.params.id,
+                    startTime: req.query.start,
+                    endTime: req.query.end,
+                    startTimeOperator: req.query.startOperator,
+                    endTimeOperator: req.query.endOperator,
+                    limit: req.query.limit,
+                    endIsStartTo: true,
+                    parseRowDetails: true,
+                    noFormat: true,
+                    noCount: true,
+                    rowName: 'events',
+                    preliminaryValidationFailed: preliminaryValidationFailed
+                },(response) => {
+                    res.end(s.prettyPrint(response))
+                })
+            }
         })
     })
     /**

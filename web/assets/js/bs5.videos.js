@@ -155,6 +155,30 @@ function getVideos(options,callback){
         })
     })
 }
+function getEvents(options,callback){
+    options = options ? options : {}
+    var requestQueries = []
+    var monitorId = options.monitorId
+    var limit = options.limit || 5000
+    var eventStartTime
+    var eventEndTime
+    // var startDate = options.startDate
+    // var endDate = options.endDate
+    if(options.startDate){
+        eventStartTime = formattedTimeForFilename(options.startDate,false)
+        requestQueries.push(`start=${eventStartTime}`)
+    }
+    if(options.endDate){
+        eventEndTime = formattedTimeForFilename(options.endDate,false)
+        requestQueries.push(`end=${eventEndTime}`)
+    }
+    if(options.onlyCount){
+        requestQueries.push(`onlyCount=1`)
+    }
+    $.get(`${getApiPrefix(`events`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.join('&')}`,function(eventData){
+        callback(eventData)
+    })
+}
 $(document).ready(function(){
     $('body')
     .on('click','.open-video',function(){

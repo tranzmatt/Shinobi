@@ -13,7 +13,25 @@ $(document).ready(function(){
             $.each(videos,function(n,row){
                 drawRowToList(row)
             })
+            getCountOfEvents({
+                monitorId: options.monitorId,
+            })
             callback(data)
+        })
+    }
+    function getCountOfEvents(options){
+        var monitorId = options.monitorId
+        var loadedMonitor = loadedMonitors[monitorId]
+        options.onlyCount = '1';
+        if(!options.startDate)options.startDate = moment().subtract(24, 'hour').utc()._d
+        if(!options.endDate)options.endDate = moment().add(1, 'hour').utc()._d
+        getEvents(options,function(data){
+            var eventDesignationText = `${lang['All Monitors']}`
+            if(monitorId){
+                eventDesignationText = `${loadedMonitor ? loadedMonitor.name : monitorId}`
+            }
+            $('.events_from_last_24_which_monitor').text(eventDesignationText)
+            $('.events_from_last_24').text(data.count)
         })
     }
     monitorList.change(function(){
