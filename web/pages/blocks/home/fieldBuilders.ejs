@@ -185,8 +185,11 @@ drawBlock = function(monitorSettings){
              case'div':
                    fieldElement = `<div ${attributes.join(' ')} class="${fieldClass.join(' ')}" >${field.divContent || ''}`
              break;
-             case'div':
+             case'html':
                    fieldElement = `${field.html}`
+             break;
+             case'img':
+                   fieldElement = `<img ${attributes.join(' ')} class="${fieldClass.join(' ')}" src="${window.libURL}/${field.src}">`
              break;
              case'iconCard':
                    fieldElement = `<div ${attributes.join(' ')} class="card mb-3 border-0 ${fieldClass.join(' ')}">
@@ -261,6 +264,7 @@ drawBlock = function(monitorSettings){
          if(
            fieldType === 'ul' ||
            fieldType ===  'div' ||
+           fieldType ===  'img' ||
            fieldType ===  'html' ||
            fieldType ===  'iconCard' ||
            fieldType ===  'indicatorBar' ||
