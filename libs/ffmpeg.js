@@ -68,7 +68,7 @@ module.exports = async (s,config,lang,onFinish) => {
               e.sdir + 'cmd.txt'
             ]
             const cameraProcess = spawn('node',cameraCommandParams,{detached: true,stdio: stdioPipes})
-            if(config.debugLog === true){
+            if(config.debugLog === true && config.debugLogMonitors === true){
                 cameraProcess.stderr.on('data',(data) => {
                     console.log(`${e.ke} ${e.mid}`)
                     console.log(data.toString())
