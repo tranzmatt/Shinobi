@@ -6297,7 +6297,7 @@ module.exports = function(s,config,lang){
                              "value": "0",
                           },
                           {
-                             "name": "Yes",
+                             "name": lang.Yes,
                              "value": "1",
                              "selected": true
                           }
@@ -6350,7 +6350,7 @@ module.exports = function(s,config,lang){
                             "selected": true
                          },
                          {
-                            "name": "Yes",
+                            "name": lang.Yes,
                             "value": "1",
                             "info": "Use Traditional Recording, Hotswap, or Delete Motionless with their currently set options in the Global Detection Settings section."
                          }
@@ -6364,16 +6364,12 @@ module.exports = function(s,config,lang){
                       "form-group-class": "actions-row",
                       "possible": [
                          {
-                            "name": "Default",
+                            "name": lang['Original Choice'],
                             "value": "",
                             "selected": true
                          },
                          {
-                            "name": "No",
-                            "value": "0",
-                         },
-                         {
-                            "name": "Yes",
+                            "name": lang.Yes,
                             "value": "1",
                          }
                       ]
@@ -6385,29 +6381,6 @@ module.exports = function(s,config,lang){
                        "form-group-class": "actions-row",
                     },
                     {
-                      "name": "actions=mail",
-                      "field": "Email on Trigger",
-                      "fieldType": "select",
-                      "form-group-class": "actions-row",
-                      "default": "",
-                      "example": "1",
-                      "possible": [
-                         {
-                            "name": "Default",
-                            "value": "",
-                            "selected": true
-                         },
-                         {
-                            "name": "No",
-                            "value": "0",
-                         },
-                         {
-                            "name": "Yes",
-                            "value": "1",
-                         }
-                      ]
-                    },
-                    {
                       "name": "actions=webhook",
                       "field": lang['Legacy Webhook'],
                       "fieldType": "select",
@@ -6416,16 +6389,12 @@ module.exports = function(s,config,lang){
                       "example": "1",
                       "possible": [
                          {
-                            "name": "Default",
+                            "name": lang['Original Choice'],
                             "value": "",
                             "selected": true
                          },
                          {
-                            "name": "No",
-                            "value": "0",
-                         },
-                         {
-                            "name": "Yes",
+                            "name": lang.Yes,
                             "value": "1",
                          }
                       ]
@@ -6440,16 +6409,12 @@ module.exports = function(s,config,lang){
                       "form-group-class": "actions-row",
                       "possible": [
                          {
-                            "name": "Default",
+                            "name": lang['Original Choice'],
                             "value": "",
                             "selected": true
                          },
                          {
-                            "name": "No",
-                            "value": "0",
-                         },
-                         {
-                            "name": "Yes",
+                            "name": lang.Yes,
                             "value": "1",
                          }
                       ]
@@ -6463,16 +6428,12 @@ module.exports = function(s,config,lang){
                       "form-group-class": "actions-row",
                       "possible": [
                          {
-                            "name": "Default",
+                            "name": lang['Original Choice'],
                             "value": "",
                             "selected": true
                          },
                          {
-                            "name": "No",
-                            "value": "0",
-                         },
-                         {
-                            "name": "Yes",
+                            "name": lang.Yes,
                             "value": "1",
                          }
                       ]

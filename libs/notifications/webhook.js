@@ -276,16 +276,12 @@ module.exports = function(s,config,lang,getSnapshot){
          "example": "1",
          "possible": [
             {
-               "name": "Default",
+               "name": lang['Original Choice'],
                "value": "",
                "selected": true
             },
             {
-               "name": "No",
-               "value": "0",
-            },
-            {
-               "name": "Yes",
+               "name": lang.Yes,
                "value": "1",
             }
          ]

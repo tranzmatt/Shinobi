@@ -240,6 +240,25 @@ module.exports = function(s,config,lang,getSnapshot){
         s.onFilterEvent(onFilterEventForEmail)
         s.onDetectorNoTriggerTimeout(onDetectorNoTriggerTimeoutForEmail)
         s.onMonitorUnexpectedExit(onMonitorUnexpectedExitForEmail)
+        s.definitions["Event Filters"].blocks["Action for Selected"].info.push(                    {
+          "name": "actions=mail",
+          "field": "Email on Trigger",
+          "fieldType": "select",
+          "form-group-class": "actions-row",
+          "default": "",
+          "example": "1",
+          "possible": [
+             {
+                "name": lang['Original Choice'],
+                "value": "",
+                "selected": true
+             },
+             {
+                "name": lang.Yes,
+                "value": "1",
+             }
+          ]
+        })
     }catch(err){
         console.log(err)
     }
