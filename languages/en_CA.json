@@ -1246,6 +1246,9 @@
    "Backup": "Backup",
    "Close All Monitors": "Close All Monitors",
    "Daily Events": "Daily Events",
+   "Send Notification": "Send Notification",
    "setMaxStorageAmountText": "You should set your Max Storage Amount in your Account Settings located on the left. Find the option under the Profile section. It is currently set to 10 GB.",
+   "Save Events": "Save Events",
+   "Legacy Webhook": "Legacy Webhook",
    "Cloud": "Cloud"
 }

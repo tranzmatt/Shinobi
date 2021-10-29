@@ -363,7 +363,7 @@ module.exports = (s,config,lang,app,io) => {
                 matrices: eventDetails.matrices || [],
             },d.frame)
         }
-        if(forceSave || (filter.save && monitorDetails.detector_save === '1')){
+        if(forceSave || (filter.save || monitorDetails.detector_save === '1')){
             s.knexQuery({
                 action: "insert",
                 table: "Events",

@@ -2778,7 +2778,7 @@ module.exports = function(s,config,lang){
                    {
                        hidden: true,
                       "name": "detail=detector_save",
-                      "field": lang["Save Events to SQL"],
+                      "field": lang["Save Events"],
                       "description": "Save Motion Events in SQL. This will allow display of motion over video during the time motion events occured in the Power Viewer.",
                       "default": "1",
                       "example": "",
@@ -6347,7 +6347,6 @@ module.exports = function(s,config,lang){
                          {
                             "name": "No",
                             "value": "0",
-                            "info": "Allow other functions to continue.",
                             "selected": true
                          },
                          {
@@ -6359,111 +6358,78 @@ module.exports = function(s,config,lang){
                     },
                     {
                       "name": "actions=save",
-                      "field": "Save Events to SQL",
+                      "field": lang['Save Events'],
                       "fieldType": "select",
-                      "description": "Save Motion Events in SQL. This will allow display of motion over video during the time motion events occured in the Power Viewer.",
                       "default": "Yes",
                       "form-group-class": "actions-row",
                       "possible": [
                          {
                             "name": "Default",
                             "value": "",
-                            "info": "Use values set in Global Detector Settings.",
                             "selected": true
                          },
                          {
                             "name": "No",
                             "value": "0",
-                            "info": "Finish the current 10 minute order."
                          },
                          {
                             "name": "Yes",
                             "value": "1",
-                            "info": "Reset the timer"
                          }
                       ]
+                    },
+                    {
+                       "name": "actions=indifference",
+                       "field": "Modify Indifference",
+                       "description": "Modify minimum indifference required for event.",
+                       "form-group-class": "actions-row",
                     },
                     {
                       "name": "actions=mail",
                       "field": "Email on Trigger",
                       "fieldType": "select",
                       "form-group-class": "actions-row",
-                      "description": "Recieve an email of an image during a motion event to the master account for the camera group. You must setup SMTP details in conf.json.",
-                      "default": "No",
+                      "default": "",
                       "example": "1",
                       "possible": [
                          {
                             "name": "Default",
                             "value": "",
-                            "info": "Use values set in Global Detector Settings.",
                             "selected": true
                          },
                          {
                             "name": "No",
                             "value": "0",
-                            "info": "No Email."
                          },
                          {
                             "name": "Yes",
                             "value": "1",
-                            "info": "Send Email."
                          }
                       ]
                     },
                     {
                       "name": "actions=webhook",
-                      "field": "Webhook on Trigger",
+                      "field": lang['Legacy Webhook'],
                       "fieldType": "select",
                       "form-group-class": "actions-row",
-                      "description": "Send a GET request during an event to the URL specified. Webhook location can be specified in the Global Detector Settings for the Monitor.",
-                      "default": "No",
+                      "default": "",
                       "example": "1",
                       "possible": [
                          {
                             "name": "Default",
                             "value": "",
-                            "info": "Use values set in Global Detector Settings.",
                             "selected": true
                          },
                          {
                             "name": "No",
                             "value": "0",
-                            "info": "No Webhook."
                          },
                          {
                             "name": "Yes",
                             "value": "1",
-                            "info": "Send Webhook."
                          }
                       ]
                     },
-                    {
-                      "name": "actions=discord",
-                      "field": "Discord Alert on Trigger",
-                      "fieldType": "select",
-                      "form-group-class": "actions-row",
-                      "description": "Recieve a Discord Notification with an image or video during an event to the Discord channel specified. Discord Bot and Channel settings can be changed in your Account Settings.",
-                      "default": "No",
-                      "example": "1",
-                      "possible": [
-                         {
-                            "name": "Default",
-                            "value": "",
-                            "info": "Use values set in Global Detector Settings.",
-                            "selected": true
-                         },
-                         {
-                            "name": "No",
-                            "value": "0",
-                            "info": "No Alert."
-                         },
-                         {
-                            "name": "Yes",
-                            "value": "1",
-                            "info": "Get a Message to Discord."
-                         }
-                      ]
-                   },
                    {
                       "name": "actions=command",
                       "field": "Detector Command",
@@ -6476,18 +6442,15 @@ module.exports = function(s,config,lang){
                          {
                             "name": "Default",
                             "value": "",
-                            "info": "Use values set in Global Detector Settings.",
                             "selected": true
                          },
                          {
                             "name": "No",
                             "value": "0",
-                            "info": "No script will run."
                          },
                          {
                             "name": "Yes",
                             "value": "1",
-                            "info": "Trigger the script that is set in the <b>Command</b> option. <b>Command</b> is only visible when selecting this option."
                          }
                       ]
                    },
@@ -6496,32 +6459,23 @@ module.exports = function(s,config,lang){
                       "field": "Use Record Method",
                       "fieldType": "select",
                       "description": "Use Traditional Recording, Hotswap, or Delete Motionless with their currently set options in the Global Detection Settings section.",
-                      "default": "No",
+                      "default": "",
                       "form-group-class": "actions-row",
                       "possible": [
                          {
                             "name": "Default",
                             "value": "",
-                            "info": "Use values set in Global Detector Settings.",
                             "selected": true
                          },
                          {
                             "name": "No",
                             "value": "0",
-                            "info": "No Traditional Recording, Hotswap, or Delete Motionless."
                          },
                          {
                             "name": "Yes",
                             "value": "1",
-                            "info": "Use Traditional Recording, Hotswap, or Delete Motionless with their currently set options in the Global Detection Settings section."
                          }
                       ]
-                   },
-                   {
-                      "name": "actions=indifference",
-                      "field": "Modify Indifference",
-                      "description": "Modify minimum indifference required for event.",
-                      "form-group-class": "actions-row",
                    },
                 ]
             },

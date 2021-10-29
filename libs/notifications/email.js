@@ -94,16 +94,11 @@ module.exports = function(s,config,lang,getSnapshot){
             }
         }
         const onEventTriggerBeforeFilterForEmail = function(d,filter){
-            const monitorConfig = s.group[d.ke].rawMonitorConfigurations[d.id]
-            if(monitorConfig.details.detector_mail === '1'){
-                filter.mail = true
-            }else{
-                filter.mail = false
-            }
+            filter.mail = false
         }
         const onEventTriggerForEmail = async (d,filter) => {
             const monitorConfig = s.group[d.ke].rawMonitorConfigurations[d.id]
-            if(filter.mail && config.mail && !s.group[d.ke].activeMonitors[d.id].detector_mail){
+            if((filter.mail || monitorConfig.details.detector_mail === '1') && config.mail && !s.group[d.ke].activeMonitors[d.id].detector_mail){
                 s.knexQuery({
                     action: "select",
                     columns: "mail",

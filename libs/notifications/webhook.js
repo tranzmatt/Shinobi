@@ -99,13 +99,13 @@ module.exports = function(s,config,lang,getSnapshot){
         })
     }
     const onEventTriggerBeforeFilterForGlobalWebhook = function(d,filter){
-        filter.global_webhook = true
+        filter.global_webhook = false
     }
     const onEventTriggerForGlobalWebhook = async (d,filter) => {
         let filesSent = 0;
         const monitorConfig = s.group[d.ke].rawMonitorConfigurations[d.id]
         // d = event object
-        if(filter.global_webhook && monitorConfig.details.notify_global_webhook === '1' && !s.group[d.ke].activeMonitors[d.id].detector_global_webhook){
+        if((filter.global_webhook || monitorConfig.details.notify_global_webhook === '1') && !s.group[d.ke].activeMonitors[d.id].detector_global_webhook){
             var detector_global_webhook_timeout
             if(!monitorConfig.details.detector_global_webhook_timeout||monitorConfig.details.detector_global_webhook_timeout===''){
                 detector_global_webhook_timeout = 1000 * 60 * 10;
@@ -267,4 +267,27 @@ module.exports = function(s,config,lang,getSnapshot){
             }
         ]
     }
+    s.definitions["Event Filters"].blocks["Action for Selected"].info.push({
+         "name": "actions=global_webhook",
+         "field": lang['Webhook'],
+         "fieldType": "select",
+         "form-group-class": "actions-row",
+         "default": "",
+         "example": "1",
+         "possible": [
+            {
+               "name": "Default",
+               "value": "",
+               "selected": true
+            },
+            {
+               "name": "No",
+               "value": "0",
+            },
+            {
+               "name": "Yes",
+               "value": "1",
+            }
+         ]
+    })
 }
