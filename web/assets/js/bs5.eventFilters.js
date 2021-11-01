@@ -1,3 +1,15 @@
+window.acceptableDetectorFilterOperators = {
+    'indexOf': lang['Contains'],
+    '!indexOf': lang['Does Not Contain'],
+    '===': lang['Equal to'],
+    '!==': lang['Not Equal to'],
+    '>=': lang['Greater Than or Equal to'],
+    '>': lang['Greater Than'],
+    '<': lang['Less Than'],
+    '<=': lang['Less Than or Equal to'],
+    '||': lang['OR'],
+    '&&': lang['AND'],
+};
 $(document).ready(function(e){
     //detector filters window
     var detectorFiltersWindow = $('#tab-eventFilters')
