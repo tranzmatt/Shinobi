@@ -12,10 +12,10 @@ $(document).ready(function(){
     function drawRowToList(row){
         var streamUrl = libURL + buildStreamUrl(row.mid).replace($user.auth_token,selectedApiKey)
         theList.append(`
-        <div data-mid="${row.mid}" class="col-md-4 glM${row.mid}">
+        <div data-mid="${row.mid}" class="col-md-4 card-page-selection glM${row.mid}">
             <div class="${definitions.Theme.isDark ? 'text-white' : 'text-dark'} mb-3 card shadow-sm btn-default">
                 <div class="card monitor-card-preview snapshot launch-live-grid-monitor cursor-pointer" style="background-image:url(${getApiPrefix('icon') + '/' + row.mid})"></div>
-              <div class="p-3">
+                ${buildMiniMonitorCardBody(loadedMonitors[row.mid],null,`<div>
                 <div class="mb-2">
                     <div class="d-flex flex-row">
                         <div class="flex-grow-1">
@@ -32,7 +32,7 @@ $(document).ready(function(){
                     <div class="flex-grow-1">
                         <a href="javascript:console.log('${row.mid} Export')" class="badge btn btn-dark export-this-monitor-settings"><i class="fa fa-download"></i> ${lang['Export']}</a>
                         <a href="javascript:console.log('${row.mid} Settings')" class="badge btn btn-dark open-monitor-settings"><i class="fa fa-wrench"></i> ${lang['Edit']}</a>
-                        <a href="javascript:console.log('${row.mid} Videos')" class="badge btn btn-primary open-videos"><i class="fa fa-film"></i> ${lang['Videos']}</a>
+                        <a class="badge btn btn-dark copy-stream-url" href="${streamUrl}" target="_blank">${lang['Copy Stream URL']}</a>
                         <!-- <a class="badge btn btn-primary duplicate-monitor"><i class="fa fa-copy"></i> ${lang['Duplicate']}</a> -->
                     </div>
                     <div>
@@ -46,10 +46,7 @@ $(document).ready(function(){
                         </div>
                     </div>
                 </div>
-              </div>
-              <div class="card-footer">
-                <a class="copy-stream-url" href="${streamUrl}" target="_blank"><small class="text-muted">${streamUrl}</small></a>
-              </div>
+              </div>`,true)}
           </div>
       </div>`)
     }

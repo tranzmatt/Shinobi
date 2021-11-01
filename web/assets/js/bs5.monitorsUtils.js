@@ -666,7 +666,127 @@ function magnifyStream(options){
         commit(height,width)
     }
 }
+function getCardMonitorSettingsFields(formElement){
+    var formValues = {};
+    formValues.details = {}
+    $.each(['name','detail'],function(n,keyType){
+        formElement.find(`[${keyType}]`).each(function(n,v){
+            var el = $(v);
+            var key = el.attr(keyType)
+            if(el.is(':checkbox')){
+                var value = el.prop("checked") ? '1' : '0'
+            }else{
+                var value = el.val()
+            }
+            switch(keyType){
+                case'detail':
+                    formValues.details[key] = value;
+                break;
+                case'name':
+                    formValues[key] = value;
+                break;
+            }
+            if(key === 'detector_pam' || key === 'detector_use_detect_object'){
+                formValues.details.detector = '1'
+            }else{
+                formValues.details.detector = '0'
+            }
+        })
+    })
+    return formValues;
+}
+function updateMonitor(monitorToPost,callback){
+    var newMon = mergeDeep(generateDefaultMonitorSettings(),monitorToPost)
+    $.post(getApiPrefix(`configureMonitor`) + '/' + monitorToPost.mid,{data:JSON.stringify(newMon,null,3)},callback || function(){})
+}
+var miniCardBodyPages = []
+var miniCardPageSelectorTabs = [
+    {
+        label: lang.Info,
+        value: 'info',
+        icon: 'info-circle',
+    },
+    {
+        label: lang['Quick Settings'],
+        value: 'settings',
+        icon: 'wrench',
+    },
+]
+var miniCardSettingsFields = [
+    function(monitorAlreadyAdded){
+        return  {
+            label: lang['Motion Detection'],
+            name: "detail=detector_pam",
+            value: monitorAlreadyAdded.details.detector_pam || '0',
+            fieldType: 'toggle',
+        }
+    }
+]
+function buildMiniMonitorCardBody(monitorAlreadyAdded,monitorConfigPartial,additionalInfo,doOpenVideosInsteadOfDelete){
+    if(!monitorConfigPartial)monitorConfigPartial = monitorAlreadyAdded;
+    var monitorId = monitorConfigPartial.mid
+    var monitorSettingsHtml = ``
+    var cardPageSelectors = ``
+    var infoHtml = additionalInfo instanceof Object ? jsonToHtmlBlock(additionalInfo) : additionalInfo ? additionalInfo : ''
+    var miniCardBodyPagesHtml = ''
+    $.each(miniCardBodyPages,function(n,pagePiece){
+        if(typeof pagePiece === 'function'){
+            miniCardBodyPagesHtml += pagePiece(monitorAlreadyAdded,monitorConfigPartial,additionalInfo,doOpenVideosInsteadOfDelete)
+        }else{
+            miniCardBodyPagesHtml += pagePiece
+        }
+    });
+    if(monitorAlreadyAdded){
+        monitorSettingsHtml += `<form onsubmit="return false;" data-mid="${monitorId}" class="mini-monitor-editor card-page-container" card-page-container="settings" style="display:none">
+        <div class="card-body p-2">
+        `
+        $.each(([]).concat(miniCardSettingsFields),function(n,option){
+            option = typeof option === 'function' ? option(monitorAlreadyAdded,monitorConfigPartial,additionalInfo,doOpenVideosInsteadOfDelete) : option
+            monitorSettingsHtml += `<div class="row mb-2">
+                <div class="col-md-9">
+                    ${option.label}
+                </div>
+                <div class="col-md-3 text-right">`
+                    switch(option.fieldType){
+                        case'toggle':
+                            monitorSettingsHtml += `<input class="form-check-input" type="checkbox" ${option.value === '1' ? 'checked' : ''} ${option.name.indexOf('=') > -1 ? option.name : `name="${option.name}"`}>`
+                        break;
+                        case'text':
+                            monitorSettingsHtml += `<input class="form-control text-center form-control-sm" type="text" ${option.name.indexOf('=') > -1 ? option.name : `name="${option.name}"`} value="${option.value || ''}" placeholder="${option.placeholder || ''}">`
+                        break;
+                    }
+                    monitorSettingsHtml += `</div>
+                </div>`
+        })
+        monitorSettingsHtml += `</div>
+            <div class="card-footer text-center">
+                <a class="btn btn-sm btn-secondary open-region-editor" data-mid="${monitorConfigPartial.mid}">${lang['Zones']}</a>
+                <button type="submit" class="btn btn-sm btn-success">${lang['Save']}</button>
+                <!-- <a class="btn btn-sm btn-default copy">${lang['Advanced']}</a> -->
+            </div>
+        </form>`
 
+        $.each(miniCardPageSelectorTabs,function(n,v){
+            cardPageSelectors += `<a class="btn btn-sm btn-secondary card-page-selector mt-2 ${miniCardPageSelectorTabs.length !== n + 1 ? 'mr-2' : ''}" card-page-selector="${v.value}"><i class="fa fa-${v.icon}"></i> ${v.label}</a>`
+        });
+    }
+    var cardBody = `
+        <div class="card-page-selectors text-center">
+            ${cardPageSelectors}
+        </div>
+        <div class="card-page-container" card-page-container="info">
+            <div class="card-body p-2">
+                <div>${infoHtml}</div>
+            </div>
+            <div class="card-footer text-center">
+                <a class="btn btn-sm btn-block btn-${monitorAlreadyAdded ? doOpenVideosInsteadOfDelete ? 'primary open-videos' : 'danger delete-monitor' : 'success add-monitor'}">${monitorAlreadyAdded ? doOpenVideosInsteadOfDelete ? lang['Videos'] : lang['Delete Camera'] : lang['Add Camera']}</a>
+            </div>
+        </div>
+        ${monitorSettingsHtml}
+        ${miniCardBodyPagesHtml}
+    `
+    return cardBody
+}
 $(document).ready(function(){
     $('body')
     .on('click','[system]',function(){
@@ -684,6 +804,22 @@ $(document).ready(function(){
         var systemSwitch = el.attr('shinobi-switch');
         dashboardSwitch(systemSwitch)
     })
+    .on('click','.mini-monitor-editor [type="submit"]',function(e){
+        var formElement = $(this).parents('form')
+        var monitorId = formElement.attr('data-mid');
+        var loadedMonitor = getDbColumnsForMonitor(loadedMonitors[monitorId])
+        var thisForm = getCardMonitorSettingsFields(formElement);
+        updateMonitor(mergeDeep(loadedMonitor,thisForm))
+    })
+    .on('click','.card-page-selector',function(e){
+        e.preventDefault()
+        var el = $(this)
+        var pageSelection = el.attr('card-page-selector')
+        var parent = el.parents('.card-page-selection')
+        parent.find(`[card-page-container]`).hide()
+        parent.find(`[card-page-container="${pageSelection}"]`).show()
+        return false;
+    });
     monitorGroupSelections
     .on('click','[monitor-group]',function(){
         var groupId = $(this).attr('monitor-group');

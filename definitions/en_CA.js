@@ -6334,6 +6334,7 @@ module.exports = function(s,config,lang){
              "Action for Selected": {
                 "name": lang["Action for Selected"],
                 "color": "red",
+                "blockquote": lang.eventFilterActionText,
                 "section-class": "actions",
                 "info": [
                     {
@@ -6352,7 +6353,6 @@ module.exports = function(s,config,lang){
                          {
                             "name": lang.Yes,
                             "value": "1",
-                            "info": "Use Traditional Recording, Hotswap, or Delete Motionless with their currently set options in the Global Detection Settings section."
                          }
                       ]
                     },
@@ -7916,6 +7916,6 @@ module.exports = function(s,config,lang){
               ]
           }
          }
-        },
+      },
   })
 }
