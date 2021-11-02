@@ -12,6 +12,9 @@ const P = SAT.Polygon;
 const B = SAT.Box;
 // Matrix In Region Libs />
 module.exports = (s,config,lang,app,io) => {
+    // Event Filters >
+    const acceptableOperators = ['indexOf','!indexOf','===','!==','>=','>','<','<=']
+    // Event Filters />
     const {
         splitForFFPMEG
     } = require('../ffmpeg/utils.js')(s,config,lang)
@@ -211,7 +214,12 @@ module.exports = (s,config,lang,app,io) => {
                                     pass()
                                 }
                             break;
-                            default:
+                            case'===':
+                            case'!==':
+                            case'>=':
+                            case'>':
+                            case'<':
+                            case'<=':
                                 if(eval('param '+condition.p2+' "'+condition.p3.replace(/"/g,'\\"')+'"')){
                                     pass()
                                 }
@@ -244,7 +252,7 @@ module.exports = (s,config,lang,app,io) => {
                                 var atSecond = parseInt(doAtTime[2]) - 1 || timeNow.getSeconds()
                                 var nowAddedInSeconds = atHourNow * 60 * 60 + atMinuteNow * 60 + atSecondNow
                                 var conditionAddedInSeconds = atHour * 60 * 60 + atMinute * 60 + atSecond
-                                if(eval('nowAddedInSeconds '+condition.p2+' conditionAddedInSeconds')){
+                                if(acceptableOperators.indexOf(condition.p2) > -1 && eval('nowAddedInSeconds '+condition.p2+' conditionAddedInSeconds')){
                                     conditionChain[place].ok = true
                                 }
                             }
