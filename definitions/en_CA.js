@@ -7534,6 +7534,11 @@ module.exports = function(s,config,lang){
                           pageOpen: 'powerVideo',
                       },
                       {
+                          icon: 'calendar',
+                          label: `${lang['Calendar']}`,
+                          pageOpen: 'calendarView',
+                      },
+                      {
                           icon: 'wrench',
                           label: `${lang['Monitor Settings']}`,
                           pageOpen: 'monitorSettings',
