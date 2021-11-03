@@ -7910,7 +7910,7 @@ module.exports = function(s,config,lang){
            "Time Strip": {
                id: "powerVideoTimelineStripsContainer",
                noHeader: true,
-              "color": "green",
+              "color": "bg-gradient-blue text-white",
               "section-pre-class": "col-md-12 mt-3",
               "info": [
                   {
