@@ -24,6 +24,9 @@ module.exports = (s,config,lang,app,io) => {
     const {
         cutVideoLength
     } = require('../video/utils.js')(s,config,lang)
+    const {
+        isEven
+    } = require('../basic/utils.js')(s,config,lang)
     async function saveImageFromEvent(options,frameBuffer){
         const monitorId = options.mid || options.id
         const groupKey = options.ke
@@ -191,8 +194,19 @@ module.exports = (s,config,lang,app,io) => {
                 var conditionChain = {}
                 var dFilter = filters[key]
                 if(dFilter.enabled === '0')return;
+                var numberOfOpenAndCloseBrackets = 0
                 dFilter.where.forEach(function(condition,place){
-                    conditionChain[place] = {ok:false,next:condition.p4,matrixCount:0}
+                    const hasOpenBracket = condition.openBracket === '1';
+                    const hasCloseBracket = condition.closeBracket === '1';
+                    conditionChain[place] = {
+                        ok: false,
+                        next: condition.p4,
+                        matrixCount: 0,
+                        openBracket: hasOpenBracket,
+                        closeBracket: hasCloseBracket,
+                    }
+                    if(hasOpenBracket)++numberOfOpenAndCloseBrackets;
+                    if(hasCloseBracket)++numberOfOpenAndCloseBrackets;
                     if(d.details.matrices)conditionChain[place].matrixCount = d.details.matrices.length
                     var modifyFilters = function(toCheck,matrixPosition){
                         var param = toCheck[condition.p1]
@@ -263,14 +277,20 @@ module.exports = (s,config,lang,app,io) => {
                     }
                 })
                 var conditionArray = Object.values(conditionChain)
-                var validationString = ''
+                var validationString = []
+                var allowBrackets = false;
+                if (numberOfOpenAndCloseBrackets === 0 || isEven(numberOfOpenAndCloseBrackets)){
+                    allowBrackets = true;
+                }else{
+                    s.userLog(d,{type:lang["Event Filter Error"],msg:lang.eventFilterErrorBrackets})
+                }
                 conditionArray.forEach(function(condition,number){
-                    validationString += condition.ok+' '
+                    validationString.push(`${allowBrackets && condition.openBracket ? '(' : ''}${condition.ok}${allowBrackets && condition.closeBracket ? ')' : ''}`);
                     if(conditionArray.length-1 !== number){
-                        validationString += condition.next+' '
+                        validationString.push(condition.next)
                     }
                 })
-                if(eval(validationString)){
+                if(eval(validationString.join(' '))){
                     if(dFilter.actions.halt !== '1'){
                         delete(dFilter.actions.halt)
                         Object.keys(dFilter.actions).forEach(function(key){

@@ -125,6 +125,12 @@ module.exports = (processCwd,config) => {
             callback(hasSubcribed)
         }
     }
+    function isEven(value) {
+        if (value%2 == 0)
+            return true;
+        else
+            return false;
+    }
     return {
         parseJSON: parseJSON,
         stringJSON: stringJSON,
@@ -137,5 +143,6 @@ module.exports = (processCwd,config) => {
         localToUtc: localToUtc,
         formattedTime: formattedTime,
         checkSubscription: checkSubscription,
+        isEven: isEven,
     }
 }

@@ -90,71 +90,78 @@ $(document).ready(function(e){
     }
     var drawDetectorFilterFieldsRow = function(d){
         if(!d)d = {};
-        d.id = $('#filters_where .row').length;
+        d.id = detectorFiltersConditionRows.find('.where-row').length;
         if(!d.p1){d.p1='indifference'}
         if(!d.p2){d.p2='==='}
         if(!d.p3){d.p3=''}
         if(!d.p4){d.p4='&&'}
-        tmp = `<div class="row where-row">
-           <div class="form-group col-md-3">
-               <label>
-                   <select class="form-control input-sm" where="p1">
-                       <option value="indifference" selected>${lang['Indifference']}</option>
-                       <option value="name">${lang['Region Name']}</option>
-                       <option value="reason">${lang['Reason']}</option>
-                       <option value="time">${lang['Time']}</option>
-                       <option value="plug">${lang['Detection Engine']}</option>
-                       <optgroup label="Matrix">
-                          <option value="tag">${lang['Object Tag']}</option>
-			  <option value="count">${lang['Object Count']}</option>
-                          <option value="confidence">${lang['Confidence']}</option>
-                          <option value="x">${lang['X Point']}</option>
-                          <option value="y">${lang['Y Point']}</option>
-                          <option value="height">${lang['Height']}</option>
-                          <option value="width">${lang['Width']}</option>
-                       </optgroup>
-                   </select>
-               </label>
+        tmp = `<div class="d-flex flex-row where-row">
+            <div class="py-2 pr-1">
+                <select class="form-control input-sm" where="openBracket">
+                    <option value="0" selected></option>
+                    <option value="1">(</option>
+                </select>
+            </div>
+           <div class="py-2 px-1 flex-grow-1">
+               <select class="form-control input-sm" where="p1">
+                   <option value="indifference" selected>${lang['Indifference']}</option>
+                   <option value="name">${lang['Region Name']}</option>
+                   <option value="reason">${lang['Reason']}</option>
+                   <option value="time">${lang['Time']}</option>
+                   <option value="plug">${lang['Detection Engine']}</option>
+                   <optgroup label="Matrix">
+                      <option value="tag">${lang['Object Tag']}</option>
+		  <option value="count">${lang['Object Count']}</option>
+                      <option value="confidence">${lang['Confidence']}</option>
+                      <option value="x">${lang['X Point']}</option>
+                      <option value="y">${lang['Y Point']}</option>
+                      <option value="height">${lang['Height']}</option>
+                      <option value="width">${lang['Width']}</option>
+                   </optgroup>
+               </select>
            </div>
-           <div class="form-group col-md-3">
-               <label>
-                   <select class="form-control input-sm" where="p2">
-                       <option value="===" selected>${lang['Equal to']}</option>
-                       <option value="!==">${lang['Not Equal to']}</option>
-                       <option value="indexOf">${lang['Contains']}</option>
-                       <option value="!indexOf">${lang['Does Not Contain']}</option>
-                       <optgroup label="For Numbers">
-                          <option value=">=">${lang['Greater Than or Equal to']}</option>
-                          <option value=">">${lang['Greater Than']}</option>
-                          <option value="<">${lang['Less Than']}</option>
-                          <option value="<=">${lang['Less Than or Equal to']}</option>
-                       </optgroup>
-                   </select>
-               </label>
+           <div class="py-2 px-1 flex-grow-1">
+               <select class="form-control input-sm" where="p2">
+                   <option value="===" selected>${lang['Equal to']}</option>
+                   <option value="!==">${lang['Not Equal to']}</option>
+                   <option value="indexOf">${lang['Contains']}</option>
+                   <option value="!indexOf">${lang['Does Not Contain']}</option>
+                   <optgroup label="For Numbers">
+                      <option value=">=">${lang['Greater Than or Equal to']}</option>
+                      <option value=">">${lang['Greater Than']}</option>
+                      <option value="<">${lang['Less Than']}</option>
+                      <option value="<=">${lang['Less Than or Equal to']}</option>
+                   </optgroup>
+               </select>
            </div>
-           <div class="form-group col-md-3">
-               <label>
-                   <input class="form-control input-sm" placeholder="Value" title="${lang.Value}" where="p3">
-               </label>
+           <div class="py-2 px-1 flex-grow-1">
+               <input class="form-control input-sm" placeholder="Value" title="${lang.Value}" where="p3">
            </div>
-           <div class="form-group col-md-2">
-               <label>
-                   <select class="form-control input-sm" where="p4">
-                       <option value="&&" selected>${lang['AND']}</option>
-                       <option value="||">${lang['OR']}</option>
-                   </select>
-               </label>
+           <div class="py-2 px-1">
+               <select class="form-control input-sm" where="closeBracket">
+                   <option value="0" selected></option>
+                   <option value="1">)</option>
+               </select>
            </div>
-           <div class="form-group col-md-1">
+           <div class="py-2 px-1">
+               <select class="form-control input-sm" where="p4">
+                   <option value="&&" selected>${lang['AND']}</option>
+                   <option value="||">${lang['OR']}</option>
+               </select>
+           </div>
+           <div class="py-2 pl-1">
                <a class="btn btn-danger btn-block pull-right delete-condition">&nbsp;<i class="fa fa-trash-o"></i>&nbsp;</a>
            </div>
         </div>`
         detectorFiltersConditionRows.append(tmp);
-        detectorFiltersConditionRows.find('.row [where="p4"][disabled]').prop('disabled',false)
-        detectorFiltersConditionRows.find('.row:last [where="p1"]').val(d.p1)
-        detectorFiltersConditionRows.find('.row:last [where="p2"]').val(d.p2)
-        detectorFiltersConditionRows.find('.row:last [where="p3"]').val(d.p3)
-        detectorFiltersConditionRows.find('.row:last [where="p4"]').val(d.p4).prop('disabled',true)
+        detectorFiltersConditionRows.find('.where-row [where="p4"][disabled]').prop('disabled',false)
+        var lastRow = detectorFiltersConditionRows.find('.where-row:last')
+        lastRow.find('[where="openBracket"]').val(d.openBracket)
+        lastRow.find('[where="p1"]').val(d.p1)
+        lastRow.find('[where="p2"]').val(d.p2)
+        lastRow.find('[where="p3"]').val(d.p3)
+        lastRow.find('[where="closeBracket"]').val(d.closeBracket)
+        lastRow.find('[where="p4"]').val(d.p4).prop('disabled',true)
     }
     var createNewFilter = function(){
         var newId = generateId(5)
@@ -197,7 +204,7 @@ $(document).ready(function(e){
     detectorFiltersWindow.on('change','[where="p1"]',function(e){
         var el = $(this)
         var p1v = el.val()
-        var parent = el.parents('.row')
+        var parent = el.parents('.where-row')
         var p3 = parent.find('[where="p3"]')
         var options = []
         switch(p1v){
@@ -250,7 +257,7 @@ $(document).ready(function(e){
     detectorFiltersWindow.on('click','.where .delete-condition',function(e){
         if(detectorFiltersConditionRows.find('.where-row').length > 1){
             $(this).parents('.where-row').remove()
-            detectorFiltersConditionRows.find('.row:last [where="p4"]').prop('disabled',true)
+            detectorFiltersConditionRows.find('.where-row:last [where="p4"]').prop('disabled',true)
             updateSelectedFilter()
         }
     })

@@ -1256,6 +1256,8 @@
    "Before": "Before",
    "After": "After",
    "Rule": "Rule",
+   "Event Filter Error": "Event Filter Error",
+   "eventFilterErrorBrackets": "You have an un-even number of brackets. They are being ignored.",
    "Quick Settings": "Quick Settings",
    "Copy Stream URL": "Copy Stream URL",
    "willTriggerAnEvent": "will trigger an event",
