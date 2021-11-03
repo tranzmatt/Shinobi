@@ -6200,7 +6200,7 @@ module.exports = function(s,config,lang){
                     {
                         "field": lang["Monitor"],
                         "fieldType": "select",
-                        "class": "dark monitors_list",
+                        "class": "monitors_list",
                         "possible": []
                     },
                     {
@@ -7915,6 +7915,39 @@ module.exports = function(s,config,lang){
                   },
               ]
           }
+         }
+      },
+      "Calendar": {
+          "section": "Calendar",
+          "blocks": {
+              "Search Settings": {
+                 "name": lang["Search Settings"],
+                 "color": "green",
+                 "section-pre-class": "col-md-4",
+                 "info": [
+                     {
+                         "field": lang["Monitor"],
+                         "fieldType": "select",
+                         "class": "monitors_list",
+                         "possible": []
+                     },
+                     {
+                         "class": "date_selector",
+                         "field": lang.Date,
+                     }
+                ]
+            },
+            "Calendar": {
+                noHeader: true,
+               "section-pre-class": "col-md-8",
+               "info": [
+                   {
+                       "fieldType": "div",
+                       "id": "calendar_draw_area",
+                       "divContent": ""
+                   }
+               ]
+           },
          }
       },
   })
