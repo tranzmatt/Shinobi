@@ -175,3 +175,7 @@
 .vis-selected [timeline-video-file] .progress{
     opacity: 1;
 }
+
+#powerVideo .vis-item.vis-box {
+    border-radius: 5px;
+}

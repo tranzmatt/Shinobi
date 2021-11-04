@@ -693,6 +693,7 @@ function getCardMonitorSettingsFields(formElement){
             }
         })
     })
+    console.log(formValues)
     return formValues;
 }
 function updateMonitor(monitorToPost,callback){
@@ -809,7 +810,7 @@ $(document).ready(function(){
         var monitorId = formElement.attr('data-mid');
         var loadedMonitor = getDbColumnsForMonitor(loadedMonitors[monitorId])
         var thisForm = getCardMonitorSettingsFields(formElement);
-        updateMonitor(mergeDeep(loadedMonitor,thisForm))
+        updateMonitor(mergeDeep({},loadedMonitor,thisForm))
     })
     .on('click','.card-page-selector',function(e){
         e.preventDefault()

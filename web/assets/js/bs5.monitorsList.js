@@ -22,7 +22,7 @@ $(document).ready(function(){
                             <span class="monitor_name" title="${row.mid}">${row.name}</span>
                         </div>
                         <div class="text-right">
-                            <input class="form-check-input no-abs m-0" type="checkbox" value="${row.mid}" name="${row.mid}" id="monitorListSelect-${row.mid}">
+                            <input class="monitor-list-select form-check-input no-abs m-0" type="checkbox" value="${row.mid}" name="${row.mid}" id="monitorListSelect-${row.mid}">
                         </div>
                     </div>
                     <small class="text-muted monitor_host">${row.host}</small><br>
@@ -113,8 +113,12 @@ $(document).ready(function(){
     }
     function getSelectedMonitors(){
         var monitorsSelected = [];
-        $.each(theList.serializeObject(),function(n,v){
-            monitorsSelected.push(getDbColumnsForMonitor(loadedMonitors[n]))
+        theList.find('.monitor-list-select').each(function(n,v){
+            var el = $(v)
+            if(el.is(':checked')){
+                var key = el.attr('name')
+                monitorsSelected.push(getDbColumnsForMonitor(loadedMonitors[key]))
+            }
         })
         return monitorsSelected;
     }
