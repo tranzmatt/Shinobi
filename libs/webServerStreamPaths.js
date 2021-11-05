@@ -290,50 +290,6 @@ module.exports = function(s,config,lang,app){
         },res,req)
     })
     /**
-    * API : Get H.265/h265 HEVC stream
-    */
-    app.get([config.webPaths.apiPrefix+':auth/h265/:ke/:id/s.hevc',config.webPaths.apiPrefix+':auth/h265/:ke/:id/:channel/s.hevc'], function(req,res) {
-        s.auth(req.params,function(user){
-            s.checkChildProxy(req.params,function(){
-                noCache(res)
-                var Emitter,chunkChannel
-                if(!req.params.channel){
-                    Emitter = s.group[req.params.ke].activeMonitors[req.params.id].emitter
-                    chunkChannel = 'MAIN'
-                }else{
-                    Emitter = s.group[req.params.ke].activeMonitors[req.params.id].emitterChannel[parseInt(req.params.channel)+config.pipeAddition]
-                    chunkChannel = parseInt(req.params.channel)+config.pipeAddition
-                }
-                //variable name of contentWriter
-                var contentWriter
-                //set headers
-                res.setHeader('Content-Type', 'video/mp4');
-                res.setHeader('Access-Control-Allow-Origin','*');
-                var ip = s.getClientIp(req)
-                s.camera('watch_on',{
-                    id : req.params.id,
-                    ke : req.params.ke
-                },{
-                    id : req.params.auth + ip + req.headers['user-agent']
-                })
-                //write new frames as they happen
-                Emitter.on('data',contentWriter=function(buffer){
-                    res.write(buffer)
-                })
-                //remove contentWriter when client leaves
-                res.on('close', function () {
-                    Emitter.removeListener('data',contentWriter)
-                    s.camera('watch_off',{
-                        id : req.params.id,
-                        ke : req.params.ke
-                    },{
-                        id : req.params.auth + ip + req.headers['user-agent']
-                    })
-                })
-            },res,req)
-        },res,req)
-    })
-    /**
     * API : Get H.264 over HTTP
      */
     app.get([

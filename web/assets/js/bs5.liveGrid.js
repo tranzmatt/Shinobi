@@ -5,6 +5,24 @@ var runningJpegStreams = {}
 var liveGrid = $('#monitors_live')
 var liveGridOpenCountElements = $('.liveGridOpenCount')
 var liveGridOpenCount = 0
+//
+var onLiveStreamInitiateExtensions = []
+function onLiveStreamInitiate(callback){
+    onLiveStreamInitiateExtensions.push(callback)
+}
+var onLiveStreamCloseExtensions = []
+function onLiveStreamClose(callback){
+    onLiveStreamCloseExtensions.push(callback)
+}
+var onSignalCheckLiveStreamExtensions = []
+function onSignalCheckLiveStream(callback){
+    onSignalCheckLiveStreamExtensions.push(callback)
+}
+var onBuildStreamElementExtensions = []
+function onBuildStreamElement(callback){
+    onBuildStreamElementExtensions.push(callback)
+}
+//
 function setLiveGridOpenCount(addOrRemove){
     liveGridOpenCount += addOrRemove
     liveGridOpenCountElements.text(liveGridOpenCount)
@@ -74,6 +92,10 @@ function buildStreamElementHtml(streamType){
                 html = '<canvas class="stream-element"></canvas>';
             break;
         }
+        $.each(onBuildStreamElementExtensions,function(extender){
+            var newHtml = extender(streamType)
+            html = newHtml ? newHtml : html
+        })
     }
     return html
 }
@@ -469,48 +491,10 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
                 },4000)
             })
         break;
-        case'h265':
-            var player = loadedPlayer.h265Player
-            var video = containerElement.find('.stream-element')[0]
-            if (player) {
-                player.stop()
-                revokeVideoPlayerUrl(monitorId)
-            }
-            loadedPlayer.h265Player = new libde265.RawPlayer(video)
-            var player = loadedPlayer.h265Player
-            player.set_status_callback(function(msg, fps) {
-            })
-            player.launch()
-            if(loadedPlayer.h265Socket && loadedPlayer.h265Socket.connected){
-                loadedPlayer.h265Socket.disconnect()
-            }
-            if(loadedPlayer.h265HttpStream && loadedPlayer.abort){
-                loadedPlayer.h265HttpStream.abort()
-            }
-            if(monitor.details.stream_flv_type==='ws'){
-              loadedPlayer.h265Socket = io(location.origin,{ path: websocketPath, query: websocketQuery, transports: ['websocket'], forceNew: false})
-              var ws = loadedPlayer.h265Socket
-              ws.on('diconnect',function(){
-                  console.log('h265Socket Stream Disconnected')
-              })
-              ws.on('connect',function(){
-                  ws.emit('h265',{
-                      auth: $user.auth_token,
-                      uid: $user.uid,
-                      ke: groupKey,
-                      id: monitorId,
-                      channel: subStreamChannel
-                  })
-                  ws.on('data',function(imageData){
-                      player._handle_onChunk(imageData)
-                  })
-              })
-            }else{
-              var url = getApiPrefix(`h265`) + '/' + monitorId + (subStreamChannel ? `/${subStreamChannel}` : '') + '/s.hevc';
-              loadedPlayer.h265HttpStream = player.createHttpStream(url)
-            }
-        break;
     }
+    $.each(onLiveStreamInitiateExtensions,function(extender){
+        extender(streamType,monitor,loadedPlayer)
+    })
     var monitorMutes = dashboardOptions().monitorMutes || {}
     if(dashboardOptions().switches.monitorMuteAudio === 1){
         containerElement.find('video').each(function(n,el){
@@ -566,15 +550,13 @@ function closeLiveGridPlayer(monitorId,killElement){
             if(livePlayerElement.hls){livePlayerElement.hls.destroy()}
             if(livePlayerElement.Poseidon){livePlayerElement.Poseidon.stop()}
             if(livePlayerElement.Base64){livePlayerElement.Base64.disconnect()}
-            if(livePlayerElement.h265Socket){livePlayerElement.h265Socket.disconnect()}
-            if(livePlayerElement.h265Player){livePlayerElement.h265Player.stop()}
             if(livePlayerElement.dash){livePlayerElement.dash.reset()}
             if(livePlayerElement.jpegInterval){
                 stopJpegStream(monitorId)
             }
-            if(livePlayerElement.h265HttpStream && livePlayerElement.h265HttpStream.abort){
-                livePlayerElement.h265HttpStream.abort()
-            }
+            $.each(onLiveStreamCloseExtensions,function(extender){
+                extender(livePlayerElement)
+            })
         }
         if(liveGridElements[monitorId])revokeVideoPlayerUrl(monitorId)
         clearInterval(livePlayerElement.signal)
@@ -774,7 +756,7 @@ function signalCheckLiveStream(options){
         }
         function executeCheck(){
             switch(streamType){
-                case'b64':case'h265':
+                case'b64':
                     monitorItem.resize()
                 break;
                 case'hls':case'flv':case'mp4':
@@ -811,6 +793,9 @@ function signalCheckLiveStream(options){
                     });
                 break;
             }
+            $.each(onSignalCheckLiveStreamExtensions,function(extender){
+                extender(streamType,monitorItem)
+            })
         }
         executeCheck();
     }catch(err){

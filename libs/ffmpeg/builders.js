@@ -9,6 +9,8 @@ module.exports = (s,config,lang) => {
     const {
         validateDimensions,
     } = require('./utils.js')(s,config,lang)
+    if(!config.outputsWithAudio)config.outputsWithAudio = ['hls','flv','mp4','rtmp'];
+    if(!config.outputsNotCapableOfPresets)config.outputsNotCapableOfPresets = [];
     const hasCudaEnabled = (monitor) => {
         return monitor.details.accelerator === '1' && monitor.details.hwaccel === 'cuvid' && monitor.details.hwaccel_vcodec === ('h264_cuvid' || 'hevc_cuvid' || 'mjpeg_cuvid' || 'mpeg4_cuvid')
     }
@@ -203,7 +205,7 @@ module.exports = (s,config,lang) => {
         const streamType = channel.stream_type ? channel.stream_type : 'hls'
         const videoFps = !isNaN(parseFloat(channel.stream_fps)) && channel.stream_fps !== '0' ? parseFloat(channel.stream_fps) : streamType === 'rtmp' ? '30' : null
         const inputMap = buildInputMap(e,e.details.input_map_choices[`stream_channel-${channelNumber}`])
-        const outputCanHaveAudio = (streamType === 'hls' || streamType === 'mp4' || streamType === 'flv' || streamType === 'h265' || streamType === 'rtmp')
+        const outputCanHaveAudio = config.outputsWithAudio.indexOf(streamType) > -1;
         const outputRequiresEncoding = streamType === 'mjpeg' || streamType === 'b64'
         const outputIsPresetCapable = outputCanHaveAudio
         const { videoWidth, videoHeight } = validateDimensions(channel.stream_scale_x,channel.stream_scale_y)
@@ -246,7 +248,7 @@ module.exports = (s,config,lang) => {
             streamFilters.push(channel.stream_vf)
         }
         if(outputIsPresetCapable){
-            const streamPreset = streamType !== 'h265' && channel.preset_stream ? channel.preset_stream : null
+            const streamPreset = config.outputsNotCapableOfPresets.indexOf(streamType) === -1 && channel.preset_stream ? channel.preset_stream : null
             if(streamPreset){
                 streamFlags.push(`-preset ${streamPreset}`)
             }
@@ -292,13 +294,13 @@ module.exports = (s,config,lang) => {
             case'mjpeg':
                 streamFlags.push(`-an -c:v mjpeg -f mpjpeg -boundary_tag shinobi pipe:${number}`)
             break;
-            case'h265':
-                streamFlags.push(`-movflags +frag_keyframe+empty_moov+default_base_moof -metadata title="Shinobi H.265 Stream" -reset_timestamps 1 -f hevc pipe:${number}`)
-            break;
             case'b64':case'':case undefined:case null://base64
                 streamFlags.push(`-an -c:v mjpeg -f image2pipe pipe:${number}`)
             break;
         }
+        s.onFfmpegBuildStreamChannelExtensions.forEach(function(extender){
+            extender(streamType,streamFlags,number,e)
+        });
         return ' ' + streamFlags.join(' ')
     }
     const buildMainInput = function(e){
@@ -384,7 +386,7 @@ module.exports = (s,config,lang) => {
             const videoQuality = e.details.stream_quality ? e.details.stream_quality : '1'
             const videoFps = !isNaN(parseFloat(e.details.stream_fps)) && e.details.stream_fps !== '0' ? parseFloat(e.details.stream_fps) : null
             const inputMap = buildInputMap(e,e.details.input_map_choices.stream)
-            const outputCanHaveAudio = (streamType === 'hls' || streamType === 'mp4' || streamType === 'flv' || streamType === 'h265')
+            const outputCanHaveAudio = config.outputsWithAudio.indexOf(streamType) > -1;
             const outputRequiresEncoding = streamType === 'mjpeg' || streamType === 'b64'
             const outputIsPresetCapable = outputCanHaveAudio
             const { videoWidth, videoHeight } = validateDimensions(e.details.stream_scale_x,e.details.stream_scale_y)
@@ -429,7 +431,7 @@ module.exports = (s,config,lang) => {
                 streamFilters.push(e.details.stream_vf)
             }
             if(outputIsPresetCapable){
-                const streamPreset = streamType !== 'h265' && e.details.preset_stream ? e.details.preset_stream : null
+                const streamPreset = config.outputsNotCapableOfPresets.indexOf(streamType) === -1 && e.details.preset_stream ? e.details.preset_stream : null
                 if(streamPreset){
                     streamFlags.push(`-preset ${streamPreset}`)
                 }
@@ -465,13 +467,13 @@ module.exports = (s,config,lang) => {
                 case'mjpeg':
                     streamFlags.push(`-an -c:v mjpeg -f mpjpeg -boundary_tag shinobi pipe:1`)
                 break;
-                case'h265':
-                    streamFlags.push(`-movflags +frag_keyframe+empty_moov+default_base_moof -metadata title="Shinobi H.265 Stream" -reset_timestamps 1 -f hevc pipe:1`)
-                break;
                 case'b64':case'':case undefined:case null://base64
                     streamFlags.push(`-an -c:v mjpeg -f image2pipe pipe:1`)
                 break;
             }
+            s.onFfmpegBuildMainStreamExtensions.forEach(function(extender){
+                extender(streamType,streamFlags,e)
+            });
             if(e.details.custom_output){
                 streamFlags.push(e.details.custom_output)
             }

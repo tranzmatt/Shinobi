@@ -1,5 +1,13 @@
 var availableMonitorGroups = {}
 var monitorGroupSelections = $('#monitor-group-selections')
+var onGetSnapshotByStreamExtensions = []
+function onGetSnapshotByStream(callback){
+    onGetSnapshotByStreamExtensions.push(callback)
+}
+var onBuildStreamUrlExtensions = []
+function onBuildStreamUrl(callback){
+    onBuildStreamUrlExtensions.push(callback)
+}
 function humanReadableModeLabel(mode){
     var humanMode = lang['Disabled']
     switch(mode){
@@ -48,6 +56,7 @@ function getSnapshot(options,cb){
     var monitor = options.mon || options.monitor || options
     var targetElement = $(options.targetElement || `[data-mid="${monitor.mid}"].monitor_item .stream-element`)
     var details = safeJsonParse(monitor.details)
+    var streamType = details.stream_type;
     if(window.jpegModeOn !== true){
         function completeAction(image_data,width,height){
             var len = image_data.length
@@ -70,7 +79,7 @@ function getSnapshot(options,cb){
                 },10000)
             }catch(er){}
         }
-        switch(details.stream_type){
+        switch(streamType){
             case'hls':
             case'flv':
             case'mp4':
@@ -89,7 +98,6 @@ function getSnapshot(options,cb){
                 completeAction(atob(c.toDataURL('image/jpeg').split(',')[1]),c.width,c.height)
             break;
             case'b64':
-            case'h265':
                 var c = targetElement[0]
                 var ctx = c.getContext('2d')
                 completeAction(atob(c.toDataURL('image/jpeg').split(',')[1]),c.width,c.height)
@@ -101,6 +109,9 @@ function getSnapshot(options,cb){
                 cb(url,image_data,image_data.width,image_data.height)
             break;
         }
+        $.each(onGetSnapshotByStreamExtensions,function(extender){
+            extender(streamType,targetElement,completeAction,cb)
+        })
     }else{
         url = targetElement.attr('src')
         image_data = new Image()
@@ -185,7 +196,8 @@ function playAudioAlert(){
 function buildStreamUrl(monitorId){
     var monitor = loadedMonitors[monitorId]
     var streamURL
-    switch(safeJsonParse(monitor.details).stream_type){
+    var streamType = safeJsonParse(monitor.details).stream_type
+    switch(streamType){
         case'jpeg':
             streamURL = getApiPrefix(`jpeg`) + '/' + monitorId + '/s.jpg'
         break;
@@ -198,15 +210,17 @@ function buildStreamUrl(monitorId){
         case'flv':
             streamURL = getApiPrefix(`flv`) + '/' + monitorId + '/s.flv'
         break;
-        case'h265':
-            streamURL = getApiPrefix(`h265`) + '/' + monitorId + '/s.hevc'
-        break;
         case'mp4':
             streamURL = getApiPrefix(`mp4`) + '/' + monitorId + '/s.mp4'
         break;
         case'b64':
             streamURL = 'Websocket'
         break;
+    }
+    if(!streamURL){
+        $.each(onBuildStreamUrlExtensions,function(extender){
+            streamURL = extender(streamType,monitorId)
+        })
     }
     return streamURL
 }

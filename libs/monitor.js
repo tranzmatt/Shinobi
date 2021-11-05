@@ -948,8 +948,9 @@ module.exports = function(s,config,lang){
             }
         }
         //frames to stream
-       var frameToStreamPrimary
-       switch(e.details.stream_type){
+       var frameToStreamPrimary;
+       const streamType = e.details.stream_type;
+       switch(streamType){
            case'mp4':
                delete(s.group[e.ke].activeMonitors[e.id].mp4frag['MAIN'])
                if(!s.group[e.ke].activeMonitors[e.id].mp4frag['MAIN'])s.group[e.ke].activeMonitors[e.id].mp4frag['MAIN'] = new Mp4Frag()
@@ -974,12 +975,6 @@ module.exports = function(s,config,lang){
                    s.group[e.ke].activeMonitors[e.id].emitter.emit('data',d)
                }
            break;
-           case'h265':
-               frameToStreamPrimary = function(d){
-                   resetStreamCheck(e)
-                   s.group[e.ke].activeMonitors[e.id].emitter.emit('data',d)
-               }
-           break;
            case'b64':case undefined:case null:case'':
                var buffer
                frameToStreamPrimary = function(d){
@@ -996,6 +991,9 @@ module.exports = function(s,config,lang){
                }
            break;
         }
+        s.onMonitorCreateStreamPipeExtensions.forEach(function(extender){
+            if(!frameToStreamPrimary)frameToStreamPrimary = extender(streamType,e,resetStreamCheck)
+        });
         if(frameToStreamPrimary){
             s.group[e.ke].activeMonitors[e.id].spawn.stdout.on('data',frameToStreamPrimary)
         }

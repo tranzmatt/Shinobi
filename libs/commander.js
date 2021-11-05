@@ -4,6 +4,11 @@ module.exports = function(s,config,lang,app){
     var runningWorker;
     config.machineId = config.p2pApiKey + '' + config.p2pGroupId
     config.p2pTargetAuth = config.p2pTargetAuth || s.gid(30)
+    if(!config.workerStreamOutHandlers)config.workerStreamOutHandlers = [
+      'Base64',
+      'FLV',
+      'MP4',
+    ];
     if(!config.p2pServerList)config.p2pServerList = {
         "vancouver-1": {
             name: 'Vancouver-1',

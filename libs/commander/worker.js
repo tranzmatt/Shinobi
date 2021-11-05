@@ -201,12 +201,7 @@ const initialize = (config,lang) => {
             })
 
         });
-        ([
-          'h265',
-          'Base64',
-          'FLV',
-          'MP4',
-        ]).forEach((target) => {
+        config.workerStreamOutHandlers.forEach((target) => {
             connectionToP2PServer.on(target,(initData) => {
                 if(connectedUserWebSockets[initData.auth]){
                     const clientConnectionToMachine = createShinobiSocketConnection(initData.auth + initData.ke + initData.id)
