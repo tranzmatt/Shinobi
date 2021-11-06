@@ -92,7 +92,7 @@ function buildStreamElementHtml(streamType){
                 html = '<canvas class="stream-element"></canvas>';
             break;
         }
-        $.each(onBuildStreamElementExtensions,function(extender){
+        $.each(onBuildStreamElementExtensions,function(n,extender){
             var newHtml = extender(streamType)
             html = newHtml ? newHtml : html
         })
@@ -492,8 +492,8 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
             })
         break;
     }
-    $.each(onLiveStreamInitiateExtensions,function(extender){
-        extender(streamType,monitor,loadedPlayer)
+    $.each(onLiveStreamInitiateExtensions,function(n,extender){
+        extender(streamType,monitor,loadedPlayer,subStreamChannel)
     })
     var monitorMutes = dashboardOptions().monitorMutes || {}
     if(dashboardOptions().switches.monitorMuteAudio === 1){
@@ -554,7 +554,7 @@ function closeLiveGridPlayer(monitorId,killElement){
             if(livePlayerElement.jpegInterval){
                 stopJpegStream(monitorId)
             }
-            $.each(onLiveStreamCloseExtensions,function(extender){
+            $.each(onLiveStreamCloseExtensions,function(n,extender){
                 extender(livePlayerElement)
             })
         }
@@ -793,7 +793,7 @@ function signalCheckLiveStream(options){
                     });
                 break;
             }
-            $.each(onSignalCheckLiveStreamExtensions,function(extender){
+            $.each(onSignalCheckLiveStreamExtensions,function(n,extender){
                 extender(streamType,monitorItem)
             })
         }

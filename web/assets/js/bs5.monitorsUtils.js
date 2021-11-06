@@ -109,7 +109,7 @@ function getSnapshot(options,cb){
                 cb(url,image_data,image_data.width,image_data.height)
             break;
         }
-        $.each(onGetSnapshotByStreamExtensions,function(extender){
+        $.each(onGetSnapshotByStreamExtensions,function(n,extender){
             extender(streamType,targetElement,completeAction,cb)
         })
     }else{
@@ -218,7 +218,8 @@ function buildStreamUrl(monitorId){
         break;
     }
     if(!streamURL){
-        $.each(onBuildStreamUrlExtensions,function(extender){
+        $.each(onBuildStreamUrlExtensions,function(n,extender){
+            console.log(extender)
             streamURL = extender(streamType,monitorId)
         })
     }

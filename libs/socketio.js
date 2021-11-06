@@ -1003,7 +1003,7 @@ module.exports = function(s,config,lang,io){
             delete(s.clientSocketConnection[cn.id])
         })
         s.onWebSocketConnectionExtensions.forEach(function(extender){
-            extender(cn)
+            extender(cn,validatedAndBindAuthenticationToSocketConnection,createStreamEmitter)
         })
     });
 }
