@@ -1,7 +1,6 @@
 module.exports = function(s,config,lang,app,io){
     if(config.showPoweredByShinobi === undefined){config.showPoweredByShinobi=true}
     if(config.poweredByShinobi === undefined){config.poweredByShinobi='Powered by Shinobi.Systems'}
-    if(config.webPageTitle === undefined){config.webPageTitle='Shinobi'}
     if(config.showLoginCardHeader === undefined){config.showLoginCardHeader=true}
     if(config.webFavicon === undefined){config.webFavicon = 'libs/img/icon/favicon.ico'}
     if(!config.logoLocationAppleTouchIcon)config.logoLocationAppleTouchIcon = 'libs/img/icon/apple-touch-icon.png';
