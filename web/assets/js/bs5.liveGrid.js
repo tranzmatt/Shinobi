@@ -1078,12 +1078,13 @@ $(document).ready(function(e){
     dashboardSwitchCallbacks.monitorMuteAudio = function(toggleState){
         var monitorMutes = dashboardOptions().monitorMutes || {}
         $('.monitor_item video').each(function(n,vidEl){
-            var monitorId = $(this).parents('[mid]').attr('mid')
+            var el = $(this)
+            var monitorId = el.parents('[data-mid]').attr('data-mid')
             if(toggleState === 1){
-                vidEl.muted = true
+                el.attr('muted','muted')
             }else{
                 if(monitorMutes[monitorId] !== 1){
-                    vidEl.muted = false
+                    el.removeAttr('muted')
                 }
             }
         })

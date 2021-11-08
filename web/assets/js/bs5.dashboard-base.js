@@ -734,6 +734,13 @@ function setSwitchUIState(systemSwitch,toggleState){
     }
 }
 var dashboardSwitchCallbacks = {}
+function runDashboardSwitchCallback(systemSwitch){
+    var theSwitches = dashboardOptions().switches
+    var afterAction = dashboardSwitchCallbacks[systemSwitch]
+    if(afterAction){
+        afterAction(theSwitches[systemSwitch])
+    }
+}
 function dashboardSwitch(systemSwitch){
     var theSwitches = dashboardOptions().switches
     if(!theSwitches){
@@ -748,8 +755,7 @@ function dashboardSwitch(systemSwitch){
         theSwitches[systemSwitch]=1
     }
     dashboardOptions('switches',theSwitches)
-    var afterAction = dashboardSwitchCallbacks[systemSwitch]
-    if(afterAction)afterAction(theSwitches[systemSwitch])
+    runDashboardSwitchCallback(systemSwitch)
     setSwitchUIState(systemSwitch,theSwitches[systemSwitch])
 }
 
