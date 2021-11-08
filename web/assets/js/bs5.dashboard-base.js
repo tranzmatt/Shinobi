@@ -352,7 +352,8 @@ function deleteTab(tabId){
 
 var addedOnTabAway = {}
 function addOnTabAway(tabId,action){
-    addedOnTabAway[tabId] = action
+    if(!addedOnTabAway[tabId])addedOnTabAway[tabId] = []
+    addedOnTabAway[tabId].push(action)
 }
 
 function onTabAway(tabId){
@@ -366,12 +367,17 @@ function onTabAway(tabId){
         case'livePlayer':
         break;
     }
-    if(addedOnTabAway[tabId])addedOnTabAway[tabId](loadedTab)
+    if(addedOnTabAway[tabId]){
+        addedOnTabAway[tabId].forEach(function(theAction){
+            theAction(loadedTab)
+        })
+    }
 }
 
 var addedOnTabReopen = {}
 function addOnTabReopen(tabId,action){
-    addedOnTabReopen[tabId] = action
+    if(!addedOnTabReopen[tabId])addedOnTabReopen[tabId] = []
+    addedOnTabReopen[tabId].push(action)
 }
 
 function onTabReopen(tabId){
@@ -387,12 +393,17 @@ function onTabReopen(tabId){
         case'livePlayer':
         break;
     }
-    if(addedOnTabReopen[tabId])addedOnTabReopen[tabId](loadedTab)
+    if(addedOnTabReopen[tabId]){
+        addedOnTabReopen[tabId].forEach(function(theAction){
+            theAction(loadedTab)
+        })
+    }
 }
 
 var addedOnTabOpen = {}
 function addOnTabOpen(tabId,action){
-    addedOnTabOpen[tabId] = action
+    if(!addedOnTabOpen[tabId])addedOnTabOpen[tabId] = []
+    addedOnTabOpen[tabId].push(action)
 }
 
 function onTabOpen(tabId){
@@ -400,7 +411,11 @@ function onTabOpen(tabId){
     if(!loadedTab)return
     var type = loadedTab.type
     loadTabBlipPosition(tabId)
-    if(addedOnTabOpen[tabId])addedOnTabOpen[tabId](loadedTab)
+    if(addedOnTabOpen[tabId]){
+        addedOnTabOpen[tabId].forEach(function(theAction){
+            theAction(loadedTab)
+        })
+    }
 }
 
 
