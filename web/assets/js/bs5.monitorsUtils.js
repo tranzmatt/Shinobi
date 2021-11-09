@@ -684,7 +684,7 @@ function magnifyStream(options){
 function getCardMonitorSettingsFields(formElement){
     var formValues = {};
     formValues.details = {}
-    $.each(['name','detail'],function(n,keyType){
+    $.each(['name','detail','monitor-groups-selected'],function(n,keyType){
         formElement.find(`[${keyType}]`).each(function(n,v){
             var el = $(v);
             var key = el.attr(keyType)
@@ -697,6 +697,9 @@ function getCardMonitorSettingsFields(formElement){
                 case'detail':
                     formValues.details[key] = value;
                 break;
+                case'monitor-groups-selected':
+                    formValues.details.groups = value;
+                break;
                 case'name':
                     formValues[key] = value;
                 break;
@@ -708,7 +711,6 @@ function getCardMonitorSettingsFields(formElement){
             }
         })
     })
-    console.log(formValues)
     return formValues;
 }
 function updateMonitor(monitorToPost,callback){
@@ -736,7 +738,23 @@ var miniCardSettingsFields = [
             value: monitorAlreadyAdded.details.detector_pam || '0',
             fieldType: 'toggle',
         }
-    }
+    },
+    function(monitorAlreadyAdded){
+        var monitorGroups = Object.values($user.mon_groups).map(function(item){
+            return {
+                value: item.id,
+                name: item.name,
+                selected: monitorAlreadyAdded.details.groups.indexOf(item.id) > -1,
+            }
+        });
+        return  {
+            label: lang['Grouping'],
+            name: `monitor-groups-selected="${monitorAlreadyAdded.mid}"`,
+            fieldType: 'select',
+            attributes: 'multiple',
+            possible: monitorGroups,
+        }
+    },
 ]
 function buildMiniMonitorCardBody(monitorAlreadyAdded,monitorConfigPartial,additionalInfo,doOpenVideosInsteadOfDelete){
     if(!monitorConfigPartial)monitorConfigPartial = monitorAlreadyAdded;
@@ -758,21 +776,40 @@ function buildMiniMonitorCardBody(monitorAlreadyAdded,monitorConfigPartial,addit
         `
         $.each(([]).concat(miniCardSettingsFields),function(n,option){
             option = typeof option === 'function' ? option(monitorAlreadyAdded,monitorConfigPartial,additionalInfo,doOpenVideosInsteadOfDelete) : option
-            monitorSettingsHtml += `<div class="row mb-2">
-                <div class="col-md-9">
-                    ${option.label}
-                </div>
-                <div class="col-md-3 text-right">`
-                    switch(option.fieldType){
-                        case'toggle':
-                            monitorSettingsHtml += `<input class="form-check-input" type="checkbox" ${option.value === '1' ? 'checked' : ''} ${option.name.indexOf('=') > -1 ? option.name : `name="${option.name}"`}>`
-                        break;
-                        case'text':
-                            monitorSettingsHtml += `<input class="form-control text-center form-control-sm" type="text" ${option.name.indexOf('=') > -1 ? option.name : `name="${option.name}"`} value="${option.value || ''}" placeholder="${option.placeholder || ''}">`
-                        break;
-                    }
-                    monitorSettingsHtml += `</div>
-                </div>`
+            var newFieldHtml = '';
+            if((['div']).indexOf(option.fieldType) > -1){
+                switch(option.fieldType){
+                    case'div':
+                        newFieldHtml += `<div id="${option.id}" ${option.attributes || ''} class="${option.class || ''}" style="${option.style || ''}">${option.divContent || ''}</div>`
+                    break;
+                }
+            }else{
+                newFieldHtml += `<div class="row mb-2">
+                    <div class="col-md-9">
+                        ${option.label}
+                    </div>
+                    <div class="col-md-3 text-right">`
+                        switch(option.fieldType){
+                            case'toggle':
+                                newFieldHtml += `<input class="form-check-input" type="checkbox" ${option.value === '1' ? 'checked' : ''} ${option.name.indexOf('=') > -1 ? option.name : `name="${option.name}"`}>`
+                            break;
+                            case'text':
+                                newFieldHtml += `<input class="form-control text-center form-control-sm" type="text" ${option.name.indexOf('=') > -1 ? option.name : `name="${option.name}"`} value="${option.value || ''}" placeholder="${option.placeholder || ''}">`
+                            break;
+                            case'select':
+                                newFieldHtml += `<select ${option.name.indexOf('=') > -1 ? option.name : `name="${option.name}"`} ${option.id ? `id="${option.id}"` : ''} ${option.attributes || ''} class="form-control form-control-sm ${option.class || ''}" style="${option.style || ''}">`
+                                if(option.possible){
+                                    option.possible.forEach(function(item){
+                                        newFieldHtml += `<option value="${item.value}" ${item.selected ? 'selected' : ''}>${item.name}</option>`
+                                    })
+                                }
+                                newFieldHtml += `</select>`
+                            break;
+                        }
+                        newFieldHtml += `</div>
+                    </div>`
+            }
+            monitorSettingsHtml += newFieldHtml;
         })
         monitorSettingsHtml += `</div>
             <div class="card-footer text-center">
@@ -825,7 +862,10 @@ $(document).ready(function(){
         var monitorId = formElement.attr('data-mid');
         var loadedMonitor = getDbColumnsForMonitor(loadedMonitors[monitorId])
         var thisForm = getCardMonitorSettingsFields(formElement);
-        updateMonitor(mergeDeep({},loadedMonitor,thisForm))
+        var baseConfig = mergeDeep({},loadedMonitor)
+        baseConfig.details.groups = [];
+        var newConfig = mergeDeep(baseConfig,thisForm)
+        updateMonitor(newConfig)
     })
     .on('click','.card-page-selector',function(e){
         e.preventDefault()

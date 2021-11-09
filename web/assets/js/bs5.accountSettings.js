@@ -30,8 +30,11 @@ $(document).ready(function(){
     function writewMonGroups(){
         theForm.find('[detail="mon_groups"]').val(JSON.stringify($user.mon_groups)).change()
     }
+    window.getMonitorGroups = function(){
+        return $user.mon_groups ? $user.mon_groups : safeJsonParse($user.details.mon_groups)
+    }
     window.reDrawMonGroupsInAccountSettings = function(){
-        $user.mon_groups = $user.mon_groups ? $user.mon_groups : safeJsonParse($user.details.mon_groups)
+        $user.mon_groups = getMonitorGroups()
         var monitorList = Object.values($user.mon_groups).map(function(item){
             return {
                 value: item.id,
