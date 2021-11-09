@@ -650,12 +650,12 @@ function permissionCheck(toCheck,monitorId){
     return false
 }
 
-function drawMonitorListToSelector(jqTarget,selectFirst){
+function drawMonitorListToSelector(jqTarget,selectFirst,showId){
     var html = ''
     $.each(loadedMonitors,function(n,v){
         html += createOptionHtml({
             value: v.mid,
-            label: v.name + ` (${v.mid})`,
+            label: v.name + (showId ? ` (${v.mid})` : ''),
         })
     })
     jqTarget.html(html)
