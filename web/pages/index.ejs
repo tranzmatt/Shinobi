@@ -27,7 +27,7 @@
 <div id="page-contents" class="display-table full-height">
     <div class="shinobi-bg-shade bg-gradient-blue">
     	<div class="d-flex flex-row full-height">
-			<div class="col-0 col-lg-8" style="background-image:url(<%- config.loginScreenBackground %>);background-size:cover;opacity:0.2">
+			<div class="col-0 col-lg-8" style="background-image:url(<%- config.loginScreenBackground %>);<%- config.loginScreenBackgroundCss ? config.loginScreenBackgroundCss : 'background-size: cover;opacity: 0.2;' %>">
 
             </div>
 			<div class="col-12 col-lg-4 vertical-center" style="background:rgba(0,0,0,0.8)">
@@ -114,7 +114,7 @@
                                             } %>
                                         </select>
                                     <% } %>
-                                    <div class="form-group" <% config.showLoginTypeSelector === true ? '' : 'style="display:none"' %>>
+                                    <div class="form-group" <%- config.showLoginTypeSelector === true ? '' : 'style="display:none"' %>>
                                         <label><%- lang['Authenticate'] %></label>
                                         <select class="form-control wide-text" name="alternateLogin" selector="f_i">
                                             <option value="" selected><%- lang.Default %></option>
