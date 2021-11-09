@@ -23,6 +23,7 @@ function loadSwitchStates(){
     if(theSwitches){
         $.each(theSwitches,function(systemSwitch,toggleState){
             setSwitchUIState(systemSwitch,toggleState)
+            runDashboardSwitchCallback(systemSwitch)
         })
     }else{
         dashboardOptions('switches',{notifyHide:0})
