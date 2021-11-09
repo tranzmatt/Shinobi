@@ -62,9 +62,11 @@ function createVideoRow(row,classOverride){
                   <th scope="col" class="${definitions.Theme.isDark ? 'text-white' : ''} text-epic">${lang.Events}</th>
                   <th scope="col" class="text-end"><span class="badge bg-light text-dark rounded-pill">${row.events.length}</span></th>
                 </tr>`
-            $.each(row.events,function(n,theEvent){
+            $.each(([]).concat(row.events).splice(0,11),function(n,theEvent){
                 var imagePath = `${formattedTimeForFilename(theEvent.time,false,'YYYY-MM-DD')}/${formattedTimeForFilename(theEvent.time,false,'YYYY-MM-DDTHH-mm-ss')}.jpg`
                 possibleEventFrames += `<div class="col-4 mb-2"><img class="rounded pop-image cursor-pointer" style="max-width:100%;" src="${getApiPrefix('timelapse')}/${theEvent.mid}/${imagePath}" onerror="$(this).parent().remove()"></div>`
+            })
+            $.each(row.events,function(n,theEvent){
                 $.each(theEvent.details.matrices,function(n,matrix){
                     if(!objectsFound[matrix.tag])objectsFound[matrix.tag] = 1
                     ++objectsFound[matrix.tag]
