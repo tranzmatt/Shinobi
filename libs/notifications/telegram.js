@@ -30,6 +30,7 @@ module.exports = function(s,config,lang,getSnapshot){
                             })
                         }
                     }catch(err){
+                        s.debugLog('Telegram Error',err)
                         s.userLog({ke:groupKey,mid:'$USER'},{type:lang.NotifyErrorText,msg:err})
                     }
                 }else{
@@ -301,7 +302,7 @@ module.exports = function(s,config,lang,getSnapshot){
                  ]
             })
         }catch(err){
-            console.log(err)
+            console.error(err)
             console.log('Could not start Telegram bot, please run "npm install node-telegram-bot-api" inside the Shinobi folder.')
         }
     }

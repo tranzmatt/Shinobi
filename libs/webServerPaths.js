@@ -435,9 +435,12 @@ module.exports = function(s,config,lang,app,io){
                                 $user:{
                                     ke: user.ke,
                                     uid: user.uid,
-                                    mail: user.mail
+                                    mail: user.mail,
+                                    details: {
+                                        sub: user.details.sub
+                                    }
                                 },
-                                lang: user.lang
+                                lang: user.lang,
                             })
                             return;
                         }
