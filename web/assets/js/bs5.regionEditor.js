@@ -111,8 +111,8 @@ $(document).ready(function(e){
         });
         regionEditorRegionsList.change();
     }
-    var initLiveStream = function(){
-        var monitorId = getCurrentlySelectedMonitorId()
+    function initLiveStream(monitorId){
+        var monitorId = monitorId || getCurrentlySelectedMonitorId()
         var apiPoint = 'embed'
         var liveElement = regionEditorLiveView.find('iframe,img')
         regionEditorLiveView.find('iframe,img').attr('src','').hide()
@@ -284,7 +284,10 @@ $(document).ready(function(e){
     regionEditorMonitorsList.change(function(){
         var monitorId = $(this).val()
         var monitor = loadedMonitors[monitorId]
-        if(monitor)loadRegionEditor(monitor)
+        if(monitor){
+            loadRegionEditor(monitor)
+            initLiveStream()
+        }
     })
     addOnTabOpen('regionEditor', function () {
         useRegionStillImage = getRegionStillImageSwitch() === 1;
