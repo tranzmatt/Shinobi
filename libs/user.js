@@ -14,6 +14,7 @@ module.exports = function(s,config,lang){
         deleteFileBinFiles,
         deleteCloudVideos,
         deleteCloudTimelapseFrames,
+        resetAllStorageCounters,
     } = require("./user/utils.js")(s,config,lang);
     let purgeDiskGroup = () => {}
     const runQuery = async.queue(function(groupKey, callback) {
@@ -385,6 +386,7 @@ module.exports = function(s,config,lang){
                             var user = Object.assign(form,{ke : d.ke})
                             var userDetails = JSON.parse(formDetails)
                             s.group[d.ke].sizeLimit = parseFloat(newSize)
+                            resetAllStorageCounters(d.ke)
                             if(!dontRunExtensions){
                                 s.onAccountSaveExtensions.forEach(function(extender){
                                     extender(s.group[d.ke],userDetails,user)
