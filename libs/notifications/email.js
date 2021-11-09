@@ -3,6 +3,7 @@ const {
     template,
     checkEmail,
 } = require("./emailUtils.js")
+const nodeMailer = require('nodemailer')
 module.exports = function(s,config,lang,getSnapshot){
     const {
         getEventBasedRecordingUponCompletion,
@@ -11,10 +12,52 @@ module.exports = function(s,config,lang,getSnapshot){
     try{
         if(config.mail){
             if(config.mail.from === undefined){config.mail.from = '"ShinobiCCTV" <no-reply@shinobi.video>'}
-            s.nodemailer = require('nodemailer').createTransport(config.mail);
+            s.nodemailer = nodeMailer.createTransport(config.mail);
         }
         const sendMessage = (...args) => {
             return s.nodemailer.sendMail(...args)
+        }
+        function buildNodeMailerConfig(options){
+            return {
+              host: options.host,
+              port: options.port,
+              secure: options.secure, // upgrade later with STARTTLS
+              auth: {
+                user: options.auth.user,
+                pass: options.auth.pass,
+              },
+              tls: {
+                  rejectUnauthorized: false,
+              },
+            }
+        }
+        function getNodeMailerByUser(user){
+            const userDetails = user.details
+            // auth >
+            const smtpServer = userDetails.email_smtp_server
+            const smtpPort = parseInt(userDetails.email_smtp_port) || 587
+            const smtpSecure = userDetails.email_enable_tls === '0' ? false : true
+            const smtpSenderAddress = userDetails.email_sender_address
+            const smtpSenderPassword = userDetails.email_sender_password
+            // auth />
+            const emailSenderName = userDetails.email_sender_name
+            const emailSendTo = userDetails.email_send_to
+            if(smtpServer && smtpSenderAddress && smtpSenderPassword){
+                if(!s.group[user.ke].nodemailerTransport){
+                    s.group[user.ke].nodemailerTransport = nodeMailer.createTransport(buildNodeMailerConfig({
+                        host: smtpServer,
+                        port: smtpPort,
+                        secure: smtpSecure,
+                        auth: {
+                            user: smtpSenderAddress,
+                            pass: smtpSenderPassword,
+                        }
+                    }))
+                }
+                return s.group[user.ke].nodemailerTransport
+            }else{
+                return s.nodemailer
+            }
         }
         const onDetectorNoTriggerTimeoutForEmail = function(e){
             //e = monitor object
@@ -240,7 +283,7 @@ module.exports = function(s,config,lang,getSnapshot){
         s.onFilterEvent(onFilterEventForEmail)
         s.onDetectorNoTriggerTimeout(onDetectorNoTriggerTimeoutForEmail)
         s.onMonitorUnexpectedExit(onMonitorUnexpectedExitForEmail)
-        s.definitions["Event Filters"].blocks["Action for Selected"].info.push(                    {
+        s.definitions["Event Filters"].blocks["Action for Selected"].info.push({
           "name": "actions=mail",
           "field": "Email on Trigger",
           "fieldType": "select",
