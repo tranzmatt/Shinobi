@@ -888,6 +888,18 @@ $(document).ready(function(){
         el.addClass('active')
         parent.find(`[tab-section="${tabName}"]`).show()
     });
+    if(!isMobile){
+        $('body').on('mousedown',"select[multiple]",function(e){
+            e.preventDefault();
+            var select = this;
+            var scroll = select .scrollTop;
+            e.target.selected = !e.target.selected;
+            setTimeout(function(){select.scrollTop = scroll;}, 0);
+            $(select ).focus();
+        }).on('mousemove',"select[multiple]",function(e){
+            e.preventDefault()
+        });    
+    }
     $('.logout').click(function(e){
         $.get(getApiPrefix() + '/logout/' + $user.ke + '/' + $user.uid,function(data){
             localStorage.removeItem('ShinobiLogin_'+location.host);
