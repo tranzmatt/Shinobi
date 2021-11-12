@@ -27,7 +27,7 @@ form.modal-body{margin:0}
 .hide-box-wrapper.form-group-group{
     padding: 0;
 } */
-.hide-box-wrapper .box-wrapper{
+.hide-box-wrapper > .box-wrapper{
     height: 0;
     overflow: hidden;
 }

@@ -284,7 +284,7 @@ drawBlock = function(monitorSettings){
                  <% }
              %>
          <% }else{ %>
-             <div <%- hidden %> class="form-group <%- field['form-group-class'] %>">
+             <div <%- hidden %> class="form-group <%- field['form-group-class'] || '' %>" <%- field['form-group-attribute'] || '' %>>
                  <div>
                      <label><%- field.field %></label>
                  </div>

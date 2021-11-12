@@ -374,7 +374,7 @@ window.getMonitorEditFormFields = function(){
     monitorConfig.details.groups = getMonitorGroupsSelected()
     // TODO : Input Maps and Stream Channels
 
-    
+
 //    if(monitorConfig.protocol=='rtsp'){monitorConfig.ext='mp4',monitorConfig.type='rtsp'}
     if(errorsFound.length > 0){
         response.ok = false
@@ -1439,6 +1439,8 @@ editorForm.find('[name="type"]').change(function(e){
         //     })
         switch(d.f){
             case'monitor_status':
+                loadedMonitors[d.id].code = parseInt(`${d.code}`)
+                loadedMonitors[d.id].status = `${d.status}`
                 $('[data-mid="'+d.id+'"] .monitor_status').html(monitorStatusCodes[d.code] || d.code || d.status);
             break;
             case'monitor_delete':
