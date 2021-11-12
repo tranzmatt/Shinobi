@@ -7725,46 +7725,12 @@ module.exports = function(s,config,lang){
                          isFormGroupGroup: true,
                          "info": [
                              {
-                                "fieldType": "btn-group",
-                                "btns": [
-                                    {
-                                        "fieldType": "btn",
-                                        "class": `btn-primary btn-sm`,
-                                        "attribute": `tab-chooser="monitors"`,
-                                        "btnContent": `${lang['Monitors']}`,
-                                    },
-                                    {
-                                        "fieldType": "btn",
-                                        "class": `btn-primary btn-sm`,
-                                        "attribute": `tab-chooser="settings"`,
-                                        "btnContent": `${lang['Search Settings']}`,
-                                    },
-                                ],
-                             },
-                         ]
-                     },
-                     {
-                         "name": lang["Monitors"],
-                         "color": "blue",
-                         noId: true,
-                         isFormGroupGroup: true,
-                         attribute: `tab-section="monitors"`,
-                         "info": [
-                             {
+                                 "field": lang['Monitors'],
                                  "id": "powerVideoMonitorsList",
-                                 "fieldType": "div",
-                                 "class": "list-group",
+                                 "form-group-attribute": 'tab-section=monitors',
+                                 "attribute": "multiple",
+                                 "fieldType": "select",
                              },
-                         ]
-                     },
-                     {
-                         hidden: true,
-                         "name": lang["Search Settings"],
-                         "color": "blue",
-                         noId: true,
-                         isFormGroupGroup: true,
-                         attribute: `tab-section="settings"`,
-                         "info": [
                              {
                                 "id": "powerVideoDateRange",
                                 "field": lang['Date Range'],

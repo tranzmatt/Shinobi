@@ -14,6 +14,7 @@ $(document).ready(function(e){
     var eventsLabeledByTime = {}
     var monitorSlotPlaySpeeds = {}
     var currentlyPlayingVideos = {}
+    var lastPowerVideoSelectedMonitors = []
     var extenders = {
         onVideoPlayerTimeUpdateExtensions: [],
         onVideoPlayerTimeUpdate: function(extender){
@@ -39,8 +40,7 @@ $(document).ready(function(e){
     },function(start, end, label){
         // $.pwrvid.drawTimeline()
         powerVideoDateRangeElement.focus()
-        getSelectedMonitors().each(function(n,activeElement){
-            var monitorId = $(activeElement).attr('data-monitor')
+        $.each(lastPowerVideoSelectedMonitors,function(n,monitorId){
             requestTableData(monitorId)
         })
     });
@@ -50,11 +50,13 @@ $(document).ready(function(e){
         powerVideoLoadedEvents[monitorId] = events
     }
     var drawMonitorsList = function(){
-        var html = ''
-        $.each(loadedMonitors,function(n,monitor){
-            html += `<div class="list-group-item" data-monitor="${monitor.mid}">${monitor.name}</div>`
-        })
-        powerVideoMonitorsListElement.html(html)
+        var monitorList = Object.values(loadedMonitors).map(function(item){
+            return {
+                value: item.mid,
+                label: item.name,
+            }
+        });
+        powerVideoMonitorsListElement.html(createOptionListHtml(monitorList))
     }
     var requestTableData = function(monitorId,user){
         if(!user)user = $user
@@ -343,38 +345,42 @@ $(document).ready(function(e){
             //     console.log(monitorId,'play')
             // })
             .off("timeupdate").on("timeupdate",function(){
-                var event = eventsLabeledByTime[monitorId][video.time][parseInt(this.currentTime)]
-                if(event){
-                    if(event.details.matrices){
-                        drawMatrices(event,{
-                            streamObjectsContainer: streamObjectsContainer,
-                            monitorId: monitorId,
-                            height: height,
-                            width: width,
-                        })
-                        detectionInfoContainerObject.html(jsonToHtmlBlock(event.details.matrices))
+                try{
+                    var event = eventsLabeledByTime[monitorId][video.time][parseInt(this.currentTime)]
+                    if(event){
+                        if(event.details.matrices){
+                            drawMatrices(event,{
+                                streamObjectsContainer: streamObjectsContainer,
+                                monitorId: monitorId,
+                                height: height,
+                                width: width,
+                            })
+                            detectionInfoContainerObject.html(jsonToHtmlBlock(event.details.matrices))
+                        }
+                        if(event.details.confidence){
+                            motionMeterProgressBar.css('width',event.details.confidence+'%')
+                            motionMeterProgressBarTextBox.text(event.details.confidence)
+                            var html = `<div>${lang['Region']} : ${event.details.name}</div>
+                                <div>${lang['Confidence']} : ${event.details.confidence}</div>
+                                <div>${lang['Plugin']} : ${event.details.plug}</div>`
+                            detectionInfoContainerMotion.html(html)
+                            // detectionInfoContainerRaw.html(jsonToHtmlBlock({`${lang['Plug']}`:event.details.plug}))
+                        }
                     }
-                    if(event.details.confidence){
-                        motionMeterProgressBar.css('width',event.details.confidence+'%')
-                        motionMeterProgressBarTextBox.text(event.details.confidence)
-                        var html = `<div>${lang['Region']} : ${event.details.name}</div>
-                            <div>${lang['Confidence']} : ${event.details.confidence}</div>
-                            <div>${lang['Plugin']} : ${event.details.plug}</div>`
-                        detectionInfoContainerMotion.html(html)
-                        // detectionInfoContainerRaw.html(jsonToHtmlBlock({`${lang['Plug']}`:event.details.plug}))
+                    var currentTime = this.currentTime;
+                    var watchPoint = Math.floor((currentTime/this.duration) * 100)
+                    if(!preloadedNext && watchPoint >= 75){
+                        preloadedNext = true
+                        var videoAfter = videoPlayerContainer.find(`video.videoAfter`)[0]
+                        videoAfter.setAttribute('preload',true)
                     }
+                    if(videoCurrentTimeProgressBar)videoCurrentTimeProgressBar.style.width = `${watchPoint}%`
+                    extenders.onVideoPlayerTimeUpdateExtensions.forEach(function(extender){
+                        extender(videoElement,watchPoint)
+                    })
+                }catch(err){
+                    console.log(err)
                 }
-                var currentTime = this.currentTime;
-                var watchPoint = Math.floor((currentTime/this.duration) * 100)
-                if(!preloadedNext && watchPoint >= 75){
-                    preloadedNext = true
-                    var videoAfter = videoPlayerContainer.find(`video.videoAfter`)[0]
-                    videoAfter.setAttribute('preload',true)
-                }
-                if(videoCurrentTimeProgressBar)videoCurrentTimeProgressBar.style.width = `${watchPoint}%`
-                extenders.onVideoPlayerTimeUpdateExtensions.forEach(function(extender){
-                    extender(videoElement,watchPoint)
-                })
             })
             var onEnded = function() {
                 visuallyDeselectItemInRow(video)
@@ -517,7 +523,7 @@ $(document).ready(function(e){
         drawMiniEventsChart(video,getMiniEventsChartConfig(video))
     }
     var getSelectedMonitors = function(){
-        return powerVideoMonitorsListElement.find('.active')
+        return powerVideoMonitorsListElement.val()
     }
     var getAllActiveVideosInSlots = function(){
         return powerVideoMonitorViewsElement.find('video.videoNow')
@@ -600,6 +606,19 @@ $(document).ready(function(e){
             loadVideoIntoMonitorSlot(video.videoBefore,0)
         })
     }
+    function onPowerVideoSettingsChange(){
+        var monitorIdsSelectedNow = powerVideoMonitorsListElement.val()
+        var monitorsChanged = lastPowerVideoSelectedMonitors.filter(x => monitorIdsSelectedNow.includes(x))
+        monitorsChanged.forEach((monitorId) => {
+            var isSelected = powerVideoMonitorsListElement.find(`option[value="${monitorId}"]`).attr('selected')
+            if(!!isSelected){
+                requestTableData(monitorId)
+            }else{
+                unloadTableData(monitorId)
+            }
+        })
+        lastPowerVideoSelectedMonitors = ([]).concat(monitorIdsSelectedNow || [])
+    }
     onWebSocketEvent(function (d){
         switch(d.f){
             case'videos&events':
@@ -612,21 +631,15 @@ $(document).ready(function(e){
             break;
         }
     })
-    $('body')
+    powerVideoMonitorsListElement.change(onPowerVideoSettingsChange);
+    powerVideoVideoLimitElement.change(onPowerVideoSettingsChange);
+    powerVideoEventLimitElement.change(onPowerVideoSettingsChange);
+    powerVideoSet.change(onPowerVideoSettingsChange);
+    powerVideoWindow
         .on('dblclick','.videoPlayer',function(){
             var el = $(this)
             $('.videoPlayer-detection-info').addClass('hide')
             fullScreenInit(this)
-        })
-        .on('click','[data-monitor]',function(){
-            var el = $(this)
-            var monitorId = el.attr('data-monitor')
-            el.toggleClass('active')
-            if(el.hasClass('active')){
-                requestTableData(monitorId)
-            }else{
-                unloadTableData(monitorId)
-            }
         })
         .on('click','[powerVideo-control]',function(){
             var el = $(this)
