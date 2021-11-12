@@ -29,22 +29,22 @@ module.exports = function(s,config,lang,getSnapshot){
                     ]
                 },(err,r) => {
                     r = r[0]
-                        var mailOptions = {
-                            from: config.mail.from, // sender address
-                            to: checkEmail(r.mail), // list of receivers
-                            subject: lang.NoMotionEmailText1+' '+e.name+' ('+e.id+')', // Subject line
-                            html: '<i>'+lang.NoMotionEmailText2+' ' + (e.details.detector_notrigger_timeout || 10) + ' '+lang.minutes+'.</i>',
+                    var mailOptions = {
+                        from: config.mail.from, // sender address
+                        to: checkEmail(r.mail), // list of receivers
+                        subject: lang.NoMotionEmailText1+' '+e.name+' ('+e.id+')', // Subject line
+                        html: '<i>'+lang.NoMotionEmailText2+' ' + (e.details.detector_notrigger_timeout || 10) + ' '+lang.minutes+'.</i>',
+                    }
+                    mailOptions.html+='<div><b>'+lang['Monitor Name']+' </b> : '+e.name+'</div>'
+                    mailOptions.html+='<div><b>'+lang['Monitor ID']+' </b> : '+e.id+'</div>'
+                    sendMessage(mailOptions, (error, info) => {
+                        if (error) {
+                            s.systemLog('detector:notrigger:sendMail',error)
+                            s.tx({f:'error',ff:'detector_notrigger_mail',id:e.id,ke:e.ke,error:error},'GRP_'+e.ke);
+                            return ;
                         }
-                        mailOptions.html+='<div><b>'+lang['Monitor Name']+' </b> : '+e.name+'</div>'
-                        mailOptions.html+='<div><b>'+lang['Monitor ID']+' </b> : '+e.id+'</div>'
-                        sendMessage(mailOptions, (error, info) => {
-                            if (error) {
-                                s.systemLog('detector:notrigger:sendMail',error)
-                                s.tx({f:'error',ff:'detector_notrigger_mail',id:e.id,ke:e.ke,error:error},'GRP_'+e.ke);
-                                return ;
-                            }
-                            s.tx({f:'detector_notrigger_mail',id:e.id,ke:e.ke,info:info},'GRP_'+e.ke);
-                        })
+                        s.tx({f:'detector_notrigger_mail',id:e.id,ke:e.ke,info:info},'GRP_'+e.ke);
+                    })
                 })
             }
         }
