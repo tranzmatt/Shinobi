@@ -1344,5 +1344,9 @@
    "scissors": "scissors",
    "teddy bear": "teddy bear",
    "hair drier": "hair drier",
-   "toothbrush": "toothbrush"
+   "toothbrush": "toothbrush",
+   "Frigate":"Frigate",
+   "Plain":"Plain",
+   "MQTT Error":"MQTT Error",
+   "MQTT Client":"MQTT Client"
 }

@@ -1,5 +1,3 @@
-// - tab-return-accountSettings : currently does not function
-
 $(document).ready(function(){
     var accountSettingsWereSaved = false;
     var theBlock = $('#tab-accountSettings')
@@ -8,6 +6,17 @@ $(document).ready(function(){
     var addStorageMaxAmounts = $('#add_storage_max_amounts')
     var addStorageMaxAmountsField = theForm.find('[detail="addStorage"]')
     var monitorGroups = $('#settings_mon_groups')
+    window.accountSettings = {
+        onLoadFieldsExtensions: [],
+        onLoadFields: function(...extender){
+            accountSettings.onLoadFieldsExtensions.push(...extender)
+        },
+        onSaveFieldsExtensions: [],
+        onSaveFields: function(...extender){
+            accountSettings.onSaveFieldsExtensions.push(...extender)
+        },
+    }
+
     function drawAddStorageFields(){
         try{
             var addStorageData = JSON.parse($user.details.addStorage || '{}')
@@ -89,6 +98,9 @@ $(document).ready(function(){
             theForm.find(`[detail="${n}"]`).val(v).change()
         })
         reDrawMonGroupsInAccountSettings()
+        accountSettings.onLoadFieldsExtensions.forEach(function(extender){
+            extender(theForm)
+        })
     }
     addStorageMaxAmounts.on('change','[addStorageLimit]',function(){
         var json = {}
@@ -134,6 +146,9 @@ $(document).ready(function(){
         })
         var details = getDetailValues(theForm)
         formData.details = details
+        accountSettings.onSaveFieldsExtensions.forEach(function(extender){
+            extender(formData)
+        })
         $.post(getApiPrefix('accounts') + '/edit',{
             data: JSON.stringify(formData)
         },function(data){

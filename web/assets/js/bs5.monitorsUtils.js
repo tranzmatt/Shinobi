@@ -840,6 +840,16 @@ function buildMiniMonitorCardBody(monitorAlreadyAdded,monitorConfigPartial,addit
     `
     return cardBody
 }
+function buildMonitorsListSelectFieldHtml(arrayOfSelected){
+    var monitorList = Object.values(loadedMonitors).map(function(item){
+        return {
+            value: item.mid,
+            label: item.name,
+            selected: (arrayOfSelected || []).indexOf(item.mid) > -1,
+        }
+    });
+    return createOptionListHtml(monitorList)
+}
 $(document).ready(function(){
     $('body')
     .on('click','[system]',function(){
