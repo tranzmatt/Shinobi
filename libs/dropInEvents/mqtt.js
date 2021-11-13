@@ -176,6 +176,11 @@ module.exports = (s,config,lang,app,io) => {
                   ]
                },
                {
+                  "fieldType": "btn",
+                  "class": `btn-success mqtt-add-row`,
+                  "btnContent": `<i class="fa fa-plus"></i> &nbsp; ${lang['Add']}`,
+               },
+               {
                   "id": "mqttclient_list",
                   "fieldType": "div",
                }

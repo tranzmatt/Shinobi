@@ -1,6 +1,8 @@
 $(document).ready(function(){
+    var theBlock = $('#tab-accountSettings')
     var mqttList = $('#mqttclient_list')
-    function drawMqttLsitRow(row,number){
+    function drawMqttLsitRow(row){
+        row = row ? row : {}
         var html = `<div class="d-flex flex-row mqtt-list-row">
             <div class="flex-grow-1">
                 <input class="form-control form-control-sm" mqtt-param="host" value="${row.host || ''}">
@@ -13,12 +15,12 @@ $(document).ready(function(){
                     ${createOptionHtml({
                         value: 'plain',
                         label: lang['Plain'],
-                        selected: row.type === 'plain',
+                        selected: row.type.indexOf('plain') > -1,
                     })}
                     ${createOptionHtml({
                         value: 'frigate',
                         label: lang['Frigate'],
-                        selected: row.type === 'frigate',
+                        selected: row.type.indexOf('frigate') > -1,
                     })}
                 </select>
             </div>
@@ -28,9 +30,18 @@ $(document).ready(function(){
                     <optgroup label="${lang.Monitors}">${buildMonitorsListSelectFieldHtml(row.monitors || [])}</optgroup>
                 </select>
             </div>
+            <div>
+                <button type="button" class="btn btn-sm btn-danger mqtt-delete-row"><i class="fa fa-times"></i></button>
+            </div>
         </div>`
         return html
     }
+    theBlock.find('.mqtt-add-row').click(function(){
+        mqttList.append(drawMqttLsitRow())
+    });
+    mqttList.on('click','.mqtt-delete-row',function(){
+        $(this).parents('.mqtt-list-row').remove()
+    });
     accountSettings.onLoadFields(function(theForm){
         var mqttClientList = $user.details.mqttclient_list ? $user.details.mqttclient_list : []
         mqttList.empty()
