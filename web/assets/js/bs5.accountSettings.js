@@ -6,17 +6,6 @@ $(document).ready(function(){
     var addStorageMaxAmounts = $('#add_storage_max_amounts')
     var addStorageMaxAmountsField = theForm.find('[detail="addStorage"]')
     var monitorGroups = $('#settings_mon_groups')
-    window.accountSettings = {
-        onLoadFieldsExtensions: [],
-        onLoadFields: function(...extender){
-            accountSettings.onLoadFieldsExtensions.push(...extender)
-        },
-        onSaveFieldsExtensions: [],
-        onSaveFields: function(...extender){
-            accountSettings.onSaveFieldsExtensions.push(...extender)
-        },
-    }
-
     function drawAddStorageFields(){
         try{
             var addStorageData = JSON.parse($user.details.addStorage || '{}')

@@ -33,6 +33,8 @@ require('./libs/ffmpeg.js')(s,config,lang, async () => {
     require('./libs/auth.js')(s,config,lang)
     //express web server with ejs
     const app = require('./libs/webServer.js')(s,config,lang,io)
+    //page layout load
+    require('./libs/definitions.js')(s,config,lang,app,io)
     //web server routes : page handling..
     require('./libs/webServerPaths.js')(s,config,lang,app,io)
     //web server routes for streams : streams..
@@ -67,8 +69,6 @@ require('./libs/ffmpeg.js')(s,config,lang, async () => {
     require('./libs/rtmpserver.js')(s,config,lang)
     //dropInEvents server (file manipulation to create event trigger)
     require('./libs/dropInEvents.js')(s,config,lang,app,io)
-    //form fields to drive the internals
-    require('./libs/definitions.js')(s,config,lang,app,io)
     //notifiers : discord..
     require('./libs/notification.js')(s,config,lang)
     //branding functions and config defaults

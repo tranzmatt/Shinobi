@@ -331,4 +331,5 @@ module.exports = function(s,config,lang,app,io){
             s.systemLog(`SMTP Server running on port ${config.smtpServerPort}...`)
         })
     }
+    require('./dropInEvents/mqtt.js')(s,config,lang,app,io)
 }

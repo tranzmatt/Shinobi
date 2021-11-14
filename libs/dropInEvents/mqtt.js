@@ -1,9 +1,10 @@
-const mqtt = require('mqtt')
 module.exports = (s,config,lang,app,io) => {
     if(config.mqttClient === true){
+        console.log('Loading MQTT Connections...')
+        const mqtt = require('mqtt')
         const {
             triggerEvent,
-        } = require('./events/utils.js')(s,config,lang)
+        } = require('../events/utils.js')(s,config,lang)
         function sendPlainEvent(options){
             const groupKey = options.ke
             const monitorId = options.mid || options.id
@@ -53,8 +54,10 @@ module.exports = (s,config,lang,app,io) => {
             const subKey = options.subKey
             const groupKey = options.ke
             const onData = options.onData || function(){}
+            s.debugLog('Connecting.... mqtt://' + mqttEndpoint)
             const client  = mqtt.connect('mqtt://' + mqttEndpoint)
             client.on('connect', function () {
+                s.debugLog('Connected! mqtt://' + mqttEndpoint)
                 client.subscribe(subKey, function (err) {
                     if (err) {
                         s.debugLog(err)
@@ -80,76 +83,98 @@ module.exports = (s,config,lang,app,io) => {
         const loadMqttListBotForUser = function(user){
             const groupKey = user.ke
             const userDetails = s.parseJSON(user.details);
-            const mqttClientList = userDetails.mqttclient_list || []
-            if(!s.group[groupKey].mqttSubscriptions)s.group[groupKey].mqttSubscriptions = {};
-            const mqttSubs = s.group[groupKey].mqttSubscriptions
-            mqttClientList.forEach(function(n,row){
-                const mqttSubId = `${row.host} ${row.subKey}`
-                const messageConversionTypes = row.type || []
-                const monitorsToTrigger = row.monitors || []
-                const doActions = []
-                const onData = (data) => {
-                    doActions.forEach(function(theAction){
-                        theAction(data)
-                    })
-                    s.debugLog('MQTT Data',row,data)
-                }
-                if(mqttSubs[mqttSubId]){
-                    mqttSubs[mqttSubId].end()
-                    delete(mqttSubs[mqttSubId])
-                }
-                messageConversionTypes.forEach(function(type){
-                    switch(type){
-                        case'plain':
-                            doActions.push(function(data){
-                                 // data is unused for plain event.
-                                 monitorsToTrigger.forEach(function(monitorId){
-                                     sendPlainEvent({
-                                         host: row.host,
-                                         subKey: row.subKey,
-                                         ke: groupKey,
-                                         mid: monitorId
-                                     })
-                                 })
+            if(userDetails.mqttclient === '1'){
+                const mqttClientList = userDetails.mqttclient_list || []
+                if(!s.group[groupKey].mqttSubscriptions)s.group[groupKey].mqttSubscriptions = {};
+                const mqttSubs = s.group[groupKey].mqttSubscriptions
+                mqttClientList.forEach(function(row,n){
+                    try{
+                        const mqttSubId = `${row.host} ${row.subKey}`
+                        const messageConversionTypes = row.type || []
+                        const monitorsToTrigger = row.monitors || []
+                        const doActions = []
+                        const onData = (data) => {
+                            doActions.forEach(function(theAction){
+                                theAction(data)
                             })
-                        break;
-                        case'frigate':
-                            // https://docs.frigate.video/integrations/mqtt/#frigateevents
-                            doActions.push(function(data){
-                                 // this handler requires using frigate/events
-                                 // only "new" events will be captured.
-                                 if(data.type === 'new'){
-                                     monitorsToTrigger.forEach(function(monitorId){
-                                         sendFrigateEvent(data,{
-                                             host: row.host,
-                                             subKey: row.subKey,
-                                             ke: groupKey,
-                                             mid: monitorId
+                            s.debugLog('MQTT Data',row,data)
+                        }
+                        if(mqttSubs[mqttSubId]){
+                            mqttSubs[mqttSubId].end()
+                            delete(mqttSubs[mqttSubId])
+                        }
+                        messageConversionTypes.forEach(function(type){
+                            switch(type){
+                                case'plain':
+                                    doActions.push(function(data){
+                                         // data is unused for plain event.
+                                         monitorsToTrigger.forEach(function(monitorId){
+                                             sendPlainEvent({
+                                                 host: row.host,
+                                                 subKey: row.subKey,
+                                                 ke: groupKey,
+                                                 mid: monitorId
+                                             })
                                          })
-                                     })
-                                 }
-                            })
-                        break;
+                                    })
+                                break;
+                                case'frigate':
+                                    // https://docs.frigate.video/integrations/mqtt/#frigateevents
+                                    doActions.push(function(data){
+                                         // this handler requires using frigate/events
+                                         // only "new" events will be captured.
+                                         if(data.type === 'new'){
+                                             monitorsToTrigger.forEach(function(monitorId){
+                                                 sendFrigateEvent(data,{
+                                                     host: row.host,
+                                                     subKey: row.subKey,
+                                                     ke: groupKey,
+                                                     mid: monitorId
+                                                 })
+                                             })
+                                         }
+                                    })
+                                break;
+                            }
+                        })
+                        mqttSubs[mqttSubId] = createMqttSubscription({
+                            host: row.host,
+                            subKey: row.subKey,
+                            ke: groupKey,
+                            onData: onData,
+                        })
+                    }catch(err){
+                        s.debugLog(err)
+                        // s.systemLog(err)
                     }
                 })
-                mqttSubs[mqttSubId] = createMqttSubscription({
-                    host: row.host,
-                    subKey: row.subKey,
-                    ke: groupKey,
-                    onData: onData,
-                })
-            })
+            }
         }
         const unloadMqttListBotForUser = function(user){
             const groupKey = user.ke
             const mqttSubs = s.group[groupKey].mqttSubscriptions || {}
-            Object.keys(mqttSubs).forEach(function(n,mqttSubId){
-                mqttSubs[mqttSubId].end()
+            Object.keys(mqttSubs).forEach(function(mqttSubId){
+                try{
+                    mqttSubs[mqttSubId].end()
+                }catch(err){
+                    s.debugLog(err)
+                    // s.userLog({
+                    //     ke: groupKey,
+                    //     mid: '$USER'
+                    // },{
+                    //     type: lang['MQTT Error'],
+                    //     msg: err
+                    // })
+                }
                 delete(mqttSubs[mqttSubId])
             })
         }
+        const onBeforeAccountSave = function(data){
+            data.d.mqttclient_list = []
+        }
         s.loadGroupAppExtender(loadMqttListBotForUser)
         s.unloadGroupAppExtender(unloadMqttListBotForUser)
+        s.beforeAccountSave(onBeforeAccountSave)
         // s.onEventTrigger(onEventTrigger)
         // s.onMonitorUnexpectedExit(onMonitorUnexpectedExit)
         s.definitions["Account Settings"].blocks["MQTT Client"] = {
@@ -183,10 +208,12 @@ module.exports = (s,config,lang,app,io) => {
                {
                   "id": "mqttclient_list",
                   "fieldType": "div",
+              },
+               {
+                  "fieldType": "script",
+                  "src": "assets/js/bs5.mqtt.js",
                }
            ]
         }
-        //load front end js
-        s.customAutoLoadTree['LibsJs'].push('bs5.mqtt.js')
     }
 }

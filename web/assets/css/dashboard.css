@@ -375,3 +375,11 @@ ul.squeeze {
     height: 100%;
     background: rgba(0,0,0,0.6);
 }
+
+
+/*  */
+.vertical-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
