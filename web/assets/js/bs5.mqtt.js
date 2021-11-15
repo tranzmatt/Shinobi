@@ -29,7 +29,7 @@ $(document).ready(function(){
             </div>
             <div class="px-1 py-2">
                     <select multiple class="form-control form-control-sm" mqtt-param="monitors">
-                    <option value="">${lang['All Monitors']}</option>
+                    <option value="$all">${lang['All Monitors']}</option>
                     <optgroup label="${lang.Monitors}">${buildMonitorsListSelectFieldHtml(row.monitors || [])}</optgroup>
                 </select>
             </div>

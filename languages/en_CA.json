@@ -1345,8 +1345,17 @@
    "teddy bear": "teddy bear",
    "hair drier": "hair drier",
    "toothbrush": "toothbrush",
+   "Detection Event":"Detection Event",
+   "Monitor Edit":"Monitor Edit",
+   "Monitor Start":"Monitor Start",
+   "Monitor Stop":"Monitor Stop",
+   "Monitor Died":"Monitor Died",
+   "Account Save":"Account Save",
+   "User Log":"User Log",
    "Frigate":"Frigate",
    "Plain":"Plain",
    "MQTT Error":"MQTT Error",
+   "MQTT Inbound":"MQTT Inbound",
+   "MQTT Outbound":"MQTT Outbound",
    "MQTT Client":"MQTT Client"
 }

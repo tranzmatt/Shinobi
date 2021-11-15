@@ -359,7 +359,8 @@ module.exports = function(s,config,lang){
                     }
                     readStorageArray()
                     ///
-                    formDetails = JSON.stringify(s.mergeDeep(details,formDetails))
+                    formDetails = s.mergeDeep(details,formDetails)
+                    formDetailsString = JSON.stringify(s.mergeDeep(details,formDetails))
                     ///
                     const updateQuery = {}
                     if(form.pass && form.pass !== ''){
@@ -372,7 +373,7 @@ module.exports = function(s,config,lang){
                         const value = form[key]
                         updateQuery[key] = value
                     })
-                    updateQuery.details = formDetails
+                    updateQuery.details = formDetailsString
                     s.knexQuery({
                         action: "update",
                         table: "Users",
@@ -382,21 +383,20 @@ module.exports = function(s,config,lang){
                             ['uid','=',d.uid],
                         ]
                     },() => {
+                        const user = Object.assign({ke : d.ke},form)
                         if(!details.sub){
-                            var user = Object.assign(form,{ke : d.ke})
-                            var userDetails = JSON.parse(formDetails)
                             s.group[d.ke].sizeLimit = parseFloat(newSize)
                             resetAllStorageCounters(d.ke)
                             if(!dontRunExtensions){
-                                s.onAccountSaveExtensions.forEach(function(extender){
-                                    extender(s.group[d.ke],userDetails,user)
-                                })
                                 s.unloadGroupAppExtensions.forEach(function(extender){
                                     extender(user)
                                 })
                                 s.loadGroupApps(d)
                             }
                         }
+                        s.onAccountSaveExtensions.forEach(function(extender){
+                            extender(s.group[d.ke],formDetails,user)
+                        })
                         if(d.cnid)s.tx({f:'user_settings_change',uid:d.uid,ke:d.ke,form:form},d.cnid)
                     })
                 }
