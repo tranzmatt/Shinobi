@@ -37,23 +37,23 @@ module.exports = function(s,config,lang,getSnapshot){
                 return client
             }
             function sendToMqttConnections(groupKey,eventName,addedArgs,checkMonitors){
-                (s.group[groupKey].mqttOutbounderKeys || []).forEach(function(key){
-                    const outBounder = s.group[groupKey].mqttOutbounders[key]
-                    const theAction = outBounder.eventHandlers[eventName]
-                    if(!theAction)return;
-                    try{
-                        if(checkMonitors){
-                            const monitorsToRead = outBounder.monitorsToRead
-                            const firstArg = addedArgs[0]
-                            const monitorId = firstArg.mid || firstArg.id
-                            if(monitorsToRead.indexOf(monitorId) > -1 || monitorsToRead.indexOf('$all') > -1)theAction(...addedArgs);
-                        }else{
-                            theAction(...addedArgs)
-                        }
-                    }catch(err){
-                        s.debugLog(err)
-                    }
-                })
+                try{
+                    (s.group[groupKey].mqttOutbounderKeys || []).forEach(function(key){
+                        const outBounder = s.group[groupKey].mqttOutbounders[key]
+                        const theAction = outBounder.eventHandlers[eventName]
+                        if(!theAction)return;
+                            if(checkMonitors){
+                                const monitorsToRead = outBounder.monitorsToRead
+                                const firstArg = addedArgs[0]
+                                const monitorId = firstArg.mid || firstArg.id
+                                if(monitorsToRead.indexOf(monitorId) > -1 || monitorsToRead.indexOf('$all') > -1)theAction(...addedArgs);
+                            }else{
+                                theAction(...addedArgs)
+                            }
+                    })
+                }catch(err){
+                    s.debugLog(err)
+                }
             }
             const sendMessage = async function(options,data){
                 const sendBody = s.stringJSON(data)
