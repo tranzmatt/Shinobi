@@ -92,6 +92,7 @@ module.exports = (s,config,lang,app,io) => {
                         const mqttSubId = `${row.host} ${row.subKey}`
                         const messageConversionTypes = row.type || []
                         const monitorsToTrigger = row.monitors || []
+                        const triggerAllMonitors = monitorsToTrigger.indexOf('$all') > -1
                         const doActions = []
                         const onData = (data) => {
                             doActions.forEach(function(theAction){
@@ -108,7 +109,12 @@ module.exports = (s,config,lang,app,io) => {
                                 case'plain':
                                     doActions.push(function(data){
                                          // data is unused for plain event.
-                                         monitorsToTrigger.forEach(function(monitorId){
+                                         let listOfMonitors = monitorsToTrigger
+                                         if(triggerAllMonitors){
+                                             const activeMonitors = Object.keys(s.group[groupKey].activeMonitors)
+                                             listOfMonitors = activeMonitors
+                                         }
+                                         listOfMonitors.forEach(function(monitorId){
                                              sendPlainEvent({
                                                  host: row.host,
                                                  subKey: row.subKey,
@@ -124,7 +130,12 @@ module.exports = (s,config,lang,app,io) => {
                                          // this handler requires using frigate/events
                                          // only "new" events will be captured.
                                          if(data.type === 'new'){
-                                             monitorsToTrigger.forEach(function(monitorId){
+                                             let listOfMonitors = monitorsToTrigger
+                                             if(triggerAllMonitors){
+                                                 const activeMonitors = Object.keys(s.group[groupKey].activeMonitors)
+                                                 listOfMonitors = activeMonitors
+                                             }
+                                             listOfMonitors.forEach(function(monitorId){
                                                  sendFrigateEvent(data,{
                                                      host: row.host,
                                                      subKey: row.subKey,
@@ -177,9 +188,9 @@ module.exports = (s,config,lang,app,io) => {
         s.beforeAccountSave(onBeforeAccountSave)
         // s.onEventTrigger(onEventTrigger)
         // s.onMonitorUnexpectedExit(onMonitorUnexpectedExit)
-        s.definitions["Account Settings"].blocks["MQTT Client"] = {
+        s.definitions["Account Settings"].blocks["MQTT Inbound"] = {
            "evaluation": "$user.details.use_mqttclient !== '0'",
-           "name": lang['MQTT Client'],
+           "name": lang['MQTT Inbound'],
            "color": "green",
            "info": [
                {
