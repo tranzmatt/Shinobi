@@ -1,22 +1,57 @@
 var fs = require("fs")
 module.exports = function(s,config,lang,getSnapshot){
     if(config.mqttClient === true){
+        console.log('Loading MQTT Outbound Connectivity...')
+        const mqtt = require('mqtt')
         const {
             getEventBasedRecordingUponCompletion,
         } = require('../events/utils.js')(s,config,lang)
         try{
-            const availableExtenders = ['onMonitorSave', 'onMonitorStart', 'onMonitorStop', 'onMonitorDied', 'onEventTrigger', 'onDetectorNoTriggerTimeout', 'onAccountSave', 'onUserLog', 'onTwoFactorAuthCodeNotification']
+            function createMqttSubscription(options){
+                const mqttEndpoint = options.host
+                const subKey = options.subKey
+                const groupKey = options.ke
+                const onData = options.onData || function(){}
+                s.debugLog('Connecting.... mqtt://' + mqttEndpoint)
+                const client  = mqtt.connect('mqtt://' + mqttEndpoint)
+                client.on('connect', function () {
+                    s.debugLog('Connected! mqtt://' + mqttEndpoint)
+                    client.subscribe(subKey, function (err) {
+                        if (err) {
+                            s.debugLog(err)
+                            s.userLog({
+                                ke: groupKey,
+                                mid: '$USER'
+                            },{
+                                type: lang['MQTT Error'],
+                                msg: err
+                            })
+                        }else{
+                            client.on('message', function (topic, message) {
+                                const data = s.parseJSON(message.toString())
+                                onData(data)
+                            })
+                        }
+                    })
+                })
+                return client
+            }
             function sendToMqttConnections(groupKey,eventName,addedArgs,checkMonitors){
-                s.group[groupKey].mqttOutbounderKeys.forEach(function(key){
+                (s.group[groupKey].mqttOutbounderKeys || []).forEach(function(key){
                     const outBounder = s.group[groupKey].mqttOutbounders[key]
                     const theAction = outBounder.eventHandlers[eventName]
-                    if(checkMonitors){
-                        const monitorsToRead = outBounder.monitorsToRead
-                        const firstArg = addedArgs[0]
-                        const monitorId = firstArg.mid || firstArg.id
-                        if(monitorsToRead.indexOf(monitorId) > -1 || monitorsToRead.indexOf('$all') > -1)theAction(..addedArgs);
-                    }else{
-                        theAction(..addedArgs)
+                    if(!theAction)return;
+                    try{
+                        if(checkMonitors){
+                            const monitorsToRead = outBounder.monitorsToRead
+                            const firstArg = addedArgs[0]
+                            const monitorId = firstArg.mid || firstArg.id
+                            if(monitorsToRead.indexOf(monitorId) > -1 || monitorsToRead.indexOf('$all') > -1)theAction(...addedArgs);
+                        }else{
+                            theAction(...addedArgs)
+                        }
+                    }catch(err){
+                        s.debugLog(err)
                     }
                 })
             }
@@ -34,15 +69,6 @@ module.exports = function(s,config,lang,getSnapshot){
             }
             const onEventTriggerBeforeFilter = function(d,filter){
                 filter.mqttout = false
-            }
-            const onTwoFactorAuthCodeNotification = function(r){
-                // r = user
-                if(r.details.factor_mqttout === '1'){
-                    sendMessage({
-                        title: r.lang['Enter this code to proceed'],
-                        description: '**'+s.factorAuth[r.ke][r.uid].key+'** '+r.lang.FactorAuthText1,
-                    },[],r.ke)
-                }
             }
             const onDetectorNoTriggerTimeout = function(e){
                 if(e.details.detector_notrigger_mqttout === '1'){
@@ -67,11 +93,36 @@ module.exports = function(s,config,lang,getSnapshot){
                     sendToMqttConnections(groupKey,'onEventTrigger',[d,filter],true)
                 }
             }
+            const onMonitorSave = (monitorConfig) => {
+                const groupKey = monitorConfig.ke
+                sendToMqttConnections(groupKey,'onMonitorSave',[monitorConfig],true)
+            }
+            const onMonitorStart = (monitorConfig) => {
+                const groupKey = monitorConfig.ke
+                sendToMqttConnections(groupKey,'onMonitorStart',[monitorConfig],true)
+            }
+            const onMonitorStop = (monitorConfig) => {
+                const groupKey = monitorConfig.ke
+                sendToMqttConnections(groupKey,'onMonitorStop',[monitorConfig],true)
+            }
             const onMonitorDied = (monitorConfig) => {
                 const groupKey = monitorConfig.ke
                 sendToMqttConnections(groupKey,'onMonitorDied',[monitorConfig],true)
             }
-
+            const onAccountSave = (activeGroup,userDetails,user) => {
+                const groupKey = monitorConfig.ke
+                sendToMqttConnections(groupKey,'onAccountSave',[activeGroup,userDetails,user])
+            }
+            const onUserLog = (logEvent) => {
+                const groupKey = logEvent.ke
+                sendToMqttConnections(groupKey,'onUserLog',[logEvent])
+            }
+            const onTwoFactorAuthCodeNotification = function(user){
+                const groupKey = user.ke
+                if(user.details.factor_mqttout === '1'){
+                    sendToMqttConnections(groupKey,'onTwoFactorAuthCodeNotification',[user],true)
+                }
+            }
             const loadMqttListBotForUser = function(user){
                 const groupKey = user.ke
                 const userDetails = s.parseJSON(user.details);
@@ -142,7 +193,20 @@ module.exports = function(s,config,lang,getSnapshot){
                                             sendMessage(msgOptions,{
                                                 title: titleLegend[eventName],
                                                 name: eventName,
-                                                data: logEvent
+                                                data: logEvent,
+                                                time: new Date(),
+                                            })
+                                        }
+                                    break;
+                                    case'onTwoFactorAuthCodeNotification':
+                                        theAction = function(user){
+                                            sendMessage(msgOptions,{
+                                                title: titleLegend[eventName],
+                                                name: eventName,
+                                                data: {
+                                                    code: s.factorAuth[user.ke][user.uid].key
+                                                },
+                                                time: new Date(),
                                             })
                                         }
                                     break;
@@ -158,7 +222,7 @@ module.exports = function(s,config,lang,getSnapshot){
                                                 name: eventName,
                                                 data: {
                                                     name: monitorConfig.name,
-                                                    monitorId: e.mid || e.id,
+                                                    monitorId: monitorConfig.mid || monitorConfig.id,
                                                 },
                                                 time: new Date(),
                                             })
@@ -207,7 +271,11 @@ module.exports = function(s,config,lang,getSnapshot){
             s.onEventTrigger(onEventTrigger)
             s.onEventTriggerBeforeFilter(onEventTriggerBeforeFilter)
             s.onDetectorNoTriggerTimeout(onDetectorNoTriggerTimeout)
+            s.onMonitorSave(onMonitorSave)
+            s.onMonitorStart(onMonitorStart)
+            s.onMonitorStop(onMonitorStop)
             s.onMonitorDied(onMonitorDied)
+            s.onUserLog(onUserLog)
             s.definitions["Monitor Settings"].blocks["Notifications"].info[0].info.push(
                 {
                    "name": "detail=notify_mqttout",
@@ -288,7 +356,7 @@ module.exports = function(s,config,lang,getSnapshot){
                    },
                    {
                       "fieldType": "btn",
-                      "class": `btn-success mqtt-add-row`,
+                      "class": `btn-success mqtt-out-add-row`,
                       "btnContent": `<i class="fa fa-plus"></i> &nbsp; ${lang['Add']}`,
                    },
                    {

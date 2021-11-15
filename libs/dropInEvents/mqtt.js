@@ -1,6 +1,6 @@
 module.exports = (s,config,lang,app,io) => {
     if(config.mqttClient === true){
-        console.log('Loading MQTT Connections...')
+        console.log('Loading MQTT Inbound Connectivity...')
         const mqtt = require('mqtt')
         const {
             triggerEvent,
