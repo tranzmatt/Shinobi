@@ -4974,7 +4974,7 @@ module.exports = function(s,config,lang){
              "Uploaders": {
                 "name": lang["Uploaders"],
                 "color": "forestgreen",
-                "blocks": s.uploaderFields
+                "info": []
              },
              "Preferences": {
                 "name": lang.Preferences,
