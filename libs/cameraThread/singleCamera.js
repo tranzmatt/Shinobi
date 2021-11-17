@@ -14,6 +14,8 @@ const stdioPipes = jsonData.pipes || []
 var newPipes = []
 var stdioWriters = [];
 
+// const dataPort = require('./libs/dataPortConnection.js')(jsonData)
+
 var writeToStderr = function(text){
   try{
     process.stderr.write(Buffer.from(`${text}`, 'utf8' ))

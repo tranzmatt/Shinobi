@@ -184,6 +184,11 @@ module.exports = function(s,config){
         s.onSubscriptionCheckExtensions.push(callback)
     }
     //
+    s.onDataPortMessageExtensions = []
+    s.onDataPortMessage = function(callback){
+        s.onDataPortMessageExtensions.push(callback)
+    }
+    //
     /////// VIDEOS ////////
     s.insertCompletedVideoExtensions = []
     s.insertCompletedVideoExtender = function(callback){

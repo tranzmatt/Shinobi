@@ -26,6 +26,12 @@ module.exports = async (s,config,lang,onFinish) => {
 
     s.ffmpeg = function(e){
         try{
+            // const dataPortToken = s.gid(10);
+            // s.dataPortTokens[dataPortToken] = {
+            //     type: 'cameraThread',
+            //     ke: e.ke,
+            //     mid: e.mid,
+            // }
             const ffmpegCommand = [`-progress pipe:5`];
             ([
                 buildMainInput(e),
@@ -54,6 +60,7 @@ module.exports = async (s,config,lang,onFinish) => {
 
             }
             fs.writeFileSync(e.sdir + 'cmd.txt',JSON.stringify({
+                // dataPortToken: dataPortToken,
                 cmd: ffmpegCommandParsed,
                 pipes: stdioPipes.length,
                 rawMonitorConfig: s.group[e.ke].rawMonitorConfigurations[e.id],

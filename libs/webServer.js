@@ -107,6 +107,7 @@ module.exports = function(s,config,lang,io){
     server.listen(config.port,config.bindip,function(){
         console.log(lang.Shinobi+' : Web Server Listening on '+config.port);
     });
+    s.httpServer = server;
     if(config.webPaths.home !== '/'){
         io.attach(server,{
             path:'/socket.io',
