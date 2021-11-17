@@ -625,13 +625,13 @@ module.exports = (s,config,lang,app,io) => {
             halt : false,
             addToMotionCounter : true,
             useLock : true,
-            save : true,
-            webhook : true,
-            command : true,
-            record : true,
+            save : false,
+            webhook : false,
+            command : false,
+            record : false,
             forceRecord : false,
             indifference : false,
-            countObjects : true
+            countObjects : false
         }
         if(!s.group[d.ke] || !s.group[d.ke].activeMonitors[d.id]){
             return s.systemLog(lang['No Monitor Found, Ignoring Request'])
@@ -670,8 +670,7 @@ module.exports = (s,config,lang,app,io) => {
             addToEventCounter(d)
         }
         if(
-            filter.countObjects &&
-            monitorDetails.detector_obj_count === '1' &&
+            (filter.countObjects || monitorDetails.detector_obj_count === '1') &&
             monitorDetails.detector_obj_count_in_region !== '1'
         ){
             didCountingAlready = true

@@ -77,6 +77,7 @@ module.exports = function(s,config,lang,getSnapshot){
                 }
             }
             const onEventTrigger = (d,filter) => {
+                const monitorConfig = s.group[d.ke].rawMonitorConfigurations[d.id]
                 if((filter.mqttout || monitorConfig.details.notify_mqttout === '1') && !s.group[d.ke].activeMonitors[d.id].detector_mqttout){
                     var detector_mqttout_timeout
                     if(!monitorConfig.details.detector_mqttout_timeout||monitorConfig.details.detector_mqttout_timeout===''){
