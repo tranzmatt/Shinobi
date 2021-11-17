@@ -14,11 +14,17 @@ const stdioPipes = jsonData.pipes || []
 var newPipes = []
 var stdioWriters = [];
 
-// const dataPort = require('./libs/dataPortConnection.js')(jsonData)
+const dataPort = require('./libs/dataPortConnection.js')(jsonData,() => {
+    dataPort.send(jsonData.dataPortToken)
+})
 
-var writeToStderr = function(text){
+var writeToStderr = function(argsAsArray){
   try{
-    process.stderr.write(Buffer.from(`${text}`, 'utf8' ))
+    // process.stderr.write(Buffer.from(`${text}`, 'utf8' ))
+    dataPort.send({
+        f: 'debugLog',
+        data: argsAsArray,
+    })
       // stdioWriters[2].write(Buffer.from(`${new Error('writeToStderr').stack}`, 'utf8' ))
   }catch(err){
   }

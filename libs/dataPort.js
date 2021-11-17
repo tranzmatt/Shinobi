@@ -1,3 +1,4 @@
+const url = require('url');
 module.exports = function(s,config,lang,app,io){
     const {
         triggerEvent,
@@ -21,8 +22,10 @@ module.exports = function(s,config,lang,app,io){
         // client.send(someDataToSendAsStringOrBinary)
         setClientKillTimerIfNotAuthenticatedInTime(client)
         function onAuthenticate(data){
+            console.log('AUTHING DATA PORT',data)
             clearKillTimer(client)
             if(s.dataPortTokens[data]){
+                console.log('AUTH DATA PORT',true)
                 sendData = onAuthenticatedData;
                 delete(s.dataPortTokens[data]);
             }else{
@@ -30,6 +33,7 @@ module.exports = function(s,config,lang,app,io){
             }
         }
         function onAuthenticatedData(data){
+            console.log('DATA PORT',data)
             switch(data.f){
                 case'trigger':
                     triggerEvent(data)
@@ -37,18 +41,18 @@ module.exports = function(s,config,lang,app,io){
                 case's.tx':
                     s.tx(data.data,data.to)
                 break;
-                case'log':
-                    console.log(data.data)
-                break;
                 case'debugLog':
                     s.debugLog(data.data)
+                break;
+                default:
+                    console.log(data)
                 break;
             }
             s.onDataPortMessageExtensions.forEach(function(extender){
                 extender(data)
             })
         }
-        let sendData = onAuthenticate;
+        var sendData = onAuthenticate;
         client.on('message', sendData)
     })
     theWebSocket.broadcast = function(data) {

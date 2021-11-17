@@ -33,6 +33,8 @@ require('./libs/ffmpeg.js')(s,config,lang, async () => {
     require('./libs/auth.js')(s,config,lang)
     //express web server with ejs
     const app = require('./libs/webServer.js')(s,config,lang,io)
+    //data port
+    require('./libs/dataPort.js')(s,config,lang,app,io)
     //page layout load
     require('./libs/definitions.js')(s,config,lang,app,io)
     //web server routes : page handling..
@@ -85,8 +87,6 @@ require('./libs/ffmpeg.js')(s,config,lang, async () => {
     require('./libs/scheduler.js')(s,config,lang,app,io)
     //onvif device manager
     require('./libs/onvifDeviceManager.js')(s,config,lang,app,io)
-    //data port
-    // require('./libs/dataPort.js')(s,config,lang,app,io)
     //alternate logins
     require('./libs/auth/logins.js')(s,config,lang,app)
     //on-start actions, daemon(s) starter

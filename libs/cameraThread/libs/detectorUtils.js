@@ -76,7 +76,7 @@ module.exports = function(jsonData,pamDiffResponder,alternatePamDiff){
       }
     }
     function logData(...args){
-        process.logData(JSON.stringify(args))
+        process.logData(args)
     }
     function getRegionsWithMinimumChange(data){
         try{

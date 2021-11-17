@@ -1,35 +1,24 @@
-module.exports = function(jsonData){
-    var WebSocketClient = require('websocket').client;
-
-    var client = new WebSocketClient();
-
-    client.on('connectFailed', function(error) {
-        console.log('Connect Error: ' + error.toString());
+module.exports = function(jsonData,onConnected){
+    const config = jsonData.globalInfo.config;
+    const dataPortToken = jsonData.dataPortToken;
+    const CWS = require('cws');
+    const client = new CWS(`ws://localhost:${config.port}/dataPort`);
+    console.log('readyState:', client.readyState);
+    client.on('error', e => {
+        console.error(e);
     });
-
-    client.on('connect', function(connection) {
-        console.log('WebSocket Client Connected');
-        connection.on('error', function(error) {
-            console.log("Connection Error: " + error.toString());
-        });
-        connection.on('close', function() {
-            console.log('echo-protocol Connection Closed');
-        });
-        connection.on('message', function(message) {
-            if (message.type === 'utf8') {
-                console.log("Received: '" + message.utf8Data + "'");
-            }
-        });
-
-        function sendNumber() {
-            if (connection.connected) {
-                var number = Math.round(Math.random() * 0xFFFFFF);
-                connection.sendUTF(number.toString());
-                setTimeout(sendNumber, 1000);
-            }
-        }
-        sendNumber();
+    client.on('close', e => {
+        console.log('The websocket was closed');
     });
-
-    client.connect('ws://localhost:8080/', 'echo-protocol');
+    //
+    // // Listen for messages & log them
+    // client.on('message', message => {
+    //   if ('string' !== typeof message) throw Error("Message could not be decoded");
+    //   const received = JSON.parse(message);
+    //   console.log('Message received:', received);
+    // });
+    client.on('open', () => {
+        onConnected()
+    });
+    return client;
 }
