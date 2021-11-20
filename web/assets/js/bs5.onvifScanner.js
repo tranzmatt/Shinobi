@@ -119,7 +119,7 @@ $(document).ready(function(e){
         return matches;
     }
     var filterOutMonitorsThatAreAlreadyAdded = function(listOfCameras,callback){
-        $.get(getApiPrefix(`monitor`),function(monitors){
+        $.getJSON(getApiPrefix(`monitor`),function(monitors){
             var monitorsNotExisting = []
             $.each(listOfCameras,function(n,camera){
                 var matches = false

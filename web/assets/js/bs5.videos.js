@@ -146,9 +146,9 @@ function getVideos(options,callback){
         eventEndTime = formattedTimeForFilename(options.endDate,false)
         requestQueries.push(`end=${eventEndTime}`)
     }
-    $.get(`${getApiPrefix(`videos`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`limit=${limit}`]).join('&')}`,function(data){
+    $.getJSON(`${getApiPrefix(`videos`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`limit=${limit}`]).join('&')}`,function(data){
         var videos = data.videos
-        $.get(`${getApiPrefix(`events`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.join('&')}`,function(eventData){
+        $.getJSON(`${getApiPrefix(`events`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.join('&')}`,function(eventData){
             var newVideos = applyEventListToVideos(videos,eventData)
             $.each(newVideos,function(n,video){
                 loadVideoData(video)
@@ -177,7 +177,7 @@ function getEvents(options,callback){
     if(options.onlyCount){
         requestQueries.push(`onlyCount=1`)
     }
-    $.get(`${getApiPrefix(`events`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.join('&')}`,function(eventData){
+    $.getJSON(`${getApiPrefix(`events`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.join('&')}`,function(eventData){
         callback(eventData)
     })
 }
@@ -206,7 +206,7 @@ $(document).ready(function(){
                 class: 'btn-danger btn-sm'
             },
             clickCallback: function(){
-                $.get(videoEndpoint + '/delete',function(data){
+                $.getJSON(videoEndpoint + '/delete',function(data){
                     if(data.ok){
                         console.log('Video Deleted')
                     }else{

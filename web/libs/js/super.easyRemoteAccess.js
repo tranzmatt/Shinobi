@@ -115,7 +115,7 @@ $(document).ready(function(){
             var selectedServer = p2pServerList[currentlyRegisteredP2PServer]
             console.log(selectedServer,currentlySelectedP2PServerId,p2pServerList)
             if(selectedServer && selectedServer.host){
-                var href = `http://${selectedServer.host}:${selectedServer.webPort}/s/${apiKey}?p2p=1`
+                var href = `http://${selectedServer.host}:${selectedServer.webPort}/s/${apiKey}/?p2p=1`
                 var win = window.open(href, '_blank');
                 win.focus();
             }else{

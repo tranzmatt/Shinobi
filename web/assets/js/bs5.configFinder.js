@@ -25,7 +25,7 @@ $(document).ready(function(){
     }
     var getConfigurationsFromHub = function(rowLimit,skipOver,explore,searchQuery,sortBy,sortDirection,callback){
         // $.get(,callback)
-        $.get(`https://hub.shinobi.video/searchConfiguration?skipOver=${skipOver}&rowLimit=${rowLimit}&sortBy=${sortBy}&sortDirection=${sortDirection}${searchQuery ? `&text=${searchQuery}` : ''}`,function(data){
+        $.getJSON(`https://hub.shinobi.video/searchConfiguration?skipOver=${skipOver}&rowLimit=${rowLimit}&sortBy=${sortBy}&sortDirection=${sortDirection}${searchQuery ? `&text=${searchQuery}` : ''}`,function(data){
             callback(data)
             // $.get(getApiPrefix() + `/getShinobiHubConfigurations/${$user.ke}/cam?rowLimit=${rowLimit}&skipOver=${skipOver}&explore=${explore ? explore : "0"}&search=${searchQuery}&sortDirection=${sortDirection}&sortBy=${sortBy}`,function(privateData){
             //     callback(data.concat(privateData || []))

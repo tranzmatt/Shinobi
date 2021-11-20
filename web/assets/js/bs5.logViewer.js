@@ -37,7 +37,7 @@ $(document).ready(function(e){
         selectedLogType = selectedLogType === 'all' ? '' : selectedLogType
         var currentDateRange = dateRangeSelector.data('daterangepicker');
         var apiEndpoint = getApiPrefix(`logs`) + '/' + selectedLogType + '?start=' + formattedTimeForFilename(currentDateRange.startDate) + '&end=' + formattedTimeForFilename(currentDateRange.endDate)
-        $.get(apiEndpoint,function(rows){
+        $.getJSON(apiEndpoint,function(rows){
             logViewerDataInMemory = {
                 startDate: currentDateRange.startDate,
                 endDate: currentDateRange.endDate,

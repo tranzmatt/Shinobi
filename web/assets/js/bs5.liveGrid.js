@@ -822,7 +822,7 @@ $(document).ready(function(e){
         var monitor = loadedMonitors[monitorId]
         if(monitor.subStreamToggleLock)return false;
         monitor.subStreamToggleLock = true
-        $.get(getApiPrefix(`toggleSubstream`) + '/' + monitor.mid,function(data){
+        $.getJSON(getApiPrefix(`toggleSubstream`) + '/' + monitor.mid,function(data){
             monitor.subStreamToggleLock = false
         })
     })

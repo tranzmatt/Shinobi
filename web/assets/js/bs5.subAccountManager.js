@@ -13,7 +13,7 @@ $(document).ready(function(){
         loadedSubAccounts = {}
     }
     var getSubAccounts = function(callback){
-        $.get(`${apiPrefix}accounts/${$user.ke}`,function(data){
+        $.getJSON(`${apiPrefix}accounts/${$user.ke}`,function(data){
             clearTable()
             $.each(data.accounts,function(n,account){
                 loadedSubAccounts[account.uid] = account;

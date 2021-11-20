@@ -149,7 +149,7 @@ function getVideoSnapshot(videoElement,cb){
 function runPtzCommand(monitorId,switchChosen){
     switch(switchChosen){
         case'setHome':
-            $.get(getApiPrefix(`control`) + '/' + monitorId + '/setHome',function(data){
+            $.getJSON(getApiPrefix(`control`) + '/' + monitorId + '/setHome',function(data){
                 console.log(data)
             })
         break;
@@ -388,7 +388,7 @@ function deleteMonitors(monitorsSelected,afterDelete){
                 class:'btn-danger',
                 callback:function(){
                     $.each(monitorsSelected,function(n,monitor){
-                        $.get(`${getApiPrefix(`configureMonitor`)}/${monitor.mid}/delete`,function(data){
+                        $.getJSON(`${getApiPrefix(`configureMonitor`)}/${monitor.mid}/delete`,function(data){
                             console.log(data)
                             if(monitorsSelected.length === n + 1){
                                 //last
@@ -403,7 +403,7 @@ function deleteMonitors(monitorsSelected,afterDelete){
                 class:'btn-danger',
                 callback:function(){
                     $.each(monitorsSelected,function(n,monitor){
-                        $.get(`${getApiPrefix(`configureMonitor`)}/${monitor.mid}/delete?deleteFiles=true`,function(data){
+                        $.getJSON(`${getApiPrefix(`configureMonitor`)}/${monitor.mid}/delete?deleteFiles=true`,function(data){
                             console.log(data)
                             if(monitorsSelected.length === n + 1){
                                 //last

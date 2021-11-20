@@ -71,6 +71,9 @@ function base64ArrayBuffer(arrayBuffer) {
 
       return base64
 }
+function getLocationPathName(){
+    return location.pathname.endsWith('/') ? location.pathname : location.pathname
+}
 function debugLog(...args){
     console.log(...args)
 }
@@ -198,7 +201,7 @@ function liveStamp(){
 }
 
 function loadMonitorsIntoMemory(callback){
-    $.get(`${getApiPrefix(`monitor`)}`,function(data){
+    $.getJSON(`${getApiPrefix(`monitor`)}`,function(data){
         $.each(data,function(n,monitor){
             monitor.details = safeJsonParse(monitor.details)
             loadedMonitors[monitor.mid] = monitor

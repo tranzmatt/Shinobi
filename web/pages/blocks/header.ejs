@@ -6,6 +6,7 @@
 <html lang="en">
 <head>
     <title><%-pageTitle%></title>
+    <div><%-window.libURL%></div>
     <meta charset="utf-8">
     <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, shrink-to-fit=no' name='viewport' />
     <meta name="description" content="Shinobi">
@@ -62,7 +63,7 @@
         if(!details.sub){ %>
             <script>
                 window.getAdminApiPrefix = function(piece){
-                    return location.search === '?p2p=1' ? location.pathname + '/' : "<%=originalURL%><%=config.webPaths.adminApiPrefix%><%- $user.auth_token %>/"
+                    return location.search === '?p2p=1' ? (location.pathname.endsWith('/') ? location.pathname : location.pathname) : "<%=originalURL%><%=config.webPaths.adminApiPrefix%><%- $user.auth_token %>/"
                 }
             </script>
         <% }

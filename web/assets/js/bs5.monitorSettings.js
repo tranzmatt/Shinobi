@@ -1064,7 +1064,7 @@ editorForm.find('[name="type"]').change(function(e){
     }
     // presets
     var loadPresets = function(callback){
-        $.get(getApiPrefix() + '/monitorStates/' + $user.ke,function(d){
+        $.getJSON(getApiPrefix() + '/monitorStates/' + $user.ke,function(d){
             var presets = d.presets
             loadedPresets = {}
             $.each(presets,function(n,preset){

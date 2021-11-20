@@ -193,7 +193,7 @@ $(document).ready(function(e){
                 title: lang.Delete,
             },
             clickCallback: function(){
-                $.get(frame.href + '/delete',function(response){
+                $.getJSON(frame.href + '/delete',function(response){
                     if(response.ok){
                         el.parent().remove()
                     }
