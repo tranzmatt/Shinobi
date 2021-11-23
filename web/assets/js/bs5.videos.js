@@ -41,7 +41,7 @@ function applyEventListToVideos(videos,events){
             var startTime = new Date(video.time)
             var endTime = new Date(video.end)
             var eventTime = new Date(theEvent.time)
-            if(eventTime >= startTime && eventTime <= endTime){
+            if(theEvent.mid === video.mid && eventTime >= startTime && eventTime <= endTime){
                 videoEvents.push(theEvent)
                 currentEvents.splice(index, 1)
             }
