@@ -7710,61 +7710,6 @@ module.exports = function(s,config,lang){
       "Power Viewer": {
            "section": lang["Power Viewer"],
            "blocks": {
-              "Search Settings": {
-                  id: "powerVideoTabs",
-                 "color": "blue",
-                 noHeader: true,
-                 noDefaultSectionClasses: true,
-                 attribute: `tab-chooser-parent`,
-                 "section-pre-class": "col-md-4",
-                 "info": [
-                     {
-                         "color": "blue",
-                         noHeader: true,
-                         isSection: true,
-                         isFormGroupGroup: true,
-                         "info": [
-                             {
-                                 "field": lang['Monitors'],
-                                 "id": "powerVideoMonitorsList",
-                                 "form-group-attribute": 'tab-section=monitors',
-                                 "attribute": "multiple",
-                                 "fieldType": "select",
-                             },
-                             {
-                                "id": "powerVideoDateRange",
-                                "field": lang['Date Range'],
-                             },
-                             {
-                                "id": "powerVideoVideoLimit",
-                                "field": lang['Video Limit'] + ` (${lang['Per Monitor']})`,
-                                "placeholder": "0",
-                             },
-                             {
-                                "id": "powerVideoEventLimit",
-                                "field": lang['Event Limit'] + ` (${lang['Per Monitor']})`,
-                                "placeholder": "500",
-                             },
-                             {
-                                 id:'powerVideoSet',
-                                 field: lang['Video Set'],
-                                 default:'h264',
-                                 "fieldType": "select",
-                                 possible:[
-                                   {
-                                       "name": lang.Local,
-                                      "value": "local"
-                                   },
-                                   {
-                                      "name": lang.Cloud,
-                                      "value": "cloud"
-                                   },
-                                ]
-                             },
-                         ]
-                     },
-                 ]
-            },
             "Video Playback": {
                 id: "powerVideoVideoPlayback",
                 noHeader: true,
@@ -7856,13 +7801,60 @@ module.exports = function(s,config,lang){
                            },
                        ]
                    },
+                   {
+                       id: "powerVideoTabs",
+                       attribute: `tab-chooser-parent`,
+                       "color": "blue",
+                       noHeader: true,
+                       isSection: true,
+                       isFormGroupGroup: true,
+                       "info": [
+                           {
+                               "field": lang['Monitors'],
+                               "id": "powerVideoMonitorsList",
+                               "form-group-attribute": 'tab-section=monitors',
+                               "attribute": "multiple",
+                               "fieldType": "select",
+                           },
+                           {
+                              "id": "powerVideoDateRange",
+                              "field": lang['Date Range'],
+                           },
+                           {
+                              "id": "powerVideoVideoLimit",
+                              "field": lang['Video Limit'] + ` (${lang['Per Monitor']})`,
+                              "placeholder": "0",
+                           },
+                           {
+                              "id": "powerVideoEventLimit",
+                              "field": lang['Event Limit'] + ` (${lang['Per Monitor']})`,
+                              "placeholder": "500",
+                           },
+                           {
+                               id:'powerVideoSet',
+                               field: lang['Video Set'],
+                               default:'h264',
+                               "fieldType": "select",
+                               possible:[
+                                 {
+                                     "name": lang.Local,
+                                    "value": "local"
+                                 },
+                                 {
+                                    "name": lang.Cloud,
+                                    "value": "cloud"
+                                 },
+                              ]
+                           },
+                       ]
+                   },
                ]
            },
            "Time Strip": {
                id: "powerVideoTimelineStripsContainer",
                noHeader: true,
               "color": "bg-gradient-blue text-white",
-              "section-pre-class": "col-md-12 mt-3",
+              "section-pre-class": "col-md-4",
               "info": [
                   {
                      "id": "powerVideoTimelineStrips",
@@ -7870,7 +7862,7 @@ module.exports = function(s,config,lang){
                      "divContent": `<div class="loading"><i class="fa fa-hand-pointer-o"></i><div class="epic-text">${lang['Select a Monitor']}</div></div>`,
                   },
               ]
-          }
+          },
          }
       },
       "Calendar": {
