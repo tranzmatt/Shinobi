@@ -504,8 +504,8 @@ module.exports = function(s,config,lang){
             if(s.group[e.ke] && s.group[e.ke].rawMonitorConfigurations && s.group[e.ke].rawMonitorConfigurations[e.mid] && s.group[e.ke].rawMonitorConfigurations[e.mid].mode !== 'stop'){
                 if(s.group[e.ke].activeMonitors[e.mid].onvifConnection){
                     const screenShot = await s.getSnapshotFromOnvif({
-                        username: onvifUsername,
-                        password: onvifPassword,
+                        username: options.username,
+                        password: options.password,
                         uri: cameraResponse.uri,
                     });
                     s.tx({

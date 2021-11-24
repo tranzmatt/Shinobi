@@ -62,6 +62,7 @@ $(document).ready(function(){
             })
             blockForm.find('[name="Encoding"]').html(html)
             //Resolutions
+            console.log(encoderOptions)
             if(encoderOptions.H264){
                 var html = ``
                 $.each(encoderOptions.H264.ResolutionsAvailable,function(n,resolution){
@@ -95,6 +96,7 @@ $(document).ready(function(){
     }
     var writeOnvifDataToFormFields = function(onvifData){
         var formFields = {}
+        console.log('write fields ',onvifData)
         if(onvifData.date){
             var utcDatePieces = onvifData.date.UTCDateTime
             var dateString = `${utcDatePieces.Date.Year}-${utcDatePieces.Date.Month}-${utcDatePieces.Date.Day} ${utcDatePieces.Time.Hour}:${utcDatePieces.Time.Minute}:${utcDatePieces.Time.Second} UTC`
@@ -107,8 +109,10 @@ $(document).ready(function(){
 
         }
         if(onvifData.networkInterface){
-            var ipConfig = onvifData.networkInterface.IPv4.Config
-            var ipv4 = ipConfig.DHCP === 'true' ? ipConfig.LinkLocal.Address : ipConfig.Manual.Address || ipConfig.LinkLocal.Address
+            var eth0 = onvifData.networkInterface[0] || onvifData.networkInterface
+            var ipConfig = eth0.IPv4.Config
+            var linkLocal = ipConfig.LinkLocal || ipConfig.FromDHCP
+            var ipv4 = ipConfig.DHCP === 'true' ? linkLocal.Address : ipConfig.Manual.Address || linkLocal.Address
             formFields["setNetworkInterface:ipv4"] = ipv4
         }
         if(onvifData.gateway){
@@ -218,7 +222,43 @@ $(document).ready(function(){
     }
     function openOnvifDeviceManager(monitorId){
         selectedMonitorId = `${monitorId}`
+        blockForm.find('input').val('')
         getUIFieldValuesFromCamera(monitorId)
+    }
+    function submitTheForm(){
+        $.confirm.create({
+            title: lang.updateCamerasInternalSettings,
+            body: lang.noUndoForAction,
+            clickOptions: {
+                title: lang['Save'],
+                class:'btn-success'
+            },
+            clickCallback: function(){
+                var postData = convertFormFieldNameToObjectKeys(getUIFieldValuesFromForm())
+                console.log('postData',postData)
+                $.post(getApiPrefix('onvifDeviceManager') + '/' + selectedMonitorId + '/save',{
+                    data: JSON.stringify(postData)
+                },function(response){
+                    var notifyTitle = lang['Settings Changed']
+                    var notifyText = lang.onvifdeviceSavedText
+                    var notifyTextError = ''
+                    var notifyType = 'success'
+                    $.each(response.responses,function(key,response){
+                        if(!response.ok){
+                            notifyTextError = lang.onvifdeviceSavedFoundErrorText
+                            notifyType = 'warning'
+                            console.log(response)
+                        }
+                    })
+                    notifyText = notifyTextError ? notifyText + ' ' + notifyTextError : notifyText;
+                    new PNotify({
+                        title: notifyTitle,
+                        text: notifyText,
+                        type: notifyType,
+                    })
+                })
+            }
+        })
     }
     dateRangePicker.daterangepicker({
         singleDatePicker: true,
@@ -257,38 +297,7 @@ $(document).ready(function(){
     })
     blockForm.submit(function(e){
         e.preventDefault()
-        $.confirm.create({
-            title: lang.updateCamerasInternalSettings,
-            body: lang.noUndoForAction,
-            clickOptions: {
-                title: lang['Save'],
-                class:'btn-success'
-            },
-            clickCallback: function(){
-                var postData = convertFormFieldNameToObjectKeys(getUIFieldValuesFromForm())
-                console.log('postData',postData)
-                $.post(getApiPrefix('onvifDeviceManager') + '/' + selectedMonitorId + '/save',{
-                    data: JSON.stringify(postData)
-                },function(response){
-                    var notifyTitle = lang['Settings Changed']
-                    var notifyText = lang.onvifdeviceSavedText
-                    var notifyTextError = ''
-                    var notifyType = 'success'
-                    $.each(response.responses,function(key,response){
-                        if(!response.ok){
-                            notifyTextError = lang.onvifdeviceSavedFoundErrorText
-                            notifyType = 'warning'
-                        }
-                    })
-                    notifyText = notifyTextError ? notifyText + ' ' + notifyTextError : notifyText;
-                    new PNotify({
-                        title: notifyTitle,
-                        text: notifyText,
-                        type: notifyType,
-                    })
-                })
-            }
-        })
+        submitTheForm()
         return false;
     })
     onWebSocketEvent(function(d){
