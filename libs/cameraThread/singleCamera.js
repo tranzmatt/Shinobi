@@ -119,7 +119,9 @@ writeToStderr('Thread Opening')
 
 if(rawMonitorConfig.details.detector === '1' && rawMonitorConfig.details.detector_pam === '1'){
   try{
-    const attachPamDetector = require(config.monitorDetectorDaemonPath ? config.monitorDetectorDaemonPath : __dirname + '/detector.js')(jsonData,stdioWriters[3])
+    const attachPamDetector = require(config.monitorDetectorDaemonPath ? config.monitorDetectorDaemonPath : __dirname + '/detector.js')(jsonData,(detectorObject) => {
+        dataPort.send(JSON.stringify(detectorObject))
+    })
     attachPamDetector(cameraProcess)
   }catch(err){
     writeToStderr(err.stack)
