@@ -189,6 +189,11 @@ module.exports = function(s,config){
         s.onDataPortMessageExtensions.push(callback)
     }
     //
+    s.onHttpRequestUpgradeExtensions = {}
+    s.onHttpRequestUpgrade = function(nameOfCallback,callback){
+        s.onHttpRequestUpgradeExtensions[nameOfCallback] = callback
+    }
+    //
     /////// VIDEOS ////////
     s.insertCompletedVideoExtensions = []
     s.insertCompletedVideoExtender = function(callback){

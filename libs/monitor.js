@@ -931,10 +931,10 @@ module.exports = function(s,config,lang){
                         onDetectorJpegOutputSecondary(e,data)
                     })
                 }else{
-		    s.group[e.ke].activeMonitors[e.id].spawn.stdio[4].on('data',function(data){
+		            s.group[e.ke].activeMonitors[e.id].spawn.stdio[4].on('data',function(data){
                         onDetectorJpegOutputAlone(e,data)
                     })
-		}
+		        }
             }else if(e.details.detector_use_detect_object === '1' && e.details.detector_send_frames !== '1'){
                 s.group[e.ke].activeMonitors[e.id].spawn.stdio[4].on('data',function(data){
                     onDetectorJpegOutputSecondary(e,data)

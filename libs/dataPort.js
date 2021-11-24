@@ -52,27 +52,16 @@ module.exports = function(s,config,lang,app,io){
             })
         }
         client.on('message', onAuthenticate)
+        client.on('close', () => {
+            clearTimeout(client.killTimer)
+        })
+        client.on('disconnect', () => {
+            clearTimeout(client.killTimer)
+        })
     })
-    theWebSocket.broadcast = function(data) {
-      theWebSocket.clients.forEach((client) => {
-           try{
-               client.sendData(data)
-           }catch(err){
-               // console.log(err)
-           }
-      })
-    };
-
-    s.httpServer.on('upgrade', function upgrade(request, socket, head) {
-        const pathname = url.parse(request.url).pathname;
-        if (pathname === '/dataPort') {
-            theWebSocket.handleUpgrade(request, socket, head, function done(ws) {
-                theWebSocket.emit('connection', ws, request)
-            })
-        } else if (pathname.indexOf('/socket.io') > -1) {
-            return;
-        } else {
-            socket.destroy();
-        }
-    });
+    s.onHttpRequestUpgrade('/dataPort',(request, socket, head) => {
+        theWebSocket.handleUpgrade(request, socket, head, function done(ws) {
+            theWebSocket.emit('connection', ws, request)
+        })
+    })
 }
