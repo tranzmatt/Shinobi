@@ -14,8 +14,24 @@ const stdioPipes = jsonData.pipes || []
 var newPipes = []
 var stdioWriters = [];
 
-const dataPort = require('./libs/dataPortConnection.js')(jsonData,() => {
+const dataPort = require('./libs/dataPortConnection.js')(jsonData,
+// onConnected
+() => {
     dataPort.send(jsonData.dataPortToken)
+},
+// onError
+(err) => {
+    writeToStderr([
+        'dataPort:Connection:Error',
+        err
+    ])
+},
+// onClose
+(e) => {
+    writeToStderr([
+        'dataPort:Connection:Closed',
+        e
+    ])
 })
 
 var writeToStderr = function(argsAsArray){
