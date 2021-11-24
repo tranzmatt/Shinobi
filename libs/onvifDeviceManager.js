@@ -26,7 +26,7 @@ module.exports = function(s,config,lang,app,io){
             try{
                 const groupKey = req.params.ke
                 const monitorId = req.params.id
-                const onvifDevice = s.group[groupKey].activeMonitors[monitorId].onvifConnection
+                const onvifDevice = s.group[groupKey].activeMonitors[monitorId].onvifConnection || (await s.createOnvifDevice({id: monitorId, ke: groupKey})).device
                 const cameraInfo = await getUIFieldValues(onvifDevice)
                 endData.onvifData = cameraInfo
             }catch(err){

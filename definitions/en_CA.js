@@ -5104,10 +5104,21 @@ module.exports = function(s,config,lang){
                  "blockquote": lang.onvifdeviceManagerGlobalTip,
                  "info": [
                      {
+                         "field": lang["Monitor"],
+                         "fieldType": "select",
+                         "class": "monitors_list",
+                         "possible": []
+                     },
+                     {
                         "fieldType": "btn",
                         "class": `btn-warning onvif-device-reboot`,
                         "btnContent": `<i class="fa fa-refresh"></i> &nbsp; ${lang['Reboot Camera']}`,
                      },
+                     {
+                         "fieldType": "div",
+                         "class": "p-2",
+                         "divContent": `<pre class="bg-dark text-white" style="max-height: 400px;overflow: auto;" id="onvifDeviceManagerInfo"></pre>`,
+                     }
                  ]
              },
              "Network": {
@@ -7584,6 +7595,11 @@ module.exports = function(s,config,lang){
                           label: `${lang['ONVIF Scanner']}`,
                           pageOpen: 'onvifScanner',
                           addUl:true
+                      },
+                      {
+                          icon: 'opera',
+                          label: `${lang['ONVIF Device Manager']}`,
+                          pageOpen: 'onvifDeviceManager',
                       },
                       {
                           icon: 'eyedropper',
