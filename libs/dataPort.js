@@ -1,15 +1,12 @@
-const url = require('url');
+const {
+    createWebSocketServer,
+} = require('./basic/websocketServer.js')
 module.exports = function(s,config,lang,app,io){
     const {
         triggerEvent,
     } = require('./events/utils.js')(s,config,lang)
-    // options = options ? options : {}
-    // options.port = options.port || 3001
     s.dataPortTokens = {}
-    const WebSocket = require('cws');
-    const theWebSocket = new WebSocket.Server({
-        noServer: true
-    });
+    const theWebSocket = createWebSocketServer()
     function setClientKillTimerIfNotAuthenticatedInTime(client){
         client.killTimer = setTimeout(function(){
             client.terminate()
