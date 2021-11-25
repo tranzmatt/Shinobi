@@ -39,12 +39,7 @@ module.exports = function(s,config,lang,app,io){
         });
         //send data to child node function
         s.cx = function(data,connectionId){
-            // if(senderObject){
-            //     data.sentFrom = senderObject.id;
-            //     childNodesConnectionIndex[connectionId].sendJson(data)
-            // }else{
-                childNodesConnectionIndex[connectionId].sendJson(data)
-            // }
+            childNodesConnectionIndex[connectionId].sendJson(data)
         }
         //child Node Websocket
         childNodeWebsocket.on('connection', function (client, req) {

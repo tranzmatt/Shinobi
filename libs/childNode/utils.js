@@ -1,3 +1,4 @@
+const fs = require('fs');
 module.exports = function(s,config,lang,app,io){
     function getIpAddress(req){
         return (req.headers['cf-connecting-ip'] ||
