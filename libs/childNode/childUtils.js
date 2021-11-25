@@ -1,5 +1,6 @@
 module.exports = function(s,config,lang,app,io){
     const queuedSqlCallbacks = s.queuedSqlCallbacks;
+    var checkCpuInterval = null;
     function onDataFromMasterNode(d) {
         switch(d.f){
             case'sqlCallback':
@@ -10,7 +11,7 @@ module.exports = function(s,config,lang,app,io){
                 }
             break;
             case'init_success':
-                s.connected=true;
+                s.connectedToMasterNode = true;
                 s.other_helpers=d.child_helpers;
             break;
             case'kill':
@@ -42,7 +43,46 @@ module.exports = function(s,config,lang,app,io){
             break;
         }
     }
+    function initiateConnectionToMasterNode(){
+        console.log('CHILD CONNECTION SUCCESS')
+        s.cx({
+            f : 'init',
+            port : config.port,
+            coreCount : s.coreCount,
+            availableHWAccels : config.availableHWAccels
+        })
+        clearInterval(checkCpuInterval)
+        checkCpuInterval = setInterval(async () => {
+            sendCurrentCpuUsage()
+        },5000)
+    }
+    function onDisconnectFromMasterNode(){
+        s.connectedToMasterNode = false;
+        destroyAllMonitorProcesses()
+    }
+    function destroyAllMonitorProcesses(){
+        var groupKeys = Object.keys(s.group)
+        groupKeys.forEach(function(groupKey){
+            var activeMonitorKeys = Object.keys(s.group[groupKey].activeMonitors)
+            activeMonitorKeys.forEach(function(monitorKey){
+                var activeMonitor = s.group[groupKey].activeMonitors[monitorKey]
+                if(activeMonitor && activeMonitor.spawn && activeMonitor.spawn.close)activeMonitor.spawn.close()
+                if(activeMonitor && activeMonitor.spawn && activeMonitor.spawn.kill)activeMonitor.spawn.kill()
+            })
+        })
+    }
+    function sendCurrentCpuUsage(){
+        const cpu = await s.cpuUsage()
+        s.cx({
+            f: 'cpu',
+            cpu: parseFloat(cpu)
+        })
+    }
     return {
         onDataFromMasterNode,
+        initiateConnectionToMasterNode,
+        onDisconnectFromMasterNode,
+        destroyAllMonitorProcesses,
+        sendCurrentCpuUsage,
     }
 }
