@@ -1,5 +1,5 @@
+const WebSocket = require('cws');
 function createWebSocketServer(options){
-    const WebSocket = require('cws');
     const theWebSocket = new WebSocket.Server(options ? options : {
         noServer: true
     });
@@ -14,6 +14,19 @@ function createWebSocketServer(options){
     };
     return theWebSocket
 }
+function createWebSocketClient(connectionHost,options){
+    const clientConnection = WebSocket(connectionHost, options.engineOptions);
+    if(options.onMessage){
+        const onMessage = options.onMessage;
+        clientConnection.on('message', message => {
+            const data = JSON.parse(message);
+            onMessage(received);
+        });
+    }
+    return clientConnection
+}
+
 module.exports = {
     createWebSocketServer,
+    createWebSocketClient,
 }

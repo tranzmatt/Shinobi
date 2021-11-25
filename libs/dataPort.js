@@ -1,6 +1,4 @@
-const {
-    createWebSocketServer,
-} = require('./basic/websocketServer.js')
+const { createWebSocketServer } = require('./basic/websocketTools.js')
 module.exports = function(s,config,lang,app,io){
     const {
         triggerEvent,
