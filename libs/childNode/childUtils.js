@@ -1,4 +1,5 @@
 module.exports = function(s,config,lang,app,io){
+    const { cameraDestroy } = require('../monitor/utils.js')(s,config,lang)
     const queuedSqlCallbacks = s.queuedSqlCallbacks;
     var checkCpuInterval = null;
     function onDataFromMasterNode(d) {
@@ -17,7 +18,6 @@ module.exports = function(s,config,lang,app,io){
             case'kill':
                 s.initiateMonitorObject(d.d);
                 cameraDestroy(d.d)
-                var childNodeIp = s.group[d.d.ke].activeMonitors[d.d.id]
             break;
             case'sync':
                 s.initiateMonitorObject(d.sync);
@@ -46,10 +46,11 @@ module.exports = function(s,config,lang,app,io){
     function initiateConnectionToMasterNode(){
         console.log('CHILD CONNECTION SUCCESS')
         s.cx({
-            f : 'init',
-            port : config.port,
-            coreCount : s.coreCount,
-            availableHWAccels : config.availableHWAccels
+            f: 'init',
+            port: config.port,
+            coreCount: s.coreCount,
+            availableHWAccels: config.availableHWAccels,
+            socketKey: config.childNodes.key
         })
         clearInterval(checkCpuInterval)
         checkCpuInterval = setInterval(async () => {

@@ -10,8 +10,7 @@ module.exports = function(s,config,lang,app,io){
         client.ip = ipAddress;
         client.shinobiChildAlreadyRegistered = true;
         client.sendJson = (data) => {
-            const dataString = JSON.stringify(data);
-            client.send(dataString)
+            client.send(JSON.stringify(data))
         }
         if(!s.childNodes[ipAddress]){
             s.childNodes[ipAddress] = {}
@@ -30,9 +29,7 @@ module.exports = function(s,config,lang,app,io){
             childNodes : s.childNodes
         })
         activeNode.coreCount = options.coreCount
-        return {
-            ipAddress,
-        }
+        return ipAddress
     }
     function initiateVideoTransferConnection(){
 

@@ -4,7 +4,6 @@ const https = require('https');
 const express = require('express');
 const { createWebSocketServer, createWebSocketClient } = require('./basic/websocketTools.js')
 module.exports = function(s,config,lang,app,io){
-    const { cameraDestroy } = require('./monitor/utils.js')(s,config,lang)
     //setup Master for childNodes
     if(config.childNodes.enabled === true && config.childNodes.mode === 'master'){
         const {
@@ -36,12 +35,12 @@ module.exports = function(s,config,lang,app,io){
         });
         s.debugLog('childNodeWebsocket.attach(childNodeServer)')
         //send data to child node function
-        s.cx = function(data,connectionId,senderObject){
+        s.cx = function(data,connectionId){
             // if(senderObject){
             //     data.sentFrom = senderObject.id;
-            //     childNodesConnectionIndex[y].sendJson(data)
+            //     childNodesConnectionIndex[connectionId].sendJson(data)
             // }else{
-                childNodesConnectionIndex[y].sendJson(data)
+                childNodesConnectionIndex[connectionId].sendJson(data)
             // }
         }
         //child Node Websocket
@@ -82,8 +81,7 @@ module.exports = function(s,config,lang,app,io){
             onMessage: onDataFromMasterNode
         })
         function sendDataToMasterNode(data){
-            x.socketKey = config.childNodes.key;
-            childIO.send(JSON.stringify(data));
+            childIO.send(JSON.stringify(data))
         }
         s.cx = sendDataToMasterNode;
         s.tx = function(x,y){
