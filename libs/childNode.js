@@ -1,11 +1,15 @@
 const fs = require('fs');
+const url = require('url');
 const http = require('http');
 const https = require('https');
 const express = require('express');
 const { createWebSocketServer, createWebSocketClient } = require('./basic/websocketTools.js')
 module.exports = function(s,config,lang,app,io){
     //setup Master for childNodes
-    if(config.childNodes.enabled === true && config.childNodes.mode === 'master'){
+    if(
+        config.childNodes.enabled === true &&
+        config.childNodes.mode === 'master'
+    ){
         const {
             initiateDataConnection,
             initiateVideoTransferConnection,
@@ -31,9 +35,8 @@ module.exports = function(s,config,lang,app,io){
         });
         const childNodeBindIP = config.childNodes.ip || config.bindip;
         childNodeServer.listen(config.childNodes.port,childNodeBindIP,function(){
-            console.log(lang.Shinobi+' - CHILD NODE SERVER : '+childNodeBindIP + ':' + config.childNodes.port);
+            console.log(lang.Shinobi+' - CHILD NODE SERVER : ' + config.childNodes.port);
         });
-        s.debugLog('childNodeWebsocket.attach(childNodeServer)')
         //send data to child node function
         s.cx = function(data,connectionId){
             // if(senderObject){
@@ -46,6 +49,7 @@ module.exports = function(s,config,lang,app,io){
         //child Node Websocket
         childNodeWebsocket.on('connection', function (client, req) {
             //functions for dispersing work to child servers;
+            console.log('Connection to ws 8288')
             const connectionId = s.gid(10);
             client.id = connectionId;
             function onConnection(d){
@@ -70,14 +74,18 @@ module.exports = function(s,config,lang,app,io){
         })
     }else
     //setup Child for childNodes
-    if(config.childNodes.enabled === true && config.childNodes.mode === 'child' && config.childNodes.host){
+    if(
+        config.childNodes.enabled === true &&
+        config.childNodes.mode === 'child' &&
+        config.childNodes.host
+    ){
         const {
             initiateConnectionToMasterNode,
             onDisconnectFromMasterNode,
             onDataFromMasterNode,
         } = require('./childNode/childUtils.js')(s,config,lang,app,io)
         s.connectedToMasterNode = false;
-        const childIO = createWebSocketClient('ws://'+config.childNodes.host,{
+        const childIO = createWebSocketClient('ws://'+config.childNodes.host + '/childNode',{
             onMessage: onDataFromMasterNode
         })
         function sendDataToMasterNode(data){
@@ -106,10 +114,10 @@ module.exports = function(s,config,lang,app,io){
             if(typeof onMoveOn === 'function')s.queuedSqlCallbacks[callbackId] = onMoveOn;
             sendDataToMasterNode({f:'knex',options:options,callbackId:callbackId});
         }
-        childIO.on('connect', function(){
+        childIO.on('open', function(){
             initiateConnectionToMasterNode()
         })
-        childIO.on('disconnect',function(){
+        childIO.on('close',function(){
             onDisconnectFromMasterNode()
         })
     }

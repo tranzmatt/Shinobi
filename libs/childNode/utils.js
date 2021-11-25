@@ -29,12 +29,14 @@ module.exports = function(s,config,lang,app,io){
             childNodes : s.childNodes
         })
         activeNode.coreCount = options.coreCount
+        console.log('Initiated Child Node : ', ipAddress)
         return ipAddress
     }
     function initiateVideoTransferConnection(){
 
     }
     function onWebSocketData(client,data){
+        const activeMonitor = data.ke && data.mid && s.group[data.ke] ? s.group[data.ke].activeMonitors[data.mid] : null;
         const ipAddress = client.ip;
         switch(data.f){
             case'cpu':
@@ -70,7 +72,6 @@ module.exports = function(s,config,lang,app,io){
                 }
             break;
             case'created_timelapse_file_chunk':
-                const activeMonitor = s.group[data.ke].activeMonitors[data.mid];
                 if(!activeMonitor.childNodeStreamWriters[data.filename]){
                     var dir = s.getTimelapseFrameDirectory(data.d) + `${data.currentDate}/`
                     activeMonitor.childNodeStreamWriters[data.filename] = fs.createWriteStream(dir+data.filename)
@@ -78,7 +79,6 @@ module.exports = function(s,config,lang,app,io){
                 activeMonitor.childNodeStreamWriters[data.filename].write(data.chunk)
             break;
             case'created_timelapse_file':
-                const activeMonitor = s.group[data.ke].activeMonitors[data.mid];
                 if(!activeMonitor.childNodeStreamWriters[data.filename]){
                     return console.log('FILE NOT EXIST')
                 }
@@ -96,7 +96,6 @@ module.exports = function(s,config,lang,app,io){
                 },data.queryInfo)
             break;
             case'created_file_chunk':
-                const activeMonitor = s.group[data.ke].activeMonitors[data.mid];
                 if(!activeMonitor.childNodeStreamWriters[data.filename]){
                     data.dir = s.getVideoDirectory(s.group[data.ke].rawMonitorConfigurations[data.mid])
                     if (!fs.existsSync(data.dir)) {
@@ -107,7 +106,6 @@ module.exports = function(s,config,lang,app,io){
                 activeMonitor.childNodeStreamWriters[data.filename].write(data.chunk)
             break;
             case'created_file':
-                const activeMonitor = s.group[data.ke].activeMonitors[data.mid];
                 if(!activeMonitor.childNodeStreamWriters[data.filename]){
                     return console.log('FILE NOT EXIST')
                 }

@@ -15,12 +15,12 @@ function createWebSocketServer(options){
     return theWebSocket
 }
 function createWebSocketClient(connectionHost,options){
-    const clientConnection = WebSocket(connectionHost, options.engineOptions);
+    const clientConnection = new WebSocket(connectionHost, options.engineOptions);
     if(options.onMessage){
         const onMessage = options.onMessage;
         clientConnection.on('message', message => {
             const data = JSON.parse(message);
-            onMessage(received);
+            onMessage(data);
         });
     }
     return clientConnection

@@ -1,14 +1,13 @@
 module.exports = function(s,config,lang,app,io){
     const { cameraDestroy } = require('../monitor/utils.js')(s,config,lang)
-    const queuedSqlCallbacks = s.queuedSqlCallbacks;
     var checkCpuInterval = null;
     function onDataFromMasterNode(d) {
         switch(d.f){
             case'sqlCallback':
                 const callbackId = d.callbackId;
-                if(queuedSqlCallbacks[callbackId]){
-                    queuedSqlCallbacks[callbackId](d.err,d.rows)
-                    delete(queuedSqlCallbacks[callbackId])
+                if(s.queuedSqlCallbacks[callbackId]){
+                    s.queuedSqlCallbacks[callbackId](d.err,d.rows)
+                    delete(s.queuedSqlCallbacks[callbackId])
                 }
             break;
             case'init_success':
@@ -53,9 +52,7 @@ module.exports = function(s,config,lang,app,io){
             socketKey: config.childNodes.key
         })
         clearInterval(checkCpuInterval)
-        checkCpuInterval = setInterval(async () => {
-            sendCurrentCpuUsage()
-        },5000)
+        checkCpuInterval = setInterval(sendCurrentCpuUsage,5000)
     }
     function onDisconnectFromMasterNode(){
         s.connectedToMasterNode = false;
@@ -72,7 +69,7 @@ module.exports = function(s,config,lang,app,io){
             })
         })
     }
-    function sendCurrentCpuUsage(){
+    async function sendCurrentCpuUsage(){
         const cpu = await s.cpuUsage()
         s.cx({
             f: 'cpu',
