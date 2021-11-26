@@ -6,7 +6,7 @@ module.exports = function(s,config,lang,app,io){
             req.headers["'x-forwarded-for"] ||
             req.connection.remoteAddress).replace('::ffff:','');
     }
-    function initiateDataConnection(client,req,options){
+    function initiateDataConnection(client,req,options,connectionId){
         const ipAddress = getIpAddress(req) + ':' + options.port
         client.ip = ipAddress;
         client.shinobiChildAlreadyRegistered = true;
@@ -27,16 +27,14 @@ module.exports = function(s,config,lang,app,io){
         })
         client.sendJson({
             f : 'init_success',
-            childNodes : s.childNodes
+            childNodes : s.childNodes,
+            connectionId: connectionId,
         })
         activeNode.coreCount = options.coreCount
         console.log('Initiated Child Node : ', ipAddress)
         return ipAddress
     }
-    function initiateVideoTransferConnection(){
-
-    }
-    function onWebSocketData(client,data){
+    function onWebSocketDataFromChildNode(client,data){
         const activeMonitor = data.ke && data.mid && s.group[data.ke] ? s.group[data.ke].activeMonitors[data.mid] : null;
         const ipAddress = client.ip;
         switch(data.f){
@@ -96,58 +94,6 @@ module.exports = function(s,config,lang,app,io){
                     ke: data.ke
                 },data.queryInfo)
             break;
-            case'created_file_chunk':
-                if(!activeMonitor.childNodeStreamWriters[data.filename]){
-                    data.dir = s.getVideoDirectory(s.group[data.ke].rawMonitorConfigurations[data.mid])
-                    if (!fs.existsSync(data.dir)) {
-                        fs.mkdirSync(data.dir, {recursive: true}, (err) => {s.debugLog(err)})
-                    }
-                    activeMonitor.childNodeStreamWriters[data.filename] = fs.createWriteStream(data.dir+data.filename)
-                }
-                activeMonitor.childNodeStreamWriters[data.filename].write(data.chunk)
-            break;
-            case'created_file':
-                if(!activeMonitor.childNodeStreamWriters[data.filename]){
-                    return console.log('FILE NOT EXIST')
-                }
-                activeMonitor.childNodeStreamWriters[data.filename].end();
-                client.sendJson({
-                    f:'delete',
-                    file:data.filename,
-                    ke:data.ke,
-                    mid:data.mid
-                })
-                s.txWithSubPermissions({
-                    f:'video_build_success',
-                    hrefNoAuth:'/videos/'+data.ke+'/'+data.mid+'/'+data.filename,
-                    filename:data.filename,
-                    mid:data.mid,
-                    ke:data.ke,
-                    time:data.time,
-                    size:data.filesize,
-                    end:data.end
-                },'GRP_'+data.ke,'video_view')
-                //save database row
-                var insert = {
-                    startTime : data.time,
-                    filesize : data.filesize,
-                    endTime : data.end,
-                    dir : s.getVideoDirectory(data.d),
-                    file : data.filename,
-                    filename : data.filename,
-                    filesizeMB : parseFloat((data.filesize/1048576).toFixed(2))
-                }
-                s.insertDatabaseRow(data.d,insert)
-                s.insertCompletedVideoExtensions.forEach(function(extender){
-                    extender(data.d,insert)
-                })
-                //purge over max
-                s.purgeDiskForGroup(data.ke)
-                //send new diskUsage values
-                s.setDiskUsedForGroup(data.ke,insert.filesizeMB)
-                clearTimeout(activeMonitor.recordingChecker)
-                clearTimeout(activeMonitor.streamChecker)
-            break;
         }
     }
     function onDataConnectionDisconnect(client, req){
@@ -179,10 +125,77 @@ module.exports = function(s,config,lang,app,io){
             s.childNodes[ipAddress].dead = true
         }
     }
+    function initiateVideoWriteFromChildNode(client,data,connectionId){
+        const response = {ok: true}
+        return new Promise((resolve,reject) => {
+            const groupKey = data.ke
+            const monitorId = data.mid
+            const filename = data.filename
+            const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
+            const monitorConfig = s.group[groupKey].rawMonitorConfigurations[monitorId]
+            const fileWritePath = s.getVideoDirectory(monitorConfig) + filename
+            const writeStream = fs.createWriteStream(fileWritePath)
+            const videoDirectory = s.getVideoDirectory(monitorConfig)
+            if (!fs.existsSync(videoDirectory)) {
+                fs.mkdirSync(videoDirectory, {recursive: true}, (err) => {s.debugLog(err)})
+            }
+            activeMonitor.childNodeStreamWriters[filename] = writeStream
+            client.on('message',(d) => {
+                writeStream.write(d)
+            })
+            client.on('close',(d) => {
+                setTimeout(() => {
+                    if(!activeMonitor.childNodeStreamWriters[filename]){
+                        return console.log('FILE NOT EXIST')
+                    }
+                    activeMonitor.childNodeStreamWriters[filename].end();
+                    //delete video file from child node
+                    s.cx({
+                        f: 'delete',
+                        file: filename,
+                        ke: data.ke,
+                        mid: data.mid
+                    },connectionId)
+                    //
+                    s.txWithSubPermissions({
+                        f:'video_build_success',
+                        hrefNoAuth:'/videos/'+data.ke+'/'+data.mid+'/'+filename,
+                        filename:filename,
+                        mid:data.mid,
+                        ke:data.ke,
+                        time:data.time,
+                        size:data.filesize,
+                        end:data.end
+                    },'GRP_'+data.ke,'video_view')
+                    //save database row
+                    var insert = {
+                        startTime : data.time,
+                        filesize : data.filesize,
+                        endTime : data.end,
+                        dir : s.getVideoDirectory(data.d),
+                        file : filename,
+                        filename : filename,
+                        filesizeMB : parseFloat((data.filesize/1048576).toFixed(2))
+                    }
+                    s.insertDatabaseRow(data.d,insert)
+                    s.insertCompletedVideoExtensions.forEach(function(extender){
+                        extender(data.d,insert)
+                    })
+                    //purge over max
+                    s.purgeDiskForGroup(data.ke)
+                    //send new diskUsage values
+                    s.setDiskUsedForGroup(data.ke,insert.filesizeMB)
+                    clearTimeout(activeMonitor.recordingChecker)
+                    clearTimeout(activeMonitor.streamChecker)
+                    resolve(response)
+                },2000)
+            })
+        })
+    }
     return {
         initiateDataConnection,
-        initiateVideoTransferConnection,
-        onWebSocketData,
+        onWebSocketDataFromChildNode,
         onDataConnectionDisconnect,
+        initiateVideoWriteFromChildNode,
     }
 }

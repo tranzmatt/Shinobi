@@ -1,3 +1,5 @@
+const fs = require('fs');
+const { createWebSocketClient } = require('../basic/websocketTools.js')
 module.exports = function(s,config,lang,app,io){
     const { cameraDestroy } = require('../monitor/utils.js')(s,config,lang)
     var checkCpuInterval = null;
@@ -12,7 +14,8 @@ module.exports = function(s,config,lang,app,io){
             break;
             case'init_success':
                 s.connectedToMasterNode = true;
-                s.other_helpers=d.child_helpers;
+                s.other_helpers = d.child_helpers;
+                s.childNodeIdOnMasterNode = d.connectionId
             break;
             case'kill':
                 s.initiateMonitorObject(d.d);
@@ -28,7 +31,7 @@ module.exports = function(s,config,lang,app,io){
                 s.file('delete',s.dir.videos+d.ke+'/'+d.mid+'/'+d.file)
             break;
             case'deleteTimelapseFrame'://delete video
-            var filePath = s.getTimelapseFrameDirectory(d.d) + `${d.currentDate}/` + d.file
+                var filePath = s.getTimelapseFrameDirectory(d.d) + `${d.currentDate}/` + d.file
                 s.file('delete',filePath)
             break;
             case'insertCompleted'://close video
@@ -76,11 +79,44 @@ module.exports = function(s,config,lang,app,io){
             cpu: parseFloat(cpu)
         })
     }
+    function sendVideoToMasterNode(filePath,options){
+        const response = {ok: true}
+        return new Promise((resolve,reject) => {
+            const fileTransferConnection = createWebSocketClient('ws://'+config.childNodes.host + '/childNodeFileRelay',{
+                onMessage: () => {}
+            })
+            fileTransferConnection.on('open', function(){
+                fileTransferConnection.send(JSON.stringify({
+                    fileType: 'video',
+                    options: options,
+                    socketKey: config.childNodes.key,
+                    connectionId: s.childNodeIdOnMasterNode,
+                }))
+                setTimeout(() => {
+                    fs.createReadStream(filePath,{ highWaterMark: 500 })
+                    .on('data',function(data){
+                        console.log('Send Video Chunk',data.length)
+                        fileTransferConnection.send(data)
+                    })
+                    .on('close',function(){
+                        // clearTimeout(s.group[e.ke].activeMonitors[e.id].recordingChecker)
+                        // clearTimeout(s.group[e.ke].activeMonitors[e.id].streamChecker)
+                        // s.cx(Object.assign({},options,{
+                        //     f:'created_file',
+                        // }))
+                        fileTransferConnection.close()
+                        resolve(response)
+                    })
+                },2000)
+            })
+        })
+    }
     return {
         onDataFromMasterNode,
         initiateConnectionToMasterNode,
         onDisconnectFromMasterNode,
         destroyAllMonitorProcesses,
         sendCurrentCpuUsage,
+        sendVideoToMasterNode,
     }
 }

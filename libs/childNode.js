@@ -13,19 +13,25 @@ module.exports = function(s,config,lang,app,io){
         const {
             initiateDataConnection,
             initiateVideoTransferConnection,
-            onWebSocketData,
+            onWebSocketDataFromChildNode,
             onDataConnectionDisconnect,
+            initiateVideoWriteFromChildNode,
         } = require('./childNode/utils.js')(s,config,lang,app,io)
         s.childNodes = {};
         const childNodesConnectionIndex = {};
         const childNodeHTTP = express();
         const childNodeServer = http.createServer(app);
         const childNodeWebsocket = createWebSocketServer();
+        const childNodeFileRelay = createWebSocketServer();
         childNodeServer.on('upgrade', function upgrade(request, socket, head) {
             const pathname = url.parse(request.url).pathname;
             if (pathname === '/childNode') {
                 childNodeWebsocket.handleUpgrade(request, socket, head, function done(ws) {
                     childNodeWebsocket.emit('connection', ws, request)
+                })
+            } else if (pathname === '/childNodeFileRelay') {
+                childNodeFileRelay.handleUpgrade(request, socket, head, function done(ws) {
+                    childNodeFileRelay.emit('connection', ws, request)
                 })
             } else if (pathname.indexOf('/socket.io') > -1) {
                 return;
@@ -47,25 +53,43 @@ module.exports = function(s,config,lang,app,io){
             console.log('Connection to ws 8288')
             const connectionId = s.gid(10);
             client.id = connectionId;
-            function onConnection(d){
+            function onAuthenticate(d){
                 const data = JSON.parse(d);
                 const childNodeKeyAccepted = config.childNodes.key.indexOf(data.socketKey) > -1;
                 if(!client.shinobiChildAlreadyRegistered && data.f === 'init' && childNodeKeyAccepted){
-                    const connectionAddress = initiateDataConnection(client,req,data);
+                    const connectionAddress = initiateDataConnection(client,req,data,connectionId);
                     childNodesConnectionIndex[connectionId] = client;
-                    client.removeListener('message',onConnection)
+                    client.removeListener('message',onAuthenticate)
                     client.on('message',(d) => {
                         const data = JSON.parse(d);
-                        onWebSocketData(client,data)
+                        onWebSocketDataFromChildNode(client,data)
                     })
                 }else{
                     client.destroy()
                 }
             }
-            client.on('message',onConnection)
+            client.on('message',onAuthenticate)
             client.on('disconnect',() => {
                 onDataConnectionDisconnect(client, req)
             })
+        })
+        childNodeFileRelay.on('connection', function (client, req) {
+            function onAuthenticate(d){
+                const data = JSON.parse(d);
+                const childNodeKeyAccepted = config.childNodes.key.indexOf(data.socketKey) > -1;
+                if(!client.alreadyInitiated && data.fileType && childNodeKeyAccepted){
+                    client.alreadyInitiated = true;
+                    client.removeListener('message',onAuthenticate)
+                    switch(data.fileType){
+                        case'video':
+                            initiateVideoWriteFromChildNode(client,data.options,data.connectionId)
+                        break;
+                    }
+                }else{
+                    client.destroy()
+                }
+            }
+            client.on('message',onAuthenticate)
         })
     }else
     //setup Child for childNodes

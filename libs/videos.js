@@ -2,6 +2,9 @@ var fs = require('fs');
 var exec = require('child_process').exec;
 var spawn = require('child_process').spawn;
 module.exports = function(s,config,lang){
+    const {
+        sendVideoToMasterNode,
+    } = require('./childNode/childUtils.js')(s,config,lang)
     /**
      * Gets the video directory of the supplied video or monitor database row.
      * @constructor
@@ -145,20 +148,8 @@ module.exports = function(s,config,lang){
                     end: s.timeObject(k.endTime).format('YYYY-MM-DD HH:mm:ss')
                 }
                 if(config.childNodes.enabled === true && config.childNodes.mode === 'child' && config.childNodes.host){
-                    fs.createReadStream(k.dir+k.filename,{ highWaterMark: 500 })
-                    .on('data',function(data){
-                        s.cx(Object.assign(response,{
-                            f:'created_file_chunk',
-                            chunk: data,
-                        }))
-                    })
-                    .on('close',function(){
-                        clearTimeout(s.group[e.ke].activeMonitors[e.id].recordingChecker)
-                        clearTimeout(s.group[e.ke].activeMonitors[e.id].streamChecker)
-                        s.cx(Object.assign(response,{
-                            f:'created_file',
-                        }))
-                    })
+                    var filePath = k.dir + k.filename;
+                    sendVideoToMasterNode(filePath,response)
                 }else{
                     var href = '/videos/'+e.ke+'/'+e.mid+'/'+k.filename
                     if(config.useUTC === true)href += '?isUTC=true';
