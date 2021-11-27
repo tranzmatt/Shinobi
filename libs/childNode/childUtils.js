@@ -2,7 +2,7 @@ const fs = require('fs');
 const { createWebSocketClient } = require('../basic/websocketTools.js')
 module.exports = function(s,config,lang,app,io){
     const { cameraDestroy } = require('../monitor/utils.js')(s,config,lang)
-    var checkCpuInterval = null;
+    var checkHwInterval = null;
     function onDataFromMasterNode(d) {
         switch(d.f){
             case'sqlCallback':
@@ -36,9 +36,11 @@ module.exports = function(s,config,lang,app,io){
                 s.file('delete',filePath)
             break;
             case'cameraStop'://stop camera
+                s.group[d.d.ke].activeMonitors[d.d.mid].masterSaysToStop = true
                 s.camera('stop',d.d)
             break;
             case'cameraStart'://start or record camera
+                s.group[d.d.ke].activeMonitors[d.d.mid].masterSaysToStop = false
                 s.camera(d.mode,d.d)
             break;
         }
@@ -47,16 +49,22 @@ module.exports = function(s,config,lang,app,io){
         s.cx({
             f: 'init',
             port: config.port,
+            platform: s.platform,
             coreCount: s.coreCount,
+            totalmem: s.totalmem / 1048576,
             availableHWAccels: config.availableHWAccels,
             socketKey: config.childNodes.key
         })
-        clearInterval(checkCpuInterval)
-        checkCpuInterval = setInterval(sendCurrentCpuUsage,5000)
+        clearInterval(checkHwInterval)
+        checkHwInterval = setInterval(() => {
+            sendCurrentCpuUsage()
+            sendCurrentRamUsage()
+        },5000)
     }
     function onDisconnectFromMasterNode(){
         s.connectedToMasterNode = false;
         destroyAllMonitorProcesses()
+        clearInterval(checkHwInterval)
     }
     function destroyAllMonitorProcesses(){
         var groupKeys = Object.keys(s.group)
@@ -70,10 +78,20 @@ module.exports = function(s,config,lang,app,io){
         })
     }
     async function sendCurrentCpuUsage(){
-        const cpu = await s.cpuUsage()
+        const percent = await s.cpuUsage();
+        const use = s.coreCount * (percent / 100)
         s.cx({
             f: 'cpu',
-            cpu: parseFloat(cpu)
+            used: use,
+            percent: percent
+        })
+    }
+    async function sendCurrentRamUsage(){
+        const ram = await s.ramUsage()
+        s.cx({
+            f: 'ram',
+            used: ram.used,
+            percent: ram.percent,
         })
     }
     function createFileTransferToMasterNode(filePath,transferInfo,fileType){
@@ -121,6 +139,7 @@ module.exports = function(s,config,lang,app,io){
         onDisconnectFromMasterNode,
         destroyAllMonitorProcesses,
         sendCurrentCpuUsage,
+        sendCurrentRamUsage,
         sendVideoToMasterNode,
         sendTimelapseFrameToMasterNode,
     }

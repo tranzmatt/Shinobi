@@ -2,6 +2,7 @@ const fs = require('fs');
 module.exports = function(s,config,lang,app,io){
     const masterDoWorkToo = config.childNodes.masterDoWorkToo;
     const maxCpuPercent = config.childNodes.maxCpuPercent || 75;
+    const maxRamPercent = config.childNodes.maxRamPercent || 75;
     function getIpAddress(req){
         return (req.headers['cf-connecting-ip'] ||
             req.headers["CF-Connecting-IP"] ||
@@ -25,6 +26,9 @@ module.exports = function(s,config,lang,app,io){
         activeNode.cpu = 0
         activeNode.ip = webAddress
         activeNode.activeCameras = {}
+        activeNode.platform = options.platform
+        activeNode.coreCount = options.coreCount
+        activeNode.totalmem = options.totalmem
         options.availableHWAccels.forEach(function(accel){
             if(config.availableHWAccels.indexOf(accel) === -1)config.availableHWAccels.push(accel)
         })
@@ -33,7 +37,6 @@ module.exports = function(s,config,lang,app,io){
             childNodes : s.childNodes,
             connectionId: connectionId,
         })
-        activeNode.coreCount = options.coreCount
         s.debugLog('Authenticated Child Node!',new Date(),webAddress)
         return webAddress
     }
@@ -42,7 +45,12 @@ module.exports = function(s,config,lang,app,io){
         const webAddress = client.ip;
         switch(data.f){
             case'cpu':
-                s.childNodes[webAddress].cpu = data.cpu;
+                s.childNodes[webAddress].cpuUsed = data.used;
+                s.childNodes[webAddress].cpuPercent = data.percent;
+            break;
+            case'ram':
+                s.childNodes[webAddress].ramUsed = data.used;
+                s.childNodes[webAddress].ramPercent = data.percent;
             break;
             case'sql':
                 s.sqlQuery(data.query,data.values,function(err,rows){
@@ -245,15 +253,38 @@ module.exports = function(s,config,lang,app,io){
         activeMonitor.childNode = childNodeSelected
         activeMonitor.childNodeId = theChildNode.cnid;
     }
+    function getNodeWithHighestCpuAndRamUse(){
+        var nodeWithLowestCpuUse = 0
+        var nodeWithLowestRamUse = 0
+        const childNodeList = Object.keys(s.childNodes)
+        childNodeList.forEach(function(webAddress){
+            const theChildNode = s.childNodes[webAddress]
+            if(
+                theChildNode.cpuUsed > nodeWithLowestCpuUse &&
+                theChildNode.ramUsed > nodeWithLowestRamUse
+            ){
+                nodeWithLowestCpuUse = theChildNode.cpuUsed + 0.2
+                nodeWithLowestRamUse = theChildNode.ramUsed + 50
+            }
+        })
+        return {
+            nodeWithLowestCpuUse,
+            nodeWithLowestRamUse,
+        }
+    }
     async function selectNodeForOperation(options){
         const groupKey = options.ke
         const monitorId = options.mid
-        var childNodeList = Object.keys(s.childNodes)
+        const childNodeList = Object.keys(s.childNodes)
         if(childNodeList.length > 0){
             let childNodeFound = false
             let childNodeSelected = null;
             var nodeWithLowestActiveCamerasCount = 65535
             var nodeWithLowestActiveCameras = null
+            let {
+                nodeWithLowestCpuUse,
+                nodeWithLowestRamUse,
+            } = getNodeWithHighestCpuAndRamUse();
             childNodeList.forEach(function(webAddress){
                 const theChildNode = s.childNodes[webAddress]
                 delete(theChildNode.activeCameras[groupKey + monitorId])
@@ -261,28 +292,49 @@ module.exports = function(s,config,lang,app,io){
                 if(
                     // child node is connected and available
                     !theChildNode.dead &&
-                    // look for child node with least number of running cameras
-                    nodeCameraCount < nodeWithLowestActiveCamerasCount &&
+                    // // look for child node with least number of running cameras
+                    // nodeCameraCount < nodeWithLowestActiveCamerasCount &&
                     // look for child node with CPU usage below 75% (default)
-                    theChildNode.cpu < maxCpuPercent
+                    theChildNode.cpuUsed < nodeWithLowestCpuUse &&
+                    theChildNode.cpuPercent < maxCpuPercent &&
+                    // look for child node with RAM usage below 75% (default)
+                    theChildNode.ramUsed < nodeWithLowestRamUse &&
+                    theChildNode.ramPercent < maxRamPercent
                 ){
-                    nodeWithLowestActiveCamerasCount = nodeCameraCount
+                    // nodeWithLowestActiveCamerasCount = nodeCameraCount
                     childNodeSelected = `${webAddress}`
+                    nodeWithLowestCpuUse = theChildNode.cpuUsed
+                    nodeWithLowestRamUse = theChildNode.ramUsed
                 }
             })
             if(childNodeSelected && masterDoWorkToo){
-                const nodeCameraCount = getActiveCameraCount()
-                const masterNodeCpuUsage = (await s.cpuUsage()).cpu
+                // const nodeCameraCount = getActiveCameraCount()
+                const masterNodeHw = await getHwUsage();
                 if(
-                    nodeCameraCount < nodeWithLowestActiveCamerasCount &&
-                    masterNodeCpuUsage < maxCpuPercent
+                    // nodeCameraCount < nodeWithLowestActiveCamerasCount &&
+                    masterNodeHw.cpuUsed < nodeWithLowestCpuUse &&
+                    masterNodeHw.cpuPercent < maxCpuPercent &&
+                    // look for child node with RAM usage below 75% (default)
+                    masterNodeHw.ramUsed < nodeWithLowestRamUse &&
+                    masterNodeHw.ramPercent < maxRamPercent
                 ){
-                    nodeWithLowestActiveCamerasCount = nodeCameraCount
+                    // nodeWithLowestActiveCamerasCount = nodeCameraCount
                     // release child node selection and use master node
                     childNodeSelected = null
                 }
             }
             return childNodeSelected;
+        }
+    }
+    async function getHwUsage(){
+        const percent = await s.cpuUsage();
+        const use = s.coreCount * (percent / 100)
+        const ram = await s.ramUsage()
+        return {
+            ramUsed: ram.used,
+            ramPercent: ram.percent,
+            cpuUsed: use,
+            cpuPercent: percent,
         }
     }
     return {
