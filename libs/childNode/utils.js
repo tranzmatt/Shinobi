@@ -208,6 +208,48 @@ module.exports = function(s,config,lang,app,io){
             })
         })
     }
+    function selectNodeForOperation(options){
+        const groupKey = options.ke
+        const monitorId = options.mid
+        var childNodeList = Object.keys(s.childNodes)
+        if(childNodeList.length > 0){
+            let childNodeFound = false
+            let childNodeSelected = null;
+            var nodeWithLowestActiveCamerasCount = 65535
+            var nodeWithLowestActiveCameras = null
+            childNodeList.forEach(function(webAddress){
+                const theChildNode = s.childNodes[webAddress]
+                delete(theChildNode.activeCameras[groupKey + monitorId])
+                var nodeCameraCount = Object.keys(theChildNode.activeCameras).length
+                if(
+                    // child node is connected and available
+                    !theChildNode.dead &&
+                    // look for child node with least number of running cameras
+                    nodeCameraCount < nodeWithLowestActiveCamerasCount &&
+                    // look for child node with CPU usage below 75%
+                    theChildNode.cpu < 75
+                ){
+                    nodeWithLowestActiveCamerasCount = nodeCameraCount
+                    childNodeSelected = `${webAddress}`
+                }
+            })
+            if(childNodeSelected){
+                const theChildNode = s.childNodes[childNodeSelected]
+                const activeMonitor = s.group[groupKey].activeMonitors[monitorId];
+                const monitorConfig = Object.assign({},s.group[groupKey].rawMonitorConfigurations[monitorId])
+                theChildNode.activeCameras[groupKey + monitorId] = monitorConfig;
+                activeMonitor.childNode = childNodeSelected
+                activeMonitor.childNodeId = theChildNode.cnid;
+                s.cx({
+                    f: 'sync',
+                    sync: monitorConfig,
+                    ke: groupKey,
+                    mid: monitorId
+                },activeMonitor.childNodeId);
+                return theChildNode;
+            }
+        }
+    }
     return {
         getIpAddress,
         initiateDataConnection,
@@ -215,5 +257,6 @@ module.exports = function(s,config,lang,app,io){
         onDataConnectionDisconnect,
         initiateVideoWriteFromChildNode,
         initiateTimelapseFrameWriteFromChildNode,
+        selectNodeForOperation,
     }
 }

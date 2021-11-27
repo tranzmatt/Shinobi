@@ -40,6 +40,9 @@ module.exports = function(s,config,lang){
     const {
         scanForOrphanedVideos
     } = require('./video/utils.js')(s,config,lang)
+    const {
+        selectNodeForOperation
+    } = require('./childNode/utils.js')(s,config,lang)
     const startMonitorInQueue = createQueue(1, 3)
     s.initiateMonitorObject = function(e){
         if(!s.group[e.ke]){s.group[e.ke]={}};
@@ -1310,34 +1313,12 @@ module.exports = function(s,config,lang){
         }
         try{
             if(config.childNodes.enabled === true && config.childNodes.mode === 'master'){
-                var copiedMonitorObject = s.cleanMonitorObject(s.group[e.ke].rawMonitorConfigurations[e.id])
-                var childNodeList = Object.keys(s.childNodes)
-                if(childNodeList.length > 0){
-                    e.childNodeFound = false
-                    var selectNode = function(ip){
-                        e.childNodeFound = true
-                        e.childNodeSelected = ip
-                    }
-                    var nodeWithLowestActiveCamerasCount = 65535
-                    var nodeWithLowestActiveCameras = null
-                    childNodeList.forEach(function(ip){
-                        delete(s.childNodes[ip].activeCameras[e.ke+e.id])
-                        var nodeCameraCount = Object.keys(s.childNodes[ip].activeCameras).length
-                        if(!s.childNodes[ip].dead && nodeCameraCount < nodeWithLowestActiveCamerasCount && s.childNodes[ip].cpu < 75){
-                            nodeWithLowestActiveCamerasCount = nodeCameraCount
-                            nodeWithLowestActiveCameras = ip
-                        }
-                    })
-                    if(nodeWithLowestActiveCameras)selectNode(nodeWithLowestActiveCameras)
-                    if(e.childNodeFound === true){
-                        s.childNodes[e.childNodeSelected].activeCameras[e.ke+e.id] = copiedMonitorObject
-                        activeMonitor.childNode = e.childNodeSelected
-                        activeMonitor.childNodeId = s.childNodes[e.childNodeSelected].cnid;
-                        s.cx({f:'sync',sync:s.group[e.ke].rawMonitorConfigurations[e.id],ke:e.ke,mid:e.id},activeMonitor.childNodeId);
-                        doOnChildMachine()
-                    }else{
-                        startMonitorInQueue.push(doOnThisMachine,function(){})
-                    }
+                const selectedNode = selectNodeForOperation({
+                    ke: e.ke,
+                    mid: e.id,
+                });
+                if(selectedNode){
+                    doOnChildMachine()
                 }else{
                     startMonitorInQueue.push(doOnThisMachine,function(){})
                 }
@@ -1600,8 +1581,10 @@ module.exports = function(s,config,lang){
                     code: wantedStatusCode,
                 })
                 if(
-                    config.childNodes.enabled === true &&
-                    config.childNodes.mode === 'master' ||
+                    (
+                        config.childNodes.enabled === true &&
+                        config.childNodes.mode === 'master'
+                    ) ||
                     config.childNodes.enabled === false
                 ){
                     setTimeout(() => {
