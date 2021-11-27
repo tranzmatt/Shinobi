@@ -99,11 +99,11 @@ module.exports = function(s,config,lang){
         e.dir = s.getVideoDirectory(e)
         k.dir = e.dir.toString()
         if(s.group[e.ke].activeMonitors[e.id].childNode){
-            s.cx({
-                f: 'insertCompleted',
-                d: s.group[e.ke].rawMonitorConfigurations[e.id],
-                k: k
-            },s.group[e.ke].activeMonitors[e.id].childNodeId);
+            // s.cx({
+            //     f: 'insertCompleted',
+            //     d: s.group[e.ke].rawMonitorConfigurations[e.id],
+            //     k: k
+            // },s.group[e.ke].activeMonitors[e.id].childNodeId);
         }else{
             //get file directory
             k.fileExists = fs.existsSync(k.dir+k.file)

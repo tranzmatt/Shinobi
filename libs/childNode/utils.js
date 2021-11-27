@@ -117,7 +117,11 @@ module.exports = function(s,config,lang,app,io){
                 // response.fileWritePath = fileWritePath
                 // response.writeData = data
                 // response.childNodeId = connectionId
-                activeMonitor.childNodeStreamWriters[filename].end();
+                try{
+                    activeMonitor.childNodeStreamWriters[filename].end();
+                }catch(err){
+
+                }
                 setTimeout(() => {
                     delete(activeMonitor.childNodeStreamWriters[filename])
                 },100)
@@ -135,47 +139,45 @@ module.exports = function(s,config,lang,app,io){
             const videoDirectory = s.getVideoDirectory(monitorConfig)
             data.writeDirectory = videoDirectory
             initiateFileWriteFromChildNode(client,data,connectionId,(response) => {
-                setTimeout(() => {
-                    //delete video file from child node
-                    s.cx({
-                        f: 'delete',
-                        file: filename,
-                        ke: data.ke,
-                        mid: data.mid
-                    },connectionId)
-                    //
-                    s.txWithSubPermissions({
-                        f:'video_build_success',
-                        hrefNoAuth:'/videos/'+data.ke+'/'+data.mid+'/'+filename,
-                        filename:filename,
-                        mid:data.mid,
-                        ke:data.ke,
-                        time:data.time,
-                        size:data.filesize,
-                        end:data.end
-                    },'GRP_'+data.ke,'video_view')
-                    //save database row
-                    var insert = {
-                        startTime : data.time,
-                        filesize : data.filesize,
-                        endTime : data.end,
-                        dir : s.getVideoDirectory(data.d),
-                        file : filename,
-                        filename : filename,
-                        filesizeMB : parseFloat((data.filesize/1048576).toFixed(2))
-                    }
-                    s.insertDatabaseRow(data.d,insert)
-                    s.insertCompletedVideoExtensions.forEach(function(extender){
-                        extender(data.d,insert)
-                    })
-                    //purge over max
-                    s.purgeDiskForGroup(data.ke)
-                    //send new diskUsage values
-                    s.setDiskUsedForGroup(data.ke,insert.filesizeMB)
-                    clearTimeout(activeMonitor.recordingChecker)
-                    clearTimeout(activeMonitor.streamChecker)
-                    resolve(response)
-                },2000)
+                //delete video file from child node
+                s.cx({
+                    f: 'delete',
+                    file: filename,
+                    ke: data.ke,
+                    mid: data.mid
+                },connectionId)
+                //
+                s.txWithSubPermissions({
+                    f:'video_build_success',
+                    hrefNoAuth:'/videos/'+data.ke+'/'+data.mid+'/'+filename,
+                    filename:filename,
+                    mid:data.mid,
+                    ke:data.ke,
+                    time:data.time,
+                    size:data.filesize,
+                    end:data.end
+                },'GRP_'+data.ke,'video_view')
+                //save database row
+                var insert = {
+                    startTime : data.time,
+                    filesize : data.filesize,
+                    endTime : data.end,
+                    dir : videoDirectory,
+                    file : filename,
+                    filename : filename,
+                    filesizeMB : parseFloat((data.filesize/1048576).toFixed(2))
+                }
+                s.insertDatabaseRow(monitorConfig,insert)
+                s.insertCompletedVideoExtensions.forEach(function(extender){
+                    extender(monitorConfig,insert)
+                })
+                //purge over max
+                s.purgeDiskForGroup(data.ke)
+                //send new diskUsage values
+                s.setDiskUsedForGroup(data.ke,insert.filesizeMB)
+                clearTimeout(activeMonitor.recordingChecker)
+                clearTimeout(activeMonitor.streamChecker)
+                resolve(response)
             })
         })
     }
@@ -192,19 +194,17 @@ module.exports = function(s,config,lang,app,io){
             const writeStream = fs.createWriteStream(fileWritePath)
             data.writeDirectory = timelapseFrameDirectory
             initiateFileWriteFromChildNode(client,data,connectionId,(response) => {
-                setTimeout(() => {
-                    s.cx({
-                        f: 'deleteTimelapseFrame',
-                        file: filename,
-                        currentDate: currentDate,
-                        ke: groupKey,
-                        mid: monitorId
-                    },connectionId)
-                    s.insertTimelapseFrameDatabaseRow({
-                        ke: groupKey
-                    },data.queryInfo)
-                    resolve(response)
-                },2000)
+                s.cx({
+                    f: 'deleteTimelapseFrame',
+                    file: filename,
+                    currentDate: currentDate,
+                    ke: groupKey,
+                    mid: monitorId
+                },connectionId)
+                s.insertTimelapseFrameDatabaseRow({
+                    ke: groupKey
+                },data.queryInfo)
+                resolve(response)
             })
         })
     }

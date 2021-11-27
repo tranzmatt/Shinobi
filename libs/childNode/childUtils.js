@@ -34,9 +34,6 @@ module.exports = function(s,config,lang,app,io){
                 var filePath = s.getTimelapseFrameDirectory(d.d) + `${d.currentDate}/` + d.file
                 s.file('delete',filePath)
             break;
-            case'insertCompleted'://close video
-                s.insertCompletedVideo(d.d,d.k)
-            break;
             case'cameraStop'://start camera
                 s.camera('stop',d.d)
             break;
