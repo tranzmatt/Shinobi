@@ -1,6 +1,7 @@
 const fs = require('fs');
 module.exports = function(s,config,lang,app,io){
     const masterDoWorkToo = config.childNodes.masterDoWorkToo;
+    const maxCpuPercent = config.childNodes.maxCpuPercent || 75;
     function getIpAddress(req){
         return (req.headers['cf-connecting-ip'] ||
             req.headers["CF-Connecting-IP"] ||
@@ -262,8 +263,8 @@ module.exports = function(s,config,lang,app,io){
                     !theChildNode.dead &&
                     // look for child node with least number of running cameras
                     nodeCameraCount < nodeWithLowestActiveCamerasCount &&
-                    // look for child node with CPU usage below 75%
-                    theChildNode.cpu < 75
+                    // look for child node with CPU usage below 75% (default)
+                    theChildNode.cpu < maxCpuPercent
                 ){
                     nodeWithLowestActiveCamerasCount = nodeCameraCount
                     childNodeSelected = `${webAddress}`
@@ -271,10 +272,10 @@ module.exports = function(s,config,lang,app,io){
             })
             if(childNodeSelected && masterDoWorkToo){
                 const nodeCameraCount = getActiveCameraCount()
-                const masterNodeCpuUsage = await s.cpuUsage()
+                const masterNodeCpuUsage = (await s.cpuUsage()).cpu
                 if(
                     nodeCameraCount < nodeWithLowestActiveCamerasCount &&
-                    masterNodeCpuUsage < 75
+                    masterNodeCpuUsage < maxCpuPercent
                 ){
                     nodeWithLowestActiveCamerasCount = nodeCameraCount
                     // release child node selection and use master node

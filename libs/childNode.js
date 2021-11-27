@@ -35,8 +35,6 @@ module.exports = function(s,config,lang,app,io){
                 childNodeFileRelay.handleUpgrade(request, socket, head, function done(ws) {
                     childNodeFileRelay.emit('connection', ws, request)
                 })
-            } else if (pathname.indexOf('/socket.io') > -1) {
-                return;
             } else {
                 socket.destroy();
             }
