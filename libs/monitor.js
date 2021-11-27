@@ -41,7 +41,8 @@ module.exports = function(s,config,lang){
         scanForOrphanedVideos
     } = require('./video/utils.js')(s,config,lang)
     const {
-        selectNodeForOperation
+        selectNodeForOperation,
+        bindMonitorToChildNode
     } = require('./childNode/utils.js')(s,config,lang)
     const startMonitorInQueue = createQueue(1, 3)
     s.initiateMonitorObject = function(e){
@@ -1313,15 +1314,21 @@ module.exports = function(s,config,lang){
         }
         try{
             if(config.childNodes.enabled === true && config.childNodes.mode === 'master'){
-                const selectedNode = selectNodeForOperation({
+                selectNodeForOperation({
                     ke: e.ke,
                     mid: e.id,
+                }).then((selectedNode) => {
+                    if(selectedNode){
+                        bindMonitorToChildNode({
+                            ke: e.ke,
+                            mid: e.id,
+                            childNodeId: selectedNode,
+                        })
+                        doOnChildMachine()
+                    }else{
+                        startMonitorInQueue.push(doOnThisMachine,function(){})
+                    }                    
                 });
-                if(selectedNode){
-                    doOnChildMachine()
-                }else{
-                    startMonitorInQueue.push(doOnThisMachine,function(){})
-                }
             }else{
                 startMonitorInQueue.push(doOnThisMachine,function(){})
             }

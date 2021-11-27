@@ -137,6 +137,7 @@ module.exports = function(s,config,lang,app,io){
             childIO.send(JSON.stringify(data))
         }
         s.cx = sendDataToMasterNode;
+        // replace internal functions with bridges to master node
         s.tx = function(x,y){
             sendDataToMasterNode({f:'s.tx',data:x,to:y})
         }

@@ -1,5 +1,6 @@
 const fs = require('fs');
 module.exports = function(s,config,lang,app,io){
+    const masterDoWorkToo = config.childNodes.masterDoWorkToo;
     function getIpAddress(req){
         return (req.headers['cf-connecting-ip'] ||
             req.headers["CF-Connecting-IP"] ||
@@ -208,7 +209,42 @@ module.exports = function(s,config,lang,app,io){
             })
         })
     }
-    function selectNodeForOperation(options){
+    function getActiveCameraCount(){
+        let theCount = 0
+        Object.keys(s.group).forEach(function(groupKey){
+            const theGroup = s.group[groupKey]
+            Object.keys(theGroup.activeMonitors).forEach(function(groupKey){
+                const activeMonitor = theGroup.activeMonitors[monitorId]
+                if(
+                    // watching
+                    activeMonitor.statusCode === 2 ||
+                    // recording
+                    activeMonitor.statusCode === 3 ||
+                    // starting
+                    activeMonitor.statusCode === 1 ||
+                    // started
+                    activeMonitor.statusCode === 9
+                    //// Idle, in memory
+                    // activeMonitor.statusCode === 6
+                ){
+                    ++theCount
+                }
+            })
+        })
+        return theCount
+    }
+    function bindMonitorToChildNode(options){
+        const groupKey = options.ke
+        const monitorId = options.mid
+        const childNodeSelected = options.childNodeId
+        const theChildNode = s.childNodes[childNodeSelected]
+        const activeMonitor = s.group[groupKey].activeMonitors[monitorId];
+        const monitorConfig = Object.assign({},s.group[groupKey].rawMonitorConfigurations[monitorId])
+        theChildNode.activeCameras[groupKey + monitorId] = monitorConfig;
+        activeMonitor.childNode = childNodeSelected
+        activeMonitor.childNodeId = theChildNode.cnid;
+    }
+    async function selectNodeForOperation(options){
         const groupKey = options.ke
         const monitorId = options.mid
         var childNodeList = Object.keys(s.childNodes)
@@ -220,7 +256,7 @@ module.exports = function(s,config,lang,app,io){
             childNodeList.forEach(function(webAddress){
                 const theChildNode = s.childNodes[webAddress]
                 delete(theChildNode.activeCameras[groupKey + monitorId])
-                var nodeCameraCount = Object.keys(theChildNode.activeCameras).length
+                const nodeCameraCount = Object.keys(theChildNode.activeCameras).length
                 if(
                     // child node is connected and available
                     !theChildNode.dead &&
@@ -233,21 +269,19 @@ module.exports = function(s,config,lang,app,io){
                     childNodeSelected = `${webAddress}`
                 }
             })
-            if(childNodeSelected){
-                const theChildNode = s.childNodes[childNodeSelected]
-                const activeMonitor = s.group[groupKey].activeMonitors[monitorId];
-                const monitorConfig = Object.assign({},s.group[groupKey].rawMonitorConfigurations[monitorId])
-                theChildNode.activeCameras[groupKey + monitorId] = monitorConfig;
-                activeMonitor.childNode = childNodeSelected
-                activeMonitor.childNodeId = theChildNode.cnid;
-                s.cx({
-                    f: 'sync',
-                    sync: monitorConfig,
-                    ke: groupKey,
-                    mid: monitorId
-                },activeMonitor.childNodeId);
-                return theChildNode;
+            if(childNodeSelected && masterDoWorkToo){
+                const nodeCameraCount = getActiveCameraCount()
+                const masterNodeCpuUsage = await s.cpuUsage()
+                if(
+                    nodeCameraCount < nodeWithLowestActiveCamerasCount &&
+                    masterNodeCpuUsage < 75
+                ){
+                    nodeWithLowestActiveCamerasCount = nodeCameraCount
+                    // release child node selection and use master node
+                    childNodeSelected = null
+                }
             }
+            return childNodeSelected;
         }
     }
     return {
@@ -258,5 +292,6 @@ module.exports = function(s,config,lang,app,io){
         initiateVideoWriteFromChildNode,
         initiateTimelapseFrameWriteFromChildNode,
         selectNodeForOperation,
+        bindMonitorToChildNode,
     }
 }

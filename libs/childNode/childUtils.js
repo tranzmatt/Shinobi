@@ -31,11 +31,11 @@ module.exports = function(s,config,lang,app,io){
             case'delete'://delete video
                 s.file('delete',s.dir.videos+d.ke+'/'+d.mid+'/'+d.file)
             break;
-            case'deleteTimelapseFrame'://delete video
+            case'deleteTimelapseFrame'://delete timelapse frame
                 var filePath = s.getTimelapseFrameDirectory(d.d) + `${d.currentDate}/` + d.file
                 s.file('delete',filePath)
             break;
-            case'cameraStop'://start camera
+            case'cameraStop'://stop camera
                 s.camera('stop',d.d)
             break;
             case'cameraStart'://start or record camera
