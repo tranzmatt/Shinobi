@@ -1599,15 +1599,21 @@ module.exports = function(s,config,lang){
                     status: wantedStatus,
                     code: wantedStatusCode,
                 })
-                setTimeout(() => {
-                    scanForOrphanedVideos({
-                        ke: e.ke,
-                        mid: e.id,
-                    },{
-                        forceCheck: true,
-                        checkMax: 2
-                    })
-                },2000)
+                if(
+                    config.childNodes.enabled === true &&
+                    config.childNodes.mode === 'master' ||
+                    config.childNodes.enabled === false
+                ){
+                    setTimeout(() => {
+                        scanForOrphanedVideos({
+                            ke: e.ke,
+                            mid: e.id,
+                        },{
+                            forceCheck: true,
+                            checkMax: 2
+                        })
+                    },2000)
+                }
                 clearTimeout(s.group[e.ke].activeMonitors[e.id].onMonitorStartTimer)
                 s.onMonitorStopExtensions.forEach(function(extender){
                     extender(Object.assign(s.group[e.ke].rawMonitorConfigurations[e.id],{}),e)
