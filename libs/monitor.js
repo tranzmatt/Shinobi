@@ -1299,6 +1299,8 @@ module.exports = function(s,config,lang){
                     //data, options
                     d : s.group[e.ke].rawMonitorConfigurations[e.id]
                 },activeMonitor.childNodeId)
+                clearTimeout(activeMonitor.recordingChecker);
+                clearTimeout(activeMonitor.streamChecker);
             }
             if(
                 e.type !== 'socket' &&
@@ -1327,7 +1329,7 @@ module.exports = function(s,config,lang){
                         doOnChildMachine()
                     }else{
                         startMonitorInQueue.push(doOnThisMachine,function(){})
-                    }                    
+                    }
                 });
             }else{
                 startMonitorInQueue.push(doOnThisMachine,function(){})
@@ -1539,13 +1541,13 @@ module.exports = function(s,config,lang){
                 if(!s.group[e.ke]||!s.group[e.ke].activeMonitors[e.id]){return}
                 if(config.childNodes.enabled === true && config.childNodes.mode === 'master' && s.group[e.ke].activeMonitors[e.id].childNode && s.childNodes[s.group[e.ke].activeMonitors[e.id].childNode].activeCameras[e.ke+e.id]){
                     s.group[e.ke].activeMonitors[e.id].isStarted = false
+                    s.cx({f:'sync',sync:s.group[e.ke].rawMonitorConfigurations[e.id],ke:e.ke,mid:e.id},s.group[e.ke].activeMonitors[e.id].childNodeId);
                     s.cx({
                         //function
                         f : 'cameraStop',
                         //data, options
                         d : s.group[e.ke].rawMonitorConfigurations[e.id]
                     },s.group[e.ke].activeMonitors[e.id].childNodeId)
-                    s.cx({f:'sync',sync:s.group[e.ke].rawMonitorConfigurations[e.id],ke:e.ke,mid:e.id},s.group[e.ke].activeMonitors[e.id].childNodeId);
                 }else{
                     closeEventBasedRecording(e)
                     if(s.group[e.ke].activeMonitors[e.id].fswatch){s.group[e.ke].activeMonitors[e.id].fswatch.close();delete(s.group[e.ke].activeMonitors[e.id].fswatch)}
@@ -1617,6 +1619,15 @@ module.exports = function(s,config,lang){
                 if(activeMonitor.isStarted === true){
                     //stop action, monitor already started or recording
                     return
+                }
+                if(activeMonitor.masterSaysToStop === true){
+                    s.sendMonitorStatus({
+                        id: e.id,
+                        ke: e.ke,
+                        status: lang.Stopped,
+                        code: 5,
+                    })
+                    return;
                 }
                 if(config.probeMonitorOnStart === true){
                     const probeResponse = await probeMonitor(s.group[e.ke].rawMonitorConfigurations[e.id],2000,true)
