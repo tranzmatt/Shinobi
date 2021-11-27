@@ -64,36 +64,6 @@ module.exports = function(s,config,lang,app,io){
                 if(!data.mon || !data.data)return console.log('LOG DROPPED',data.mon,data.data);
                 s.userLog(data.mon,data.data)
             break;
-            case'open_timelapse_file_transfer':
-                var location = s.getTimelapseFrameDirectory(data.d) + `${data.currentDate}/`
-                if(!fs.existsSync(location)){
-                    fs.mkdirSync(location)
-                }
-            break;
-            case'created_timelapse_file_chunk':
-                if(!activeMonitor.childNodeStreamWriters[data.filename]){
-                    var dir = s.getTimelapseFrameDirectory(data.d) + `${data.currentDate}/`
-                    activeMonitor.childNodeStreamWriters[data.filename] = fs.createWriteStream(dir+data.filename)
-                }
-                activeMonitor.childNodeStreamWriters[data.filename].write(data.chunk)
-            break;
-            case'created_timelapse_file':
-                if(!activeMonitor.childNodeStreamWriters[data.filename]){
-                    return console.log('FILE NOT EXIST')
-                }
-                activeMonitor.childNodeStreamWriters[data.filename].end()
-                client.sendJson({
-                    f: 'deleteTimelapseFrame',
-                    file: data.filename,
-                    currentDate: data.currentDate,
-                    d: data.d, //monitor config
-                    ke: data.ke,
-                    mid: data.mid
-                })
-                s.insertTimelapseFrameDatabaseRow({
-                    ke: data.ke
-                },data.queryInfo)
-            break;
         }
     }
     function onDataConnectionDisconnect(client, req){
@@ -125,30 +95,46 @@ module.exports = function(s,config,lang,app,io){
             s.childNodes[ipAddress].dead = true
         }
     }
-    function initiateVideoWriteFromChildNode(client,data,connectionId){
+    function initiateFileWriteFromChildNode(client,data,connectionId,onFinish){
         const response = {ok: true}
+        const groupKey = data.ke
+        const monitorId = data.mid
+        const filename = data.filename
+        const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
+        const writeDirectory = data.writeDirectory
+        const fileWritePath = writeDirectory + filename
+        const writeStream = fs.createWriteStream(fileWritePath)
+        if (!fs.existsSync(writeDirectory)) {
+            fs.mkdirSync(writeDirectory, {recursive: true}, (err) => {s.debugLog(err)})
+        }
+        activeMonitor.childNodeStreamWriters[filename] = writeStream
+        client.on('message',(d) => {
+            writeStream.write(d)
+        })
+        client.on('close',(d) => {
+            setTimeout(() => {
+                // response.fileWritePath = fileWritePath
+                // response.writeData = data
+                // response.childNodeId = connectionId
+                activeMonitor.childNodeStreamWriters[filename].end();
+                setTimeout(() => {
+                    delete(activeMonitor.childNodeStreamWriters[filename])
+                },100)
+                onFinish(response)
+            },2000)
+        })
+    }
+    function initiateVideoWriteFromChildNode(client,data,connectionId){
         return new Promise((resolve,reject) => {
             const groupKey = data.ke
             const monitorId = data.mid
             const filename = data.filename
             const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
             const monitorConfig = s.group[groupKey].rawMonitorConfigurations[monitorId]
-            const fileWritePath = s.getVideoDirectory(monitorConfig) + filename
-            const writeStream = fs.createWriteStream(fileWritePath)
             const videoDirectory = s.getVideoDirectory(monitorConfig)
-            if (!fs.existsSync(videoDirectory)) {
-                fs.mkdirSync(videoDirectory, {recursive: true}, (err) => {s.debugLog(err)})
-            }
-            activeMonitor.childNodeStreamWriters[filename] = writeStream
-            client.on('message',(d) => {
-                writeStream.write(d)
-            })
-            client.on('close',(d) => {
+            data.writeDirectory = videoDirectory
+            initiateFileWriteFromChildNode(client,data,connectionId,(response) => {
                 setTimeout(() => {
-                    if(!activeMonitor.childNodeStreamWriters[filename]){
-                        return console.log('FILE NOT EXIST')
-                    }
-                    activeMonitor.childNodeStreamWriters[filename].end();
                     //delete video file from child node
                     s.cx({
                         f: 'delete',
@@ -192,10 +178,40 @@ module.exports = function(s,config,lang,app,io){
             })
         })
     }
+    function initiateTimelapseFrameWriteFromChildNode(client,data,connectionId){
+        return new Promise((resolve,reject) => {
+            const groupKey = data.ke
+            const monitorId = data.mid
+            const filename = data.filename
+            const currentDate = data.currentDate
+            const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
+            const monitorConfig = s.group[groupKey].rawMonitorConfigurations[monitorId]
+            const timelapseFrameDirectory = s.getTimelapseFrameDirectory(monitorConfig) + currentDate + `/`
+            const fileWritePath = timelapseFrameDirectory + filename
+            const writeStream = fs.createWriteStream(fileWritePath)
+            data.writeDirectory = timelapseFrameDirectory
+            initiateFileWriteFromChildNode(client,data,connectionId,(response) => {
+                setTimeout(() => {
+                    s.cx({
+                        f: 'deleteTimelapseFrame',
+                        file: filename,
+                        currentDate: currentDate,
+                        ke: groupKey,
+                        mid: monitorId
+                    },connectionId)
+                    s.insertTimelapseFrameDatabaseRow({
+                        ke: groupKey
+                    },data.queryInfo)
+                    resolve(response)
+                },2000)
+            })
+        })
+    }
     return {
         initiateDataConnection,
         onWebSocketDataFromChildNode,
         onDataConnectionDisconnect,
         initiateVideoWriteFromChildNode,
+        initiateTimelapseFrameWriteFromChildNode,
     }
 }

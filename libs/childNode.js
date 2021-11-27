@@ -16,6 +16,7 @@ module.exports = function(s,config,lang,app,io){
             onWebSocketDataFromChildNode,
             onDataConnectionDisconnect,
             initiateVideoWriteFromChildNode,
+            initiateTimelapseFrameWriteFromChildNode,
         } = require('./childNode/utils.js')(s,config,lang,app,io)
         s.childNodes = {};
         const childNodesConnectionIndex = {};
@@ -83,6 +84,9 @@ module.exports = function(s,config,lang,app,io){
                     switch(data.fileType){
                         case'video':
                             initiateVideoWriteFromChildNode(client,data.options,data.connectionId)
+                        break;
+                        case'timelapseFrame':
+                            initiateTimelapseFrameWriteFromChildNode(client,data.options,data.connectionId)
                         break;
                     }
                 }else{

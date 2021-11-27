@@ -79,7 +79,7 @@ module.exports = function(s,config,lang,app,io){
             cpu: parseFloat(cpu)
         })
     }
-    function sendVideoToMasterNode(filePath,options){
+    function createFileTransferToMasterNode(filePath,transferInfo,fileType){
         const response = {ok: true}
         return new Promise((resolve,reject) => {
             const fileTransferConnection = createWebSocketClient('ws://'+config.childNodes.host + '/childNodeFileRelay',{
@@ -87,29 +87,36 @@ module.exports = function(s,config,lang,app,io){
             })
             fileTransferConnection.on('open', function(){
                 fileTransferConnection.send(JSON.stringify({
-                    fileType: 'video',
-                    options: options,
+                    fileType: fileType || 'video',
+                    options: transferInfo,
                     socketKey: config.childNodes.key,
                     connectionId: s.childNodeIdOnMasterNode,
                 }))
                 setTimeout(() => {
                     fs.createReadStream(filePath,{ highWaterMark: 500 })
                     .on('data',function(data){
-                        console.log('Send Video Chunk',data.length)
                         fileTransferConnection.send(data)
                     })
                     .on('close',function(){
-                        // clearTimeout(s.group[e.ke].activeMonitors[e.id].recordingChecker)
-                        // clearTimeout(s.group[e.ke].activeMonitors[e.id].streamChecker)
-                        // s.cx(Object.assign({},options,{
-                        //     f:'created_file',
-                        // }))
                         fileTransferConnection.close()
                         resolve(response)
                     })
                 },2000)
             })
         })
+    }
+    async function sendVideoToMasterNode(filePath,options){
+        const groupKey = options.ke
+        const monitorId = options.mid
+        const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
+        const response = await createFileTransferToMasterNode(filePath,options,'video');
+        clearTimeout(activeMonitor.recordingChecker);
+        clearTimeout(activeMonitor.streamChecker);
+        return response;
+    }
+    async function sendTimelapseFrameToMasterNode(filePath,options){
+        const response = await createFileTransferToMasterNode(filePath,options,'timelapseFrame');
+        return response;
     }
     return {
         onDataFromMasterNode,
@@ -118,5 +125,6 @@ module.exports = function(s,config,lang,app,io){
         destroyAllMonitorProcesses,
         sendCurrentCpuUsage,
         sendVideoToMasterNode,
+        sendTimelapseFrameToMasterNode,
     }
 }

@@ -142,7 +142,6 @@ module.exports = function(s,config,lang){
                     mid: e.mid,
                     ke: e.ke,
                     filename: k.filename,
-                    d: s.cleanMonitorObject(s.group[e.ke].rawMonitorConfigurations[e.id]),
                     filesize: k.filesize,
                     time: s.timeObject(k.startTime).format('YYYY-MM-DD HH:mm:ss'),
                     end: s.timeObject(k.endTime).format('YYYY-MM-DD HH:mm:ss')
