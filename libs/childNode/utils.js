@@ -7,20 +7,21 @@ module.exports = function(s,config,lang,app,io){
             req.connection.remoteAddress).replace('::ffff:','');
     }
     function initiateDataConnection(client,req,options,connectionId){
-        const ipAddress = getIpAddress(req) + ':' + options.port
-        client.ip = ipAddress;
+        const ipAddress = getIpAddress(req)
+        const webAddress = ipAddress + ':' + options.port
+        client.ip = webAddress;
         client.shinobiChildAlreadyRegistered = true;
         client.sendJson = (data) => {
             client.send(JSON.stringify(data))
         }
-        if(!s.childNodes[ipAddress]){
-            s.childNodes[ipAddress] = {}
+        if(!s.childNodes[webAddress]){
+            s.childNodes[webAddress] = {}
         };
-        const activeNode = s.childNodes[ipAddress];
+        const activeNode = s.childNodes[webAddress];
         activeNode.dead = false
         activeNode.cnid = client.id
         activeNode.cpu = 0
-        activeNode.ip = ipAddress
+        activeNode.ip = webAddress
         activeNode.activeCameras = {}
         options.availableHWAccels.forEach(function(accel){
             if(config.availableHWAccels.indexOf(accel) === -1)config.availableHWAccels.push(accel)
@@ -31,15 +32,15 @@ module.exports = function(s,config,lang,app,io){
             connectionId: connectionId,
         })
         activeNode.coreCount = options.coreCount
-        console.log('Initiated Child Node : ', ipAddress)
-        return ipAddress
+        s.debugLog('Authenticated Child Node!',new Date(),webAddress)
+        return webAddress
     }
     function onWebSocketDataFromChildNode(client,data){
         const activeMonitor = data.ke && data.mid && s.group[data.ke] ? s.group[data.ke].activeMonitors[data.mid] : null;
-        const ipAddress = client.ip;
+        const webAddress = client.ip;
         switch(data.f){
             case'cpu':
-                s.childNodes[ipAddress].cpu = data.cpu;
+                s.childNodes[webAddress].cpu = data.cpu;
             break;
             case'sql':
                 s.sqlQuery(data.query,data.values,function(err,rows){
@@ -52,7 +53,7 @@ module.exports = function(s,config,lang,app,io){
                 });
             break;
             case'clearCameraFromActiveList':
-                if(s.childNodes[ipAddress])delete(s.childNodes[ipAddress].activeCameras[data.ke + data.id])
+                if(s.childNodes[webAddress])delete(s.childNodes[webAddress].activeCameras[data.ke + data.id])
             break;
             case'camera':
                 s.camera(data.mode,data.data)
@@ -67,10 +68,10 @@ module.exports = function(s,config,lang,app,io){
         }
     }
     function onDataConnectionDisconnect(client, req){
-        const ipAddress = client.ip;
-        console.log('childNodeWebsocket.disconnect',ipAddress)
-        if(s.childNodes[ipAddress]){
-            var monitors = Object.values(s.childNodes[ipAddress].activeCameras)
+        const webAddress = client.ip;
+        console.log('childNodeWebsocket.disconnect',webAddress)
+        if(s.childNodes[webAddress]){
+            var monitors = Object.values(s.childNodes[webAddress].activeCameras)
             if(monitors && monitors[0]){
                 var loadCompleted = 0
                 var loadMonitor = function(monitor){
@@ -91,8 +92,8 @@ module.exports = function(s,config,lang,app,io){
                 }
                 loadMonitor(monitors[loadCompleted])
             }
-            s.childNodes[ipAddress].activeCameras = {}
-            s.childNodes[ipAddress].dead = true
+            s.childNodes[webAddress].activeCameras = {}
+            s.childNodes[webAddress].dead = true
         }
     }
     function initiateFileWriteFromChildNode(client,data,connectionId,onFinish){
@@ -208,6 +209,7 @@ module.exports = function(s,config,lang,app,io){
         })
     }
     return {
+        getIpAddress,
         initiateDataConnection,
         onWebSocketDataFromChildNode,
         onDataConnectionDisconnect,

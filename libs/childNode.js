@@ -11,6 +11,7 @@ module.exports = function(s,config,lang,app,io){
         config.childNodes.mode === 'master'
     ){
         const {
+            getIpAddress,
             initiateDataConnection,
             initiateVideoTransferConnection,
             onWebSocketDataFromChildNode,
@@ -51,14 +52,15 @@ module.exports = function(s,config,lang,app,io){
         //child Node Websocket
         childNodeWebsocket.on('connection', function (client, req) {
             //functions for dispersing work to child servers;
-            console.log('Connection to ws 8288')
+            const ipAddress = getIpAddress(req)
             const connectionId = s.gid(10);
+            s.debugLog('Child Node Connection!',new Date(),ipAddress)
             client.id = connectionId;
             function onAuthenticate(d){
                 const data = JSON.parse(d);
                 const childNodeKeyAccepted = config.childNodes.key.indexOf(data.socketKey) > -1;
                 if(!client.shinobiChildAlreadyRegistered && data.f === 'init' && childNodeKeyAccepted){
-                    const connectionAddress = initiateDataConnection(client,req,data,connectionId);
+                    initiateDataConnection(client,req,data,connectionId);
                     childNodesConnectionIndex[connectionId] = client;
                     client.removeListener('message',onAuthenticate)
                     client.on('message',(d) => {
@@ -66,6 +68,7 @@ module.exports = function(s,config,lang,app,io){
                         onWebSocketDataFromChildNode(client,data)
                     })
                 }else{
+                    s.debugLog('Child Node Force Disconnected!',new Date(),ipAddress)
                     client.destroy()
                 }
             }
