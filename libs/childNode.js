@@ -111,9 +111,28 @@ module.exports = function(s,config,lang,app,io){
             onDataFromMasterNode,
         } = require('./childNode/childUtils.js')(s,config,lang,app,io)
         s.connectedToMasterNode = false;
-        const childIO = createWebSocketClient('ws://'+config.childNodes.host + '/childNode',{
-            onMessage: onDataFromMasterNode
-        })
+        let childIO;
+        function createChildNodeConnection(){
+            childIO = createWebSocketClient('ws://'+config.childNodes.host + '/childNode',{
+                onMessage: onDataFromMasterNode
+            })
+            childIO.on('open', function(){
+                console.error(new Date(),'Child Nodes : Connected to Master Node! Authenticating...');
+                initiateConnectionToMasterNode()
+            })
+            childIO.on('close',function(){
+                onDisconnectFromMasterNode()
+                setTimeout(() => {
+                    console.error(new Date(),'Child Nodes : Connection to Master Node Closed. Attempting Reconnect...');
+                    createChildNodeConnection()
+                },3000)
+            })
+            childIO.on('error',function(err){
+                console.error(new Date(),'Child Nodes ERROR : ', err.message);
+                childIO.close()
+            })
+        }
+        createChildNodeConnection()
         function sendDataToMasterNode(data){
             childIO.send(JSON.stringify(data))
         }
@@ -140,11 +159,5 @@ module.exports = function(s,config,lang,app,io){
             if(typeof onMoveOn === 'function')s.queuedSqlCallbacks[callbackId] = onMoveOn;
             sendDataToMasterNode({f:'knex',options:options,callbackId:callbackId});
         }
-        childIO.on('open', function(){
-            initiateConnectionToMasterNode()
-        })
-        childIO.on('close',function(){
-            onDisconnectFromMasterNode()
-        })
     }
 }

@@ -13,6 +13,7 @@ module.exports = function(s,config,lang,app,io){
                 }
             break;
             case'init_success':
+                console.error(new Date(),'Child Nodes : Authenticated with Master Node!');
                 s.connectedToMasterNode = true;
                 s.other_helpers = d.child_helpers;
                 s.childNodeIdOnMasterNode = d.connectionId
@@ -43,7 +44,6 @@ module.exports = function(s,config,lang,app,io){
         }
     }
     function initiateConnectionToMasterNode(){
-        console.log('CHILD CONNECTION SUCCESS')
         s.cx({
             f: 'init',
             port: config.port,
