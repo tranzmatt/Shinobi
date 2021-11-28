@@ -40,8 +40,8 @@ module.exports = function(s,config,lang,app,io){
                 s.camera('stop',d.d)
             break;
             case'cameraStart'://start or record camera
-                s.group[d.d.ke].activeMonitors[d.d.mid].masterSaysToStop = false
                 s.camera(d.mode,d.d)
+                s.group[d.d.ke].activeMonitors[d.d.mid].masterSaysToStop = false
             break;
         }
     }
