@@ -207,7 +207,7 @@ const deleteVideosByDays = async (v,days,addedQueries) => {
             const filename = formattedTime(row.time) + '.' + row.ext
             try{
                 await fs.promises.unlink(dir + filename)
-                clearSize += row.size
+                clearSize += row.size / 1048576
                 sendToWebSocket({
                     f: 'video_delete',
                     filename: filename + '.' + row.ext,
