@@ -71,7 +71,7 @@ module.exports = function(s,config,lang,app,io){
                 }
             }
             client.on('message',onAuthenticate)
-            client.on('disconnect',() => {
+            client.on('close',() => {
                 onDataConnectionDisconnect(client, req)
             })
         })
