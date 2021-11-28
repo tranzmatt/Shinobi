@@ -281,6 +281,8 @@ module.exports = function(s,config,lang,app,io){
             let childNodeSelected = null;
             var nodeWithLowestActiveCamerasCount = 65535
             var nodeWithLowestActiveCameras = null
+            let nodeWithLowestCpuPercent = 100
+            let nodeWithLowestRamPercent = 100
             let {
                 nodeWithLowestCpuUse,
                 nodeWithLowestRamUse,
@@ -297,14 +299,18 @@ module.exports = function(s,config,lang,app,io){
                     // look for child node with CPU usage below 75% (default)
                     theChildNode.cpuUsed < nodeWithLowestCpuUse &&
                     theChildNode.cpuPercent < maxCpuPercent &&
+                    theChildNode.cpuPercent < nodeWithLowestCpuPercent &&
                     // look for child node with RAM usage below 75% (default)
                     theChildNode.ramUsed < nodeWithLowestRamUse &&
-                    theChildNode.ramPercent < maxRamPercent
+                    theChildNode.ramPercent < maxRamPercent &&
+                    theChildNode.ramPercent < nodeWithLowestRamPercent
                 ){
                     // nodeWithLowestActiveCamerasCount = nodeCameraCount
                     childNodeSelected = `${webAddress}`
                     nodeWithLowestCpuUse = theChildNode.cpuUsed
+                    nodeWithLowestCpuPercent = theChildNode.cpuPercent
                     nodeWithLowestRamUse = theChildNode.ramUsed
+                    nodeWithLowestRamPercent = theChildNode.ramPercent
                 }
             })
             if(childNodeSelected && masterDoWorkToo){
@@ -314,9 +320,11 @@ module.exports = function(s,config,lang,app,io){
                     // nodeCameraCount < nodeWithLowestActiveCamerasCount &&
                     masterNodeHw.cpuUsed < nodeWithLowestCpuUse &&
                     masterNodeHw.cpuPercent < maxCpuPercent &&
+                    masterNodeHw.cpuPercent < nodeWithLowestCpuPercent &&
                     // look for child node with RAM usage below 75% (default)
                     masterNodeHw.ramUsed < nodeWithLowestRamUse &&
-                    masterNodeHw.ramPercent < maxRamPercent
+                    masterNodeHw.ramPercent < maxRamPercent &&
+                    masterNodeHw.ramPercent < nodeWithLowestRamPercent
                 ){
                     // nodeWithLowestActiveCamerasCount = nodeCameraCount
                     // release child node selection and use master node
