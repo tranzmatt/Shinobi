@@ -36,12 +36,15 @@ module.exports = function(s,config,lang,app,io){
                 s.file('delete',filePath)
             break;
             case'cameraStop'://stop camera
-                s.group[d.d.ke].activeMonitors[d.d.mid].masterSaysToStop = true
+                // s.group[d.d.ke].activeMonitors[d.d.mid].masterSaysToStop = true
                 s.camera('stop',d.d)
             break;
             case'cameraStart'://start or record camera
                 s.camera(d.mode,d.d)
-                s.group[d.d.ke].activeMonitors[d.d.mid].masterSaysToStop = false
+                let activeMonitor = s.group[d.d.ke].activeMonitors[d.d.mid]
+                // activeMonitor.masterSaysToStop = false
+                clearTimeout(activeMonitor.recordingChecker);
+                clearTimeout(activeMonitor.streamChecker);
             break;
         }
     }
