@@ -1,13 +1,6 @@
 const fs = require('fs')
 const { spawn } = require('child_process')
 module.exports = (s,config,lang) => {
-    const isMasterNode = (
-        (
-            config.childNodes.enabled === true &&
-            config.childNodes.mode === 'master'
-        ) ||
-        config.childNodes.enabled === false
-    );
     // orphanedVideoCheck : new function
     const checkIfVideoIsOrphaned = (monitor,videosDirectory,filename) => {
         const response = {ok: true}
@@ -47,7 +40,7 @@ module.exports = (s,config,lang) => {
             })
         })
     }
-    let scanForOrphanedVideos = (monitor,options) => {
+    const scanForOrphanedVideos = (monitor,options) => {
         // const options = {
         //     checkMax: 2
         // }
@@ -121,11 +114,6 @@ module.exports = (s,config,lang) => {
                 resolve(response)
             }
         })
-    }
-    if(!isMasterNode){
-        scanForOrphanedVideos = async () => {
-            return {ok: true, orphanedFilesCount: 0}
-        }
     }
     // orphanedVideoCheck : old function
     const orphanedVideoCheck = (monitor,checkMax,callback,forceCheck) => {

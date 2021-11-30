@@ -15,6 +15,13 @@ const {
 } = require('worker_threads');
 const { copyObject, createQueue, queryStringToObject, createQueryStringFromObject } = require('./common.js')
 module.exports = function(s,config,lang){
+    const isMasterNode = (
+        (
+            config.childNodes.enabled === true &&
+            config.childNodes.mode === 'master'
+        ) ||
+        config.childNodes.enabled === false
+    );
     const {
         probeMonitor,
         getStreamInfoFromProbe,
@@ -1589,13 +1596,7 @@ module.exports = function(s,config,lang){
                     status: wantedStatus,
                     code: wantedStatusCode,
                 })
-                if(
-                    (
-                        config.childNodes.enabled === true &&
-                        config.childNodes.mode === 'master'
-                    ) ||
-                    config.childNodes.enabled === false
-                ){
+                if(isMasterNode){
                     setTimeout(() => {
                         scanForOrphanedVideos({
                             ke: e.ke,
@@ -1604,7 +1605,7 @@ module.exports = function(s,config,lang){
                             forceCheck: true,
                             checkMax: 2
                         })
-                    },2000)
+                    },2000)    
                 }
                 clearTimeout(s.group[e.ke].activeMonitors[e.id].onMonitorStartTimer)
                 s.onMonitorStopExtensions.forEach(function(extender){
