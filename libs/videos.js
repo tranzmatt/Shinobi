@@ -610,7 +610,7 @@ module.exports = function(s,config,lang){
         try{
             const monitorId = video.id || video.mid
             const details = s.parseJSON(video.details) || {}
-            const storageId = details.storageId
+            let storageId = details.storageId
             const activeMonitor = s.group[video.ke] && s.group[video.ke].activeMonitors[monitorId] ? s.group[video.ke].activeMonitors[monitorId] : null;
             if(activeMonitor && activeMonitor.addStorageId)storageId = activeMonitor.addStorageId;
             if(storageId){
