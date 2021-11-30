@@ -13,7 +13,7 @@ $(document).ready(function(){
         loadedSubAccounts = {}
     }
     var getSubAccounts = function(callback){
-        $.getJSON(`${apiPrefix}accounts/${$user.ke}`,function(data){
+        $.get(`${apiPrefix}accounts/${$user.ke}`,function(data){
             clearTable()
             $.each(data.accounts,function(n,account){
                 loadedSubAccounts[account.uid] = account;
@@ -165,7 +165,7 @@ $(document).ready(function(){
     }
     var setPermissionSelectionsToFields = function(uid){
         var account = loadedSubAccounts[uid]
-        var details = $.parseJSON(account.details)
+        var details = safeJsonParse(account.details)
         // load values to Account Information : email, password, etc.
         $.each(account,function(n,v){
             theWindowForm.find('[name="'+n+'"]').val(v)
@@ -324,6 +324,10 @@ $(document).ready(function(){
                 }else{
                     $(`#active-user-${user.uid}-${user.cnid}`).remove()
                 }
+            break;
+            case'delete_sub_account':
+                var user = d.user
+                accountTable.find(`[uid="${user.uid}"]`).remove()
             break;
         }
     })
