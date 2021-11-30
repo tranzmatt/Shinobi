@@ -40,7 +40,7 @@ $(document).ready(function(){
                     var notifyColor = 'info'
                     if(data.ok){
                         loadedSubAccounts[uid] = null;
-                        accountTable.find('tr[uid="' + uid + '"]').remove()
+                        accountTable.find('[uid="' + uid + '"]').remove()
                     }else{
                         notifyTitle = lang.accountActionFailed
                         notifyText = lang.contactAdmin
