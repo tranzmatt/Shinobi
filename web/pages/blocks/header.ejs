@@ -1,5 +1,6 @@
 <% window.additionalJsScripts = []; %>
 <%
+    if(config.baseURL)window.libURL = config.baseURL;
     if(!window.libURL)window.libURL = originalURL;
  %>
 <!DOCTYPE html>

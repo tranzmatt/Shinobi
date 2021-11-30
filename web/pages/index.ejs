@@ -1,7 +1,10 @@
 <head>
 <!-- Powered by Shinobi, http://shinobi.video -->
 <% include blocks/header-title.ejs %>
-<% if(!window.libURL)window.libURL = originalURL + global.s.checkCorrectPathEnding(config.webPaths.home) %>
+<%
+    if(config.baseURL)window.libURL = config.baseURL;
+    if(!window.libURL)window.libURL = originalURL;
+ %>
 <% include blocks/header-meta.ejs %>
 <meta http-equiv="content-type" content="text/html;charset=UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
