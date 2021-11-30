@@ -1,0 +1,42 @@
+<body class="bg-darker">
+    <% include home/menuFirst.ejs %>
+    <div class="container-fluid">
+        <div class="row">
+            <% include home/menuSide.ejs %>
+            <main id="pageTabContainer" class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                <% (config.webBlocksPreloaded || [
+                    'home/initial',
+                    'home/videoPlayer',
+                    'home/monitorsList',
+                    'home/subAccountManager',
+                    'home/accountSettings',
+                    'home/apiKeys',
+                    'home/monitorSettings',
+                    'home/schedules',
+                    'home/monitorStates',
+                    'home/liveGrid',
+                    'home/regionEditor',
+                    'home/timelapseViewer',
+                    'home/eventFilters',
+                    'home/cameraProbe',
+                    'home/powerVideo',
+                    'home/onvifScanner',
+                    'home/onvifDeviceManager',
+                    'home/configFinder',
+                    'home/logViewer',
+                    'home/calendar',
+                    'home/eventListWithPics',
+                    'confirm',
+                    'help',
+                ]).forEach(function(block){ %>
+                    <%- include(__dirname + '/web/pages/blocks/' +block + '.ejs') %>
+                <% }) %>
+                <% customAutoLoad.PageBlocks.forEach(function(block){ %>
+                    <%- include(block) %>
+                <% }) %>
+            </main>
+        </div>
+    </div>
+    <div style="display:none" id="temp"></div>
+    <a id="floating-back-button" class="go-back" style="display:none"><i class="fa fa-arrow-left"></i></a>
+</body>

@@ -1,0 +1,18 @@
+<div class="my-3 p-3 <%- define.Theme.isDark ? 'bg-dark text-white' : 'bg-light' %> rounded shadow-sm" id="recentVideos">
+  <h4 class="mb-3 pb-3 <%- define.Theme.isDark ? 'text-white' : '' %> border-bottom-dotted border-color-blue row">
+      <div class="col-md-8">
+          <%- lang['Recent Videos'] %>
+      </div>
+      <div class="col-md-4">
+          <select class="form-control form-control-sm <%- define.Theme.isDark ? 'btn-dark' : '' %> text-start monitors_list" type="text" id="recentVideosMonitorId">
+              <option value=""><%- lang['All Monitors'] %></option>
+              <optgroup label="<%- lang.Monitors %>"></optgroup>
+          </select>
+      </div>
+  </h4>
+  <div class="flex-table flex-table-dark mx-n3 pt-2 px-3 row" id="recentVideosList"></div>
+  <small class="d-block text-end mt-3">
+    <a class="btn badge" onclick="openTab('monitorsList',{})"><%- lang['Monitors'] %></a>
+  </small>
+</div>
+<script src="<%-window.libURL%>assets/js/bs5.recentVideos.js"></script>

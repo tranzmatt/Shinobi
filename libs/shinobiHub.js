@@ -78,7 +78,7 @@ module.exports = function(s,config,lang,app,io){
                 // s.userLog({ke:monitorConfig.ke,mid:'$USER'},{type:lang['Websocket Connected'],msg:{for:lang['Superuser'],id:cn.mail,ip:cn.ip}})
             })
         }
-        if(s.group[monitorConfig.ke] && s.group[monitorConfig.ke].init.shinobihub === '1'){
+        if(s.group[monitorConfig.ke] && s.group[monitorConfig.ke].init && s.group[monitorConfig.ke].init.shinobihub === '1'){
             uploadConfiguration(s.group[monitorConfig.ke].init.shinobihub_key,'cam',monitorConfig,() => {
                 // s.userLog({ke:monitorConfig.ke,mid:'$USER'},{type:lang['Websocket Connected'],msg:{for:lang['Superuser'],id:cn.mail,ip:cn.ip}})
             })

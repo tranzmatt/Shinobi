@@ -140,7 +140,7 @@ module.exports = function(s,config){
             if(options.groupBy){
                 dbQuery.groupBy(options.groupBy)
             }
-            if(options.limit){
+            if(options.limit && options.limit !== '0'){
                 if(`${options.limit}`.indexOf(',') === -1){
                     dbQuery.limit(options.limit)
                 }else{

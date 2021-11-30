@@ -201,12 +201,7 @@ const initialize = (config,lang) => {
             })
 
         });
-        ([
-          'h265',
-          'Base64',
-          'FLV',
-          'MP4',
-        ]).forEach((target) => {
+        config.workerStreamOutHandlers.forEach((target) => {
             connectionToP2PServer.on(target,(initData) => {
                 if(connectedUserWebSockets[initData.auth]){
                     const clientConnectionToMachine = createShinobiSocketConnection(initData.auth + initData.ke + initData.id)
@@ -256,7 +251,9 @@ const initialize = (config,lang) => {
         connectionToP2PServer.on('disconnect',onDisconnect)
     }
     startBridge()
-    setInterval(() => {
-        startBridge(true)
-    },1000 * 60 * 60 * 15)
+    setInterval(function(){
+        if(!connectionToP2PServer || !connectionToP2PServer.connected){
+            connectionToP2PServer.connect()
+        }
+    },1000 * 60 * 15)
 }

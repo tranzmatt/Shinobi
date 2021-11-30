@@ -451,6 +451,16 @@ module.exports = (s,config,lang) => {
             callback()
         }
     }
+    function resetAllStorageCounters(groupKey){
+        var storageIndexes = Object.keys(s.group[groupKey].addStorageUse)
+        storageIndexes.forEach((storageIndex) => {
+            s.setDiskUsedForGroupAddStorage(groupKey,{
+                size: 0,
+                storageIndex: storageIndex
+            })
+        })
+        s.setDiskUsedForGroup(groupKey,0)
+    }
     return {
         deleteSetOfVideos: deleteSetOfVideos,
         deleteSetOfTimelapseFrames: deleteSetOfTimelapseFrames,
@@ -461,5 +471,6 @@ module.exports = (s,config,lang) => {
         deleteFileBinFiles: deleteFileBinFiles,
         deleteCloudVideos: deleteCloudVideos,
         deleteCloudTimelapseFrames: deleteCloudTimelapseFrames,
+        resetAllStorageCounters: resetAllStorageCounters,
     }
 }

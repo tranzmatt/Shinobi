@@ -1,5 +1,12 @@
 module.exports = function(s,config,lang){
-    return {
+    const Theme = {
+        isDark: true,
+    }
+    const mainBackgroundColor = Theme.isDark ? 'bg-dark' : Theme.isDarkDefaultBg || 'bg-light'
+    const textWhiteOnBgDark = Theme.isDark ? 'text-white' : ''
+    return Object.assign({
+        Theme: Theme,
+    },{
         "Monitor Status Codes": {
             "0": "Disabled",
             "1": "Starting",
@@ -89,6 +96,7 @@ module.exports = function(s,config,lang){
              },
              "Presets": {
                 id: "monSectionPresets",
+               "section-class": "am_notice am_notice_edit",
                "name": lang.Presets,
                "color": "purple",
                 isSection: true,
@@ -110,13 +118,13 @@ module.exports = function(s,config,lang){
                        ]
                    },
                    {
-                       "fieldType": 'ul',
+                       "fieldType": 'div',
                        "id": "monitorPresetsSelection",
                        "class": "mdl-list"
                    },
                    {
                       "fieldType": "btn",
-                      "attribute": `data-toggle="modal" data-target="#schedules"`,
+                      "attribute": `page-open="schedules"`,
                       "class": `btn-info`,
                       "btnContent": `<i class="fa fa-clock-o"></i> &nbsp; ${lang['Schedules']}`,
                    },
@@ -699,12 +707,15 @@ module.exports = function(s,config,lang){
                          "form-group-class": "h_gpud_input h_gpud_1",
                          "possible": ""
                      },
-                     {
-                         "fieldType": 'div',
-                         "id": "monSectionInputMaps"
-                     },
                 ]
              },
+             "Input Maps": {
+                "name": lang["Additional Inputs"],
+                "color": "orange",
+                "id": "monSectionInputMaps",
+                "section-class": "pb-0",
+                "emptyDiv": true
+            },
              "Stream": {
                 "name": lang.Stream,
 
@@ -729,10 +740,6 @@ module.exports = function(s,config,lang){
                               "name": lang.Poseidon,
                               "value": "mp4",
                               "info": "Poseidon is built on Kevin Godell's MP4 processing code. It simulates a streaming MP4 file but using the data of a live stream. Includes Audio. Some browsers can play it like a regular MP4 file. Streams over HTTP or WebSocket."
-                           },
-                           {
-                              "name": lang['HEVC (H.265)'],
-                              "value": "h265"
                            },
                            {
                               "name": lang['Base64 over Websocket'],
@@ -768,7 +775,7 @@ module.exports = function(s,config,lang){
                        "default": "0",
                        "example": "",
                        "fieldType": "select",
-                       "form-group-class": "h_st_input h_st_flv h_st_mp4 h_st_h265",
+                       "form-group-class": "h_st_input h_st_flv h_st_mp4",
                        "possible": [
                           {
                              "name": lang.HTTP,
@@ -807,7 +814,7 @@ module.exports = function(s,config,lang){
                       "description": "Video codec for streaming.",
                       "default": "copy",
                       "example": "",
-                      "form-group-class": "h_st_input h_st_hls h_st_flv h_st_mp4 h_st_h265",
+                      "form-group-class": "h_st_input h_st_hls h_st_flv h_st_mp4",
                       "fieldType": "select",
                       "selector": "h_hls_v",
                       "possible": [
@@ -889,7 +896,7 @@ module.exports = function(s,config,lang){
                       "default": "0",
                       "example": "",
                       "fieldType": "select",
-                      "form-group-class": "h_st_input h_st_hls h_st_flv h_st_mp4 h_st_h265",
+                      "form-group-class": "h_st_input h_st_hls h_st_flv h_st_mp4",
                       "possible": [
                          {
                             "name": lang.Auto,
@@ -939,7 +946,6 @@ module.exports = function(s,config,lang){
                       "description": "How long each video segment should be, in minutes. Each segment will be drawn by the client through an m3u8 file. Shorter segments take less space.",
                       "default": "2",
                       "example": "",
-                      "form-group-class-pre-layer": "h_st_input h_st_mjpeg h_st_b64 h_st_hls h_st_gif h_st_flv h_st_mp4 h_st_h265 h_hls_v_input h_hls_v_libx264 h_hls_v_libx265 h_hls_v_h264_nvenc h_hls_v_hevc_nvenc h_hls_v_no",
                       "form-group-class": "h_st_input h_st_hls",
                       "possible": ""
                    },
@@ -949,7 +955,6 @@ module.exports = function(s,config,lang){
                       "description": "The number of segments maximum before deleting old segments automatically.",
                       "default": "2",
                       "example": "",
-                      "form-group-class-pre-layer": "h_st_input h_st_mjpeg h_st_b64 h_st_hls h_st_gif h_st_flv h_st_mp4 h_st_h265 h_hls_v_input h_hls_v_libx264 h_hls_v_libx265 h_hls_v_h264_nvenc h_hls_v_hevc_nvenc h_hls_v_no",
                       "form-group-class": "h_st_input h_st_hls",
                       "possible": ""
                    },
@@ -959,8 +964,7 @@ module.exports = function(s,config,lang){
                       "description": "Preset flag for certain video encoders. If you find your camera is crashing every few seconds : try leaving it blank.",
                       "default": "",
                       "example": "ultrafast",
-                      "form-group-class-pre-layer": "h_st_input h_st_mjpeg h_st_b64 h_st_hls h_st_gif h_st_flv h_st_mp4 h_st_h265 h_hls_v_input h_hls_v_libx264 h_hls_v_libx265 h_hls_v_h264_nvenc h_hls_v_hevc_nvenc h_hls_v_no",
-                      "form-group-class": "h_st_input h_st_hls h_st_flv h_st_mp4 h_st_h265",
+                      "form-group-class": "h_st_input h_st_hls h_st_flv h_st_mp4",
                       "possible": ""
                    },
                    {
@@ -969,7 +973,7 @@ module.exports = function(s,config,lang){
                       "description": "Low number means higher quality. Higher number means less quality.",
                       "default": "15",
                       "example": "1",
-                      "form-group-class": "h_st_input h_st_mjpeg h_st_b64 h_st_hls h_st_gif h_st_flv h_st_mp4 h_st_h265 h_hls_v_input h_hls_v_libx264 h_hls_v_libx265 h_hls_v_h264_nvenc h_hls_v_hevc_nvenc h_hls_v_no",
+                      "form-group-class": "h_st_input h_st_mjpeg h_st_b64 h_st_hls h_st_gif h_st_flv h_st_mp4 h_hls_v_input h_hls_v_libx264 h_hls_v_libx265 h_hls_v_h264_nvenc h_hls_v_hevc_nvenc h_hls_v_no",
                       "possible": "1-23"
                    },
                    {
@@ -978,7 +982,7 @@ module.exports = function(s,config,lang){
                       "description": "The speed in which frames are displayed to clients, in Frames Per Second. Be aware there is no default. This can lead to high bandwidth usage.",
                       "default": "",
                       "example": "1",
-                      "form-group-class": "h_st_input h_st_mjpeg h_st_b64 h_st_hls h_st_gif h_st_flv h_st_mp4 h_st_h265 h_hls_v_input h_hls_v_libx264 h_hls_v_libx265 h_hls_v_h264_nvenc h_hls_v_hevc_nvenc h_hls_v_no",
+                      "form-group-class": "h_st_input h_st_mjpeg h_st_b64 h_st_hls h_st_gif h_st_flv h_st_mp4 h_hls_v_input h_hls_v_libx264 h_hls_v_libx265 h_hls_v_h264_nvenc h_hls_v_hevc_nvenc h_hls_v_no",
                       "possible": ""
                    },
                    {
@@ -989,7 +993,7 @@ module.exports = function(s,config,lang){
                       "fieldType": "number",
                       "numberMin": "1",
                       "example": "640",
-                      "form-group-class": "h_st_input h_st_mjpeg h_st_b64 h_st_hls h_st_gif h_st_flv h_st_mp4 h_st_h265 h_hls_v_input h_hls_v_libx264 h_hls_v_libx265 h_hls_v_h264_nvenc h_hls_v_hevc_nvenc h_hls_v_no",
+                      "form-group-class": "h_st_input h_st_mjpeg h_st_b64 h_st_hls h_st_gif h_st_flv h_st_mp4 h_hls_v_input h_hls_v_libx264 h_hls_v_libx265 h_hls_v_h264_nvenc h_hls_v_hevc_nvenc h_hls_v_no",
                       "possible": ""
                    },
                    {
@@ -1000,7 +1004,7 @@ module.exports = function(s,config,lang){
                       "fieldType": "number",
                       "numberMin": "1",
                       "example": "480",
-                      "form-group-class": "h_st_input h_st_mjpeg h_st_b64 h_st_hls h_st_gif h_st_flv h_st_mp4 h_st_h265 h_hls_v_input h_hls_v_libx264 h_hls_v_libx265 h_hls_v_h264_nvenc h_hls_v_hevc_nvenc h_hls_v_no",
+                      "form-group-class": "h_st_input h_st_mjpeg h_st_b64 h_st_hls h_st_gif h_st_flv h_st_mp4 h_hls_v_input h_hls_v_libx264 h_hls_v_libx265 h_hls_v_h264_nvenc h_hls_v_hevc_nvenc h_hls_v_no",
                       "possible": ""
                    },
                    {
@@ -1010,7 +1014,7 @@ module.exports = function(s,config,lang){
                       "default": "",
                       "example": "",
                       "fieldType": "select",
-                      "form-group-class": "h_st_input h_st_mjpeg h_st_b64 h_st_hls h_st_gif h_st_flv h_st_mp4 h_st_h265 h_hls_v_input h_hls_v_libx264 h_hls_v_libx265 h_hls_v_h264_nvenc h_hls_v_hevc_nvenc h_hls_v_no",
+                      "form-group-class": "h_st_input h_st_mjpeg h_st_b64 h_st_hls h_st_gif h_st_flv h_st_mp4 h_hls_v_input h_hls_v_libx264 h_hls_v_libx265 h_hls_v_h264_nvenc h_hls_v_hevc_nvenc h_hls_v_no",
                       "possible": [
                            {
                               "name": lang["No Rotation"],
@@ -1070,9 +1074,9 @@ module.exports = function(s,config,lang){
                       "description": "Place FFMPEG video filters in this box to affect the streaming portion. No spaces.",
                       "default": "",
                       "example": "",
-                      "form-group-class": "h_st_input h_st_mjpeg h_st_b64 h_st_hls h_st_gif h_st_flv h_st_mp4 h_st_h265 h_hls_v_input h_hls_v_libx264 h_hls_v_libx265 h_hls_v_h264_nvenc h_hls_v_hevc_nvenc h_hls_v_no",
+                      "form-group-class": "h_st_input h_st_mjpeg h_st_b64 h_st_hls h_st_gif h_st_flv h_st_mp4 h_hls_v_input h_hls_v_libx264 h_hls_v_libx265 h_hls_v_h264_nvenc h_hls_v_hevc_nvenc h_hls_v_no",
                       "possible": ""
-                  },
+                   },
                    {
                       "name": "detail=tv_channel",
                       "field": lang["TV Channel"],
@@ -1272,8 +1276,554 @@ module.exports = function(s,config,lang){
                 "name": "Stream Channels",
                 "color": "blue",
                 "id": "monSectionStreamChannels",
+                "section-class": "pb-0",
                 "emptyDiv": true
             },
+            "Substream": {
+               "name": lang['Substream'],
+               "color": "blue",
+               isAdvanced: true,
+               "isSection": true,
+               "id": "monSectionSubstream",
+               "info": [
+                   {
+                       "name": lang['Connection'],
+                       "color": "orange",
+                       id: "monSectionSubstreamInput",
+                       isSection: true,
+                       isFormGroupGroup: true,
+                       "info": [
+                           {
+                               name:'map-detail=type',
+                               field:lang['Input Type'],
+                               default:'h264',
+                               attribute:'selector="h_i_SUBSTREAM_FIELDS"',
+                               "fieldType": "select",
+                               type:'selector',
+                               possible:[
+                                 {
+                                    "name": "H.264 / H.265 / H.265+",
+                                    "value": "h264"
+                                 },
+                                 {
+                                    "name": "JPEG",
+                                    "value": "jpeg"
+                                 },
+                                 {
+                                    "name": "MJPEG",
+                                    "value": "mjpeg"
+                                 },
+                                 {
+                                    "name": "HLS (.m3u8)",
+                                    "value": "hls"
+                                 },
+                                 {
+                                    "name": "MPEG-4 (.mp4 / .ts)",
+                                    "value": "mp4"
+                                 },
+                                 {
+                                    "name": "Local",
+                                    "value": "local"
+                                 },
+                                 {
+                                    "name": "Raw",
+                                    "value": "raw"
+                                 }
+                              ]
+                           },
+                           {
+                               name:'detail-substream-input=fulladdress',
+                               field:lang['Full URL Path'],
+                               placeholder:'Example : rtsp://admin:password@123.123.123.123/stream/1',
+                               type:'text',
+                           },
+                           {
+                               name:'detail-substream-input=sfps',
+                               field:lang['Monitor Capture Rate'],
+                               placeholder:'',
+                               type:'text',
+                           },
+                           {
+                               name:'detail-substream-input=aduration',
+                               field:lang['Analyzation Duration'],
+                               placeholder:'Example : 1000000',
+                               type:'text',
+                           },
+                           {
+                               name:'detail-substream-input=probesize',
+                               field:lang['Probe Size'],
+                               placeholder:'Example : 1000000',
+                               type:'text',
+                           },
+                           {
+                               name:'detail-substream-input=stream_loop',
+                               field:lang['Loop Stream'],
+                               class:'h_i_SUBSTREAM_FIELDS_input h_i_SUBSTREAM_FIELDS_mp4 h_i_SUBSTREAM_FIELDS_raw',
+                               hidden:true,
+                               default:'0',
+                               "fieldType": "select",
+                               type:'selector',
+                               possible:[
+                                   {
+                                      "name": lang.No,
+                                      "value": "0",
+                                   },
+                                   {
+                                      "name": lang.Yes,
+                                      "value": "1",
+                                   }
+                               ]
+                           },
+                           {
+                               name:'detail-substream-input=rtsp_transport',
+                               field:lang['RTSP Transport'],
+                               class:'h_i_SUBSTREAM_FIELDS_input h_i_SUBSTREAM_FIELDS_h264',
+                               default:'',
+                               "fieldType": "select",
+                               type:'selector',
+                               possible:[
+                                   {
+                                      "name": lang.Auto,
+                                      "value": "",
+                                      "info": "Let FFMPEG decide. Normally it will try UDP first."
+                                   },
+                                   {
+                                      "name": "TCP",
+                                      "value": "tcp",
+                                      "info": "Set it to this if UDP starts giving undesired results."
+                                   },
+                                   {
+                                      "name": "UDP",
+                                      "value": "udp",
+                                      "info": "FFMPEG tries this first."
+                                   }
+                               ]
+                           },
+                           {
+                               name:'detail-substream-input=accelerator',
+                               field:lang['Accelerator'],
+                               attribute:'selector="h_accel_SUBSTREAM_FIELDS"',
+                               default:'0',
+                               "fieldType": "select",
+                               type:'selector',
+                               possible:[
+                                   {
+                                      "name": lang.No,
+                                      "value": "0",
+                                   },
+                                   {
+                                      "name": lang.Yes,
+                                      "value": "1",
+                                   }
+                               ]
+                           },
+                           {
+                               name:'detail-substream-input=hwaccel',
+                               field:lang['hwaccel'],
+                               class:'h_accel_SUBSTREAM_FIELDS_input h_accel_SUBSTREAM_FIELDS_1',
+                               hidden:true,
+                               default:'',
+                               "fieldType": "select",
+                               type:'selector',
+                               possible: s.listOfHwAccels
+                           },
+                           {
+                               name:'detail-substream-input=hwaccel_vcodec',
+                               field:lang['hwaccel_vcodec'],
+                               class:'h_accel_SUBSTREAM_FIELDS_input h_accel_SUBSTREAM_FIELDS_1',
+                               hidden:true,
+                               default:'auto',
+                               "fieldType": "select",
+                               type:'selector',
+                               possible:[
+                                   {
+                                      "name": lang.Auto + '('+lang.Recommended+')',
+                                      "value": ""
+                                   },
+                                   {
+                                      "name": lang.NVIDIA,
+                                      "optgroup": [
+                                          {
+                                             "name": lang.h264_cuvid,
+                                             "value": "h264_cuvid"
+                                          },
+                                          {
+                                             "name": lang.hevc_cuvid,
+                                             "value": "hevc_cuvid"
+                                          },
+                                          {
+                                             "name": lang.mjpeg_cuvid,
+                                             "value": "mjpeg_cuvid"
+                                          },
+                                          {
+                                             "name": lang.mpeg4_cuvid,
+                                             "value": "mpeg4_cuvid"
+                                          },
+                                      ]
+                                   },
+                                   {
+                                      "name": lang["Quick Sync Video"],
+                                      "optgroup": [
+                                          {
+                                             "name": lang.h264_qsv,
+                                             "value": "h264_qsv"
+                                          },
+                                          {
+                                             "name": lang.hevc_qsv,
+                                             "value": "hevc_qsv"
+                                          },
+                                          {
+                                             "name": lang.mpeg2_qsv,
+                                             "value": "mpeg2_qsv"
+                                          },
+                                      ]
+                                   },
+                                   {
+                                      "name": lang['Raspberry Pi'],
+                                      "optgroup": [
+                                          {
+                                             "name": lang.h264_mmal,
+                                             "value": "h264_mmal"
+                                          },
+                                          {
+                                             "name": lang.mpeg2_mmal,
+                                             "value": "mpeg2_mmal"
+                                          },
+                                          {
+                                             "name": lang["MPEG-4 (Raspberry Pi)"],
+                                             "value": "mpeg4_mmal"
+                                          }
+                                      ]
+                                   },
+                                  ]
+                           },
+                           {
+                               name:'detail-substream-input=hwaccel_device',
+                               field:lang['hwaccel_device'],
+                               class:'h_accel_SUBSTREAM_FIELDS_input h_accel_SUBSTREAM_FIELDS_1',
+                               hidden:true,
+                               placeholder:'Example : /dev/dri/video0',
+                               type:'text',
+                           },
+                           {
+                               name:'detail-substream-input=cust_input',
+                               field:lang['Input Flags'],
+                               type:'text',
+                           },
+                       ]
+                   },
+                   {
+                       "name": lang['Output'],
+                       "color": "blue",
+                       id: "monSectionSubstreamOutput",
+                       isSection: true,
+                       isFormGroupGroup: true,
+                       "info": [
+                           {
+                              "field": lang["Stream Type"],
+                              "name": `detail-substream-output="stream_type"`,
+                              "description": "The method that will used to consume the video stream.",
+                              "default": "hls",
+                              "selector": "h_st_channel_SUBSTREAM_FIELDS",
+                              "fieldType": "select",
+                              "attribute": `triggerChange="#monSectionChannelSUBSTREAM_FIELDS [detail-substream-output=stream_vcodec]" triggerChangeIgnore="b64,mjpeg"`,
+                              "possible": [
+                                   {
+                                      "name": lang.Poseidon,
+                                      "value": "mp4",
+                                      "info": "Poseidon is built on Kevin Godell's MP4 processing code. It simulates a streaming MP4 file but using the data of a live stream. Includes Audio. Some browsers can play it like a regular MP4 file. Streams over HTTP or WebSocket."
+                                   },
+                                   {
+                                      "name": lang["RTMP Stream"],
+                                      "value": "rtmp",
+                                   },
+                                   {
+                                      "name": lang['MJPEG'],
+                                      "value": "mjpeg",
+                                      "info": "Standard Motion JPEG image. No audio."
+                                   },
+                                   {
+                                      "name": lang['FLV'],
+                                      "value": "flv",
+                                      "info": "Sending FLV encoded frames over WebSocket."
+                                   },
+                                   {
+                                      "name": lang['HLS (includes Audio)'],
+                                      "value": "hls",
+                                      "info": "Similar method to facebook live streams. <b>Includes audio</b> if input provides it. There is a delay of about 4-6 seconds because this method records segments then pushes them to the client rather than push as while it creates them."
+                                   }
+                                ]
+                           },
+                           {
+                              "field": lang['Server URL'],
+                              "name": `detail-substream-output="rtmp_server_url"`,
+                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_rtmp",
+                              "example": "rtmp://live-api.facebook.com:80/rtmp/",
+                           },
+                           {
+                              "field": lang['Stream Key'],
+                              "name": `detail-substream-output="rtmp_stream_key"`,
+                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_rtmp",
+                              "example": "1111111111?ds=1&a=xxxxxxxxxx",
+                           },
+                           {
+                              "field": lang['# of Allow MJPEG Clients'],
+                              "name": `detail-substream-output="stream_mjpeg_clients"`,
+                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_mjpeg",
+                              "placeholder": "20",
+                           },
+                           {
+                              "field": lang['Video Codec'],
+                              "name": `detail-substream-output="stream_vcodec"`,
+                              "description": "Video codec for streaming.",
+                              "default": "copy",
+                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4  h_st_channel_SUBSTREAM_FIELDS_h264",
+                              "fieldType": "select",
+                              "selector": "h_hls_v_channel_SUBSTREAM_FIELDS",
+                              "possible": [
+                                 {
+                                    "name": lang.Auto,
+                                    "value": "no",
+                                    "info": "Let FFMPEG choose."
+                                 },
+                                 {
+                                    "name": "libx264",
+                                    "value": "libx264",
+                                    "info": "Used for MP4 video."
+                                 },
+                                 {
+                                    "name": "libx265",
+                                    "value": "libx265",
+                                    "info": "Used for MP4 video."
+                                 },
+                                 {
+                                    "name": lang.copy,
+                                    "value": "copy",
+                                    "info": "Used for MP4 video. Has very low CPU usage but cannot use video filters and filesizes may be gigantic.  Best to setup your MP4 settings camera-side when using this option."
+                                 },
+                                 {
+                                     "name": lang['Hardware Accelerated'],
+                                     "optgroup": [
+                                         {
+                                            "name": "H.264 VA-API (Intel HW Accel)",
+                                            "value": "h264_vaapi"
+                                         },
+                                         {
+                                            "name": "H.265 VA-API (Intel HW Accel)",
+                                            "value": "hevc_vaapi"
+                                         },
+                                         {
+                                            "name": "H.264 NVENC (NVIDIA HW Accel)",
+                                            "value": "h264_nvenc"
+                                         },
+                                         {
+                                            "name": "H.265 NVENC (NVIDIA HW Accel)",
+                                            "value": "hevc_nvenc"
+                                         },
+                                         {
+                                            "name": "H.264 (Quick Sync Video)",
+                                            "value": "h264_qsv"
+                                         },
+                                         {
+                                            "name": "H.265 (Quick Sync Video)",
+                                            "value": "hevc_qsv"
+                                         },
+                                         {
+                                            "name": "MPEG2 (Quick Sync Video)",
+                                            "value": "mpeg2_qsv"
+                                         },
+                                         {
+                                            "name": "H.264 (Quick Sync Video)",
+                                            "value": "h264_qsv"
+                                         },
+                                         {
+                                            "name": "H.265 (Quick Sync Video)",
+                                            "value": "hevc_qsv"
+                                         },
+                                         {
+                                            "name": "MPEG2 (Quick Sync Video)",
+                                            "value": "mpeg2_qsv"
+                                         },
+                                         {
+                                            "name": "H.264 openMAX (Raspberry Pi)",
+                                            "value": "h264_omx"
+                                         }
+                                     ]
+                                 },
+                              ]
+                           },
+                           {
+                              "field": lang["Audio Codec"],
+                              "name": `detail-substream-output="stream_acodec"`,
+                              "description": "Audio codec for streaming.",
+                              "default": "",
+                              "example": "",
+                              "fieldType": "select",
+                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4  h_st_channel_SUBSTREAM_FIELDS_h264",
+                              "possible": [
+                                 {
+                                    "name": lang.Auto,
+                                    "info": "Let FFMPEG choose.",
+                                    "value": ""
+                                 },
+                                 {
+                                    "name": lang["No Audio"],
+                                    "info": "No Audio, this is an option that must be set in some parts of the world due to legal reasons.",
+                                    "value": "no"
+                                 },
+                                 {
+                                    "name": "libvorbis",
+                                    "info": "Used for WebM video.",
+                                    "value": "libvorbis"
+                                 },
+                                 {
+                                    "name": "libopus",
+                                    "info": "Used for WebM video.",
+                                    "value": "libopus"
+                                 },
+                                 {
+                                    "name": "libmp3lame",
+                                    "info": "Used for MP4 video.",
+                                    "value": "libmp3lame"
+                                 },
+                                 {
+                                    "name": "aac",
+                                    "info": "Used for MP4 video.",
+                                    "value": "aac"
+                                 },
+                                 {
+                                    "name": "ac3",
+                                    "info": "Used for MP4 video.",
+                                    "value": "ac3"
+                                 },
+                                 {
+                                    "name": "copy",
+                                    "info": "Used for MP4 video. Has very low CPU usage but some audio codecs need custom flags like <code>-strict 2</code> for aac.",
+                                    "value": "copy"
+                                 }
+                              ]
+                           },
+                           {
+                              "name": "detail-substream-output=hls_time",
+                              "field": lang["HLS Segment Length"],
+                              "description": "How long each video segment should be, in minutes. Each segment will be drawn by the client through an m3u8 file. Shorter segments take less space.",
+                              "default": "2",
+                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_hls",
+                           },
+                           {
+                              "name": "detail-substream-output=hls_list_size",
+                              "field": lang["HLS List Size"],
+                              "description": "The number of segments maximum before deleting old segments automatically.",
+                              "default": "2",
+                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_hls",
+                           },
+                           {
+                              "name": "detail-substream-output=preset_stream",
+                              "field": lang["HLS Preset"],
+                              "description": "Preset flag for certain video encoders. If you find your camera is crashing every few seconds : try leaving it blank.",
+                              "example": "ultrafast",
+                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_hls",
+                           },
+                           {
+                              "name": "detail-substream-output=stream_quality",
+                              "field": lang.Quality,
+                              "description": "Low number means higher quality. Higher number means less quality.",
+                              "default": "15",
+                              "example": "1",
+                              "form-group-class-pre-layer": "h_hls_v_channel_SUBSTREAM_FIELDS_input h_hls_v_channel_SUBSTREAM_FIELDS_libx264 h_hls_v_channel_SUBSTREAM_FIELDS_libx265 h_hls_v_channel_SUBSTREAM_FIELDS_h264_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_hevc_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_no",
+                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_mjpeg h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_jsmpeg h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264",
+                              "possible": "1-23"
+                           },
+                           {
+                              "name": "detail-substream-output=stream_v_br",
+                              "field": lang["Video Bit Rate"],
+                              "placeholder": "",
+                              "form-group-class-pre-layer": "h_hls_v_channel_SUBSTREAM_FIELDS_input h_hls_v_channel_SUBSTREAM_FIELDS_libx264 h_hls_v_channel_SUBSTREAM_FIELDS_libx265 h_hls_v_channel_SUBSTREAM_FIELDS_h264_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_hevc_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_no",
+                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_mjpeg h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_jsmpeg h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264",
+                           },
+                           {
+                              "name": "detail-substream-output=stream_a_br",
+                              "field": lang["Audio Bit Rate"],
+                              "placeholder": "128k",
+                              "form-group-class-pre-layer": "h_hls_v_channel_SUBSTREAM_FIELDS_input h_hls_v_channel_SUBSTREAM_FIELDS_libx264 h_hls_v_channel_SUBSTREAM_FIELDS_libx265 h_hls_v_channel_SUBSTREAM_FIELDS_h264_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_hevc_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_no",
+                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_mjpeg h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_jsmpeg h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264",
+                           },
+                           {
+                              "name": "detail-substream-output=stream_fps",
+                              "field": lang['Frame Rate'],
+                              "description": "The speed in which frames are displayed to clients, in Frames Per Second. Be aware there is no default. This can lead to high bandwidth usage.",
+                              "form-group-class-pre-layer": "h_hls_v_channel_SUBSTREAM_FIELDS_input h_hls_v_channel_SUBSTREAM_FIELDS_libx264 h_hls_v_channel_SUBSTREAM_FIELDS_libx265 h_hls_v_channel_SUBSTREAM_FIELDS_h264_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_hevc_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_no",
+                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_mjpeg h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_jsmpeg h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264",
+                           },
+                           {
+                              "name": "detail-substream-output=stream_scale_x",
+                              "field": lang.Width,
+                              "description": "Width of the stream image that is output after processing.",
+                              "fieldType": "number",
+                              "numberMin": "1",
+                              "example": "640",
+                              "form-group-class-pre-layer": "h_hls_v_channel_SUBSTREAM_FIELDS_input h_hls_v_channel_SUBSTREAM_FIELDS_libx264 h_hls_v_channel_SUBSTREAM_FIELDS_libx265 h_hls_v_channel_SUBSTREAM_FIELDS_h264_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_hevc_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_no",
+                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_mjpeg h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_jsmpeg h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264",
+                           },
+                           {
+                              "name": "detail-substream-output=stream_scale_y",
+                              "field": lang.Height,
+                              "description": "Height of the stream image that is output after processing.",
+                              "fieldType": "number",
+                              "numberMin": "1",
+                              "example": "480",
+                              "form-group-class-pre-layer": "h_hls_v_channel_SUBSTREAM_FIELDS_input h_hls_v_channel_SUBSTREAM_FIELDS_libx264 h_hls_v_channel_SUBSTREAM_FIELDS_libx265 h_hls_v_channel_SUBSTREAM_FIELDS_h264_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_hevc_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_no",
+                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_mjpeg h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_jsmpeg h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264",
+                           },
+                           {
+                              "name": "detail-substream-output=stream_rotate",
+                              "field": lang["Rotate"],
+                              "description": "Change the viewing angle of the video stream.",
+                              "fieldType": "select",
+                              "form-group-class-pre-layer": "h_hls_v_channel_SUBSTREAM_FIELDS_input h_hls_v_channel_SUBSTREAM_FIELDS_libx264 h_hls_v_channel_SUBSTREAM_FIELDS_libx265 h_hls_v_channel_SUBSTREAM_FIELDS_h264_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_hevc_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_no",
+                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_mjpeg h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_jsmpeg h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264",
+                              "possible": [
+                                   {
+                                      "name": lang["No Rotation"],
+                                      "value": "no"
+                                   },
+                                   {
+                                      "name": lang["180 Degrees"],
+                                      "value": "2,transpose=2"
+                                   },
+                                   {
+                                      "name": lang["90 Counter Clockwise and Vertical Flip (default)"],
+                                      "value": "0"
+                                   },
+                                   {
+                                      "name": lang["90 Clockwise"],
+                                      "value": "1"
+                                   },
+                                   {
+                                      "name": lang["90 Clockwise and Vertical Flip"],
+                                      "value": "2"
+                                   },
+                                   {
+                                      "name": lang["90 Clockwise and Vertical Flip"],
+                                      "value": "3"
+                                   }
+                                ]
+                           },
+                           {
+                              "name": "detail-substream-output=svf",
+                              "field": lang["Video Filter"],
+                              "description": "Place FFMPEG video filters in this box to affect the streaming portion. No spaces.",
+                              "form-group-class-pre-layer": "h_hls_v_channel_SUBSTREAM_FIELDS_input h_hls_v_channel_SUBSTREAM_FIELDS_libx264 h_hls_v_channel_SUBSTREAM_FIELDS_libx265 h_hls_v_channel_SUBSTREAM_FIELDS_h264_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_hevc_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_no",
+                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_mjpeg h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_jsmpeg h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264",
+                          },
+                          {
+                              "name": "detail-substream-output=cust_stream",
+                              "field": lang["Stream Flags"],
+                          },
+                       ]
+                   },
+               ]
+           },
              "JPEG API": {
                 "name": lang['JPEG API'],
                 "headerTitle": `${lang['JPEG API']} <small>${lang.Snapshot} (cgi-bin)</small>`,
@@ -2217,7 +2767,7 @@ module.exports = function(s,config,lang){
                    {
                        hidden: true,
                       "name": "detail=detector_save",
-                      "field": lang["Save Events to SQL"],
+                      "field": lang["Save Events"],
                       "description": "Save Motion Events in SQL. This will allow display of motion over video during the time motion events occured in the Power Viewer.",
                       "default": "1",
                       "example": "",
@@ -3169,27 +3719,6 @@ module.exports = function(s,config,lang){
                    },
                    {
                        hidden: true,
-                      "name": lang['OpenCV Cascades'],
-                      "color": "orange",
-                      id: "monSectionOpenCVCascades",
-                      headerTitle: `${lang['OpenCV Cascades']}<a class="pull-right btn btn-xs btn-default refresh_cascades" title="${lang['Refresh List of Cascades']}">&nbsp;<i class="fa fa-retweet"></i>&nbsp;</a>`,
-                      blockquote: lang.opencvCascadesText,
-                      isSection: true,
-                      isAdvanced: true,
-                      isFormGroupGroup: true,
-                      "section-pre-pre-class": "h_det_input h_det_1",
-                      "section-pre-class": "h_casc_input h_casc_1",
-                      "section-class": "shinobi-detector-opencv shinobi-detector-openalpr shinobi-detector_plug",
-                      "info": [
-                          {
-                              "fieldType": "div",
-                              id: "detector_cascade_list",
-                              style: "max-height: 300px;overflow: auto;"
-                          }
-                      ]
-                  },
-                   {
-                       hidden: true,
                       "name": lang['Traditional Recording'],
                       "input-mapping": "detector_sip_buffer",
                       "color": "orange",
@@ -3674,7 +4203,7 @@ module.exports = function(s,config,lang){
                 isAdvanced: true,
                "info": [
                    {
-                       "fieldType": 'ul',
+                       "fieldType": 'div',
                        "id": "monitor_groups",
                        "class": "mdl-list"
                    },
@@ -4445,7 +4974,7 @@ module.exports = function(s,config,lang){
              "Uploaders": {
                 "name": lang["Uploaders"],
                 "color": "forestgreen",
-                "blocks": s.uploaderFields
+                "info": []
              },
              "Preferences": {
                 "name": lang.Preferences,
@@ -4460,6 +4989,12 @@ module.exports = function(s,config,lang){
                       "default": "",
                       "example": "",
                       "possible": ""
+                  },
+                  {
+                        "field": lang.hlsOptions,
+                        "name": "localStorage=hlsOptions",
+                        fieldType:"textarea",
+                        "placeholder": "{}",
                   },
                   {
                       "field": lang['Force Monitors Per Row'],
@@ -4569,10 +5104,21 @@ module.exports = function(s,config,lang){
                  "blockquote": lang.onvifdeviceManagerGlobalTip,
                  "info": [
                      {
+                         "field": lang["Monitor"],
+                         "fieldType": "select",
+                         "class": "monitors_list",
+                         "possible": []
+                     },
+                     {
                         "fieldType": "btn",
                         "class": `btn-warning onvif-device-reboot`,
                         "btnContent": `<i class="fa fa-refresh"></i> &nbsp; ${lang['Reboot Camera']}`,
                      },
+                     {
+                         "fieldType": "div",
+                         "class": "p-2",
+                         "divContent": `<pre class="bg-dark text-white" style="max-height: 400px;overflow: auto;" id="onvifDeviceManagerInfo"></pre>`,
+                     }
                  ]
              },
              "Network": {
@@ -5373,8 +5919,8 @@ module.exports = function(s,config,lang){
                 "name": lang["Regions"],
                 "headerTitle": `<span class="cord_name">&nbsp;</span>
                   <div class="pull-right">
-                      <a class="badge btn btn-success btn-sm add">&nbsp;<i class="fa fa-plus"></i>&nbsp;</a>
-                      <a class="badge btn btn-danger btn-sm erase">&nbsp;<i class="fa fa-trash-o"></i>&nbsp;</a>
+                      <a href=# class="btn btn-success btn-sm add"><i class="fa fa-plus"></i></a>
+                      <a href=# class="btn btn-danger btn-sm erase"><i class="fa fa-trash-o"></i></a>
                   </div>`,
                 "color": "orange",
                 "section-pre-class": "col-md-6",
@@ -5412,14 +5958,23 @@ module.exports = function(s,config,lang){
                        "field": lang['Color Threshold'],
                     },
                     {
+                        hidden: true,
                         id: "regions_points",
                         "fieldType": "table",
                         "class": 'table table-striped',
                     },
                     {
                        "fieldType": "btn",
+                       attribute: "href=#",
                        "class": `btn-info toggle-region-still-image`,
                        "btnContent": `<i class="fa fa-retweet"></i> &nbsp; ${lang['Live Stream Toggle']}`,
+                    },
+                    {
+                       "fieldType": "btn",
+                       forForm: true,
+                       attribute: "href=#",
+                       "class": `btn-success`,
+                       "btnContent": `<i class="fa fa-check"></i> &nbsp; ${lang['Save']}`,
                     },
                 ]
             },
@@ -5645,7 +6200,7 @@ module.exports = function(s,config,lang){
                     {
                         "field": lang["Monitor"],
                         "fieldType": "select",
-                        "class": "dark monitors_list",
+                        "class": "monitors_list",
                         "possible": []
                     },
                     {
@@ -5732,6 +6287,23 @@ module.exports = function(s,config,lang){
                         "name": "id",
                      },
                      {
+                       "name": "enabled",
+                       "field": lang.Enabled,
+                       "fieldType": "select",
+                       "default": "1",
+                       "possible": [
+                          {
+                             "name": "No",
+                             "value": "0",
+                          },
+                          {
+                             "name": lang.Yes,
+                             "value": "1",
+                             "selected": true
+                          }
+                       ]
+                     },
+                     {
                         "name": "filter_name",
                         "field": lang['Filter Name'],
                      },
@@ -5762,6 +6334,7 @@ module.exports = function(s,config,lang){
              "Action for Selected": {
                 "name": lang["Action for Selected"],
                 "color": "red",
+                "blockquote": lang.eventFilterActionText,
                 "section-class": "actions",
                 "info": [
                     {
@@ -5770,128 +6343,62 @@ module.exports = function(s,config,lang){
                       "fieldType": "select",
                       "form-group-class": "actions-row",
                       "description": "Make the event do nothing, as if it never happened.",
-                      "default": "No",
+                      "default": "0",
                       "possible": [
                          {
                             "name": "No",
                             "value": "0",
-                            "info": "Allow other functions to continue.",
                             "selected": true
                          },
                          {
-                            "name": "Yes",
+                            "name": lang.Yes,
                             "value": "1",
-                            "info": "Use Traditional Recording, Hotswap, or Delete Motionless with their currently set options in the Global Detection Settings section."
                          }
                       ]
                     },
                     {
                       "name": "actions=save",
-                      "field": "Save Events to SQL",
+                      "field": lang['Save Events'],
                       "fieldType": "select",
-                      "description": "Save Motion Events in SQL. This will allow display of motion over video during the time motion events occured in the Power Viewer.",
                       "default": "Yes",
                       "form-group-class": "actions-row",
                       "possible": [
                          {
-                            "name": "Default",
+                            "name": lang['Original Choice'],
                             "value": "",
-                            "info": "Use values set in Global Detector Settings.",
                             "selected": true
                          },
                          {
-                            "name": "No",
-                            "value": "0",
-                            "info": "Finish the current 10 minute order."
-                         },
-                         {
-                            "name": "Yes",
+                            "name": lang.Yes,
                             "value": "1",
-                            "info": "Reset the timer"
                          }
                       ]
                     },
                     {
-                      "name": "actions=mail",
-                      "field": "Email on Trigger",
-                      "fieldType": "select",
-                      "form-group-class": "actions-row",
-                      "description": "Recieve an email of an image during a motion event to the master account for the camera group. You must setup SMTP details in conf.json.",
-                      "default": "No",
-                      "example": "1",
-                      "possible": [
-                         {
-                            "name": "Default",
-                            "value": "",
-                            "info": "Use values set in Global Detector Settings.",
-                            "selected": true
-                         },
-                         {
-                            "name": "No",
-                            "value": "0",
-                            "info": "No Email."
-                         },
-                         {
-                            "name": "Yes",
-                            "value": "1",
-                            "info": "Send Email."
-                         }
-                      ]
+                       "name": "actions=indifference",
+                       "field": "Modify Indifference",
+                       "description": "Modify minimum indifference required for event.",
+                       "form-group-class": "actions-row",
                     },
                     {
                       "name": "actions=webhook",
-                      "field": "Webhook on Trigger",
+                      "field": lang['Legacy Webhook'],
                       "fieldType": "select",
                       "form-group-class": "actions-row",
-                      "description": "Send a GET request during an event to the URL specified. Webhook location can be specified in the Global Detector Settings for the Monitor.",
-                      "default": "No",
+                      "default": "",
                       "example": "1",
                       "possible": [
                          {
-                            "name": "Default",
+                            "name": lang['Original Choice'],
                             "value": "",
-                            "info": "Use values set in Global Detector Settings.",
                             "selected": true
                          },
                          {
-                            "name": "No",
-                            "value": "0",
-                            "info": "No Webhook."
-                         },
-                         {
-                            "name": "Yes",
+                            "name": lang.Yes,
                             "value": "1",
-                            "info": "Send Webhook."
                          }
                       ]
                     },
-                    {
-                      "name": "actions=discord",
-                      "field": "Discord Alert on Trigger",
-                      "fieldType": "select",
-                      "form-group-class": "actions-row",
-                      "description": "Recieve a Discord Notification with an image or video during an event to the Discord channel specified. Discord Bot and Channel settings can be changed in your Account Settings.",
-                      "default": "No",
-                      "example": "1",
-                      "possible": [
-                         {
-                            "name": "Default",
-                            "value": "",
-                            "info": "Use values set in Global Detector Settings.",
-                            "selected": true
-                         },
-                         {
-                            "name": "No",
-                            "value": "0",
-                            "info": "No Alert."
-                         },
-                         {
-                            "name": "Yes",
-                            "value": "1",
-                            "info": "Get a Message to Discord."
-                         }
-                      ]
-                   },
                    {
                       "name": "actions=command",
                       "field": "Detector Command",
@@ -5902,20 +6409,13 @@ module.exports = function(s,config,lang){
                       "form-group-class": "actions-row",
                       "possible": [
                          {
-                            "name": "Default",
+                            "name": lang['Original Choice'],
                             "value": "",
-                            "info": "Use values set in Global Detector Settings.",
                             "selected": true
                          },
                          {
-                            "name": "No",
-                            "value": "0",
-                            "info": "No script will run."
-                         },
-                         {
-                            "name": "Yes",
+                            "name": lang.Yes,
                             "value": "1",
-                            "info": "Trigger the script that is set in the <b>Command</b> option. <b>Command</b> is only visible when selecting this option."
                          }
                       ]
                    },
@@ -5924,32 +6424,19 @@ module.exports = function(s,config,lang){
                       "field": "Use Record Method",
                       "fieldType": "select",
                       "description": "Use Traditional Recording, Hotswap, or Delete Motionless with their currently set options in the Global Detection Settings section.",
-                      "default": "No",
+                      "default": "",
                       "form-group-class": "actions-row",
                       "possible": [
                          {
-                            "name": "Default",
+                            "name": lang['Original Choice'],
                             "value": "",
-                            "info": "Use values set in Global Detector Settings.",
                             "selected": true
                          },
                          {
-                            "name": "No",
-                            "value": "0",
-                            "info": "No Traditional Recording, Hotswap, or Delete Motionless."
-                         },
-                         {
-                            "name": "Yes",
+                            "name": lang.Yes,
                             "value": "1",
-                            "info": "Use Traditional Recording, Hotswap, or Delete Motionless with their currently set options in the Global Detection Settings section."
                          }
                       ]
-                   },
-                   {
-                      "name": "actions=indifference",
-                      "field": "Modify Indifference",
-                      "description": "Modify minimum indifference required for event.",
-                      "form-group-class": "actions-row",
                    },
                 ]
             },
@@ -6015,6 +6502,17 @@ module.exports = function(s,config,lang){
                    }
                ]
            },
+           "Other Devices": {
+              "name": lang['Other Devices'],
+              "color": "danger",
+              "section-pre-class": "col-md-12",
+              "info": [
+                  {
+                      "fieldType": "div",
+                      "class": "onvif_result_error row",
+                  }
+              ]
+          },
          }
        },
      "Camera Probe": {
@@ -6267,5 +6765,1154 @@ module.exports = function(s,config,lang){
            },
          }
        },
-    }
+     "Monitor Settings Additional Input Map": {
+           "section": "Monitor Settings Additional Input Map",
+           "blocks": {
+              "Connection" : {
+                 "id": `monSectionMap$[NUMBER]`,
+                 "name": `${lang['Input Map']} $[NUMBER]`,
+                 "section-class": "input-map",
+                 "color": "orange",
+                 "isSection": true,
+                 "info": [
+                     {
+                        "fieldType": "btn-group",
+                        "btns": [
+                            {
+                                "fieldType": "btn",
+                                "class": `btn-danger delete mb-2`,
+                                "btnContent": `${lang['Delete']}`,
+                            }
+                        ],
+                     },
+                     {
+                         name:'map-detail=type',
+                         field:lang['Input Type'],
+                         default:'h264',
+                         attribute:'selector="h_i_$[TEMP_ID]"',
+                         "fieldType": "select",
+                         type:'selector',
+                         possible:[
+                           {
+                              "name": "H.264 / H.265 / H.265+",
+                              "value": "h264"
+                           },
+                           {
+                              "name": "JPEG",
+                              "value": "jpeg"
+                           },
+                           {
+                              "name": "MJPEG",
+                              "value": "mjpeg"
+                           },
+                           {
+                              "name": "HLS (.m3u8)",
+                              "value": "hls"
+                           },
+                           {
+                              "name": "MPEG-4 (.mp4 / .ts)",
+                              "value": "mp4"
+                           },
+                           {
+                              "name": "Local",
+                              "value": "local"
+                           },
+                           {
+                              "name": "Raw",
+                              "value": "raw"
+                           }
+                        ]
+                     },
+                     {
+                         name:'map-detail=fulladdress',
+                         field:lang['Full URL Path'],
+                         placeholder:'Example : rtsp://admin:password@123.123.123.123/stream/1',
+                         type:'text',
+                     },
+                     {
+                         name:'map-detail=sfps',
+                         field:lang['Monitor Capture Rate'],
+                         placeholder:'',
+                         type:'text',
+                     },
+                     {
+                         name:'map-detail=aduration',
+                         field:lang['Analyzation Duration'],
+                         placeholder:'Example : 1000000',
+                         type:'text',
+                     },
+                     {
+                         name:'map-detail=probesize',
+                         field:lang['Probe Size'],
+                         placeholder:'Example : 1000000',
+                         type:'text',
+                     },
+                     {
+                         name:'map-detail=stream_loop',
+                         field:lang['Loop Stream'],
+                         class:'h_i_$[TEMP_ID]_input h_i_$[TEMP_ID]_mp4 h_i_$[TEMP_ID]_raw',
+                         hidden:true,
+                         default:'0',
+                         "fieldType": "select",
+                         type:'selector',
+                         possible:[
+                             {
+                                "name": lang.No,
+                                "value": "0",
+                             },
+                             {
+                                "name": lang.Yes,
+                                "value": "1",
+                             }
+                         ]
+                     },
+                     {
+                         name:'map-detail=rtsp_transport',
+                         field:lang['RTSP Transport'],
+                         class:'h_i_$[TEMP_ID]_input h_i_$[TEMP_ID]_h264',
+                         default:'',
+                         "fieldType": "select",
+                         type:'selector',
+                         possible:[
+                             {
+                                "name": lang.Auto,
+                                "value": "",
+                                "info": "Let FFMPEG decide. Normally it will try UDP first."
+                             },
+                             {
+                                "name": "TCP",
+                                "value": "tcp",
+                                "info": "Set it to this if UDP starts giving undesired results."
+                             },
+                             {
+                                "name": "UDP",
+                                "value": "udp",
+                                "info": "FFMPEG tries this first."
+                             }
+                         ]
+                     },
+                     {
+                         name:'map-detail=accelerator',
+                         field:lang['Accelerator'],
+                         attribute:'selector="h_accel_$[TEMP_ID]"',
+                         default:'0',
+                         "fieldType": "select",
+                         type:'selector',
+                         possible:[
+                             {
+                                "name": lang.No,
+                                "value": "0",
+                             },
+                             {
+                                "name": lang.Yes,
+                                "value": "1",
+                             }
+                         ]
+                     },
+                     {
+                         name:'map-detail=hwaccel',
+                         field:lang['hwaccel'],
+                         class:'h_accel_$[TEMP_ID]_input h_accel_$[TEMP_ID]_1',
+                         hidden:true,
+                         default:'',
+                         "fieldType": "select",
+                         type:'selector',
+                         possible: s.listOfHwAccels
+                     },
+                     {
+                         name:'map-detail=hwaccel_vcodec',
+                         field:lang['hwaccel_vcodec'],
+                         class:'h_accel_$[TEMP_ID]_input h_accel_$[TEMP_ID]_1',
+                         hidden:true,
+                         default:'auto',
+                         "fieldType": "select",
+                         type:'selector',
+                         possible:[
+                             {
+                                "name": lang.Auto + '('+lang.Recommended+')',
+                                "value": ""
+                             },
+                             {
+                                "name": lang.NVIDIA,
+                                "optgroup": [
+                                    {
+                                       "name": lang.h264_cuvid,
+                                       "value": "h264_cuvid"
+                                    },
+                                    {
+                                       "name": lang.hevc_cuvid,
+                                       "value": "hevc_cuvid"
+                                    },
+                                    {
+                                       "name": lang.mjpeg_cuvid,
+                                       "value": "mjpeg_cuvid"
+                                    },
+                                    {
+                                       "name": lang.mpeg4_cuvid,
+                                       "value": "mpeg4_cuvid"
+                                    },
+                                ]
+                             },
+                             {
+                                "name": lang["Quick Sync Video"],
+                                "optgroup": [
+                                    {
+                                       "name": lang.h264_qsv,
+                                       "value": "h264_qsv"
+                                    },
+                                    {
+                                       "name": lang.hevc_qsv,
+                                       "value": "hevc_qsv"
+                                    },
+                                    {
+                                       "name": lang.mpeg2_qsv,
+                                       "value": "mpeg2_qsv"
+                                    },
+                                ]
+                             },
+                             {
+                                "name": lang['Raspberry Pi'],
+                                "optgroup": [
+                                    {
+                                       "name": lang.h264_mmal,
+                                       "value": "h264_mmal"
+                                    },
+                                    {
+                                       "name": lang.mpeg2_mmal,
+                                       "value": "mpeg2_mmal"
+                                    },
+                                    {
+                                       "name": lang["MPEG-4 (Raspberry Pi)"],
+                                       "value": "mpeg4_mmal"
+                                    }
+                                ]
+                             },
+                            ]
+                     },
+                     {
+                         name:'map-detail=hwaccel_device',
+                         field:lang['hwaccel_device'],
+                         class:'h_accel_$[TEMP_ID]_input h_accel_$[TEMP_ID]_1',
+                         hidden:true,
+                         placeholder:'Example : /dev/dri/video0',
+                         type:'text',
+                     },
+                     {
+                         name:'map-detail=cust_input',
+                         field:lang['Input Flags'],
+                         type:'text',
+                     },
+                 ]
+             }
+         }
+     },
+     "Monitor Settings Additional Stream Channel": {
+           "section": "Monitor Settings Additional Stream Channel",
+           "blocks": {
+              "Stream" : {
+                  "id": `monSectionChannel$[TEMP_ID]`,
+                 "name": `${lang["Stream Channel"]} $[NUMBER]`,
+                 "color": "blue",
+                 "input-mapping": "stream_channel-$[NUMBER]",
+                 "isSection": true,
+                 "section-class": "stream-channel",
+                 "info": [
+                     {
+                        "fieldType": "btn-group",
+                        "btns": [
+                            {
+                                "fieldType": "btn",
+                                "class": `btn-danger delete mb-2`,
+                                "btnContent": `${lang['Delete']}`,
+                            }
+                        ],
+                     },
+                     {
+                        "field": lang["Stream Type"],
+                        "name": `channel-detail="stream_type"`,
+                        "description": "The method that will used to consume the video stream.",
+                        "default": "mp4",
+                        "selector": "h_st_channel_$[TEMP_ID]",
+                        "fieldType": "select",
+                        "attribute": `triggerChange="#monSectionChannel$[TEMP_ID] [channel-detail=stream_vcodec]" triggerChangeIgnore="b64,mjpeg"`,
+                        "possible": [
+                             {
+                                "name": lang.Poseidon,
+                                "value": "mp4",
+                                "info": "Poseidon is built on Kevin Godell's MP4 processing code. It simulates a streaming MP4 file but using the data of a live stream. Includes Audio. Some browsers can play it like a regular MP4 file. Streams over HTTP or WebSocket."
+                             },
+                             {
+                                "name": lang["RTMP Stream"],
+                                "value": "rtmp",
+                             },
+                             {
+                                "name": lang['MJPEG'],
+                                "value": "mjpeg",
+                                "info": "Standard Motion JPEG image. No audio."
+                             },
+                             {
+                                "name": lang['FLV'],
+                                "value": "flv",
+                                "info": "Sending FLV encoded frames over WebSocket."
+                             },
+                             {
+                                "name": lang['HLS (includes Audio)'],
+                                "value": "hls",
+                                "info": "Similar method to facebook live streams. <b>Includes audio</b> if input provides it. There is a delay of about 4-6 seconds because this method records segments then pushes them to the client rather than push as while it creates them."
+                             }
+                          ]
+                     },
+                     {
+                        "field": lang['Server URL'],
+                        "name": `channel-detail="rtmp_server_url"`,
+                        "form-group-class": "h_st_channel_$[TEMP_ID]_input h_st_channel_$[TEMP_ID]_rtmp",
+                        "example": "rtmp://live-api.facebook.com:80/rtmp/",
+                     },
+                     {
+                        "field": lang['Stream Key'],
+                        "name": `channel-detail="rtmp_stream_key"`,
+                        "form-group-class": "h_st_channel_$[TEMP_ID]_input h_st_channel_$[TEMP_ID]_rtmp",
+                        "example": "1111111111?ds=1&a=xxxxxxxxxx",
+                     },
+                     {
+                        "field": lang['# of Allow MJPEG Clients'],
+                        "name": `channel-detail="stream_mjpeg_clients"`,
+                        "form-group-class": "h_st_channel_$[TEMP_ID]_input h_st_channel_$[TEMP_ID]_mjpeg",
+                        "placeholder": "20",
+                     },
+                     {
+                        "field": lang['Video Codec'],
+                        "name": `channel-detail="stream_vcodec"`,
+                        "description": "Video codec for streaming.",
+                        "default": "no",
+                        "form-group-class": "h_st_channel_$[TEMP_ID]_input h_st_channel_$[TEMP_ID]_hls h_st_channel_$[TEMP_ID]_rtmp h_st_channel_$[TEMP_ID]_flv h_st_channel_$[TEMP_ID]_mp4  h_st_channel_$[TEMP_ID]_h264",
+                        "fieldType": "select",
+                        "selector": "h_hls_v_channel_$[TEMP_ID]",
+                        "possible": [
+                           {
+                              "name": lang.Auto,
+                              "value": "no",
+                              "info": "Let FFMPEG choose."
+                           },
+                           {
+                              "name": "libx264",
+                              "value": "libx264",
+                              "info": "Used for MP4 video."
+                           },
+                           {
+                              "name": "libx265",
+                              "value": "libx265",
+                              "info": "Used for MP4 video."
+                           },
+                           {
+                              "name": lang.copy,
+                              "value": "copy",
+                              "info": "Used for MP4 video. Has very low CPU usage but cannot use video filters and filesizes may be gigantic.  Best to setup your MP4 settings camera-side when using this option."
+                           },
+                           {
+                               "name": lang['Hardware Accelerated'],
+                               "optgroup": [
+                                   {
+                                      "name": "H.264 VA-API (Intel HW Accel)",
+                                      "value": "h264_vaapi"
+                                   },
+                                   {
+                                      "name": "H.265 VA-API (Intel HW Accel)",
+                                      "value": "hevc_vaapi"
+                                   },
+                                   {
+                                      "name": "H.264 NVENC (NVIDIA HW Accel)",
+                                      "value": "h264_nvenc"
+                                   },
+                                   {
+                                      "name": "H.265 NVENC (NVIDIA HW Accel)",
+                                      "value": "hevc_nvenc"
+                                   },
+                                   {
+                                      "name": "H.264 (Quick Sync Video)",
+                                      "value": "h264_qsv"
+                                   },
+                                   {
+                                      "name": "H.265 (Quick Sync Video)",
+                                      "value": "hevc_qsv"
+                                   },
+                                   {
+                                      "name": "MPEG2 (Quick Sync Video)",
+                                      "value": "mpeg2_qsv"
+                                   },
+                                   {
+                                      "name": "H.264 (Quick Sync Video)",
+                                      "value": "h264_qsv"
+                                   },
+                                   {
+                                      "name": "H.265 (Quick Sync Video)",
+                                      "value": "hevc_qsv"
+                                   },
+                                   {
+                                      "name": "MPEG2 (Quick Sync Video)",
+                                      "value": "mpeg2_qsv"
+                                   },
+                                   {
+                                      "name": "H.264 openMAX (Raspberry Pi)",
+                                      "value": "h264_omx"
+                                   }
+                               ]
+                           },
+                        ]
+                     },
+                     {
+                        "field": lang["Audio Codec"],
+                        "name": `channel-detail="stream_acodec"`,
+                        "description": "Audio codec for streaming.",
+                        "default": "0",
+                        "example": "",
+                        "fieldType": "select",
+                        "form-group-class": "h_st_channel_$[TEMP_ID]_input h_st_channel_$[TEMP_ID]_hls h_st_channel_$[TEMP_ID]_rtmp h_st_channel_$[TEMP_ID]_flv h_st_channel_$[TEMP_ID]_mp4  h_st_channel_$[TEMP_ID]_h264",
+                        "possible": [
+                           {
+                              "name": lang.Auto,
+                              "info": "Let FFMPEG choose.",
+                              "value": ""
+                           },
+                           {
+                              "name": lang["No Audio"],
+                              "info": "No Audio, this is an option that must be set in some parts of the world due to legal reasons.",
+                              "value": "no"
+                           },
+                           {
+                              "name": "libvorbis",
+                              "info": "Used for WebM video.",
+                              "value": "libvorbis"
+                           },
+                           {
+                              "name": "libopus",
+                              "info": "Used for WebM video.",
+                              "value": "libopus"
+                           },
+                           {
+                              "name": "libmp3lame",
+                              "info": "Used for MP4 video.",
+                              "value": "libmp3lame"
+                           },
+                           {
+                              "name": "aac",
+                              "info": "Used for MP4 video.",
+                              "value": "aac"
+                           },
+                           {
+                              "name": "ac3",
+                              "info": "Used for MP4 video.",
+                              "value": "ac3"
+                           },
+                           {
+                              "name": "copy",
+                              "info": "Used for MP4 video. Has very low CPU usage but some audio codecs need custom flags like <code>-strict 2</code> for aac.",
+                              "value": "copy"
+                           }
+                        ]
+                     },
+                     {
+                        "name": "channel-detail=hls_time",
+                        "field": lang["HLS Segment Length"],
+                        "description": "How long each video segment should be, in minutes. Each segment will be drawn by the client through an m3u8 file. Shorter segments take less space.",
+                        "default": "2",
+                        "form-group-class": "h_st_channel_$[TEMP_ID]_input h_st_channel_$[TEMP_ID]_hls",
+                     },
+                     {
+                        "name": "channel-detail=hls_list_size",
+                        "field": lang["HLS List Size"],
+                        "description": "The number of segments maximum before deleting old segments automatically.",
+                        "default": "2",
+                        "form-group-class": "h_st_channel_$[TEMP_ID]_input h_st_channel_$[TEMP_ID]_hls",
+                     },
+                     {
+                        "name": "channel-detail=preset_stream",
+                        "field": lang["HLS Preset"],
+                        "description": "Preset flag for certain video encoders. If you find your camera is crashing every few seconds : try leaving it blank.",
+                        "example": "ultrafast",
+                        "form-group-class": "h_st_channel_$[TEMP_ID]_input h_st_channel_$[TEMP_ID]_hls",
+                     },
+                     {
+                        "name": "channel-detail=stream_quality",
+                        "field": lang.Quality,
+                        "description": "Low number means higher quality. Higher number means less quality.",
+                        "default": "15",
+                        "example": "1",
+                        "form-group-class-pre-layer": "h_hls_v_channel_$[TEMP_ID]_input h_hls_v_channel_$[TEMP_ID]_libx264 h_hls_v_channel_$[TEMP_ID]_libx265 h_hls_v_channel_$[TEMP_ID]_h264_nvenc h_hls_v_channel_$[TEMP_ID]_hevc_nvenc h_hls_v_channel_$[TEMP_ID]_no",
+                        "form-group-class": "h_st_channel_$[TEMP_ID]_input h_st_channel_$[TEMP_ID]_mjpeg h_st_channel_$[TEMP_ID]_hls h_st_channel_$[TEMP_ID]_rtmp h_st_channel_$[TEMP_ID]_jsmpeg h_st_channel_$[TEMP_ID]_flv h_st_channel_$[TEMP_ID]_mp4 h_st_channel_$[TEMP_ID]_h264",
+                        "possible": "1-23"
+                     },
+                     {
+                        "name": "channel-detail=stream_v_br",
+                        "field": lang["Video Bit Rate"],
+                        "placeholder": "",
+                        "form-group-class-pre-layer": "h_hls_v_channel_$[TEMP_ID]_input h_hls_v_channel_$[TEMP_ID]_libx264 h_hls_v_channel_$[TEMP_ID]_libx265 h_hls_v_channel_$[TEMP_ID]_h264_nvenc h_hls_v_channel_$[TEMP_ID]_hevc_nvenc h_hls_v_channel_$[TEMP_ID]_no",
+                        "form-group-class": "h_st_channel_$[TEMP_ID]_input h_st_channel_$[TEMP_ID]_mjpeg h_st_channel_$[TEMP_ID]_hls h_st_channel_$[TEMP_ID]_rtmp h_st_channel_$[TEMP_ID]_jsmpeg h_st_channel_$[TEMP_ID]_flv h_st_channel_$[TEMP_ID]_mp4 h_st_channel_$[TEMP_ID]_h264",
+                     },
+                     {
+                        "name": "channel-detail=stream_a_br",
+                        "field": lang["Audio Bit Rate"],
+                        "placeholder": "128k",
+                        "form-group-class-pre-layer": "h_hls_v_channel_$[TEMP_ID]_input h_hls_v_channel_$[TEMP_ID]_libx264 h_hls_v_channel_$[TEMP_ID]_libx265 h_hls_v_channel_$[TEMP_ID]_h264_nvenc h_hls_v_channel_$[TEMP_ID]_hevc_nvenc h_hls_v_channel_$[TEMP_ID]_no",
+                        "form-group-class": "h_st_channel_$[TEMP_ID]_input h_st_channel_$[TEMP_ID]_mjpeg h_st_channel_$[TEMP_ID]_hls h_st_channel_$[TEMP_ID]_rtmp h_st_channel_$[TEMP_ID]_jsmpeg h_st_channel_$[TEMP_ID]_flv h_st_channel_$[TEMP_ID]_mp4 h_st_channel_$[TEMP_ID]_h264",
+                     },
+                     {
+                        "name": "channel-detail=stream_fps",
+                        "field": lang['Frame Rate'],
+                        "description": "The speed in which frames are displayed to clients, in Frames Per Second. Be aware there is no default. This can lead to high bandwidth usage.",
+                        "form-group-class-pre-layer": "h_hls_v_channel_$[TEMP_ID]_input h_hls_v_channel_$[TEMP_ID]_libx264 h_hls_v_channel_$[TEMP_ID]_libx265 h_hls_v_channel_$[TEMP_ID]_h264_nvenc h_hls_v_channel_$[TEMP_ID]_hevc_nvenc h_hls_v_channel_$[TEMP_ID]_no",
+                        "form-group-class": "h_st_channel_$[TEMP_ID]_input h_st_channel_$[TEMP_ID]_mjpeg h_st_channel_$[TEMP_ID]_hls h_st_channel_$[TEMP_ID]_rtmp h_st_channel_$[TEMP_ID]_jsmpeg h_st_channel_$[TEMP_ID]_flv h_st_channel_$[TEMP_ID]_mp4 h_st_channel_$[TEMP_ID]_h264",
+                     },
+                     {
+                        "name": "channel-detail=stream_scale_x",
+                        "field": lang.Width,
+                        "description": "Width of the stream image that is output after processing.",
+                        "fieldType": "number",
+                        "numberMin": "1",
+                        "example": "640",
+                        "form-group-class-pre-layer": "h_hls_v_channel_$[TEMP_ID]_input h_hls_v_channel_$[TEMP_ID]_libx264 h_hls_v_channel_$[TEMP_ID]_libx265 h_hls_v_channel_$[TEMP_ID]_h264_nvenc h_hls_v_channel_$[TEMP_ID]_hevc_nvenc h_hls_v_channel_$[TEMP_ID]_no",
+                        "form-group-class": "h_st_channel_$[TEMP_ID]_input h_st_channel_$[TEMP_ID]_mjpeg h_st_channel_$[TEMP_ID]_hls h_st_channel_$[TEMP_ID]_rtmp h_st_channel_$[TEMP_ID]_jsmpeg h_st_channel_$[TEMP_ID]_flv h_st_channel_$[TEMP_ID]_mp4 h_st_channel_$[TEMP_ID]_h264",
+                     },
+                     {
+                        "name": "channel-detail=stream_scale_y",
+                        "field": lang.Height,
+                        "description": "Height of the stream image that is output after processing.",
+                        "fieldType": "number",
+                        "numberMin": "1",
+                        "example": "480",
+                        "form-group-class-pre-layer": "h_hls_v_channel_$[TEMP_ID]_input h_hls_v_channel_$[TEMP_ID]_libx264 h_hls_v_channel_$[TEMP_ID]_libx265 h_hls_v_channel_$[TEMP_ID]_h264_nvenc h_hls_v_channel_$[TEMP_ID]_hevc_nvenc h_hls_v_channel_$[TEMP_ID]_no",
+                        "form-group-class": "h_st_channel_$[TEMP_ID]_input h_st_channel_$[TEMP_ID]_mjpeg h_st_channel_$[TEMP_ID]_hls h_st_channel_$[TEMP_ID]_rtmp h_st_channel_$[TEMP_ID]_jsmpeg h_st_channel_$[TEMP_ID]_flv h_st_channel_$[TEMP_ID]_mp4 h_st_channel_$[TEMP_ID]_h264",
+                     },
+                     {
+                        "name": "channel-detail=stream_rotate",
+                        "field": lang["Rotate"],
+                        "description": "Change the viewing angle of the video stream.",
+                        "fieldType": "select",
+                        "form-group-class-pre-layer": "h_hls_v_channel_$[TEMP_ID]_input h_hls_v_channel_$[TEMP_ID]_libx264 h_hls_v_channel_$[TEMP_ID]_libx265 h_hls_v_channel_$[TEMP_ID]_h264_nvenc h_hls_v_channel_$[TEMP_ID]_hevc_nvenc h_hls_v_channel_$[TEMP_ID]_no",
+                        "form-group-class": "h_st_channel_$[TEMP_ID]_input h_st_channel_$[TEMP_ID]_mjpeg h_st_channel_$[TEMP_ID]_hls h_st_channel_$[TEMP_ID]_rtmp h_st_channel_$[TEMP_ID]_jsmpeg h_st_channel_$[TEMP_ID]_flv h_st_channel_$[TEMP_ID]_mp4 h_st_channel_$[TEMP_ID]_h264",
+                        "possible": [
+                             {
+                                "name": lang["No Rotation"],
+                                "value": "no"
+                             },
+                             {
+                                "name": lang["180 Degrees"],
+                                "value": "2,transpose=2"
+                             },
+                             {
+                                "name": lang["90 Counter Clockwise and Vertical Flip (default)"],
+                                "value": "0"
+                             },
+                             {
+                                "name": lang["90 Clockwise"],
+                                "value": "1"
+                             },
+                             {
+                                "name": lang["90 Clockwise and Vertical Flip"],
+                                "value": "2"
+                             },
+                             {
+                                "name": lang["90 Clockwise and Vertical Flip"],
+                                "value": "3"
+                             }
+                          ]
+                     },
+                     {
+                        "name": "channel-detail=svf",
+                        "field": lang["Video Filter"],
+                        "description": "Place FFMPEG video filters in this box to affect the streaming portion. No spaces.",
+                        "form-group-class-pre-layer": "h_hls_v_channel_$[TEMP_ID]_input h_hls_v_channel_$[TEMP_ID]_libx264 h_hls_v_channel_$[TEMP_ID]_libx265 h_hls_v_channel_$[TEMP_ID]_h264_nvenc h_hls_v_channel_$[TEMP_ID]_hevc_nvenc h_hls_v_channel_$[TEMP_ID]_no",
+                        "form-group-class": "h_st_channel_$[TEMP_ID]_input h_st_channel_$[TEMP_ID]_mjpeg h_st_channel_$[TEMP_ID]_hls h_st_channel_$[TEMP_ID]_rtmp h_st_channel_$[TEMP_ID]_jsmpeg h_st_channel_$[TEMP_ID]_flv h_st_channel_$[TEMP_ID]_mp4 h_st_channel_$[TEMP_ID]_h264",
+                    },
+                    {
+                        "name": "channel-detail=cust_stream",
+                        "field": lang["Stream Flags"],
+                    },
+                 ]
+             }
+          }
+       },
+       "Monitor Stream Window": {
+           "section": "Monitor Stream Window",
+           // gridBlockClass: "",
+           // streamBlockPreHtml: `<div class="gps-map-info gps-map-details hidden">
+           //     <div><i class="fa fa-compass fa-3x gps-info-bearing"></i></div>
+           //     <div><i class="fa fa-compass fa-3x gps-info-speed"></i></div>
+           //     <div></div>
+           // </div>
+           // <div class="gps-map gps-map-info hidden" id="gps-map-$MONITOR_ID"></div>`,
+           streamBlockHudHtml: `<div class="camera_cpu_usage">
+               <div class="progress">
+                   <div class="progress-bar progress-bar-danger" role="progressbar" style="width: 0px;"><span></span></div>
+               </div>
+           </div>
+           <div class="lamp" title="$MONITOR_MODE"><i class="fa fa-eercast"></i></div>`,
+           streamBlockHudControlsHtml: `<span title="${lang['Currently viewing']}" class="label label-default">
+                <span class="viewers"></span>
+           </span>
+           <a class="btn btn-sm badge btn-warning run-monitor-detection-trigger-test">${lang['Trigger Event']}</a>
+           `,
+           gridBlockAfterContentHtml: `<div class="mdl-card__supporting-text text-center">
+               <div class="indifference detector-fade">
+                   <div class="progress">
+                       <div class="progress-bar progress-bar-danger" role="progressbar"><span></span></div>
+                   </div>
+               </div>
+               <div class="monitor_details">
+                   <div class="pull-left">
+                       <a title="${lang['Options']}" class="btn btn-sm badge btn-secondary toggle-live-grid-monitor-menu"><i class="fa fa-bars"></i></a>
+                       <a title="${lang['Snapshot']}" class="btn btn-sm badge btn-warning snapshot-live-grid-monitor"><i class="fa fa-camera"></i></a>
+                       <a title="${lang['Videos List']}" class="btn btn-sm badge btn-secondary open-videos"><i class="fa fa-film"></i></a>
+                       <a title="${lang['Close']}" class="btn btn-sm badge btn-danger close-live-grid-monitor"><i class="fa fa-times"></i></a>
+                  </div>
+                   <div><span class="monitor_name">$MONITOR_NAME</span></div>
+               </div>
+           </div>
+           <div class="mdl-data_window pull-right">
+               <div class="d-flex flex-row" style="height: 100%;">
+                   <div class="data-menu col-md-6 p-2 videos-mini scrollable"></div>
+                   <div class="data-menu col-md-6 p-2 logs scrollable"></div>
+               </div>
+           </div>`,
+           links: {
+              "Mute Audio": {
+                  "label": lang['Mute Audio'],
+                  "attr": `system="monitorMuteAudioSingle" mid="$MONITOR_ID"`,
+                  "class": "primary",
+                  "icon": '$MONITOR_MUTE_ICON'
+              },
+              "Snapshot": {
+                 "label": lang['Snapshot'],
+                 "class": "primary snapshot-live-grid-monitor",
+                 "icon": "camera"
+              },
+              "Show Logs": {
+                 "label": lang['Show Logs'],
+                 "class": "warning toggle-live-grid-monitor-logs",
+                 "icon": "exclamation-triangle"
+              },
+              "Control": {
+                 "label": lang['Control'],
+                 "class": "default toggle-live-grid-monitor-ptz-controls",
+                 "icon": "arrows"
+              },
+              "Reconnect Stream": {
+                 "label": lang['Reconnect Stream'],
+                 "class": "success signal reconnect-live-grid-monitor",
+                 "icon": "plug"
+              },
+              "Pop": {
+                 "label": lang['Pop'],
+                 "class": "default run-live-grid-monitor-pop",
+                 "icon": "external-link"
+              },
+              "Zoom In": {
+                 "label": lang['Zoom In'],
+                 "attr": `monitor="zoomStreamWithMouse"`,
+                 "class": "default",
+                 "icon": "search-plus"
+              },
+              // "Calendar": {
+              //    "label": lang['Calendar'],
+              //    "attr": `monitor="calendar"`,
+              //    "class": "default ",
+              //    "icon": "calendar"
+              // },
+              // "Power Viewer": {
+              //    "label": lang['Power Viewer'],
+              //    "attr": `monitor="powerview"`,
+              //    "class": "default",
+              //    "icon": "map-marker"
+              // },
+              "Time-lapse": {
+                 "label": lang['Time-lapse'],
+                 "attr": `monitor="timelapseJpeg"`,
+                 "class": "default",
+                 "icon": "angle-double-right"
+              },
+              // "Video Grid": {
+              //    "label": "Video Grid",
+              //    "attr": `monitor="video_grid"`,
+              //    "class": "default",
+              //    "icon": "th"
+              // },
+              "Videos List": {
+                 "label": lang['Videos List'],
+                 "class": "default open-videos",
+                 "icon": "film"
+              },
+              "Monitor Settings": {
+                 "label": lang['Monitor Settings'],
+                 "class": "default open-monitor-settings",
+                 "icon": "wrench"
+              },
+              "Fullscreen": {
+                 "label": lang['Fullscreen'],
+                 "class": "default toggle-live-grid-monitor-fullscreen",
+                 "icon": "arrows-alt"
+              },
+              "Close": {
+                 "label": lang['Close'],
+                 "class": "danger close-live-grid-monitor",
+                 "icon": "times"
+              }
+           }
+       },
+       "Monitor Options": {
+           "section": "Monitor Options",
+           "dropdownClass": `${Theme.isDark ? 'dropdown-menu-dark' : ''} ${mainBackgroundColor}`
+       },
+       "SideMenu": {
+           "section": "SideMenu",
+           showMonitors: true,
+           "blocks": {
+               "Container1": {
+                  // "id": "sidebarMenu",
+                  "class": `col-md-3 col-lg-2 d-md-block ${mainBackgroundColor} sidebar collapse`,
+                  "links": [
+                      {
+                          icon: 'home',
+                          label: lang.Home,
+                          pageOpen: 'initial',
+                      },
+                      {
+                          icon: 'th',
+                          label: lang['Live Grid'] + ` &nbsp;
+                          <span class="badge bg-light text-dark rounded-pill align-text-bottom liveGridOpenCount">0</span>`,
+                          pageOpen: 'liveGrid',
+                          addUl: true,
+                          ulItems: [
+                              {
+                                  label: lang['Open All Monitors'],
+                                  class: 'open-all-monitors cursor-pointer',
+                                  color: 'orange',
+                              },
+                              {
+                                  label: lang['Close All Monitors'],
+                                  class: 'close-all-monitors cursor-pointer',
+                                  color: 'red',
+                              },
+                              {
+                                  label: lang['Order Streams'],
+                                  class: 'cursor-pointer',
+                                  attributes: 'shinobi-switch="monitorOrder" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
+                                  color: 'grey',
+                              },
+                              {
+                                  label: lang['Mute Audio'],
+                                  class: 'cursor-pointer',
+                                  attributes: 'shinobi-switch="monitorMuteAudio" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
+                                  color: 'grey',
+                              },
+                              {
+                                  label: lang['JPEG Mode'],
+                                  class: 'cursor-pointer',
+                                  attributes: 'shinobi-switch="jpegMode" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
+                                  color: 'grey',
+                              },
+                              {
+                                  label: lang['Stream in Background'],
+                                  class: 'cursor-pointer',
+                                  attributes: 'shinobi-switch="backgroundStream" ui-change-target=".dot" on-class="dot-grey" off-class="dot-green"',
+                                  color: 'grey',
+                              },
+                          ]
+                      },
+                      {
+                          icon: 'video-camera',
+                          label: `${lang.Monitors} &nbsp;
+                          <span class="badge bg-light text-dark rounded-pill align-text-bottom cameraCount"><i class="fa fa-spinner fa-pulse"></i></span>`,
+                          pageOpen: 'monitorsList',
+                      },
+                      {
+                          icon: 'map-marker',
+                          label: `${lang['Power Viewer']}`,
+                          pageOpen: 'powerVideo',
+                      },
+                      {
+                          icon: 'calendar',
+                          label: `${lang['Calendar']}`,
+                          pageOpen: 'calendarView',
+                      },
+                      {
+                          icon: 'wrench',
+                          label: `${lang['Monitor Settings']}`,
+                          pageOpen: 'monitorSettings',
+                          addUl: true,
+                      },
+                      {
+                          icon: 'gears',
+                          label: `${lang['Account Settings']}`,
+                          pageOpen: 'accountSettings',
+                          addUl: true,
+                      },
+                      {
+                          icon: 'group',
+                          label: `${lang.subAccountManager}`,
+                          pageOpen: 'subAccountManager',
+                          addUl: true,
+                      },
+                      {
+                          icon: 'compass',
+                          label: `${lang['ShinobiHub']}`,
+                          pageOpen: 'configFinder',
+                          addUl: true,
+                      },
+                      {
+                          icon: 'grav',
+                          label: `${lang['Region Editor']}`,
+                          pageOpen: 'regionEditor',
+                          addUl:true
+                      },
+                      {
+                          icon: 'key',
+                          label: `${lang['API Keys']}`,
+                          pageOpen: 'apiKeys',
+                      },
+                      {
+                          icon: 'align-right',
+                          label: `${lang['Monitor States']}`,
+                          pageOpen: 'monitorStates',
+                      },
+                      {
+                          icon: 'clock',
+                          label: `${lang['Schedules']}`,
+                          pageOpen: 'schedules',
+                      },
+                      {
+                          icon: 'fast-forward',
+                          label: `${lang['Time-lapse']}`,
+                          pageOpen: 'timelapseViewer',
+                      },
+                      {
+                          icon: 'filter',
+                          label: `${lang['Event Filters']}`,
+                          pageOpen: 'eventFilters',
+                          addUl:true
+                      },
+                      {
+                          icon: 'search',
+                          label: `${lang['ONVIF Scanner']}`,
+                          pageOpen: 'onvifScanner',
+                          addUl:true
+                      },
+                      {
+                          icon: 'opera',
+                          label: `${lang['ONVIF Device Manager']}`,
+                          pageOpen: 'onvifDeviceManager',
+                      },
+                      {
+                          icon: 'eyedropper',
+                          label: `${lang['FFprobe']}`,
+                          pageOpen: 'cameraProbe',
+                      },
+                      {
+                          icon: 'exclamation-triangle',
+                          label: `${lang['Logs']}`,
+                          pageOpen: 'logViewer',
+                      },
+                      // {
+                      //     icon: 'exclamation-circle',
+                      //     label: `${lang['Events']}`,
+                      //     pageOpen: 'eventListWithPics',
+                      // },
+                      {
+                          icon: 'sign-out',
+                          label: `${lang['Logout']}`,
+                          class: 'logout',
+                      },
+                  ]
+              },
+              "SideMenuBeforeList": {
+                 "name": "SideMenuBeforeList",
+                 "color": "grey",
+                 "noHeader": true,
+                 "noDefaultSectionClasses": true,
+                 "section-class": "px-3",
+                 "info": [
+                     {
+                         "id": "indicator-bars",
+                         isFormGroupGroup: true,
+                         "noHeader": true,
+                         "noDefaultSectionClasses": true,
+                         "section-class": "card text-white bg-gradient-blue px-3 py-2 mb-3 border-0",
+                         info: [
+                             {
+                                 "fieldType": "indicatorBar",
+                                 "icon": "microchip",
+                                 "name": "cpu",
+                                 "label": `<span class="os_cpuCount"><i class="fa fa-spinner fa-pulse"></i></span> ${lang.CPU}<span class="os_cpuCount_trailer"></span> : <span class="os_platform" style="text-transform:capitalize"><i class="fa fa-spinner fa-pulse"></i></span>`,
+                             },
+                             {
+                                 "fieldType": "indicatorBar",
+                                 "icon": "square",
+                                 "name": "ram",
+                                 "label": `<span class="os_totalmem used"><i class="fa fa-spinner fa-pulse"></i></span> ${lang.MB} ${lang.RAM}`,
+                             },
+                             {
+                                 id: 'disk-indicator-bars',
+                                 isFormGroupGroup: true,
+                                 "noHeader": true,
+                                 "noDefaultSectionClasses": true,
+                                 "section-class": "disk-indicator-bars",
+                                 info: [
+                                     {
+                                         "fieldType": "indicatorBar",
+                                         "icon": "hdd",
+                                         "name": "disk",
+                                         "label": `<span class="diskUsed" style="letter-spacing:2px;font-weight:100"></span>`,
+                                     },
+                                 ]
+                             },
+                             {
+                                 "fieldType": "indicatorBar",
+                                 "percent": 0,
+                                 "color": 'warning',
+                                 "indicatorPercentClass": 'activeCameraCount',
+                                 "icon": "video-camera",
+                                 "name": "activeCameraCount",
+                                 "label": lang['Active Monitors'],
+                             },
+                         ]
+                     }
+                 ]
+              }
+           }
+       },
+       "Home": {
+           "section": "Home",
+           "blocks": {
+              "Container1": {
+                 "name": "Container1",
+                 "color": "grey",
+                 "noHeader": true,
+                 "noDefaultSectionClasses": true,
+                 "section-class": "col-md-3 pt-3",
+                 "info": [
+                     {
+                         "fieldType": "div",
+                         "class": `card ${mainBackgroundColor} mb-3`,
+                         "divContent": `<div class="card-body ${textWhiteOnBgDark}">
+                             <h5 class="card-title"><i class="fa fa-th text-muted"></i> ${lang['Live Grid']}</h5>
+                             <p class="card-text">${lang.liveGridDescription}</p>
+                             <a page-open="liveGrid" class="btn btn-primary">${lang.Open}</a>
+                           </div>`
+                     },
+                     {
+                         "fieldType": "div",
+                         "class": `card ${mainBackgroundColor} mb-3`,
+                         "divContent": `<div class="card-body ${textWhiteOnBgDark}">
+                             <h5 class="card-title"><i class="fa fa-gears text-muted"></i> ${lang['Account Settings']}</h5>
+                             <p class="card-text">${lang.accountSettingsDescription}</p>
+                             <a page-open="accountSettings" class="btn btn-primary">${lang.Open}</a>
+                           </div>`
+                     },
+                 ]
+            },
+            "Container4": {
+                "name": "Container4",
+                "color": "grey",
+                "noHeader": true,
+                "noDefaultSectionClasses": true,
+                "section-class": "col-md-9",
+                "info": [
+                    {
+                        ejs: 'web/pages/blocks/home/recentVideos',
+                    },
+                ]
+            }
+         }
+      },
+      "Power Viewer": {
+           "section": lang["Power Viewer"],
+           "blocks": {
+            "Video Playback": {
+                id: "powerVideoVideoPlayback",
+                noHeader: true,
+                noDefaultSectionClasses: true,
+               "color": "green",
+               "section-pre-class": "col-md-8 search-parent",
+               "info": [
+                   {
+                      "id": "powerVideoMonitorViews",
+                      "fieldType": "div",
+                   },
+                   {
+                       "id": "powerVideoMonitorControls",
+                       "color": "blue",
+                       noHeader: true,
+                       isSection: true,
+                       isFormGroupGroup: true,
+                       'section-class': 'text-center',
+                       "info": [
+                           {
+                              "fieldType": "btn-group",
+                              "btns": [
+                                  {
+                                      "fieldType": "btn",
+                                      "class": `btn-default btn-sm`,
+                                      "attribute": `powerVideo-control="toggleZoom" title="${lang['Zoom In']}"`,
+                                      "btnContent": `<i class="fa fa-search-plus"></i>`,
+                                  },
+                              ],
+                           },
+                           {
+                              "fieldType": "btn-group",
+                              "btns": [
+                                  {
+                                      "fieldType": "btn",
+                                      "class": `btn-default btn-sm`,
+                                      "attribute": `powerVideo-control="previousVideoAll" title="${lang['Previous Video']}"`,
+                                      "btnContent": `<i class="fa fa-arrow-circle-left"></i>`,
+                                  },
+                                  {
+                                      "fieldType": "btn",
+                                      "class": `btn-danger btn-sm`,
+                                      "attribute": `powerVideo-control="playAll" title="${lang['Play']}"`,
+                                      "btnContent": `<i class="fa fa-play"></i>`,
+                                  },
+                                  {
+                                      "fieldType": "btn",
+                                      "class": `btn-default btn-sm`,
+                                      "attribute": `powerVideo-control="pauseAll" title="${lang['Pause']}"`,
+                                      "btnContent": `<i class="fa fa-pause"></i>`,
+                                  },
+                                  {
+                                      "fieldType": "btn",
+                                      "class": `btn-default btn-sm`,
+                                      "attribute": `powerVideo-control="nextVideoAll" title="${lang['Next Video']}"`,
+                                      "btnContent": `<i class="fa fa-arrow-circle-right"></i>`,
+                                  },
+                              ],
+                           },
+                           {
+                              "fieldType": "btn-group",
+                              "style": "font-family: monospace;",
+                              "btns": [
+                                  {
+                                      "fieldType": "btn",
+                                      "class": `btn-default btn-sm`,
+                                      "attribute": `powerVideo-control="playSpeedAll" data-speed="1"`,
+                                      "btnContent": `1`,
+                                  },
+                                  {
+                                      "fieldType": "btn",
+                                      "class": `btn-default btn-sm`,
+                                      "attribute": `powerVideo-control="playSpeedAll" data-speed="5"`,
+                                      "btnContent": `5`,
+                                  },
+                                  {
+                                      "fieldType": "btn",
+                                      "class": `btn-default btn-sm`,
+                                      "attribute": `powerVideo-control="playSpeedAll" data-speed="10"`,
+                                      "btnContent": `10`,
+                                  },
+                                  {
+                                      "fieldType": "btn",
+                                      "class": `btn-default btn-sm`,
+                                      "attribute": `powerVideo-control="playSpeedAll" data-speed="15"`,
+                                      "btnContent": `15`,
+                                  },
+                              ],
+                           },
+                       ]
+                   },
+                   {
+                       id: "powerVideoTabs",
+                       attribute: `tab-chooser-parent`,
+                       "color": "blue",
+                       noHeader: true,
+                       isSection: true,
+                       isFormGroupGroup: true,
+                       "info": [
+                           {
+                               "field": lang['Monitors'],
+                               "id": "powerVideoMonitorsList",
+                               "form-group-attribute": 'tab-section=monitors',
+                               "attribute": "multiple",
+                               "fieldType": "select",
+                           },
+                           {
+                              "id": "powerVideoDateRange",
+                              "field": lang['Date Range'],
+                           },
+                           {
+                              "id": "powerVideoVideoLimit",
+                              "field": lang['Video Limit'] + ` (${lang['Per Monitor']})`,
+                              "placeholder": "0",
+                           },
+                           {
+                              "id": "powerVideoEventLimit",
+                              "field": lang['Event Limit'] + ` (${lang['Per Monitor']})`,
+                              "placeholder": "500",
+                           },
+                           {
+                               id:'powerVideoSet',
+                               field: lang['Video Set'],
+                               default:'h264',
+                               "fieldType": "select",
+                               possible:[
+                                 {
+                                     "name": lang.Local,
+                                    "value": "local"
+                                 },
+                                 {
+                                    "name": lang.Cloud,
+                                    "value": "cloud"
+                                 },
+                              ]
+                           },
+                       ]
+                   },
+               ]
+           },
+           "Time Strip": {
+               id: "powerVideoTimelineStripsContainer",
+               noHeader: true,
+              "color": "bg-gradient-blue text-white",
+              "section-pre-class": "col-md-4",
+              "info": [
+                  {
+                     "id": "powerVideoTimelineStrips",
+                     "fieldType": "div",
+                     "divContent": `<div class="loading"><i class="fa fa-hand-pointer-o"></i><div class="epic-text">${lang['Select a Monitor']}</div></div>`,
+                  },
+              ]
+          },
+         }
+      },
+      "Calendar": {
+          "section": "Calendar",
+          "blocks": {
+              "Search Settings": {
+                 "name": lang["Search Settings"],
+                 "color": "green",
+                 "section-pre-class": "col-md-4",
+                 "info": [
+                     {
+                         "field": lang["Monitor"],
+                         "fieldType": "select",
+                         "class": "monitors_list",
+                         "possible": []
+                     },
+                     {
+                         "class": "date_selector",
+                         "field": lang.Date,
+                     }
+                ]
+            },
+            "Calendar": {
+                noHeader: true,
+               "section-pre-class": "col-md-8",
+               "info": [
+                   {
+                       "fieldType": "div",
+                       "id": "calendar_draw_area",
+                       "divContent": ""
+                   }
+               ]
+           },
+         }
+      },
+  })
 }

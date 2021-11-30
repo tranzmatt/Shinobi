@@ -1,9 +1,16 @@
-console.log('This translation tool uses Yandex.')
+console.log('This translation tool uses a Google Translate scraper. Use responsibly or your IP will be blocked by Google from using the service.')
 if(!process.argv[2]||!process.argv[3]||!process.argv[4]){
     console.log('You must input arguments.')
     console.log('# node translateLanguageFile.js <SOURCE> <FROM_LANGUAGE> <TO_LANGUAGE>')
     console.log('Example:')
-    console.log('# node translateLanguageFile.js en_US en ar')
+    console.log('# node translateLanguageFile.js en_CA en ar')
+    return
+}
+let translate;
+try{
+    translate = require('@vitalets/google-translate-api')
+}catch(err){
+    console.log(`You are missing a module to use this tool. Run "npm install @vitalets/google-translate-api" to install the required module.`)
     return
 }
 var langDir='../languages/'
@@ -17,6 +24,7 @@ var extra = ''
 var current = 1
 var currentItem = list[0]
 var chosenFile = langDir+process.argv[4]+'.json'
+var throttleTime = parseInt(process.argv[5]) || 1000
 try{
     newList=require(chosenFile)
 }catch(err){
@@ -36,49 +44,29 @@ var goNext=function(){
                 console.log('complete writing')
             })
     }else{
-        next(currentItem)
+        setTimeout(() => {
+            next(currentItem)
+        },throttleTime)
     }
 }
 var next=function(v){
     if(v===undefined){return false}
-    //trnsl.1.1.20170718T033617Z.a9bbd3b739ca59df.7f89b7474ec69812afd0014b5e338328ebf3fc39
     if(newList[v]&&newList[v]!==source[v]){
         goNext()
+        console.log('found a rule for this one, skipping : ',source[v]);
         return
     }
-    if(/<[a-z][\s\S]*>/i.test(source[v])===true){
-        extra+='&format=html'
-    }
-    var url = 'https://translate.yandex.net/api/v1.5/tr.json/translate?key=trnsl.1.1.20160311T042953Z.341f2f63f38bdac6.c7e5c01fff7f57160141021ca61b60e36ff4d379'+extra+'&lang='+process.argv[3]+'-'+process.argv[4]+'&text='+source[v]
-    https.request(url, function(data) {
-        data.setEncoding('utf8');
-        var chunks='';
-        data.on('data', (chunk) => {
-            chunks+=chunk;
-        });
-        data.on('end', () => {
-            try{
-                chunks=JSON.parse(chunks)
-                if(chunks.html){
-                    if(chunks.html[0]){
-                        var translation=chunks.html[0]
-                    }else{
-                        var translation=chunks.html
-                    }
-                    
-                }else{
-                    var translation=chunks.text[0]
-                }
-            }catch(err){
-                var translation=source[v]
-            }
-            newList[v]=translation;
-            console.log(current+'/'+list.length+','+v+' ---> '+translation)
-            goNext()
-        });
-    }).on('error', function(e) {
-        console.log('ERROR : 500 '+v)
-        res.sendStatus(500);
-    }).end();
+    translate(source[v], {to: process.argv[4],from: process.argv[3]}).then(res => {
+        translation = res.text
+        newList[v] = translation;
+        console.log(current + '/' + list.length + ',' + v + ' ---> ' + translation)
+        goNext()
+    }).catch(err => {
+        translation = `${source[v]}`
+        console.log('translation failed : ',translation);
+        console.error(err);
+        newList[v]=translation;
+        goNext()
+    });
 }
 next(currentItem)

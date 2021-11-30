@@ -26,6 +26,10 @@ module.exports = function(s,config,lang,app,io){
         twoFactorVerification,
         ldapLogin,
     } = require('./auth/utils.js')(s,config,lang)
+    const {
+        spawnSubstreamProcess,
+        destroySubstreamProcess,
+    } = require('./monitor/utils.js')(s,config,lang)
     s.renderPage = function(req,res,paths,passables,callback){
         passables.window = {}
         passables.data = req.params
@@ -75,9 +79,16 @@ module.exports = function(s,config,lang,app,io){
     if(config.webPaths.home !== '/'){
         app.use('/libs',express.static(s.mainDirectory + '/web/libs'))
     }
-    app.use(s.checkCorrectPathEnding(config.webPaths.home)+'libs',express.static(s.mainDirectory + '/web/libs'))
-    app.use(s.checkCorrectPathEnding(config.webPaths.admin)+'libs',express.static(s.mainDirectory + '/web/libs'))
-    app.use(s.checkCorrectPathEnding(config.webPaths.super)+'libs',express.static(s.mainDirectory + '/web/libs'))
+    [
+        [config.webPaths.home,'libs','/web/libs'],
+        [config.webPaths.admin,'libs','/web/libs'],
+        [config.webPaths.super,'libs','/web/libs'],
+        [config.webPaths.home,'assets','/web/assets'],
+        [config.webPaths.admin,'assets','/web/assets'],
+        [config.webPaths.super,'assets','/web/assets'],
+    ].forEach((piece) => {
+        app.use(s.checkCorrectPathEnding(piece[0])+piece[1],express.static(s.mainDirectory + piece[2]))
+    })
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({extended: true}));
     app.use(function (req,res,next){
@@ -424,9 +435,12 @@ module.exports = function(s,config,lang,app,io){
                                 $user:{
                                     ke: user.ke,
                                     uid: user.uid,
-                                    mail: user.mail
+                                    mail: user.mail,
+                                    details: {
+                                        sub: user.details.sub
+                                    }
                                 },
-                                lang: user.lang
+                                lang: user.lang,
                             })
                             return;
                         }
@@ -757,6 +771,7 @@ module.exports = function(s,config,lang,app,io){
                         r[n].currentCpuUsage = activeMonitor.currentCpuUsage
                         r[n].status = activeMonitor.monitorStatus
                         r[n].code = activeMonitor.monitorStatusCode
+                        r[n].subStreamChannel = activeMonitor.subStreamChannel
                     }
                     var buildStreamURL = function(type,channelNumber){
                         var streamURL
@@ -804,6 +819,36 @@ module.exports = function(s,config,lang,app,io){
                 })
                 s.closeJsonResponse(res,r);
             })
+        },res,req);
+    });
+    /**
+    * API : Toggle Substream Process on and off
+     */
+    app.get(config.webPaths.apiPrefix+':auth/toggleSubstream/:ke/:id', function (req,res){
+        const response = {ok: false};
+        s.auth(req.params,async (user) => {
+            const groupKey = req.params.ke
+            const monitorId = req.params.id
+            if(
+                user.permissions.control_monitors === "0" ||
+                user.details.sub &&
+                user.details.allmonitors !== '1' &&
+                user.details.monitor_edit.indexOf(monitorId) === -1
+            ){
+                response.msg = user.lang['Not Permitted']
+            }else{
+                const monitorConfig = s.group[groupKey].rawMonitorConfigurations[monitorId]
+                const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
+                if(!activeMonitor.subStreamProcess){
+                    response.ok = true
+                    activeMonitor.allowDestroySubstream = false;
+                    spawnSubstreamProcess(monitorConfig)
+                }else{
+                    activeMonitor.allowDestroySubstream = true
+                    await destroySubstreamProcess(activeMonitor)
+                }
+            }
+            s.closeJsonResponse(res,response);
         },res,req);
     });
     /**
@@ -932,29 +977,54 @@ module.exports = function(s,config,lang,app,io){
             const monitorId = req.params.id
             const groupKey = req.params.ke
             const hasRestrictions = userDetails.sub && userDetails.allmonitors !== '1';
-            s.sqlQueryBetweenTimesWithPermissions({
-                table: 'Events',
-                user: user,
-                groupKey: req.params.ke,
-                monitorId: req.params.id,
-                startTime: req.query.start,
-                endTime: req.query.end,
-                startTimeOperator: req.query.startOperator,
-                endTimeOperator: req.query.endOperator,
-                limit: req.query.limit,
-                endIsStartTo: true,
-                parseRowDetails: true,
-                noFormat: true,
-                noCount: true,
-                rowName: 'events',
-                preliminaryValidationFailed: (
-                    user.permissions.watch_videos === "0" ||
-                    hasRestrictions &&
-                    (!userDetails.video_view || userDetails.video_view.indexOf(monitorId)===-1)
-                )
-            },(response) => {
-                res.end(s.prettyPrint(response))
-            })
+            const monitorRestrictions = s.getMonitorRestrictions(user.details,monitorId)
+            const preliminaryValidationFailed = (
+                user.permissions.watch_videos === "0" ||
+                hasRestrictions &&
+                (!userDetails.video_view || userDetails.video_view.indexOf(monitorId)===-1)
+            );
+            if(req.query.onlyCount === '1' && !preliminaryValidationFailed){
+                const response = {ok: true}
+                s.knexQuery({
+                    action: "count",
+                    columns: "mid",
+                    table: "Events",
+                    where: [
+                        ['ke','=',groupKey],
+                        ['time','>=',req.query.start],
+                        ['time','<=',req.query.end],
+                        monitorRestrictions
+                    ]
+                },(err,r) => {
+                    if(err){
+                        s.debugLog(err)
+                        response.ok = false
+                    }else{
+                        response.count = r[0]['count(`mid`)']
+                    }
+                    s.closeJsonResponse(res,response)
+                })
+            }else{
+                s.sqlQueryBetweenTimesWithPermissions({
+                    table: 'Events',
+                    user: user,
+                    groupKey: req.params.ke,
+                    monitorId: req.params.id,
+                    startTime: req.query.start,
+                    endTime: req.query.end,
+                    startTimeOperator: req.query.startOperator,
+                    endTimeOperator: req.query.endOperator,
+                    limit: req.query.limit,
+                    endIsStartTo: true,
+                    parseRowDetails: true,
+                    noFormat: true,
+                    noCount: true,
+                    rowName: 'events',
+                    preliminaryValidationFailed: preliminaryValidationFailed
+                },(response) => {
+                    res.end(s.prettyPrint(response))
+                })
+            }
         })
     })
     /**

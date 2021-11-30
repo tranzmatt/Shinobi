@@ -29,22 +29,22 @@ module.exports = function(s,config,lang,getSnapshot){
                     ]
                 },(err,r) => {
                     r = r[0]
-                        var mailOptions = {
-                            from: config.mail.from, // sender address
-                            to: checkEmail(r.mail), // list of receivers
-                            subject: lang.NoMotionEmailText1+' '+e.name+' ('+e.id+')', // Subject line
-                            html: '<i>'+lang.NoMotionEmailText2+' ' + (e.details.detector_notrigger_timeout || 10) + ' '+lang.minutes+'.</i>',
+                    var mailOptions = {
+                        from: config.mail.from, // sender address
+                        to: checkEmail(r.mail), // list of receivers
+                        subject: lang.NoMotionEmailText1+' '+e.name+' ('+e.id+')', // Subject line
+                        html: '<i>'+lang.NoMotionEmailText2+' ' + (e.details.detector_notrigger_timeout || 10) + ' '+lang.minutes+'.</i>',
+                    }
+                    mailOptions.html+='<div><b>'+lang['Monitor Name']+' </b> : '+e.name+'</div>'
+                    mailOptions.html+='<div><b>'+lang['Monitor ID']+' </b> : '+e.id+'</div>'
+                    sendMessage(mailOptions, (error, info) => {
+                        if (error) {
+                            s.systemLog('detector:notrigger:sendMail',error)
+                            s.tx({f:'error',ff:'detector_notrigger_mail',id:e.id,ke:e.ke,error:error},'GRP_'+e.ke);
+                            return ;
                         }
-                        mailOptions.html+='<div><b>'+lang['Monitor Name']+' </b> : '+e.name+'</div>'
-                        mailOptions.html+='<div><b>'+lang['Monitor ID']+' </b> : '+e.id+'</div>'
-                        sendMessage(mailOptions, (error, info) => {
-                            if (error) {
-                                s.systemLog('detector:notrigger:sendMail',error)
-                                s.tx({f:'error',ff:'detector_notrigger_mail',id:e.id,ke:e.ke,error:error},'GRP_'+e.ke);
-                                return ;
-                            }
-                            s.tx({f:'detector_notrigger_mail',id:e.id,ke:e.ke,info:info},'GRP_'+e.ke);
-                        })
+                        s.tx({f:'detector_notrigger_mail',id:e.id,ke:e.ke,info:info},'GRP_'+e.ke);
+                    })
                 })
             }
         }
@@ -94,16 +94,11 @@ module.exports = function(s,config,lang,getSnapshot){
             }
         }
         const onEventTriggerBeforeFilterForEmail = function(d,filter){
-            const monitorConfig = s.group[d.ke].rawMonitorConfigurations[d.id]
-            if(monitorConfig.details.detector_mail === '1'){
-                filter.mail = true
-            }else{
-                filter.mail = false
-            }
+            filter.mail = false
         }
         const onEventTriggerForEmail = async (d,filter) => {
             const monitorConfig = s.group[d.ke].rawMonitorConfigurations[d.id]
-            if(filter.mail && config.mail && !s.group[d.ke].activeMonitors[d.id].detector_mail){
+            if((filter.mail || monitorConfig.details.detector_mail === '1') && config.mail && !s.group[d.ke].activeMonitors[d.id].detector_mail){
                 s.knexQuery({
                     action: "select",
                     columns: "mail",
@@ -245,6 +240,25 @@ module.exports = function(s,config,lang,getSnapshot){
         s.onFilterEvent(onFilterEventForEmail)
         s.onDetectorNoTriggerTimeout(onDetectorNoTriggerTimeoutForEmail)
         s.onMonitorUnexpectedExit(onMonitorUnexpectedExitForEmail)
+        s.definitions["Event Filters"].blocks["Action for Selected"].info.push(                    {
+          "name": "actions=mail",
+          "field": "Email on Trigger",
+          "fieldType": "select",
+          "form-group-class": "actions-row",
+          "default": "",
+          "example": "1",
+          "possible": [
+             {
+                "name": lang['Original Choice'],
+                "value": "",
+                "selected": true
+             },
+             {
+                "name": lang.Yes,
+                "value": "1",
+             }
+          ]
+        })
     }catch(err){
         console.log(err)
     }

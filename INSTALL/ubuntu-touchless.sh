@@ -53,19 +53,14 @@ if ! [ -x "$(command -v ifconfig)" ]; then
     echo "Shinobi - Installing Net-Tools"
     sudo apt install net-tools -y
 fi
-if ! [ -x "$(command -v node)" ]; then
-    echo "============="
-    echo "Shinobi - Installing Node.js"
-    wget https://deb.nodesource.com/setup_12.x
-    chmod +x setup_12.x
-    ./setup_12.x
-    sudo apt install nodejs -y
-    sudo apt install node-pre-gyp -y
-    rm setup_12.x
-else
-    echo "Node.js Found..."
-    echo "Version : $(node -v)"
-fi
+echo "============="
+echo "Shinobi - Installing Node.js"
+wget https://deb.nodesource.com/setup_12.x
+chmod +x setup_12.x
+./setup_12.x
+sudo apt install nodejs -y
+sudo apt install node-pre-gyp -y
+rm setup_12.x
 if ! [ -x "$(command -v npm)" ]; then
     sudo apt install npm -y
 fi

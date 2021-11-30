@@ -225,10 +225,10 @@ module.exports = async (s,config,lang,app,io) => {
                                                                         var fullPath = thirdLevelName + '/' + filename
                                                                         var blockPrefix = ''
                                                                         switch(true){
-                                                                            case filename.contains('super.'):
+                                                                            case filename.indexOf('super.') > -1:
                                                                                 blockPrefix = 'super'
                                                                             break;
-                                                                            case filename.contains('admin.'):
+                                                                            case filename.indexOf('admin.') > -1:
                                                                                 blockPrefix = 'admin'
                                                                             break;
                                                                         }

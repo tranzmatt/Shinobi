@@ -144,39 +144,6 @@ module.exports = function(s,config,lang,io){
     ////socket controller
     io.on('connection', function (cn) {
         var tx;
-        //unique h265 socket stream
-        cn.on('h265',function(d){
-            if(!s.group[d.ke]||!s.group[d.ke].activeMonitors||!s.group[d.ke].activeMonitors[d.id]){
-                cn.disconnect();return;
-            }
-            cn.ip=cn.request.connection.remoteAddress;
-            var toUTC = function(){
-                return new Date().toISOString();
-            }
-            var tx=function(z){cn.emit('data',z);}
-            const onFail = (msg) => {
-                tx({f:'stop_reconnect',msg:msg,token_used:d.auth,ke:d.ke});
-                cn.disconnect();
-            }
-            const onSuccess = (r) => {
-                r = r[0];
-                const Emitter = createStreamEmitter(d,cn)
-                validatedAndBindAuthenticationToSocketConnection(cn,d,true)
-                var contentWriter
-                cn.closeSocketVideoStream = function(){
-                    Emitter.removeListener('data', contentWriter);
-                }
-                Emitter.on('data',contentWriter = function(base64){
-                    tx(base64)
-                })
-             }
-            //check if auth key is user's temporary session key
-            if(s.group[d.ke]&&s.group[d.ke].users&&s.group[d.ke].users[d.auth]){
-                onSuccess(s.group[d.ke].users[d.auth]);
-            }else{
-                streamConnectionAuthentication(d,cn.ip).then(onSuccess).catch(onFail)
-            }
-        })
         //unique Base64 socket stream
         cn.on('Base64',function(d){
             if(!s.group[d.ke]||!s.group[d.ke].activeMonitors||!s.group[d.ke].activeMonitors[d.id]){
@@ -692,6 +659,7 @@ module.exports = function(s,config,lang,io){
                                     f: 'monitor_watch_on',
                                     id: d.id,
                                     ke: d.ke,
+                                    subStreamChannel: s.group[d.ke].activeMonitors[d.id].subStreamChannel,
                                     warnings: s.group[d.ke].activeMonitors[d.id].warnings || []
                                 })
                                 s.camera('watch_on',d,cn)
@@ -1050,7 +1018,7 @@ module.exports = function(s,config,lang,io){
             delete(s.clientSocketConnection[cn.id])
         })
         s.onWebSocketConnectionExtensions.forEach(function(extender){
-            extender(cn)
+            extender(cn,validatedAndBindAuthenticationToSocketConnection,createStreamEmitter)
         })
     });
 }
