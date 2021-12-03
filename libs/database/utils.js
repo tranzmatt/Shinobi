@@ -177,6 +177,7 @@ module.exports = function(s,config){
        ]
        const monitorRestrictions = options.monitorRestrictions
        var frameLimit = options.limit
+       const noLimit = options.noLimit === '1'
        const endIsStartTo = options.endIsStartTo
        const chosenDate = options.date
        const startDate = options.startDate ? stringToSqlTime(options.startDate) : null
@@ -226,7 +227,7 @@ module.exports = function(s,config){
            where: whereQuery,
            orderBy: options.orderBy,
            groupBy: options.groupBy,
-           limit: frameLimit || '500'
+           limit: noLimit ? undefined : frameLimit || '500'
        },(err,r) => {
            if(err){
                callback({

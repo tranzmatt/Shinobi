@@ -203,6 +203,7 @@ module.exports = function(s,config,lang,app,io){
                 startOperator: req.query.startOperator,
                 endOperator: req.query.endOperator,
                 limit: req.query.limit,
+                noLimit: req.query.noLimit,
                 archived: req.query.archived,
                 rowType: 'frames',
                 endIsStartTo: true

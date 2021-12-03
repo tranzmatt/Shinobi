@@ -70,7 +70,11 @@ $(document).ready(function(e){
         if(!startDate)startDate = dateRange.startDate
         if(!endDate)endDate = dateRange.endDate
         if(!selectedMonitor)selectedMonitor = monitorsList.val()
-        var queryString = ['start=' + startDate,'end=' + endDate]
+        var queryString = [
+            'start=' + startDate,
+            'end=' + endDate,
+            'noLimit=1'
+        ]
         var frameIconsHtml = ''
         var apiURL = apiBaseUrl + '/timelapse/' + $user.ke + '/' + selectedMonitor
         $.getJSON(apiURL + '?' + queryString.join('&'),function(data){
