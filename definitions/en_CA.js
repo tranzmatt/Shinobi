@@ -1584,7 +1584,8 @@ module.exports = function(s,config,lang){
                                  {
                                     "name": lang.Auto,
                                     "value": "no",
-                                    "info": "Let FFMPEG choose."
+                                    "info": "Let FFMPEG choose.",
+                                    selected: true,
                                  },
                                  {
                                     "name": "libx264",
@@ -1664,7 +1665,8 @@ module.exports = function(s,config,lang){
                                  {
                                     "name": lang.Auto,
                                     "info": "Let FFMPEG choose.",
-                                    "value": ""
+                                    "value": "",
+                                    selected: true,
                                  },
                                  {
                                     "name": lang["No Audio"],
