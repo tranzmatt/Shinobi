@@ -1294,7 +1294,7 @@ module.exports = function(s,config,lang){
                        isFormGroupGroup: true,
                        "info": [
                            {
-                               name:'map-detail=type',
+                               name:'detail-substream-input=type',
                                field:lang['Input Type'],
                                default:'h264',
                                attribute:'selector="h_i_SUBSTREAM_FIELDS"',
@@ -6769,7 +6769,7 @@ module.exports = function(s,config,lang){
            "section": "Monitor Settings Additional Input Map",
            "blocks": {
               "Connection" : {
-                 "id": `monSectionMap$[NUMBER]`,
+                 "id": `monSectionMap$[TEMP_ID]`,
                  "name": `${lang['Input Map']} $[NUMBER]`,
                  "section-class": "input-map",
                  "color": "orange",
