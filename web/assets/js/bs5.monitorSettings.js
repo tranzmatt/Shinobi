@@ -435,20 +435,24 @@ function drawStreamChannelHtml(options){
     monitorStreamChannels.find('.stream-channel').last().find('[channel-detail="stream_vcodec"]').change()
     return tempID;
 }
+function replaceMap(string,mapNumber){
+    var newString = string.split(':')
+    newString[0] = `${mapNumber}`
+    return newString.join(':')
+}
+function replaceMapInName(string,mapNumber){
+    var newString = string.split('(')
+    newString[1] = replaceMap(newString[1],mapNumber)
+    var lastIndex = newString.length - 1
+    if(!newString[lastIndex].endsWith(')')){
+        newString[lastIndex] = newString + ')'
+    }
+    return newString.join('(')
+}
 function buildMapSelectorOptionsBasedOnAddedMaps(){
     var baseOptionSet = definitions['Monitor Settings'].blocks.Input.info.find((item) => {return item.name === 'detail=primary_input'}).possible
     var newOptGroup = [baseOptionSet]
     var addedInputMaps = monitorEditorWindow.find('.input-map')
-    function replaceMap(string,mapNumber){
-        var newString = string.split(':')
-        newString[0] = `${mapNumber}`
-        return newString.join(':')
-    }
-    function replaceMapInName(string,mapNumber){
-        var newString = string.split('(')
-        newString[1] = replaceMap(newString[1],mapNumber)
-        return newString.join('(')
-    }
     $.each(addedInputMaps,function(n){
         var mapNumber = n + 1
         var newOptionSet = []

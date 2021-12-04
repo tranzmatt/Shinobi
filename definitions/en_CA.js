@@ -120,6 +120,7 @@ module.exports = function(s,config,lang){
                    {
                        "fieldType": 'div',
                        "id": "monitorPresetsSelection",
+                       "style": "max-height:400px;overflow:auto;",
                        "class": "mdl-list"
                    },
                    {
@@ -497,23 +498,23 @@ module.exports = function(s,config,lang){
                       "form-group-class": "input-mapping",
                       "possible": [
                            {
-                              "name": lang['All streams in first feed'] + '(0, ' + lang.Default + ')',
+                              "name": lang['All streams in first feed'] + ' (0, ' + lang.Default + ')',
                               "value": "0"
                            },
                            {
-                              "name": lang['First stream in feed'] + '(0:0)',
+                              "name": lang['First stream in feed'] + ' (0:0)',
                               "value": "0:0"
                            },
                            {
-                              "name": lang['Second stream in feed'] + "(0:1)",
+                              "name": lang['Second stream in feed'] + " (0:1)",
                               "value": "0:1"
                            },
                            {
-                              "name": lang['Video streams only'] + "(0:v)",
+                              "name": lang['Video streams only'] + " (0:v)",
                               "value": "0:v"
                            },
                            {
-                              "name": lang['Video stream only from first feed'] + "(0:v:0)",
+                              "name": lang['Video stream only from first feed'] + " (0:v:0)",
                               "value": "0:v:0"
                            }
                         ]
