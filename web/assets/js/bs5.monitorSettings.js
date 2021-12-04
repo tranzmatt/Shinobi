@@ -372,6 +372,7 @@ window.getMonitorEditFormFields = function(){
     monitorConfig.details = safeJsonParse(monitorConfig.details)
     monitorConfig.details.substream = getSubStreamChannelFields()
     monitorConfig.details.groups = getMonitorGroupsSelected()
+    monitorConfig.details.input_map_choices = monitorSectionInputMapsave()
     // TODO : Input Maps and Stream Channels (does old way at the moment)
 
 
@@ -464,7 +465,7 @@ function buildMapSelectorOptionsBasedOnAddedMaps(){
 function drawInputMapSelectorHtml(options,parent){
     if(!options.map)options.map = '';
     var availableInputMapSelections = buildMapSelectorOptionsBasedOnAddedMaps()
-    var html = `<div class="form-group map-row d-flex flex-row">
+    var html = `<div class="map-row form-group map-row d-flex flex-row">
         <div class="flex-grow-1">
             <select class="form-control form-control-sm" map-input="map">`
                     $.each(availableInputMapSelections,function(n,optgroup){
@@ -473,6 +474,7 @@ function drawInputMapSelectorHtml(options,parent){
                                 html += createOptionHtml({
                                     label: option.name,
                                     value: option.value,
+                                    selected: option.value === options.map,
                                 })
                             })
                         html += `</optgroup>`
@@ -732,7 +734,7 @@ var mapPlacementInit = function(){
     })
 }
 var monitorSectionInputMapsave = function(){
-    var mapContainers = $('[input-mapping]');
+    var mapContainers = monitorEditorWindow.find('[input-mapping]');
     var stringForSave = {}
     mapContainers.each(function(q,t){
         var mapRowElement = $(t).find('.map-row');
@@ -746,7 +748,7 @@ var monitorSectionInputMapsave = function(){
         });
         stringForSave[$(t).attr('input-mapping')] = mapRow;
     });
-    monitorEditorWindow.find('[detail="input_map_choices"]').val(JSON.stringify(stringForSave)).change();
+    return stringForSave
 }
 monitorSectionInputMaps.on('click','.delete',function(){
     $(this).parents('.input-map').remove()
@@ -774,14 +776,9 @@ monitorEditorWindow.on('change','[map-detail]',function(){
 })
 monitorEditorWindow.on('click','[input-mapping] .add_map_row',function(){
     drawInputMapSelectorHtml({},$(this).parents('[input-mapping]').find('.choices'))
-    monitorSectionInputMapsave()
 })
 monitorEditorWindow.on('click','[input-mapping] .delete_map_row',function(){
     $(this).parents('.map-row').remove()
-    monitorSectionInputMapsave()
-})
-monitorEditorWindow.on('change','[map-input]',function(){
-    monitorSectionInputMapsave()
 })
 //////////////////
 //Stream Channels
@@ -803,7 +800,6 @@ var channelPlacementInit = function(){
         _this.attr('stream-channel',n)
         _this.find('.place').text(n)
         _this.find('[input-mapping]').attr('input-mapping','stream_channel-'+n)
-        monitorSectionInputMapsave()
     })
 }
 var getSubStreamChannelFields = function(){
