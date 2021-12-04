@@ -499,12 +499,7 @@ function importIntoMonitorEditor(options){
     //get maps
     monitorSectionInputMaps.empty()
     if(monitorDetails.input_maps && monitorDetails.input_maps !== ''){
-        var input_maps
-        try{
-            input_maps = safeJsonParse(monitorDetails.input_maps)
-        }catch(er){
-            input_maps = monitorDetails.input_maps;
-        }
+        var input_maps = safeJsonParse(monitorDetails.input_maps)
         if(input_maps.length > 0){
             showInputMappingFields()
             $.each(input_maps,function(n,v){
