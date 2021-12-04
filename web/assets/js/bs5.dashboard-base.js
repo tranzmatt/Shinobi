@@ -581,7 +581,7 @@ function diffObject(obj1, obj2) {
 function getAllSectionsFromDefinition(definitionsBase){
     var sections = {}
     var addSection = function(section,parentName){
-        sections[section.name] = {
+        sections[section.id + section.name] = {
             name: section.name,
             id: section.id,
             color: section.color,
@@ -596,7 +596,7 @@ function getAllSectionsFromDefinition(definitionsBase){
         }
         if(section.blocks){
             $.each(section.blocks,function(m,block){
-                addSection(block)
+                addSection(block,section.name)
             })
         }
     }
