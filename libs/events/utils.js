@@ -628,7 +628,7 @@ module.exports = (s,config,lang,app,io) => {
             save : false,
             webhook : false,
             command : false,
-            record : false,
+            record : true,
             forceRecord : false,
             indifference : false,
             countObjects : false
