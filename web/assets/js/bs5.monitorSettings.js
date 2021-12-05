@@ -1456,5 +1456,17 @@ editorForm.find('[name="type"]').change(function(e){
             break;
         }
     })
+    function checkToOpenSideMenu(){
+        if(isSideBarMenuCollapsed()){
+            sideMenuCollapsePoint.collapse('show')
+        }
+    }
+    addOnTabOpen('monitorSettings', checkToOpenSideMenu)
+    addOnTabReopen('monitorSettings', checkToOpenSideMenu)
+    addOnTabAway('monitorSettings', function(){
+        if(isSideBarMenuCollapsed()){
+            sideMenuCollapsePoint.collapse('hide')
+        }
+    })
     window.generateDefaultMonitorSettings = generateDefaultMonitorSettings
 })

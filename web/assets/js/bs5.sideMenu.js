@@ -4,7 +4,6 @@ var pageTabContainer = $('#pageTabContainer')
 var topMenu = $('#topMenu')
 var monitorSideList = $('#monitorSideList')
 var sideMenuCollapsePoint = $('#side-menu-collapse-point')
-var isSideBarMenuCollapsed = false
 function buildTabHtml(tabName,tabLabel,tabIcon){
     return `<li class="nav-item">
         <a class="nav-link side-menu-link" page-open="${tabName}">
@@ -105,8 +104,7 @@ function toggleSideMenuCollapse(dontSaveChange){
     }else{
         sideMenuCollapsePoint.collapse('show')
     }
-    isSideBarMenuCollapsed = !isVisible;
-    if(!dontSaveChange)dashboardOptions('sideMenuCollapsed',isSideBarMenuCollapsed ? '0' : 1)
+    if(!dontSaveChange)dashboardOptions('sideMenuCollapsed',!isVisible ? '0' : 1)
 }
 function loadSideMenuCollapseStatus(){
     var isCollapsed = dashboardOptions().sideMenuCollapsed === 1;
@@ -116,6 +114,9 @@ function loadSideMenuCollapseStatus(){
         sideMenuCollapsePoint.collapse('show')
     }
     return isCollapsed
+}
+function isSideBarMenuCollapsed(){
+    return dashboardOptions().sideMenuCollapsed === 1
 }
 $('#monitors_list_search').keyup(function(){
     var monitorBlocks = monitorSideList.find('.monitor_block');
