@@ -2,18 +2,18 @@
     const showMonitors = define.SideMenu.showMonitors; %>
 <nav id="<%- menuInfo.id || 'sidebarMenu' %>" class="<%- menuInfo.class || 'col-md-3 col-lg-2 d-md-block sidebar collapse' %>">
     <div id="menu-side" class="position-sticky">
-        <div class="align-items-center d-flex flex-row p-3 my-3 m-3 btn-default rounded shadow-sm cursor-pointer" style="overflow: hidden;">
-            <div class="align-items-center mr-3">
-                <div class="lh-1" <%- showMonitors ? `data-bs-toggle="collapse" data-bs-target=".home-collapse"` : '' %>>
+        <div class="align-items-center d-flex flex-row my-3 m-3 btn-default rounded shadow-sm cursor-pointer" style="overflow: hidden;">
+            <div class="align-items-center mr-3 py-3 pl-3">
+                <div class="lh-1 <%- showMonitors ? `toggle-menu-collapse` : '' %>">
                     <img src="<%- window.libURL + config.logoLocation196x196 %>" width="42" style="<%- config.logoLocation76x76Style %>">
                 </div>
             </div>
-            <div class="flex-grow-1 align-items-center mr-3" <%- showMonitors ? `data-bs-toggle="collapse" data-bs-target=".home-collapse"` : '' %>>
+            <div class="flex-grow-1 align-items-center mr-3 py-3 <%- !showMonitors ? `pr-3` : '' %> <%- showMonitors ? `toggle-menu-collapse` : '' %>">
                 <h1 class="h6 mb-0 lh-1 text-ellipsis" style="overflow: hidden;"><%- $user.mail %></h1>
                 <small><%- lang.Monitors %> : <span class="cameraCount"></span></small>
             </div>
             <% if(showMonitors){ %>
-            <div class="align-items-center mr-3 btn-default rounded shadow-sm cursor-pointer">
+            <div class="align-items-center mr-3 py-3 pr-3 btn-default rounded shadow-sm cursor-pointer">
                 <div class="lh-1">
                     <a class_toggle="compressed-monitor-icons" data-target="#monitorSideList" icon-toggle="fa-th fa-bars" icon-child="i"><i class="fa fa-th"></i></a>
                 </div>
@@ -28,7 +28,7 @@
           include fieldBuilders.ejs
         %>
         <% drawBlock(define.SideMenu.blocks.SideMenuBeforeList) %>
-        <div class="collapse show home-collapse">
+        <div id="side-menu-collapse-point" class="collapse show home-collapse">
               <ul id="pageTabLinks" class="nav flex-column nav-pills">
                   <div class="pb-2 px-3" id="home-collapse">
                       <% menuInfo.links.forEach((item) => {
