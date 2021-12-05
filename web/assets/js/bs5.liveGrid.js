@@ -159,6 +159,9 @@ function buildLiveGridBlock(monitor){
         <div class="mdl-overlay-menu-backdrop hidden">
             <ul class="mdl-overlay-menu list-group">`
             var buttons = streamBlockInfo.links
+            if(!monitor.details.control === '1'){
+                delete(buttons["Control"])
+            }
             if(!permissionCheck('video_view',monitor.mid)){
                 delete(buttons["Videos List"])
                 delete(buttons["Time-lapse"])
