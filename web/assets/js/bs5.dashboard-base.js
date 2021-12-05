@@ -685,7 +685,7 @@ var logWriterFloodCounter = 0
 var logWriterFloodLock = null
 function buildLogRow(v){
     var html = ''
-    html += `<div class="card shadow-lg mb-3 px-0 btn-default search-row">
+    html += `<div class="log-item card shadow-lg mb-3 px-0 btn-default search-row">
         <div class="card-header">
             <small class="${definitions.Theme.isDark ? 'text-white' : ''}">${v.info && v.info.type ? v.info.type : v.mid}</small>
         </div>
