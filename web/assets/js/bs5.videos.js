@@ -75,14 +75,14 @@ function createVideoRow(row,classOverride){
             $.each(objectsFound,function(tag,count){
                 eventMatrixHtml += `<tr>
                     <td class="${definitions.Theme.isDark ? 'text-white' : ''}" style="text-transform:capitalize">${tag}</td>
-                    <td class="text-end"><span class="badge ${definitions.Theme.isDark ? 'bg-light text-dark' : 'bg-dark text-white'} rounded-pill">${count}</span></td>
+                    <td class="text-end"><span class="badge badge-dark text-white rounded-pill">${count}</span></td>
                 </tr>`
             })
             eventMatrixHtml += `</table>`
     }
     var videoEndpoint = getLocation() + '/' + $user.auth_token + '/videos/' + $user.ke + '/' + row.mid + '/' + row.filename
     return `
-    <div class="video-row ${classOverride ? classOverride : `col-md-12 col-lg-6 mb-3`} search-row" data-mid="${row.mid}" data-time="${row.time}">
+    <div class="video-row ${classOverride ? classOverride : `col-md-12 col-lg-6 mb-3`} search-row" data-mid="${row.mid}" data-time="${row.time}" data-time-formed="${new Date(row.time)}">
         <div class="card shadow-lg px-0 btn-default">
             <div class="card-header d-flex flex-row">
                 <div class="flex-grow-1 ${definitions.Theme.isDark ? 'text-white' : ''}">
@@ -181,6 +181,25 @@ function getEvents(options,callback){
         callback(eventData)
     })
 }
+onWebSocketEvent(function(d){
+    switch(d.f){
+        case'video_delete':
+            console.log(d)
+            $('[file="'+d.filename+'"][mid="'+d.mid+'"]:not(.modal)').remove();
+            $('[data-file="'+d.filename+'"][data-mid="'+d.mid+'"]:not(.modal)').remove();
+            $('[data-time-formed="'+(new Date(d.time))+'"][data-mid="'+d.mid+'"]:not(.modal)').remove();
+            // if($.powerVideoWindow.currentDataObject&&$.powerVideoWindow.currentDataObject[d.filename]){
+            //     delete($.timelapse.currentVideos[$.powerVideoWindow.currentDataObject[d.filename].position])
+            //     $.powerVideoWindow.drawTimeline(false)
+            // }
+            // if($.timelapse.currentVideos&&$.timelapse.currentVideos[d.filename]){
+            //     delete($.timelapse.currentVideosArray.videos[$.timelapse.currentVideos[d.filename].position])
+            //     $.timelapse.drawTimeline(false)
+            // }
+            // if($.vidview.loadedVideos && $.vidview.loadedVideos[d.filename])delete($.vidview.loadedVideos[d.filename])
+        break;
+    }
+})
 $(document).ready(function(){
     $('body')
     .on('click','.open-video',function(){

@@ -237,7 +237,7 @@ module.exports = function(s,config,lang){
                         filename: filename,
                         mid: e.id,
                         ke: e.ke,
-                        time: s.nameToTime(filename),
+                        time: new Date(s.nameToTime(filename)),
                         end: s.formattedTime(new Date,'YYYY-MM-DD HH:mm:ss')
                     },'GRP_'+e.ke);
                     var storageIndex = s.getVideoStorageIndex(e)
