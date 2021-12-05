@@ -7546,10 +7546,48 @@ module.exports = function(s,config,lang){
                           pageOpen: 'calendarView',
                       },
                       {
+                          icon: 'fast-forward',
+                          label: `${lang['Time-lapse']}`,
+                          pageOpen: 'timelapseViewer',
+                      },
+                      {
+                          divider: true,
+                      },
+                      {
                           icon: 'wrench',
                           label: `${lang['Monitor Settings']}`,
                           pageOpen: 'monitorSettings',
                           addUl: true,
+                      },
+                      {
+                          icon: 'grav',
+                          label: `${lang['Region Editor']}`,
+                          pageOpen: 'regionEditor',
+                          addUl:true
+                      },
+                      {
+                          icon: 'filter',
+                          label: `${lang['Event Filters']}`,
+                          pageOpen: 'eventFilters',
+                          addUl:true
+                      },
+                      {
+                          icon: 'align-right',
+                          label: `${lang['Monitor States']}`,
+                          pageOpen: 'monitorStates',
+                      },
+                      {
+                          icon: 'clock',
+                          label: `${lang['Schedules']}`,
+                          pageOpen: 'schedules',
+                      },
+                      {
+                          icon: 'exclamation-triangle',
+                          label: `${lang['Logs']}`,
+                          pageOpen: 'logViewer',
+                      },
+                      {
+                          divider: true,
                       },
                       {
                           icon: 'gears',
@@ -7564,42 +7602,12 @@ module.exports = function(s,config,lang){
                           addUl: true,
                       },
                       {
-                          icon: 'compass',
-                          label: `${lang['ShinobiHub']}`,
-                          pageOpen: 'configFinder',
-                          addUl: true,
-                      },
-                      {
-                          icon: 'grav',
-                          label: `${lang['Region Editor']}`,
-                          pageOpen: 'regionEditor',
-                          addUl:true
-                      },
-                      {
                           icon: 'key',
                           label: `${lang['API Keys']}`,
                           pageOpen: 'apiKeys',
                       },
                       {
-                          icon: 'align-right',
-                          label: `${lang['Monitor States']}`,
-                          pageOpen: 'monitorStates',
-                      },
-                      {
-                          icon: 'clock',
-                          label: `${lang['Schedules']}`,
-                          pageOpen: 'schedules',
-                      },
-                      {
-                          icon: 'fast-forward',
-                          label: `${lang['Time-lapse']}`,
-                          pageOpen: 'timelapseViewer',
-                      },
-                      {
-                          icon: 'filter',
-                          label: `${lang['Event Filters']}`,
-                          pageOpen: 'eventFilters',
-                          addUl:true
+                          divider: true,
                       },
                       {
                           icon: 'search',
@@ -7618,9 +7626,13 @@ module.exports = function(s,config,lang){
                           pageOpen: 'cameraProbe',
                       },
                       {
-                          icon: 'exclamation-triangle',
-                          label: `${lang['Logs']}`,
-                          pageOpen: 'logViewer',
+                          divider: true,
+                      },
+                      {
+                          icon: 'compass',
+                          label: `${lang['ShinobiHub']}`,
+                          pageOpen: 'configFinder',
+                          addUl: true,
                       },
                       {
                           icon: 'info-circle',
