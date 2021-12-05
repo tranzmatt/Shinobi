@@ -276,7 +276,6 @@ function drawLiveGridBlock(monitorConfig,subStreamChannel){
         setLiveGridOpenCount(1)
     }
     initiateLiveGridPlayer(loadedMonitors[monitorId],subStreamChannel)
-    loadVideoMiniList(monitorId)
 }
 function initiateLiveGridPlayer(monitor,subStreamChannel){
     var livePlayerElement = loadedLiveGrids[monitor.mid]
@@ -871,9 +870,11 @@ $(document).ready(function(e){
     })
     .on('click','.toggle-live-grid-monitor-logs',function(){
         var monitorItem = $(this).parents('[data-mid]')
+        var monitorId = monitorItem.attr('data-mid')
         monitorItem.toggleClass('show_data')
         var dataBlocks = monitorItem.find('.stream-block,.mdl-data_window')
         if(monitorItem.hasClass('show_data')){
+            loadVideoMiniList(monitorId)
             dataBlocks.addClass('col-md-6').removeClass('col-md-12')
         }else{
             dataBlocks.addClass('col-md-12').removeClass('col-md-6')
