@@ -7364,7 +7364,8 @@ module.exports = function(s,config,lang){
                <div class="monitor_details">
                    <div class="pull-left">
                        <a title="${lang['Options']}" class="btn btn-sm badge btn-secondary toggle-live-grid-monitor-menu"><i class="fa fa-bars"></i></a>
-                       <a title="${lang['Edit']}" class="btn btn-sm badge btn-primary default open-monitor-settings"><i class="fa fa-wrench"></i></a>
+                       <a title="${lang['Edit']}" class="btn btn-sm badge btn-primary open-monitor-settings"><i class="fa fa-wrench"></i></a>
+                       <a title="${lang['Toggle Substream']}" class="btn btn-sm badge btn-secondary toggle-monitor-substream"><i class="fa fa-eye"></i></a>
                        <a title="${lang['Snapshot']}" class="btn btn-sm badge btn-warning snapshot-live-grid-monitor"><i class="fa fa-camera"></i></a>
                        <a title="${lang['Videos List']}" class="btn btn-sm badge btn-secondary open-videos"><i class="fa fa-film"></i></a>
                        <a title="${lang['Show Logs']}" class="btn btn-sm badge btn-warning toggle-live-grid-monitor-logs"><i class="fa fa-exclamation-triangle"></i></a>
@@ -7395,6 +7396,11 @@ module.exports = function(s,config,lang){
                  "label": lang['Show Logs'],
                  "class": "warning toggle-live-grid-monitor-logs",
                  "icon": "exclamation-triangle"
+              },
+              "Show Logs": {
+                 "label": lang['Toggle Substream'],
+                 "class": "warning toggle-monitor-substream",
+                 "icon": "eye"
               },
               "Control": {
                  "label": lang['Control'],

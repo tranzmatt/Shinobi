@@ -900,6 +900,10 @@ $(document).ready(function(e){
         var monitorId = $(this).parents('[data-mid]').attr('data-mid')
         popOutMonitor(monitorId)
     })
+    .on('click','.toggle-monitor-substream',function(){
+        var monitorId = $(this).parents('[data-mid]').attr('data-mid')
+        toggleSubStream(monitorId)
+    })
     .on('click','.run-live-grid-monitor-ptz',function(){
         var el = $(this)
         var monitorId = el.parents('[data-mid]').attr('data-mid')

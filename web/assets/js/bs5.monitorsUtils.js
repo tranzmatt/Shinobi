@@ -170,7 +170,12 @@ function runTestDetectionTrigger(monitorId,callback){
         if(callback)callback()
     })
 }
-
+function toggleSubStream(monitorId,callback){
+    $.getJSON(getApiPrefix() + '/toggleSubstream/'+$user.ke+'/'+monitorId,function(d){
+        debugLog(d)
+        if(callback)callback()
+    })
+}
 function playAudioAlert(){
     var fileName = $user.details.audio_alert
     if(fileName && window.soundAlarmed !== true){

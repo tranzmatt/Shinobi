@@ -646,8 +646,7 @@ module.exports = (s,config,lang,app,io) => {
         })
         const eventDetails = d.details
         const passedEventFilters = checkEventFilters(d,monitorDetails,filter)
-        if(!passedEventFilters)return
-        const detailString = JSON.stringify(eventDetails)
+        if(!passedEventFilters)return;
         const eventTime = new Date()
         if(
             filter.addToMotionCounter &&
