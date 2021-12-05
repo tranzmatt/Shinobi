@@ -1304,7 +1304,8 @@ module.exports = function(s,config,lang){
                                possible:[
                                  {
                                     "name": "H.264 / H.265 / H.265+",
-                                    "value": "h264"
+                                    "value": "h264",
+                                    selected: true,
                                  },
                                  {
                                     "name": "JPEG",
@@ -1372,6 +1373,7 @@ module.exports = function(s,config,lang){
                                    {
                                       "name": lang.Yes,
                                       "value": "1",
+                                      selected: true,
                                    }
                                ]
                            },
@@ -1386,7 +1388,8 @@ module.exports = function(s,config,lang){
                                    {
                                       "name": lang.Auto,
                                       "value": "",
-                                      "info": "Let FFMPEG decide. Normally it will try UDP first."
+                                      "info": "Let FFMPEG decide. Normally it will try UDP first.",
+                                      selected: true,
                                    },
                                    {
                                       "name": "TCP",
@@ -1411,6 +1414,7 @@ module.exports = function(s,config,lang){
                                    {
                                       "name": lang.No,
                                       "value": "0",
+                                      selected: true,
                                    },
                                    {
                                       "name": lang.Yes,
@@ -1439,7 +1443,8 @@ module.exports = function(s,config,lang){
                                possible:[
                                    {
                                       "name": lang.Auto + '('+lang.Recommended+')',
-                                      "value": ""
+                                      "value": "",
+                                      selected: true,
                                    },
                                    {
                                       "name": lang.NVIDIA,
@@ -1532,7 +1537,6 @@ module.exports = function(s,config,lang){
                                    {
                                       "name": lang.Poseidon,
                                       "value": "mp4",
-                                      "info": "Poseidon is built on Kevin Godell's MP4 processing code. It simulates a streaming MP4 file but using the data of a live stream. Includes Audio. Some browsers can play it like a regular MP4 file. Streams over HTTP or WebSocket."
                                    },
                                    {
                                       "name": lang["RTMP Stream"],
@@ -1541,17 +1545,15 @@ module.exports = function(s,config,lang){
                                    {
                                       "name": lang['MJPEG'],
                                       "value": "mjpeg",
-                                      "info": "Standard Motion JPEG image. No audio."
                                    },
                                    {
                                       "name": lang['FLV'],
                                       "value": "flv",
-                                      "info": "Sending FLV encoded frames over WebSocket."
                                    },
                                    {
                                       "name": lang['HLS (includes Audio)'],
                                       "value": "hls",
-                                      "info": "Similar method to facebook live streams. <b>Includes audio</b> if input provides it. There is a delay of about 4-6 seconds because this method records segments then pushes them to the client rather than push as while it creates them."
+                                      selected: true,
                                    }
                                 ]
                            },

@@ -214,7 +214,43 @@ function generateDefaultMonitorSettings(){
            "detector_cascades": "",
            "stream_channels": "",
            "input_maps": "",
-           "input_map_choices": ""
+           "input_map_choices": "",
+           "substream": {
+                "input": {
+                    "type": "h264",
+                    "fulladdress": "",
+                    "sfps": "",
+                    "aduration": "",
+                    "probesize": "",
+                    "stream_loop": null,
+                    "rtsp_transport": "tcp",
+                    "accelerator": "0",
+                    "hwaccel": null,
+                    "hwaccel_vcodec": "",
+                    "hwaccel_device": "",
+                    "cust_input": ""
+                },
+                "output": {
+                    "stream_type": "hls",
+                    "rtmp_server_url": "",
+                    "rtmp_stream_key": "",
+                    "stream_mjpeg_clients": "",
+                    "stream_vcodec": "copy",
+                    "stream_acodec": "no",
+                    "hls_time": "",
+                    "hls_list_size": "",
+                    "preset_stream": "",
+                    "stream_quality": "",
+                    "stream_v_br": "",
+                    "stream_a_br": "",
+                    "stream_fps": "",
+                    "stream_scale_x": "",
+                    "stream_scale_y": "",
+                    "stream_rotate": null,
+                    "svf": "",
+                    "cust_stream": ""
+                }
+            }
         },
        "shto": "[]",
        "shfr": "[]"

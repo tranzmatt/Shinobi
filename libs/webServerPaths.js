@@ -839,13 +839,22 @@ module.exports = function(s,config,lang,app,io){
             }else{
                 const monitorConfig = s.group[groupKey].rawMonitorConfigurations[monitorId]
                 const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
-                if(!activeMonitor.subStreamProcess){
-                    response.ok = true
-                    activeMonitor.allowDestroySubstream = false;
-                    spawnSubstreamProcess(monitorConfig)
+                const substreamConfig = monitorConfig.details.substream
+                if(
+                    substreamConfig.input.fulladdress &&
+                    substreamConfig.input.type &&
+                    substreamConfig.output
+                ){
+                    if(!activeMonitor.subStreamProcess){
+                        response.ok = true
+                        activeMonitor.allowDestroySubstream = false;
+                        spawnSubstreamProcess(monitorConfig)
+                    }else{
+                        activeMonitor.allowDestroySubstream = true
+                        await destroySubstreamProcess(activeMonitor)
+                    }
                 }else{
-                    activeMonitor.allowDestroySubstream = true
-                    await destroySubstreamProcess(activeMonitor)
+                    response.msg = lang['Invalid Settings']
                 }
             }
             s.closeJsonResponse(res,response);
