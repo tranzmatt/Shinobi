@@ -290,7 +290,7 @@ function importM3u8Playlist(textData){
     })
     $.each(parsedList,function(name,url){
         var link = getUrlPieces(url)
-        var newMon = $.aM.generateDefaultMonitorSettings()
+        var newMon = generateDefaultMonitorSettings()
         newMon.details = JSON.parse(newMon.details)
         newMon.mid = 'HLS' + name.toLowerCase()
         newMon.name = name
