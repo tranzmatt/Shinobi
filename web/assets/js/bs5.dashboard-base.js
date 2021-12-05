@@ -723,8 +723,9 @@ function logWriterDraw(id,data){
     })
     $(elementTags).prepend(html).each(function(n,v){
         var el = $(v);
-        if(el.find('.log-item').length > 10){
-            v.find('.log-item:last').remove()
+        var theRows = el.find('.log-item')
+        if(theRows.length > 10){
+            theRows.last().remove()
         }
     })
 }
