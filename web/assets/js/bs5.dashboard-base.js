@@ -264,6 +264,10 @@ function blipTo(xPageValue,yPageValue){
 
 function openTab(theTab,loadData,backAction,haltTrigger,type){
     loadData = loadData ? loadData : {}
+    if(tabTree && tabTree.back && tabTree.back.name === theTab){
+        goBackOneTab()
+        return;
+    }
     saveTabBlipPosition(activeTabName)
     var allTabs = $('.page-tab');
     allTabs.hide().removeClass('tab-active');
