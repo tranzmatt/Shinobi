@@ -680,14 +680,28 @@ function drawMonitorListToSelector(jqTarget,selectFirst,showId){
         .change()
     }
 }
+var logWriterIconIndicator = $('#side-menu-link-logViewer i')
+var logWriterIconIndicatorShaking = false
+var logWriterIconIndicatorTimeout = null
+function shakeLogWriterIcon(){
+    if(logWriterIconIndicatorShaking)return;
+    logWriterIconIndicatorShaking = true;
+    logWriterIconIndicator.addClass('animate-shake')
+    logWriterIconIndicatorTimeout = setTimeout(function(){
+        logWriterIconIndicatorShaking = false;
+        logWriterIconIndicator.removeClass('animate-shake')
+    },3000)
+}
 var logWriterFloodTimeout = null
 var logWriterFloodCounter = 0
 var logWriterFloodLock = null
 function buildLogRow(v){
+    var monitor = loadedMonitors[v.mid]
+    var humanMonitorName = monitor ? monitor.name + ` (${monitor.mid}) : ` : ''
     var html = ''
     html += `<div class="log-item card shadow-lg mb-3 px-0 btn-default search-row">
         <div class="card-header">
-            <small class="${definitions.Theme.isDark ? 'text-white' : ''}">${v.info && v.info.type ? v.info.type : v.mid}</small>
+            <small class="${definitions.Theme.isDark ? 'text-white' : ''}">${humanMonitorName}${v.info && v.info.type ? v.info.type : v.mid}</small>
         </div>
         <div class="card-body">
             <div>${jsonToHtmlBlock(v.info.msg)}</div>
@@ -721,6 +735,7 @@ function logWriterDraw(id,data){
         info: data.log,
         time: data.time,
     })
+    shakeLogWriterIcon()
     $(elementTags).prepend(html).each(function(n,v){
         var el = $(v);
         var theRows = el.find('.log-item')
