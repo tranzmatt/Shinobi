@@ -6001,6 +6001,21 @@ module.exports = function(s,config,lang){
      "Schedules": {
          "section": "Schedules",
          "blocks": {
+             "Info": {
+                 "name": lang["Monitor States and Schedules"],
+                "color": "blue",
+                "section-pre-class": "col-md-12",
+                "blockquoteClass": "global_tip",
+                "blockquote": lang.MonitorStatesText,
+                "info": [
+                    {
+                       "fieldType": "btn",
+                       "attribute": `page-open="monitorStates"`,
+                       "class": `btn-primary`,
+                       "btnContent": `<i class="fa fa-align-right"></i> &nbsp; ${lang["Monitor States"]}`,
+                    },
+                ]
+             },
              "Schedules": {
                 "name": lang["Schedules"],
                 "color": "orange",
@@ -6132,8 +6147,23 @@ module.exports = function(s,config,lang){
      "Monitor States": {
          "section": "Monitor States",
          "blocks": {
+             "Info": {
+                 "name": lang["Monitor States and Schedules"],
+                "color": "blue",
+                "section-pre-class": "col-md-12",
+                "blockquoteClass": "global_tip",
+                "blockquote": lang.MonitorStatesText,
+                "info": [
+                    {
+                       "fieldType": "btn",
+                       "attribute": `page-open="schedules"`,
+                       "class": `btn-primary`,
+                       "btnContent": `<i class="fa fa-clock"></i> &nbsp; ${lang["Schedules"]}`,
+                    },
+                ]
+             },
              "Monitor States": {
-                "name": lang["Monitor States"],
+                 noHeader: true,
                 "color": "green",
                 "section-pre-class": "col-md-6",
                 "info": [
@@ -7563,13 +7593,11 @@ module.exports = function(s,config,lang){
                           icon: 'grav',
                           label: `${lang['Region Editor']}`,
                           pageOpen: 'regionEditor',
-                          addUl:true
                       },
                       {
                           icon: 'filter',
                           label: `${lang['Event Filters']}`,
                           pageOpen: 'eventFilters',
-                          addUl:true
                       },
                       {
                           icon: 'align-right',
@@ -7626,13 +7654,13 @@ module.exports = function(s,config,lang){
                           pageOpen: 'cameraProbe',
                       },
                       {
-                          divider: true,
-                      },
-                      {
                           icon: 'compass',
                           label: `${lang['ShinobiHub']}`,
                           pageOpen: 'configFinder',
                           addUl: true,
+                      },
+                      {
+                          divider: true,
                       },
                       {
                           icon: 'info-circle',
