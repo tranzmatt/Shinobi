@@ -7364,8 +7364,10 @@ module.exports = function(s,config,lang){
                <div class="monitor_details">
                    <div class="pull-left">
                        <a title="${lang['Options']}" class="btn btn-sm badge btn-secondary toggle-live-grid-monitor-menu"><i class="fa fa-bars"></i></a>
+                       <a title="${lang['Edit']}" class="btn btn-sm badge btn-primary default open-monitor-settings"><i class="fa fa-wrench"></i></a>
                        <a title="${lang['Snapshot']}" class="btn btn-sm badge btn-warning snapshot-live-grid-monitor"><i class="fa fa-camera"></i></a>
                        <a title="${lang['Videos List']}" class="btn btn-sm badge btn-secondary open-videos"><i class="fa fa-film"></i></a>
+                       <a title="${lang['Show Logs']}" class="btn btn-sm badge btn-warning toggle-live-grid-monitor-logs"><i class="fa fa-exclamation-triangle"></i></a>
                        <a title="${lang['Close']}" class="btn btn-sm badge btn-danger close-live-grid-monitor"><i class="fa fa-times"></i></a>
                   </div>
                    <div><span class="monitor_name">$MONITOR_NAME</span></div>
@@ -7613,6 +7615,11 @@ module.exports = function(s,config,lang){
                           icon: 'exclamation-triangle',
                           label: `${lang['Logs']}`,
                           pageOpen: 'logViewer',
+                      },
+                      {
+                          icon: 'info-circle',
+                          label: `${lang['Help']}`,
+                          pageOpen: 'helpWindow',
                       },
                       // {
                       //     icon: 'exclamation-circle',
