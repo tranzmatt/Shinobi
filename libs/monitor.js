@@ -28,6 +28,9 @@ module.exports = function(s,config,lang){
         cameraDestroy,
         monitorConfigurationMigrator,
         attachStreamChannelHandlers,
+        setActiveViewer,
+        destroySubstreamProcess,
+        attachMainProcessHandlers,
     } = require('./monitor/utils.js')(s,config,lang)
     const {
         addEventDetailsToString,
@@ -55,7 +58,7 @@ module.exports = function(s,config,lang){
         if(!activeMonitor.contentWriter){activeMonitor.contentWriter={}};
         if(!activeMonitor.childNodeStreamWriters){activeMonitor.childNodeStreamWriters={}};
         if(!activeMonitor.eventBasedRecording){activeMonitor.eventBasedRecording={}};
-        if(!activeMonitor.watch){activeMonitor.watch={}};
+        if(!activeMonitor.watch){activeMonitor.watch = []};
         if(!activeMonitor.fixingVideos){activeMonitor.fixingVideos={}};
         // if(!activeMonitor.viewerConnection){activeMonitor.viewerConnection={}};
         // if(!activeMonitor.viewerConnectionCount){activeMonitor.viewerConnectionCount=0};
@@ -140,7 +143,7 @@ module.exports = function(s,config,lang){
         return x.ar;
     }
     s.getStreamsDirectory = (monitor) => {
-        return s.dir.streams + monitor.ke + '/' + monitor.mid + '/'
+        return s.dir.streams + monitor.ke + '/' + (monitor.mid || monitor.id) + '/'
     }
     s.getRawSnapshotFromMonitor = function(monitor,options){
         return new Promise((resolve,reject) => {
@@ -761,55 +764,8 @@ module.exports = function(s,config,lang){
             code: e.wantedStatusCode
         });
         //on unexpected exit restart
-        s.group[e.ke].activeMonitors[e.id].spawn_exit = function(){
-            if(s.group[e.ke].activeMonitors[e.id].isStarted === true){
-                if(e.details.loglevel!=='quiet'){
-                    s.userLog(e,{type:lang['Process Unexpected Exit'],msg:{msg:lang.unexpectedExitText,cmd:s.group[e.ke].activeMonitors[e.id].ffmpeg}});
-                }
-                fatalError(e,'Process Unexpected Exit');
-                scanForOrphanedVideos(e,{
-                    forceCheck: true,
-                    checkMax: 2
-                })
-                s.onMonitorUnexpectedExitExtensions.forEach(function(extender){
-                    extender(Object.assign(s.group[e.ke].rawMonitorConfigurations[e.id],{}),e)
-                })
-            }
-        }
-        s.group[e.ke].activeMonitors[e.id].spawn.on('end',s.group[e.ke].activeMonitors[e.id].spawn_exit)
-        s.group[e.ke].activeMonitors[e.id].spawn.on('exit',s.group[e.ke].activeMonitors[e.id].spawn_exit)
-        s.group[e.ke].activeMonitors[e.id].spawn.on('error',function(er){
-            s.userLog(e,{type:'Spawn Error',msg:er});fatalError(e,'Spawn Error')
-        })
-        s.userLog(e,{type:lang['Process Started'],msg:{cmd:s.group[e.ke].activeMonitors[e.id].ffmpeg}})
-        if(s.isWin === false){
-            var strippedHost = s.stripAuthFromHost(e)
-            var sendProcessCpuUsage = function(){
-                s.getMonitorCpuUsage(e,function(percent){
-                    s.group[e.ke].activeMonitors[e.id].currentCpuUsage = percent
-                    s.tx({
-                        f: 'camera_cpu_usage',
-                        ke: e.ke,
-                        id: e.id,
-                        percent: percent
-                    },'MON_STREAM_'+e.ke+e.id)
-                })
-            }
-            clearInterval(s.group[e.ke].activeMonitors[e.id].getMonitorCpuUsage)
-            s.group[e.ke].activeMonitors[e.id].getMonitorCpuUsage = setInterval(function(){
-                if(e.details.skip_ping !== '1'){
-                    connectionTester.test(strippedHost,e.port,2000,function(err,response){
-                        if(response.success){
-                            sendProcessCpuUsage()
-                        }else{
-                            launchMonitorProcesses(e)
-                        }
-                    })
-                }else{
-                    sendProcessCpuUsage()
-                }
-            },1000 * 60)
-        }
+        if(s.group[e.ke].activeMonitors[e.id].spawn)attachMainProcessHandlers(e)
+        return s.group[e.ke].activeMonitors[e.id].spawn
     }
     const createEventCounter = function(monitor){
         if(monitor.details.detector_obj_count === '1'){
@@ -1257,27 +1213,29 @@ module.exports = function(s,config,lang){
                         if(pingResponse.success === true){
                             activeMonitor.isRecording = true
                             try{
-                                createCameraFfmpegProcess(e)
-                                createCameraStreamHandlers(e)
+                                var mainProcess = createCameraFfmpegProcess(e)
                                 createEventCounter(e)
-                                if(e.type === 'dashcam' || e.type === 'socket'){
-                                    setTimeout(function(){
-                                        activeMonitor.allowStdinWrite = true
-                                        s.txToDashcamUsers({
-                                            f : 'enable_stream',
-                                            ke : e.ke,
-                                            mid : e.id
-                                        },e.ke)
-                                    },30000)
-                                }
-                                if(
-                                    e.functionMode === 'record' ||
-                                    e.type === 'mjpeg' ||
-                                    e.type === 'h264' ||
-                                    e.type === 'local'
-                                ){
-                                    catchNewSegmentNames(e)
-                                    cameraFilterFfmpegLog(e)
+                                if(mainProcess){
+                                    createCameraStreamHandlers(e)
+                                    if(e.type === 'dashcam' || e.type === 'socket'){
+                                        setTimeout(function(){
+                                            activeMonitor.allowStdinWrite = true
+                                            s.txToDashcamUsers({
+                                                f : 'enable_stream',
+                                                ke : e.ke,
+                                                mid : e.id
+                                            },e.ke)
+                                        },30000)
+                                    }
+                                    if(
+                                        e.functionMode === 'record' ||
+                                        e.type === 'mjpeg' ||
+                                        e.type === 'h264' ||
+                                        e.type === 'local'
+                                    ){
+                                        catchNewSegmentNames(e)
+                                        cameraFilterFfmpegLog(e)
+                                    }
                                 }
                                 clearTimeout(activeMonitor.onMonitorStartTimer)
                                 activeMonitor.onMonitorStartTimer = setTimeout(() => {
@@ -1547,26 +1505,24 @@ module.exports = function(s,config,lang){
         s.initiateMonitorObject({ke:e.ke,mid:e.id})
         switch(e.functionMode){
             case'watch_on'://live streamers - join
-               if(!cn.monitorsCurrentlyWatching){cn.monitorsCurrentlyWatching = {}}
-               if(!cn.monitorsCurrentlyWatching[e.id]){cn.monitorsCurrentlyWatching[e.id]={ke:e.ke}}
-               s.group[e.ke].activeMonitors[e.id].watch[cn.id]={};
-               var numberOfViewers = Object.keys(s.group[e.ke].activeMonitors[e.id].watch).length
-               s.tx({
-                   viewers: numberOfViewers,
-                   ke: e.ke,
-                   id: e.id
-               },'MON_'+e.ke+e.id)
+                if(!cn.monitorsCurrentlyWatching){cn.monitorsCurrentlyWatching = {}}
+                if(!cn.monitorsCurrentlyWatching[e.id]){cn.monitorsCurrentlyWatching[e.id]={ke:e.ke}}
+                setActiveViewer(e.ke,e.id,cn.id,true)
+                s.group[e.ke].activeMonitors[e.id].allowDestroySubstream = false
+                clearTimeout(s.group[e.ke].activeMonitors[e.id].noViewerCountDisableSubstream)
             break;
             case'watch_off'://live streamers - leave
                 if(cn.monitorsCurrentlyWatching){delete(cn.monitorsCurrentlyWatching[e.id])}
-                var numberOfViewers = 0
-                delete(s.group[e.ke].activeMonitors[e.id].watch[cn.id]);
-                numberOfViewers = Object.keys(s.group[e.ke].activeMonitors[e.id].watch).length
-                s.tx({
-                    viewers: numberOfViewers,
-                    ke: e.ke,
-                    id: e.id
-                },'MON_'+e.ke+e.id)
+                let currentCount = setActiveViewer(e.ke,e.id,cn.id,false)
+                s.debugLog(currentCount,currentCount === 0,!!s.group[e.ke].activeMonitors[e.id].subStreamProcess)
+                if(currentCount === 0 && s.group[e.ke].activeMonitors[e.id].subStreamProcess){
+                    clearTimeout(s.group[e.ke].activeMonitors[e.id].noViewerCountDisableSubstream)
+                    s.group[e.ke].activeMonitors[e.id].noViewerCountDisableSubstream = setTimeout(function(){
+                        s.debugLog('closed')
+                        s.group[e.ke].activeMonitors[e.id].allowDestroySubstream = true
+                        destroySubstreamProcess(s.group[e.ke].activeMonitors[e.id])
+                    },5000)
+                }
             break;
             case'restart'://restart monitor
                 s.sendMonitorStatus({

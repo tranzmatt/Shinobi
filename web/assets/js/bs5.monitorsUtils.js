@@ -171,7 +171,21 @@ function runTestDetectionTrigger(monitorId,callback){
     })
 }
 function toggleSubStream(monitorId,callback){
+    var monitor = loadedMonitors[monitorId]
+    var substreamConfig = monitor.details.substream
+    var isSubStreamConfigured = !!substreamConfig.output;
+    if(!isSubStreamConfigured){
+        new PNotify({
+            type: 'warning',
+            title: lang['Invalid Settings'],
+            text: lang.SubstreamNotConfigured,
+        });
+        return;
+    }
+    if(monitor.subStreamToggleLock)return false;
+    monitor.subStreamToggleLock = true
     $.getJSON(getApiPrefix() + '/toggleSubstream/'+$user.ke+'/'+monitorId,function(d){
+        monitor.subStreamToggleLock = false
         debugLog(d)
         if(callback)callback()
     })
@@ -200,7 +214,7 @@ function playAudioAlert(){
 
 function buildStreamUrl(monitorId){
     var monitor = loadedMonitors[monitorId]
-    var streamURL
+    var streamURL = ''
     var streamType = safeJsonParse(monitor.details).stream_type
     switch(streamType){
         case'jpeg':
@@ -220,6 +234,9 @@ function buildStreamUrl(monitorId){
         break;
         case'b64':
             streamURL = 'Websocket'
+        break;
+        case'useSubstream':
+            streamURL = lang['Use Substream']
         break;
     }
     if(!streamURL){

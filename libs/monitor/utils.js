@@ -3,6 +3,7 @@ const treekill = require('tree-kill');
 const spawn = require('child_process').spawn;
 const events = require('events');
 const Mp4Frag = require('mp4frag');
+const streamViewerCountTimeouts = {}
 module.exports = (s,config,lang) => {
     const {
         createPipeArray,
@@ -17,6 +18,10 @@ module.exports = (s,config,lang) => {
     const processKill = (proc) => {
         const response = {ok: true}
         return new Promise((resolve,reject) => {
+            if(!proc){
+                resolve(response)
+                return
+            }
             function sendError(err){
                 response.ok = false
                 response.err = err
@@ -94,13 +99,17 @@ module.exports = (s,config,lang) => {
             if(activeMonitor.onChildNodeExit){
                 activeMonitor.onChildNodeExit()
             }
-            activeMonitor.spawn.stdio.forEach(function(stdio){
-              try{
-                stdio.unpipe()
-              }catch(err){
-                console.log(err)
-              }
-            })
+            try{
+                activeMonitor.spawn.stdio.forEach(function(stdio){
+                  try{
+                    stdio.unpipe()
+                  }catch(err){
+                    console.log(err)
+                  }
+                })
+            }catch(err){
+                // s.debugLog(err)
+            }
             if(activeMonitor.mp4frag){
                 var mp4FragChannels = Object.keys(activeMonitor.mp4frag)
                 mp4FragChannels.forEach(function(channel){
@@ -116,6 +125,7 @@ module.exports = (s,config,lang) => {
             }else{
                 processKill(proc).then((response) => {
                     s.debugLog(`cameraDestroy`,response)
+                    activeMonitor.allowDestroySubstream = true
                     destroySubstreamProcess(activeMonitor).then((response) => {
                         if(response.hadSubStream)s.debugLog(`cameraDestroy`,response.closeResponse)
                     })
@@ -209,13 +219,19 @@ module.exports = (s,config,lang) => {
     const spawnSubstreamProcess = function(e){
         // e = monitorConfig
         try{
-            const monitorConfig = s.group[e.ke].rawMonitorConfigurations[e.mid]
+            const groupKey = e.ke
+            const monitorId = e.mid
+            const monitorConfig = Object.assign({},s.group[groupKey].rawMonitorConfigurations[monitorId])
             const monitorDetails = monitorConfig.details
             const activeMonitor = s.group[e.ke].activeMonitors[e.mid]
             const channelNumber = 1 + (monitorDetails.stream_channels || []).length
             const ffmpegCommand = [`-progress pipe:5`];
             const logLevel = monitorDetails.loglevel ? e.details.loglevel : 'warning'
             const stdioPipes = createPipeArray({}, 2)
+            const substreamConfig = monitorConfig.details.substream
+            substreamConfig.input.type = !substreamConfig.input.fulladdress ? monitorConfig.type : substreamConfig.input.type || monitorConfig.details.rtsp_transport
+            substreamConfig.input.fulladdress = substreamConfig.input.fulladdress || s.buildMonitorUrl(monitorConfig)
+            substreamConfig.input.rtsp_transport = substreamConfig.input.rtsp_transport || monitorConfig.details.rtsp_transport
             const {
                 inputAndConnectionFields,
                 outputFields,
@@ -360,6 +376,92 @@ module.exports = (s,config,lang) => {
             ffmpegProcess.stdio[pipeNumber].on('data',frameToStreamAdded)
         }
     }
+    function setActiveViewer(groupKey,monitorId,connectionId,isBeingAdded){
+        const viewerList = s.group[groupKey].activeMonitors[monitorId].watch;
+        if(isBeingAdded){
+            if(viewerList.indexOf(connectionId) > -1)viewerList.push(connectionId);
+        }else{
+            viewerList.splice(viewerList.indexOf(connectionId), 1)
+        }
+        const numberOfViewers = viewerList.length
+        s.tx({
+            f: 'viewer_count',
+            viewers: numberOfViewers,
+            ke: groupKey,
+            id: monitorId
+        },'MON_' + groupKey + monitorId)
+        return numberOfViewers;
+    }
+    function setTimedActiveViewerForHttp(req){
+        const groupKey = req.params.ke
+        const connectionId = req.params.auth
+        const loggedInUser = s.group[groupKey].users[connectionId]
+        if(!loggedInUser){
+            const monitorId = req.params.id
+            const viewerList = s.group[groupKey].activeMonitors[monitorId].watch
+            const theViewer = viewerList[connectionId]
+            if(!theViewer){
+                setActiveViewer(groupKey,monitorId,connectionId,true)
+            }
+            clearTimeout(streamViewerCountTimeouts[req.originalUrl])
+            streamViewerCountTimeouts[req.originalUrl] = setTimeout(() => {
+                setActiveViewer(groupKey,monitorId,connectionId,false)
+            },5000)
+        }else{
+            s.debugLog(`User is Logged in, Don't add to viewer count`);
+        }
+    }
+    function attachMainProcessHandlers(e){
+        s.group[e.ke].activeMonitors[e.id].spawn_exit = function(){
+            if(s.group[e.ke].activeMonitors[e.id].isStarted === true){
+                if(e.details.loglevel!=='quiet'){
+                    s.userLog(e,{type:lang['Process Unexpected Exit'],msg:{msg:lang.unexpectedExitText,cmd:s.group[e.ke].activeMonitors[e.id].ffmpeg}});
+                }
+                fatalError(e,'Process Unexpected Exit');
+                scanForOrphanedVideos(e,{
+                    forceCheck: true,
+                    checkMax: 2
+                })
+                s.onMonitorUnexpectedExitExtensions.forEach(function(extender){
+                    extender(Object.assign(s.group[e.ke].rawMonitorConfigurations[e.id],{}),e)
+                })
+            }
+        }
+        s.group[e.ke].activeMonitors[e.id].spawn.on('end',s.group[e.ke].activeMonitors[e.id].spawn_exit)
+        s.group[e.ke].activeMonitors[e.id].spawn.on('exit',s.group[e.ke].activeMonitors[e.id].spawn_exit)
+        s.group[e.ke].activeMonitors[e.id].spawn.on('error',function(er){
+            s.userLog(e,{type:'Spawn Error',msg:er});fatalError(e,'Spawn Error')
+        })
+        s.userLog(e,{type:lang['Process Started'],msg:{cmd:s.group[e.ke].activeMonitors[e.id].ffmpeg}})
+        // if(s.isWin === false){
+            // var strippedHost = s.stripAuthFromHost(e)
+            // var sendProcessCpuUsage = function(){
+            //     s.getMonitorCpuUsage(e,function(percent){
+            //         s.group[e.ke].activeMonitors[e.id].currentCpuUsage = percent
+            //         s.tx({
+            //             f: 'camera_cpu_usage',
+            //             ke: e.ke,
+            //             id: e.id,
+            //             percent: percent
+            //         },'MON_STREAM_'+e.ke+e.id)
+            //     })
+            // }
+            // clearInterval(s.group[e.ke].activeMonitors[e.id].getMonitorCpuUsage)
+            // s.group[e.ke].activeMonitors[e.id].getMonitorCpuUsage = setInterval(function(){
+            //     if(e.details.skip_ping !== '1'){
+            //         connectionTester.test(strippedHost,e.port,2000,function(err,response){
+            //             if(response.success){
+            //                 sendProcessCpuUsage()
+            //             }else{
+            //                 launchMonitorProcesses(e)
+            //             }
+            //         })
+            //     }else{
+            //         sendProcessCpuUsage()
+            //     }
+            // },1000 * 60)
+        // }
+    }
     return {
         cameraDestroy: cameraDestroy,
         createSnapshot: createSnapshot,
@@ -369,5 +471,8 @@ module.exports = (s,config,lang) => {
         spawnSubstreamProcess: spawnSubstreamProcess,
         destroySubstreamProcess: destroySubstreamProcess,
         attachStreamChannelHandlers: attachStreamChannelHandlers,
+        setActiveViewer: setActiveViewer,
+        setTimedActiveViewerForHttp: setTimedActiveViewerForHttp,
+        attachMainProcessHandlers: attachMainProcessHandlers,
     }
 }

@@ -527,15 +527,17 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
         })
     }
     //initiate signal check
-    var signalCheckInterval = (isNaN(loadedMonitor.details.signal_check) ? 10 : parseFloat(loadedMonitor.details.signal_check)) * 1000 * 60
-    if(signalCheckInterval > 0){
-        clearInterval(loadedPlayer.signal)
-        loadedPlayer.signal = setInterval(function(){
-            signalCheckLiveStream({
-                mid: monitorId,
-                checkSpeed: 1000,
-            })
-        },signalCheckInterval);
+    if(streamType !== 'useSubstream'){
+        var signalCheckInterval = (isNaN(loadedMonitor.details.signal_check) ? 10 : parseFloat(loadedMonitor.details.signal_check)) * 1000 * 60
+        if(signalCheckInterval > 0){
+            clearInterval(loadedPlayer.signal)
+            loadedPlayer.signal = setInterval(function(){
+                signalCheckLiveStream({
+                    mid: monitorId,
+                    checkSpeed: 1000,
+                })
+            },signalCheckInterval);
+        }
     }
 }
 function revokeVideoPlayerUrl(monitorId){
@@ -819,15 +821,6 @@ $(document).ready(function(e){
     .resize(function(){
         resetAllLiveGridDimensionsInMemory()
     })
-    .on('click','.toggle-substream',function(){
-        var monitorId = $(this).parents('[data-mid]').attr('data-mid')
-        var monitor = loadedMonitors[monitorId]
-        if(monitor.subStreamToggleLock)return false;
-        monitor.subStreamToggleLock = true
-        $.getJSON(getApiPrefix(`toggleSubstream`) + '/' + monitor.mid,function(data){
-            monitor.subStreamToggleLock = false
-        })
-    })
     .on('click','.launch-live-grid-monitor',function(){
         var monitorId = $(this).parents('[data-mid]').attr('data-mid')
         // if(isMobile){
@@ -998,9 +991,17 @@ $(document).ready(function(e){
             break;
             case'monitor_watch_on':
                 var monitorId = d.mid || d.id
+                var loadedMonitor = loadedMonitors[monitorId]
                 var subStreamChannel = d.subStreamChannel
-                drawLiveGridBlock(loadedMonitors[monitorId],subStreamChannel)
-                saveLiveGridBlockOpenState(monitorId,$user.ke,1)
+                if(!loadedMonitor.subStreamChannel && loadedMonitor.details.stream_type === 'useSubstream'){
+                    toggleSubStream(monitorId,function(){
+                        drawLiveGridBlock(loadedMonitors[monitorId],subStreamChannel)
+                        saveLiveGridBlockOpenState(monitorId,$user.ke,1)
+                    })
+                }else{
+                    drawLiveGridBlock(loadedMonitors[monitorId],subStreamChannel)
+                    saveLiveGridBlockOpenState(monitorId,$user.ke,1)
+                }
             break;
             case'mode_jpeg_off':
                 window.jpegModeOn = false
