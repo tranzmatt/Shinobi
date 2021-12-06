@@ -2,8 +2,12 @@ $(document).ready(function(){
     var theBlock = $('#recentVideos')
     var theList = $('#recentVideosList')
     var monitorList = theBlock.find('.monitors_list')
-    function drawRowToList(row,toBegin){
+    function drawRowToList(row,toBegin,returnLastChild){
         theList[toBegin ? 'prepend' : 'append'](createVideoRow(row))
+        if(returnLastChild){
+            var theChildren = theList.children()
+            return toBegin ? theChildren.first() : theChildren.last()
+        }
     }
     function loadVideos(options,callback){
         theList.empty();
@@ -11,7 +15,8 @@ $(document).ready(function(){
             var html = ``
             var videos = data.videos || {}
             $.each(videos,function(n,row){
-                drawRowToList(row)
+                var createdCardCarrier = drawRowToList(row,false,true)
+                bindFrameFindingByMouseMove(createdCardCarrier,row)
             })
             getCountOfEvents({
                 monitorId: options.monitorId,
