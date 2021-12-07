@@ -87,7 +87,7 @@ $(document).ready(function(e){
                 $.each(data.reverse(),function(n,fileInfo){
                     fileInfo.href = apiURL + '/' + fileInfo.filename.split('T')[0] + '/' + fileInfo.filename
                     fileInfo.number = n
-                    frameIconsHtml += '<div class="col-md-4 frame-container"><div class="frame" data-filename="' + fileInfo.filename + '" style="background-image:url(\'' + fileInfo.href + '\')"><div class="button-strip"><button type="button" class="btn btn-sm btn-danger delete"><i class="fa fa-trash-o"></i></button></div><div class="shade">' + moment(fileInfo.time).format('YYYY-MM-DD HH:mm:ss') + '</div></div></div>'
+                    frameIconsHtml += '<div class="col-md-4 frame-container"><div class="frame" data-filename="' + fileInfo.filename + '" frame-container-unloaded="' + fileInfo.href + '"><div class="button-strip"><button type="button" class="btn btn-sm btn-danger delete"><i class="fa fa-trash-o"></i></button></div><div class="shade">' + moment(fileInfo.time).format('YYYY-MM-DD HH:mm:ss') + '</div></div></div>'
                     currentPlaylist[fileInfo.filename] = fileInfo
                 })
                 currentPlaylistArray = data
@@ -273,6 +273,24 @@ $(document).ready(function(e){
     fpsSelector.change(function(ev){
         playInterval = 1000 / ev.value
         selectedFps = ev.value + 0
+    })
+    function isElementVisible (el) {
+      const holder = frameIcons[0]
+      const { top, bottom, height } = el.getBoundingClientRect()
+      const holderRect = holder.getBoundingClientRect()
+
+      return top <= holderRect.top
+        ? holderRect.top - top <= height
+        : bottom - holderRect.bottom <= height
+    }
+    frameIcons.on('scroll',function(){
+        frameIcons.find('[frame-container-unloaded]').each(function(n,v){
+            if(isElementVisible(v)){
+                var el = $(v)
+                var imgSrc = el.attr('frame-container-unloaded')
+                el.removeAttr('frame-container-unloaded').attr('style',`background-image:url(${imgSrc})`)
+            }
+        })
     })
     $('body').on('click','.open-timelapse-viewer',function(){
         var el = $(this).parents('[data-mid]')
