@@ -358,6 +358,7 @@ module.exports = function(s,config,lang,app,io){
                     groupKey: req.params.ke,
                     archived: req.query.archived,
                     filename: req.params.filename,
+                    limit: 1,
                     rowType: 'frames',
                     endIsStartTo: true
                 },(response) => {

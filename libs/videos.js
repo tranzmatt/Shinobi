@@ -494,7 +494,7 @@ module.exports = function(s,config,lang){
         var frames = timelapseFrames.reverse()
         var ke = frames[0].ke
         var mid = frames[0].mid
-        var finalFileName = frames[0].filename.split('.')[0] + '_' + frames[frames.length - 1].filename.split('.')[0] + `-${framesPerSecond}fps`
+        var finalFileName = `${s.md5(JSON.stringify(frames))}-${framesPerSecond}fps`
         var concatFiles = []
         var createLocation
         frames.forEach(function(frame,frameNumber){
@@ -520,7 +520,7 @@ module.exports = function(s,config,lang){
                 if(!fs.existsSync(finalMp4OutputLocation)){
                     var currentFile = 0
                     var completionTimeout
-                    var commandString = `ffmpeg -y -f image2pipe -vcodec mjpeg -re -r ${framesPerSecond} -analyzeduration 10 -i - -q:v 1 -c:v libx264 -r ${framesPerSecond} "${finalMp4OutputLocation}"`
+                    var commandString = `ffmpeg -y -f image2pipe -vcodec mjpeg -r ${framesPerSecond} -analyzeduration 10 -i - -q:v 1 -c:v libx264 -r ${framesPerSecond} "${finalMp4OutputLocation}"`
                     fs.writeFileSync(commandTempLocation,commandString)
                     var videoBuildProcess = spawn('sh',[commandTempLocation])
                     videoBuildProcess.stderr.on('data',function(data){
@@ -558,24 +558,21 @@ module.exports = function(s,config,lang){
                         },5000)
                     })
                     var readFile = function(){
-                        return new Promise((resolve,reject) => {
-                            var filePath = concatFiles[currentFile]
-                            // console.log(filePath,currentFile,'/',concatFiles.length - 1)
-                            fs.readFile(filePath,function(err,buffer){
-                                if(!err)videoBuildProcess.stdin.write(buffer)
-                                if(currentFile === concatFiles.length - 1){
-                                    //is last
-                                    resolve()
-                                }else{
-                                    setTimeout(async function(){
-                                        ++currentFile
-                                        await readFile()
-                                    },1/framesPerSecond)
-                                }
-                            })
+                        var filePath = concatFiles[currentFile]
+                        // console.log(filePath,currentFile,'/',concatFiles.length - 1)
+                        fs.readFile(filePath,function(err,buffer){
+                            if(!err)videoBuildProcess.stdin.write(buffer)
+                            if(currentFile === concatFiles.length - 1){
+                                //is last
+                            }else{
+                                setTimeout(async function(){
+                                    ++currentFile
+                                    readFile()
+                                },10/framesPerSecond)
+                            }
                         })
                     }
-                    await readFile()
+                    readFile()
                     s.group[ke].activeMonitors[mid].buildingTimelapseVideo = videoBuildProcess
                     callback({
                         ok: true,

@@ -30,6 +30,7 @@
 #tab-timelapseViewer .frameIcons{
     overflow-y: auto;
     overflow-x: hidden;
+    max-height: 400px;
 }
 #tab-timelapseViewer .frameIcons .frame{
     background-size: cover;

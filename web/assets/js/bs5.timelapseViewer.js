@@ -24,6 +24,7 @@ $(document).ready(function(e){
     var downloaderIsChecking = false
     var allowKeepChecking = true
     var selectedFps = 15
+    var currentPlaylistArray = []
 
     var openTimelapseWindow = function(monitorId,startDate,endDate){
         drawTimelapseWindowElements(monitorId,startDate,endDate)
@@ -235,7 +236,7 @@ $(document).ready(function(e){
                     setDownloadButtonLabel(lang['Automatic Checking Cancelled'])
                     downloadRecheckTimers[timerId] = setTimeout(function(){
                         setDownloadButtonLabel(lang['Build Video'], 'database')
-                    },5000)
+                    },30000)
                     downloaderIsChecking = false
                     allowKeepChecking = true
                     return
