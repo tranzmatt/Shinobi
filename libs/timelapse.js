@@ -268,9 +268,9 @@ module.exports = function(s,config,lang,app,io){
             const frames = []
             var n = 0
             framesPosted.forEach((frame) => {
-                var firstParam = ['ke','=',req.params.ke]
-                if(n !== 0)firstParam = (['or']).concat(firstParam)
-                frames.push(firstParam,['mid','=',req.params.id],['filename','=',frame.filename])
+                var firstParam = [['ke','=',req.params.ke],['mid','=',req.params.id],['filename','=',frame.filename]]
+                if(n !== 0)firstParam[0] = (['or']).concat(firstParam[0])
+                frames.push(...firstParam)
                 ++n
             })
             s.knexQuery({
@@ -279,6 +279,7 @@ module.exports = function(s,config,lang,app,io){
                 table: "Timelapse Frames",
                 where: frames
             },(err,r) => {
+                s.debugLog("Timelapse Frames Building Video",r.length)
                 if(r.length === 0){
                     s.closeJsonResponse(res,{
                         ok: false

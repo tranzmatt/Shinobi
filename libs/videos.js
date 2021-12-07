@@ -488,7 +488,7 @@ module.exports = function(s,config,lang){
         file.pipe(res)
         return file
     }
-    s.createVideoFromTimelapse = function(timelapseFrames,framesPerSecond,callback){
+    s.createVideoFromTimelapse = async function(timelapseFrames,framesPerSecond,callback){
         framesPerSecond = parseInt(framesPerSecond)
         if(!framesPerSecond || isNaN(framesPerSecond))framesPerSecond = 2
         var frames = timelapseFrames.reverse()
@@ -520,7 +520,7 @@ module.exports = function(s,config,lang){
                 if(!fs.existsSync(finalMp4OutputLocation)){
                     var currentFile = 0
                     var completionTimeout
-                    var commandString = `ffmpeg -y -f image2pipe -vcodec mjpeg -r ${framesPerSecond} -analyzeduration 10 -i - -q:v 1 -c:v libx264 -r ${framesPerSecond} "${finalMp4OutputLocation}"`
+                    var commandString = `ffmpeg -y -f image2pipe -vcodec mjpeg -re -r ${framesPerSecond} -analyzeduration 10 -i - -q:v 1 -c:v libx264 -r ${framesPerSecond} "${finalMp4OutputLocation}"`
                     fs.writeFileSync(commandTempLocation,commandString)
                     var videoBuildProcess = spawn('sh',[commandTempLocation])
                     videoBuildProcess.stderr.on('data',function(data){
@@ -532,7 +532,7 @@ module.exports = function(s,config,lang){
                             }
                         },4000)
                     })
-                    videoBuildProcess.on('exit',function(data){
+                    videoBuildProcess.on('close',function(data){
                         var timeNow = new Date()
                         var fileStats = fs.statSync(finalMp4OutputLocation)
                         var details = {}
@@ -558,22 +558,24 @@ module.exports = function(s,config,lang){
                         },5000)
                     })
                     var readFile = function(){
-                        var filePath = concatFiles[currentFile]
-                        // console.log(filePath,currentFile,'/',concatFiles.length - 1)
-                        fs.readFile(filePath,function(err,buffer){
-                            if(!err)videoBuildProcess.stdin.write(buffer)
-                            if(currentFile === concatFiles.length - 1){
-                                //is last
-
-                            }else{
-                                setTimeout(function(){
-                                    ++currentFile
-                                    readFile()
-                                },1/framesPerSecond)
-                            }
+                        return new Promise((resolve,reject) => {
+                            var filePath = concatFiles[currentFile]
+                            // console.log(filePath,currentFile,'/',concatFiles.length - 1)
+                            fs.readFile(filePath,function(err,buffer){
+                                if(!err)videoBuildProcess.stdin.write(buffer)
+                                if(currentFile === concatFiles.length - 1){
+                                    //is last
+                                    resolve()
+                                }else{
+                                    setTimeout(async function(){
+                                        ++currentFile
+                                        await readFile()
+                                    },1/framesPerSecond)
+                                }
+                            })
                         })
                     }
-                    readFile()
+                    await readFile()
                     s.group[ke].activeMonitors[mid].buildingTimelapseVideo = videoBuildProcess
                     callback({
                         ok: true,
@@ -582,13 +584,22 @@ module.exports = function(s,config,lang){
                         msg: lang['Started Building']
                     })
                 }else{
-                    callback({
-                        ok: false,
-                        fileExists: true,
-                        filename: finalFileName + '.mp4',
-                        fileLocation: finalMp4OutputLocation,
-                        msg: lang['Already exists']
-                    })
+                    if(s.group[ke].activeMonitors[mid].buildingTimelapseVideo){
+                        callback({
+                            ok: false,
+                            fileExists: false,
+                            fileLocation: finalMp4OutputLocation,
+                            msg: lang.Building
+                        })
+                    }else{
+                        callback({
+                            ok: false,
+                            fileExists: true,
+                            filename: finalFileName + '.mp4',
+                            fileLocation: finalMp4OutputLocation,
+                            msg: lang['Already exists']
+                        })
+                    }
                 }
             }else{
                 callback({
