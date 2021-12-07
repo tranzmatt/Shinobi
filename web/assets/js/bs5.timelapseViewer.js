@@ -95,6 +95,7 @@ $(document).ready(function(e){
                 frameIcons.find(`.frame:first`).click()
                 // getLiveStream()
                 resetFilmStripPositions()
+                loadVisibleTimelapseFrames()
             }else{
                 frameIconsHtml = lang['No Data']
                 frameIcons.html(frameIconsHtml)
@@ -283,7 +284,7 @@ $(document).ready(function(e){
         ? holderRect.top - top <= height
         : bottom - holderRect.bottom <= height
     }
-    frameIcons.on('scroll',function(){
+    function loadVisibleTimelapseFrames(){
         frameIcons.find('[frame-container-unloaded]').each(function(n,v){
             if(isElementVisible(v)){
                 var el = $(v)
@@ -291,7 +292,8 @@ $(document).ready(function(e){
                 el.removeAttr('frame-container-unloaded').attr('style',`background-image:url(${imgSrc})`)
             }
         })
-    })
+    }
+    frameIcons.on('scroll',loadVisibleTimelapseFrames)
     $('body').on('click','.open-timelapse-viewer',function(){
         var el = $(this).parents('[data-mid]')
         var monitorId = el.attr('data-mid')
