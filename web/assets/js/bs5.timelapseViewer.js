@@ -264,7 +264,7 @@ $(document).ready(function(e){
                         downloadRecheckTimers[timerId] = setTimeout(function(){
                             setDownloadButtonLabel(lang['Please Wait or Click to Stop Checking'], 'spinner fa-pulse')
                             runDownloader()
-                        },5000)
+                        },30000)
                     }
                 })
             }
