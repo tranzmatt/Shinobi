@@ -29,6 +29,7 @@ module.exports = function(s,config,lang){
         monitorConfigurationMigrator,
         attachStreamChannelHandlers,
         setActiveViewer,
+        getActiveViewerCount,
         destroySubstreamProcess,
         attachMainProcessHandlers,
     } = require('./monitor/utils.js')(s,config,lang)
@@ -1513,15 +1514,17 @@ module.exports = function(s,config,lang){
             break;
             case'watch_off'://live streamers - leave
                 if(cn.monitorsCurrentlyWatching){delete(cn.monitorsCurrentlyWatching[e.id])}
-                let currentCount = setActiveViewer(e.ke,e.id,cn.id,false)
+                setActiveViewer(e.ke,e.id,cn.id,false)
+                s.debugLog('closeing')
+                let currentCount = getActiveViewerCount(e.ke,e.id)
                 s.debugLog(currentCount,currentCount === 0,!!s.group[e.ke].activeMonitors[e.id].subStreamProcess)
-                if(currentCount === 0 && s.group[e.ke].activeMonitors[e.id].subStreamProcess){
-                    clearTimeout(s.group[e.ke].activeMonitors[e.id].noViewerCountDisableSubstream)
-                    s.group[e.ke].activeMonitors[e.id].noViewerCountDisableSubstream = setTimeout(function(){
-                        s.debugLog('closed')
+                clearTimeout(s.group[e.ke].activeMonitors[e.id].noViewerCountDisableSubstream)
+                if(currentCount === 0 && s.group[e.ke].activeMonitors[e.id].subStreamProcessActivated){
+                    s.group[e.ke].activeMonitors[e.id].noViewerCountDisableSubstream = setTimeout(async () => {
                         s.group[e.ke].activeMonitors[e.id].allowDestroySubstream = true
-                        destroySubstreamProcess(s.group[e.ke].activeMonitors[e.id])
-                    },5000)
+                        await destroySubstreamProcess(s.group[e.ke].activeMonitors[e.id])
+                        s.debugLog('closed')
+                    },10000)
                 }
             break;
             case'restart'://restart monitor

@@ -232,6 +232,7 @@ module.exports = (s,config,lang) => {
             substreamConfig.input.type = !substreamConfig.input.fulladdress ? monitorConfig.type : substreamConfig.input.type || monitorConfig.details.rtsp_transport
             substreamConfig.input.fulladdress = substreamConfig.input.fulladdress || s.buildMonitorUrl(monitorConfig)
             substreamConfig.input.rtsp_transport = substreamConfig.input.rtsp_transport || monitorConfig.details.rtsp_transport
+            activeMonitor.subStreamProcessActivated = true
             const {
                 inputAndConnectionFields,
                 outputFields,
@@ -275,8 +276,7 @@ module.exports = (s,config,lang) => {
                     s.userLog({
                         ke: e.ke,
                         mid: e.mid,
-                    },
-                    {
+                    },{
                         type: lang["Substream Process"],
                         msg: data.toString()
                     })
@@ -318,21 +318,25 @@ module.exports = (s,config,lang) => {
             hadSubStream: false,
             alreadyClosing: false
         }
-        if(activeMonitor.subStreamProcessClosing){
-            response.alreadyClosing = true
-        }else if(activeMonitor.subStreamProcess){
-            activeMonitor.subStreamProcessClosing = true
-            activeMonitor.subStreamChannel = null;
-            const closeResponse = await processKill(activeMonitor.subStreamProcess)
-            response.hadSubStream = true
-            response.closeResponse = closeResponse
-            delete(activeMonitor.subStreamProcess)
-            s.tx({
-                f: 'substream_end',
-                mid: activeMonitor.mid,
-                ke: activeMonitor.ke
-            },'GRP_'+activeMonitor.ke);
-            activeMonitor.subStreamProcessClosing = false
+        try{
+            if(activeMonitor.subStreamProcessClosing){
+                response.alreadyClosing = true
+            }else if(activeMonitor.subStreamProcess){
+                activeMonitor.subStreamProcessClosing = true
+                activeMonitor.subStreamChannel = null;
+                const closeResponse = await processKill(activeMonitor.subStreamProcess)
+                response.hadSubStream = true
+                response.closeResponse = closeResponse
+                delete(activeMonitor.subStreamProcess)
+                s.tx({
+                    f: 'substream_end',
+                    mid: activeMonitor.mid,
+                    ke: activeMonitor.ke
+                },'GRP_'+activeMonitor.ke);
+                activeMonitor.subStreamProcessClosing = false
+            }
+        }catch(err){
+            s.debugLog('destroySubstreamProcess',err)
         }
         return response
     }
@@ -390,6 +394,11 @@ module.exports = (s,config,lang) => {
             ke: groupKey,
             id: monitorId
         },'MON_' + groupKey + monitorId)
+        return numberOfViewers;
+    }
+    function getActiveViewerCount(groupKey,monitorId){
+        const viewerList = s.group[groupKey].activeMonitors[monitorId].watch;
+        const numberOfViewers = viewerList.length
         return numberOfViewers;
     }
     function setTimedActiveViewerForHttp(req){
@@ -472,6 +481,7 @@ module.exports = (s,config,lang) => {
         destroySubstreamProcess: destroySubstreamProcess,
         attachStreamChannelHandlers: attachStreamChannelHandlers,
         setActiveViewer: setActiveViewer,
+        getActiveViewerCount: getActiveViewerCount,
         setTimedActiveViewerForHttp: setTimedActiveViewerForHttp,
         attachMainProcessHandlers: attachMainProcessHandlers,
     }
