@@ -606,11 +606,7 @@ function closeAllLiveGridPlayers(rememberClose){
     $.each(watchedOn,function(n,groupOfMons){
         $.each(groupOfMons,function(monitorId,monitor){
             if(monitor === 1){
-                if(rememberClose){
-                    mainSocket.f({f:'monitor',ff:'watch_off',id: monitorId})
-                }else{
-                    closeLiveGridPlayer(monitorId,true)
-                }
+                mainSocket.f({f:'monitor',ff:'watch_off',id: monitorId})
             }
         })
     })
@@ -926,6 +922,9 @@ $(document).ready(function(e){
                 ff: 'watch_off',
                 id: monitor.mid
             })
+            setTimeout(function(){
+                saveLiveGridBlockOpenState(monitorId,$user.ke,0)
+            },1000)
         })
     })
     liveGrid

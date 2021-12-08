@@ -232,7 +232,6 @@ module.exports = (s,config,lang) => {
             substreamConfig.input.type = !substreamConfig.input.fulladdress ? monitorConfig.type : substreamConfig.input.type || monitorConfig.details.rtsp_transport
             substreamConfig.input.fulladdress = substreamConfig.input.fulladdress || s.buildMonitorUrl(monitorConfig)
             substreamConfig.input.rtsp_transport = substreamConfig.input.rtsp_transport || monitorConfig.details.rtsp_transport
-            activeMonitor.subStreamProcessActivated = true
             const {
                 inputAndConnectionFields,
                 outputFields,

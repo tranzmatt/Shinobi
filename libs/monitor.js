@@ -1515,17 +1515,14 @@ module.exports = function(s,config,lang){
             case'watch_off'://live streamers - leave
                 if(cn.monitorsCurrentlyWatching){delete(cn.monitorsCurrentlyWatching[e.id])}
                 setActiveViewer(e.ke,e.id,cn.id,false)
-                s.debugLog('closeing')
-                let currentCount = getActiveViewerCount(e.ke,e.id)
-                s.debugLog(currentCount,currentCount === 0,!!s.group[e.ke].activeMonitors[e.id].subStreamProcess)
                 clearTimeout(s.group[e.ke].activeMonitors[e.id].noViewerCountDisableSubstream)
-                if(currentCount === 0 && s.group[e.ke].activeMonitors[e.id].subStreamProcessActivated){
-                    s.group[e.ke].activeMonitors[e.id].noViewerCountDisableSubstream = setTimeout(async () => {
+                s.group[e.ke].activeMonitors[e.id].noViewerCountDisableSubstream = setTimeout(async () => {
+                    let currentCount = getActiveViewerCount(e.ke,e.id)
+                    if(currentCount === 0 && s.group[e.ke].activeMonitors[e.id].subStreamProcess){
                         s.group[e.ke].activeMonitors[e.id].allowDestroySubstream = true
                         await destroySubstreamProcess(s.group[e.ke].activeMonitors[e.id])
-                        s.debugLog('closed')
-                    },10000)
-                }
+                    }
+                },10000)
             break;
             case'restart'://restart monitor
                 s.sendMonitorStatus({
