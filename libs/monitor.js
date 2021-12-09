@@ -600,7 +600,7 @@ module.exports = function(s,config,lang){
     }
     const createTimelapseDirectory = function(e,callback){
         var directory = s.getTimelapseFrameDirectory(e)
-        fs.mkdir(directory,function(err){
+        fs.mkdir(directory,{ recursive: true },function(err){
             s.handleFolderError(err)
             callback(err,directory)
         })
@@ -1605,7 +1605,7 @@ module.exports = function(s,config,lang){
                             forceCheck: true,
                             checkMax: 2
                         })
-                    },2000)    
+                    },2000)
                 }
                 clearTimeout(s.group[e.ke].activeMonitors[e.id].onMonitorStartTimer)
                 s.onMonitorStopExtensions.forEach(function(extender){

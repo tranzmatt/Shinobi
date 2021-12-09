@@ -39,7 +39,7 @@ module.exports = function(s,config,lang,app,io){
             const childNodeData = {
                 ke: e.ke,
                 mid: e.id,
-                time: formattedTime,
+                time: currentDate,
                 filename: filename,
                 currentDate: currentDate,
                 queryInfo: queryInfo
