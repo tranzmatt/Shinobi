@@ -6,6 +6,9 @@ const Mp4Frag = require('mp4frag');
 const streamViewerCountTimeouts = {}
 module.exports = (s,config,lang) => {
     const {
+        scanForOrphanedVideos
+    } = require('../video/utils.js')(s,config,lang)
+    const {
         createPipeArray,
         splitForFFPMEG,
         sanitizedFfmpegCommand,
@@ -419,7 +422,7 @@ module.exports = (s,config,lang) => {
             s.debugLog(`User is Logged in, Don't add to viewer count`);
         }
     }
-    function attachMainProcessHandlers(e){
+    function attachMainProcessHandlers(e,fatalError){
         s.group[e.ke].activeMonitors[e.id].spawn_exit = function(){
             if(s.group[e.ke].activeMonitors[e.id].isStarted === true){
                 if(e.details.loglevel!=='quiet'){

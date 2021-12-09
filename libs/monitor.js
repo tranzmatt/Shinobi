@@ -765,7 +765,7 @@ module.exports = function(s,config,lang){
             code: e.wantedStatusCode
         });
         //on unexpected exit restart
-        if(s.group[e.ke].activeMonitors[e.id].spawn)attachMainProcessHandlers(e)
+        if(s.group[e.ke].activeMonitors[e.id].spawn)attachMainProcessHandlers(e,fatalError)
         return s.group[e.ke].activeMonitors[e.id].spawn
     }
     const createEventCounter = function(monitor){
