@@ -26,6 +26,7 @@ module.exports = async (s,config,lang,onFinish) => {
 
     s.ffmpeg = function(e){
         try{
+            const activeMonitor = s.group[e.ke].activeMonitors[e.mid];
             const dataPortToken = s.gid(10);
             s.dataPortTokens[dataPortToken] = {
                 type: 'cameraThread',
