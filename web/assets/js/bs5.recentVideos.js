@@ -11,12 +11,14 @@ $(document).ready(function(){
     }
     function drawDaysToList(videos,toBegin){
         var videosSortedByDays = sortVideosByDays(videos)
-        $.each(videosSortedByDays,function(dayKey,videos){
-            var copyOfVideos = ([]).concat(videos).reverse()
-            theList.append(createDayCard(copyOfVideos,dayKey))
-            var theChildren = theList.children()
-            var createdCardCarrier = toBegin ? theChildren.first() : theChildren.last()
-            bindFrameFindingByMouseMoveForDay(createdCardCarrier,dayKey,copyOfVideos)
+        $.each(videosSortedByDays,function(groupKey,days){
+            $.each(days,function(dayKey,videos){
+                var copyOfVideos = ([]).concat(videos).reverse()
+                theList.append(createDayCard(copyOfVideos,dayKey))
+                var theChildren = theList.children()
+                var createdCardCarrier = toBegin ? theChildren.first() : theChildren.last()
+                bindFrameFindingByMouseMoveForDay(createdCardCarrier,dayKey,copyOfVideos)
+            })
         })
     }
     function loadVideos(options,callback){
@@ -24,11 +26,11 @@ $(document).ready(function(){
         getVideos(options,function(data){
             var html = ``
             var videos = data.videos || []
-            $.each(videos,function(n,row){
-                var createdCardCarrier = drawRowToList(row,false,true)
-                bindFrameFindingByMouseMove(createdCardCarrier,row)
-            })
-            // drawDaysToList(videos,false)
+            // $.each(videos,function(n,row){
+            //     var createdCardCarrier = drawRowToList(row,false,true)
+            //     bindFrameFindingByMouseMove(createdCardCarrier,row)
+            // })
+            drawDaysToList(videos,false)
             getCountOfEvents({
                 monitorId: options.monitorId,
             })
@@ -59,7 +61,7 @@ $(document).ready(function(){
             liveStamp()
         })
     })
-    addOnTabReopen('initial', function () {
+    theBlock.find('.recent-videos-refresh').click(function(){
         var theSelected = `${monitorList.val()}`
         drawMonitorListToSelector(monitorList.find('optgroup'))
         monitorList.val(theSelected)

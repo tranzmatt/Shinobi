@@ -876,6 +876,14 @@ $(document).ready(function(){
         deleteTab(tabName)
         return false;
     })
+    .on('click','.delete-tab-dynamic',function(e){
+        e.preventDefault()
+        e.stopPropagation()
+        var tabName = $(this).parents('.page-tab').attr('id').replace('tab-','')
+        goBackOneTab()
+        deleteTab(tabName)
+        return false;
+    })
     .on('click','[page-open]',function(){
         var el = $(this)
         var pageChoice = el.attr('page-open')

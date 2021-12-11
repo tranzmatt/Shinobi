@@ -1,7 +1,10 @@
+function getVideoPlayerTabId(video){
+    return `videoPlayer-${video.mid}-${moment(video.time).format('YYYY-MM-DD-HH-mm-ss')}`
+}
 $(document).ready(function(){
     var theBlock = $('#tab-videoPlayer')
     window.createVideoPlayerTab = function(video){
-        var newTabId = `videoPlayer-${video.mid}-${moment(video.time).format('YYYY-MM-DD-HH-mm-ss')}`
+        var newTabId = getVideoPlayerTabId(video)
         var humanStartTime = formattedTime(video.time,true)
         var humanEndTime = formattedTime(video.end,true)
         var tabLabel = `<b>${lang['Video']}</b> : ${loadedMonitors[video.mid].name} : ${formattedTime(video.time,true)}`
@@ -32,38 +35,44 @@ $(document).ready(function(){
             })
             eventMatrixHtml += `</div>`
         }
-        var baseHtml = `<main class="container page-tab tab-videoPlayer" id="tab-${newTabId}" video-id="${video.mid}${video.time}">
-            <div class="my-3 ${definitions.Theme.isDark ? 'bg-dark text-white' : 'bg-light text-dark'} rounded shadow-sm">
-                <div class="p-3">
-                    <h6 class="video-title border-bottom-dotted border-bottom-dark pb-2 mb-0">${tabLabel}</h6>
+        var baseHtml = `<main class="container page-tab tab-videoPlayer" id="tab-${newTabId}" video-id="${video.mid}${video.time}" data-mid="${video.mid}" data-time="${video.time}">
+            <div class="mt-3 ${definitions.Theme.isDark ? 'bg-dark text-white' : 'bg-light text-dark'} rounded shadow-sm" style="overflow:hidden">
+                  <div class="d-flex flex-row">
+                      <div class="flex-grow-1">
+                          <h6 class="video-title border-bottom-dotted border-bottom-dark p-3 mb-0">${tabLabel}</h6>
+                      </div>
+                      <div>
+                          <a class="btn btn-default btn-sm delete-tab-dynamic"><i class="fa fa-times"></i></a>
+                      </div>
                   </div>
                   <div style="position: relative">
                       <div class="tab-videoPlayer-event-objects" style="position: absolute;width: 100%; height: 100%; z-index: 10"></div>
                       <video class="tab-videoPlayer-video-element" controls autoplay src="${videoUrl}"></video>
                   </div>
-                  <div class="p-3">
-                      <div class="d-block">
-                            <a class="btn btn-sm btn-success" download href="${videoUrl}"><i class="fa fa-download"></i> ${lang.Download}</a>
-                      </div>
-                      <div class="d-block">
-                          <b class="flex-grow-1">${lang.Started}</b>
-                          <div class="video-time">${humanStartTime}</div>
-                      </div>
-                      <div class="d-block">
-                          <b class="flex-grow-1">${lang.Ended}</b>
-                          <div class="video-end">${humanEndTime}</div>
-                      </div>
-                      <div class="d-block">
-                          ${eventMatrixHtml}
-                      </div>
-                      <small class="d-block text-end mt-3">
-                        <a class="go-back btn badge">${lang['Back']}</a>
-                      </small>
+                <div class="d-flex flex-row">
+                    <div class="d-block p-3">
+                        <b class="flex-grow-1">${lang.Started}</b>
+                        <div class="video-time">${humanStartTime}</div>
+                    </div>
+                    <div class="d-block p-3">
+                        <b class="flex-grow-1">${lang.Ended}</b>
+                        <div class="video-end">${humanEndTime}</div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    ${eventMatrixHtml}
+                </div>
+                <div class="d-flex flex-row">
+                    <div class="flex-grow-1 bg-gradient-blue">
+                        <a class="btn btn-block px-1 py-3 ${definitions.Theme.isDark ? 'text-white' : 'text-dark'}" download href="${videoUrl}"><i class="fa fa-download"></i> ${lang.Download}</a>
+                    </div>
+                    <div class="flex-grow-1 bg-gradient-orange">
+                        <a class="btn btn-block px-1 py-3 delete-video ${definitions.Theme.isDark ? 'text-white' : 'text-dark'}"><i class="fa fa-trash-o"></i> ${lang.Delete}</a>
+                    </div>
                 </div>
             </div>
         </main>`
         var tabCreateResponse = createNewTab(newTabId,tabLabel,baseHtml,{},null,'videoPlayer')
-        console.log(tabCreateResponse)
         if(!tabCreateResponse.existAlready){
             var videoElement = tabCreateResponse.theTab.find('.tab-videoPlayer-video-element')[0]
             var videoObjectContainer = tabCreateResponse.theTab.find('.tab-videoPlayer-event-objects')

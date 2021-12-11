@@ -1,7 +1,10 @@
 <div class="my-3 p-3 <%- define.Theme.isDark ? 'bg-dark text-white' : 'bg-light' %> rounded shadow-sm" id="recentVideos">
   <h4 class="mb-3 pb-3 <%- define.Theme.isDark ? 'text-white' : '' %> border-bottom-dotted border-color-blue row">
-      <div class="col-md-8">
+      <div class="col-md-7">
           <%- lang['Recent Videos'] %>
+      </div>
+      <div class="col-md-1 text-right">
+          <a class="btn btn-primary btn-sm recent-videos-refresh">&nbsp;<i class="fa fa-refresh">&nbsp;</i></a>
       </div>
       <div class="col-md-4">
           <select class="form-control form-control-sm <%- define.Theme.isDark ? 'btn-dark' : '' %> text-start monitors_list" type="text" id="recentVideosMonitorId">
