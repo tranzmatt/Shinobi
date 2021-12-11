@@ -68,16 +68,21 @@ function getFrameOnVideoRow(percentageInward,video){
     var timeDifference = endTime - startTime
     var timeInward = timeDifference / (100 / percentageInward)
     var timeAdded = new Date(startTime.getTime() + timeInward) // ms
-    // video.timelapseFrames.forEach(function(row){
-    //     var isValid = new Date(row.time) > timeAdded
-    //     console.log(new Date(row.time),timeAdded)
-    //     if(isValid)console.log(row.time)
-    //
-    // })
     var foundFrame = video.timelapseFrames.find(function(row){
         return new Date(row.time) > timeAdded
     });
     return foundFrame
+}
+function getVideoFromDay(percentageInward,videos){
+    var startTime = new Date(videos[0].time)
+    var endTime = new Date(videos[videos.length - 1].end)
+    var timeDifference = endTime - startTime
+    var timeInward = timeDifference / (100 / percentageInward)
+    var timeAdded = new Date(startTime.getTime() + timeInward) // ms
+    var foundVideo = ([]).concat(videos).reverse().find(function(row){
+        return new Date(timeAdded - 1000) >= new Date(row.time)
+    });
+    return foundVideo
 }
 function bindFrameFindingByMouseMove(createdCardCarrier,video){
     var createdCardElement = createdCardCarrier.find('.card').first()
@@ -90,6 +95,7 @@ function bindFrameFindingByMouseMove(createdCardCarrier,video){
             var elementWidth = createdCardElement.width() + 2
             var amountMoved = evt.pageX - offest.left
             var percentMoved = amountMoved / elementWidth * 100
+            percentMoved = percentMoved > 100 ? 100 : percentMoved < 0 ? 0 : percentMoved
             var frameFound = getFrameOnVideoRow(percentMoved,video)
             if(frameFound){
                 timeImg.css('background-image',`url(${frameFound.href})`)
@@ -129,6 +135,48 @@ function bindFrameFindingByMouseMove(createdCardCarrier,video){
                 timeStrip.append(eventMatrixHtml)
         }
         timeImg.css('min-height',`auto`).addClass('video-time-no-img')
+    }
+}
+function bindFrameFindingByMouseMoveForDay(createdCardCarrier,dayKey,videos){
+    var createdCardElement = createdCardCarrier.find('.card').first()
+    var timeImg = createdCardElement.find('.video-time-img')
+    var timeStrip = createdCardElement.find('.video-time-strip')
+    var timeNeedleSeeker = createdCardElement.find('.video-time-needle-seeker')
+    var dayStart = videos[0].time
+    var dayEnd = videos[videos.length - 1].end
+    var hasFrames = false
+    $.each(videos,function(day,video){
+        if(video.timelapseFrames.length > 0){
+            hasFrames = true
+        }
+    })
+    if(hasFrames){
+        var videoSlices = createdCardElement.find('.video-day')
+        createdCardElement.on('mousemove',function(evt){
+            var offest = createdCardElement.offset()
+            var elementWidth = createdCardElement.width() + 2
+            var amountMoved = evt.pageX - offest.left
+            var percentMoved = amountMoved / elementWidth * 100
+            var videoFound = getVideoFromDay(percentMoved,videos)
+            console.log(percentMoved,videos,videoSliceAmountMoved,videoSlicePercentMoved)
+            createdCardElement.find(`[data-video-time]`).css('background-color','')
+            if(videoFound){
+                console.log('videoFound!!!!',videoFound.time)
+                var videoSlice = createdCardElement.find(`[data-video-time="${videoFound.time}"]`).css('background-color','rgba(0,0,0,0.3)')
+                var videoSliceOffest = videoSlice.offset()
+                var videoSliceElementWidth = videoSlice.width()
+                console.log('videoSliceElementWidth',videoSliceElementWidth)
+                var videoSliceAmountMoved = evt.pageX - videoSliceOffest.left
+                var videoSlicePercentMoved = videoSliceAmountMoved / videoSliceElementWidth * 100
+                videoSlicePercentMoved = videoSlicePercentMoved > 100 ? 100 : videoSlicePercentMoved < 0 ? 0 : videoSlicePercentMoved
+                var frameFound = getFrameOnVideoRow(videoSlicePercentMoved,videoFound)
+                if(frameFound){
+                    console.log('frameFound!!!!',frameFound)
+                    timeImg.css('background-image',`url(${frameFound.href})`)
+                }
+            }
+            timeNeedleSeeker.css('left',`${amountMoved}px`)
+        })
     }
 }
 function getPercentOfTimePositionFromVideo(video,theEvent){
@@ -188,6 +236,58 @@ function createVideoRow(row,classOverride){
             </div>
         </div>
     </div>`
+}
+function sortVideosByDays(videos){
+    var days = {}
+    videos.forEach(function(video){
+        var videoTime = new Date(video.time)
+        var theDayKey = `${videoTime.getDate()}-${videoTime.getMonth()}-${videoTime.getFullYear()}`
+        if(!days[theDayKey])days[theDayKey] = [];
+        days[theDayKey].push(video)
+    })
+    return days
+}
+function getVideoPercentWidthForDay(row,videos){
+    var startTime = new Date(row.time)
+    var endTime = new Date(row.end)
+    var timeDifference = endTime - startTime
+    var stripStartTime = new Date(videos[0].time)
+    var stripEndTime = new Date(videos[videos.length - 1].end)
+    var stripTimeDifference = stripEndTime - stripStartTime
+    var percent = (timeDifference / stripTimeDifference) * 100
+    console.log(percent,100 - percent)
+    return percent
+}
+function createDayCard(videos,dayKey,classOverride){
+    var html = ''
+    var eventMatrixHtml = ``
+    $.each(videos,function(n,row){
+        eventMatrixHtml += `<div class="video-day" data-video-time="${row.time}" style="width:${getVideoPercentWidthForDay(row,videos)}%;position:relative">`
+        if(row.events && row.events.length > 0){
+            $.each(row.events,function(n,theEvent){
+                var leftPercent = getPercentOfTimePositionFromVideo(row,theEvent)
+                eventMatrixHtml += `<div class="video-time-needle video-time-needle-event" style="left:${leftPercent}%"></div>`
+            })
+        }
+        eventMatrixHtml += `</div>`
+    })
+    html += `
+    <div class="video-row ${classOverride ? classOverride : `col-md-12 col-lg-6 mb-3`} search-row">
+        <div class="card shadow-lg px-0 btn-default">
+            <div class="card-header d-flex flex-row">
+                <div class="flex-grow-1 ${definitions.Theme.isDark ? 'text-white' : ''}">
+                </div>
+            </div>
+            <div class="video-time-img">
+
+            </div>
+            <div class="video-time-strip card-footer p-0">
+                <div class="flex-row d-flex" style="height:30px">${eventMatrixHtml}</div>
+                <div class="video-time-needle video-time-needle-seeker" style="z-index: 2"></div>
+            </div>
+        </div>
+    </div>`
+    return html
 }
 function drawVideoRowsToList(targetElement,rows){
     var theVideoList = $(targetElement)
