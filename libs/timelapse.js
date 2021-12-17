@@ -202,8 +202,8 @@ module.exports = function(s,config,lang,app,io){
                 endDate: req.query.end,
                 startOperator: req.query.startOperator,
                 endOperator: req.query.endOperator,
-                limit: req.query.limit,
                 noLimit: req.query.noLimit,
+                limit: req.query.limit,
                 archived: req.query.archived,
                 rowType: 'frames',
                 endIsStartTo: true

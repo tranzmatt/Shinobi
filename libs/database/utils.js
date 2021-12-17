@@ -218,6 +218,7 @@ module.exports = function(s,config){
            whereQuery.push(['filename','=',options.filename])
            frameLimit = "1";
        }
+       if(noLimit)frameLimit = '0';
        options.orderBy = options.orderBy ? options.orderBy : ['time','desc']
        if(options.count)options.groupBy = options.groupBy ? options.groupBy : options.orderBy[0]
        knexQuery({
@@ -227,7 +228,7 @@ module.exports = function(s,config){
            where: whereQuery,
            orderBy: options.orderBy,
            groupBy: options.groupBy,
-           limit: noLimit ? undefined : frameLimit || '500'
+           limit: frameLimit || '500'
        },(err,r) => {
            if(err){
                callback({
@@ -338,7 +339,7 @@ module.exports = function(s,config){
             endDate: endTime,
             startOperator: startTimeOperator,
             endOperator: endTimeOperator,
-            limit: options.limit,
+            limit: options.noLimit === '1' ? '0' : options.limit,
             archived: archived,
             rowType: rowName,
             endIsStartTo: endIsStartTo
