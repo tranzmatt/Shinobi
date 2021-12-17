@@ -2425,6 +2425,10 @@ module.exports = function(s,config,lang){
                             "value": "30"
                         },
                         {
+                            "name": `1 ${lang.minute}`,
+                            "value": "60"
+                        },
+                        {
                             "name": `5 ${lang.minutes}`,
                             "value": "300"
                         },
