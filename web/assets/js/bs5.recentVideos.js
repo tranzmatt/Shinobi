@@ -11,19 +11,24 @@ $(document).ready(function(){
     }
     function drawDaysToList(videos,toBegin){
         var videosSortedByDays = sortVideosByDays(videos)
-        $.each(videosSortedByDays,function(groupKey,days){
+        $.each(videosSortedByDays,function(monitorId,days){
             $.each(days,function(dayKey,videos){
                 var copyOfVideos = ([]).concat(videos).reverse()
-                theList.append(createDayCard(copyOfVideos,dayKey))
+                theList.append(createDayCard(copyOfVideos,dayKey,monitorId))
                 var theChildren = theList.children()
                 var createdCardCarrier = toBegin ? theChildren.first() : theChildren.last()
                 bindFrameFindingByMouseMoveForDay(createdCardCarrier,dayKey,copyOfVideos)
+                preloadAllTimelapseFramesToMemoryFromVideoList(copyOfVideos)
             })
         })
     }
     function loadVideos(options,callback){
         theList.empty();
-        getVideos(options,function(data){
+        var currentDate = new Date()
+        options.startDate = moment(currentDate).subtract(72, 'hours')._d;
+        options.endDate = moment(currentDate)._d;
+        console.log(options)
+        function drawVideoData(data){
             var html = ``
             var videos = data.videos || []
             // $.each(videos,function(n,row){
@@ -32,9 +37,21 @@ $(document).ready(function(){
             // })
             drawDaysToList(videos,false)
             getCountOfEvents({
+                startDate: options.startDate,
+                endDate: options.endDate,
                 monitorId: options.monitorId,
             })
             callback(data)
+        }
+        getVideos(options,function(data){
+            if(data.videos.length === 0){
+                options.limit = 20
+                delete(options.startDate)
+                delete(options.endDate)
+                getVideos(options,drawVideoData)
+            }else{
+                drawVideoData(data)
+            }
         })
     }
     function getCountOfEvents(options){
@@ -66,7 +83,7 @@ $(document).ready(function(){
         drawMonitorListToSelector(monitorList.find('optgroup'))
         monitorList.val(theSelected)
         loadVideos({
-            limit: 10,
+            limit: 20,
             monitorId: theSelected || undefined,
         },function(){
             liveStamp()
@@ -77,16 +94,16 @@ $(document).ready(function(){
             case'init_success':
                 drawMonitorListToSelector(monitorList.find('optgroup'))
                 loadVideos({
-                    limit: 10,
+                    limit: 20,
                 },function(){
                     liveStamp()
                 })
             break;
-            case'video_build_success':
-                loadVideoData(d)
-                var createdCardCarrier = drawRowToList(createVideoLinks(d),true)
-                bindFrameFindingByMouseMove(createdCardCarrier,row)
-            break;
+            // case'video_build_success':
+            //     loadVideoData(d)
+            //     var createdCardCarrier = drawRowToList(createVideoLinks(d),true)
+            //     bindFrameFindingByMouseMove(createdCardCarrier,row)
+            // break;
         }
     })
 })

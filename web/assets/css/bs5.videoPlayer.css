@@ -54,8 +54,15 @@
     top: 0;
 }
 .video-time-needle-event {
-    border-left: 3px solid #828282;
+    border-left: 3px solid #f9f21f;
 }
 .video-day-slice {
     height: 100%;
+}
+.video-time-header {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: rgba(0,0,0,0.6)
 }

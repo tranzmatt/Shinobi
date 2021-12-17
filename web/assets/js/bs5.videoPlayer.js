@@ -3,7 +3,7 @@ function getVideoPlayerTabId(video){
 }
 $(document).ready(function(){
     var theBlock = $('#tab-videoPlayer')
-    window.createVideoPlayerTab = function(video){
+    window.createVideoPlayerTab = function(video,timeStart){
         var newTabId = getVideoPlayerTabId(video)
         var humanStartTime = formattedTime(video.time,true)
         var humanEndTime = formattedTime(video.end,true)
@@ -73,8 +73,8 @@ $(document).ready(function(){
             </div>
         </main>`
         var tabCreateResponse = createNewTab(newTabId,tabLabel,baseHtml,{},null,'videoPlayer')
+        var videoElement = tabCreateResponse.theTab.find('.tab-videoPlayer-video-element')[0]
         if(!tabCreateResponse.existAlready){
-            var videoElement = tabCreateResponse.theTab.find('.tab-videoPlayer-video-element')[0]
             var videoObjectContainer = tabCreateResponse.theTab.find('.tab-videoPlayer-event-objects')
             var videoHeight = videoObjectContainer.height()
             var videoWidth = videoObjectContainer.width()
@@ -92,6 +92,7 @@ $(document).ready(function(){
                 }
             }
         }
+        if(timeStart)videoElement.currentTime = timeStart;
     }
     window.closeVideoPlayer = function(tabId){
         console.log('closeVideoPlayer')

@@ -1,4 +1,38 @@
 var loadedVideosInMemory = {}
+var loadedFramesMemory = {}
+var loadedFramesMemoryTimeout = {}
+function getLocalTimelapseImageLink(imageUrl){
+    if(loadedFramesMemory[imageUrl]){
+        return loadedFramesMemory[imageUrl]
+    }else{
+        return new Promise((resolve,reject) => {
+            fetch(imageUrl)
+              .then(res => res.blob()) // Gets the response and returns it as a blob
+              .then(blob => {
+                var objectURL = URL.createObjectURL(blob);
+                loadedFramesMemory[imageUrl] = objectURL
+                clearTimeout(loadedFramesMemoryTimeout[imageUrl])
+                loadedFramesMemoryTimeout[imageUrl] = setTimeout(function(){
+                    URL.revokeObjectURL(objectURL)
+                    delete(loadedFramesMemory[imageUrl])
+                    delete(loadedFramesMemoryTimeout[imageUrl])
+                },1000 * 60 * 10)
+                resolve(objectURL)
+            });
+        })
+    }
+}
+async function preloadAllTimelapseFramesToMemoryFromVideoList(videos){
+    for (let i = 0; i < videos.length; i++) {
+        var video = videos[i]
+        for (let ii = 0; ii < video.timelapseFrames.length; ii++) {
+            var frame = video.timelapseFrames[ii]
+            // console.log ('Loading... ',frame.href)
+            await getLocalTimelapseImageLink(frame.href)
+            // console.log ('Loaded! ',frame.href)
+        }
+    }
+}
 function createVideoLinks(video){
     var details = safeJsonParse(video.details)
     var queryString = []
@@ -72,6 +106,7 @@ function getFrameOnVideoRow(percentageInward,video){
         return new Date(row.time) > timeAdded
     });
     return {
+        timeInward: timeInward,
         foundFrame: foundFrame,
         timeAdded: timeAdded,
     }
@@ -145,6 +180,7 @@ function bindFrameFindingByMouseMoveForDay(createdCardCarrier,dayKey,videos){
     var timeImg = createdCardElement.find('.video-time-img')
     var timeStrip = createdCardElement.find('.video-time-strip')
     var timeNeedleSeeker = createdCardElement.find('.video-time-needle-seeker')
+    var videoLabel = createdCardElement.find('.video-time-label-selected-video')
     var dayStart = videos[0].time
     var dayEnd = videos[videos.length - 1].end
     var hasFrames = false
@@ -157,6 +193,7 @@ function bindFrameFindingByMouseMoveForDay(createdCardCarrier,dayKey,videos){
         var videoSlices = createdCardElement.find('.video-day-slice')
         var videoTimeLabel = createdCardElement.find('.video-time-label')
         var currentlySelected = null
+        var currentlySelectedFrame = null
         createdCardElement.on('mousemove',function(evt){
             var offest = createdCardElement.offset()
             var elementWidth = createdCardElement.width() + 2
@@ -174,15 +211,20 @@ function bindFrameFindingByMouseMoveForDay(createdCardCarrier,dayKey,videos){
                 videoSlicePercentMoved = videoSlicePercentMoved > 100 ? 100 : videoSlicePercentMoved < 0 ? 0 : videoSlicePercentMoved
                 var result = getFrameOnVideoRow(videoSlicePercentMoved,videoFound)
                 var frameFound = result.foundFrame
-                videoTimeLabel.text(result.timeAdded)
+                videoTimeLabel.text(formattedTime(result.timeAdded))
                 if(frameFound){
-                    timeImg.css('background-image',`url(${frameFound.href})`)
-                    if(currentlySelected !== videoFound){
-                        timeNeedleSeeker.attr('video-time-seeked-video-position',videoFound.time)
-                        timeNeedleSeeker.attr('data-mid',videoFound.mid)
-                    }
+                    currentlySelectedFrame = Object.assign({},frameFound)
+                    setTimeout(async function(){
+                        var frameUrl = await getLocalTimelapseImageLink(frameFound.href)
+                        if(currentlySelectedFrame.time === frameFound.time)timeImg.css('background-image',`url(${frameUrl})`);
+                    },1)
                 }
-                currentlySelected = videoFound
+                if(currentlySelected && currentlySelected.time !== videoFound.time){
+                    timeNeedleSeeker.attr('video-time-seeked-video-position',videoFound.time)
+                    videoLabel.text(videoFound.time)
+                }
+                currentlySelected = Object.assign({},videoFound)
+                timeNeedleSeeker.attr('video-slice-seeked',result.timeInward)
             }
             timeNeedleSeeker.css('left',`${percentMoved}%`)
         })
@@ -266,7 +308,7 @@ function getVideoPercentWidthForDay(row,videos){
     var percent = (timeDifference / stripTimeDifference) * 100
     return percent
 }
-function createDayCard(videos,dayKey,classOverride){
+function createDayCard(videos,dayKey,monitorId,classOverride){
     var html = ''
     var eventMatrixHtml = ``
     $.each(videos,function(n,row){
@@ -281,18 +323,29 @@ function createDayCard(videos,dayKey,classOverride){
     })
     html += `
     <div class="video-row ${classOverride ? classOverride : `col-md-12 col-lg-6 mb-3`} search-row">
-        <div class="card shadow-lg px-0 btn-default">
-            <div class="card-header d-flex flex-row">
-                <div class="flex-grow-1 ${definitions.Theme.isDark ? 'text-white' : ''}">
-                    <span class="video-time-label">${videos[0].time} to ${videos[videos.length - 1].end}</span>
+        <div class="card shadow-sm px-0 ${definitions.Theme.isDark ? 'bg-dark' : 'bg-light'}" style="border-radius: 10px;overflow: hidden;">
+            <div class="video-time-header p-3">
+                <div class="d-flex flex-row ${definitions.Theme.isDark ? 'text-white' : ''}">
+                    <div class="flex-grow-1">
+                        <b>${loadedMonitors[monitorId] ? loadedMonitors[monitorId].name : monitorId}</b>
+                    </div>
+                    <div class="text-right">
+                        <span class="badge badge-sm badge-primary">${dayKey}</span>
+                    </div>
+                </div>
+                <div class="${definitions.Theme.isDark ? 'text-white' : ''}">
+                    <span class="video-time-label">${formattedTime(videos[0].time)} to ${formattedTime(videos[videos.length - 1].end)}</span>
+                </div>
+                <div class="${definitions.Theme.isDark ? 'text-white' : ''}">
+                    <span class="video-time-label-selected-video"></span>
                 </div>
             </div>
-            <div class="video-time-img" style="background-image: url(${videos[0].timelapseFrames ? videos[0].timelapseFrames[0].href : ''})">
+            <div class="video-time-img" style="background-image: url(${videos[0].timelapseFrames[0] ? videos[0].timelapseFrames[0].href : ''})">
 
             </div>
             <div class="video-time-strip card-footer p-0">
                 <div class="flex-row d-flex" style="height:30px">${eventMatrixHtml}</div>
-                <div class="video-time-needle video-time-needle-seeker" style="z-index: 2"></div>
+                <div class="video-time-needle video-time-needle-seeker" data-mid="${videos[0].mid}" style="z-index: 2"></div>
             </div>
         </div>
     </div>`
@@ -327,10 +380,10 @@ function getVideos(options,callback){
         eventEndTime = formattedTimeForFilename(options.endDate,false)
         requestQueries.push(`end=${eventEndTime}`)
     }
-    $.getJSON(`${getApiPrefix(`videos`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`limit=${limit}`]).join('&')}`,function(data){
+    $.getJSON(`${getApiPrefix(`videos`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`noLimit=1`]).join('&')}`,function(data){
         var videos = data.videos
-        $.getJSON(`${getApiPrefix(`timelapse`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.join('&')}`,function(timelapseFrames){
-            $.getJSON(`${getApiPrefix(`events`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.join('&')}`,function(eventData){
+        $.getJSON(`${getApiPrefix(`timelapse`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`noLimit=1`]).join('&')}`,function(timelapseFrames){
+            $.getJSON(`${getApiPrefix(`events`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`noLimit=1`]).join('&')}`,function(eventData){
                 var newVideos = applyDataListToVideos(videos,eventData)
                 newVideos = applyTimelapseFramesListToVideos(newVideos,timelapseFrames,'timelapseFrames',true)
                 $.each(newVideos,function(n,video){
@@ -398,8 +451,10 @@ $(document).ready(function(){
         var el = $(this)
         var monitorId = el.attr('data-mid')
         var videoTime = el.attr('video-time-seeked-video-position')
+        var timeInward = (parseInt(el.attr('video-slice-seeked')) / 1000) - 2
         var video = loadedVideosInMemory[`${monitorId}${videoTime}`]
-        createVideoPlayerTab(video)
+        timeInward = timeInward < 0 ? 0 : timeInward
+        createVideoPlayerTab(video,timeInward)
     })
     .on('click','.delete-video',function(){
         var el = $(this).parents('[data-mid]')
