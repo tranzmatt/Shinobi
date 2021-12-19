@@ -214,7 +214,43 @@ function generateDefaultMonitorSettings(){
            "detector_cascades": "",
            "stream_channels": "",
            "input_maps": "",
-           "input_map_choices": ""
+           "input_map_choices": "",
+           "substream": {
+                "input": {
+                    "type": "h264",
+                    "fulladdress": "",
+                    "sfps": "",
+                    "aduration": "",
+                    "probesize": "",
+                    "stream_loop": null,
+                    "rtsp_transport": "",
+                    "accelerator": "0",
+                    "hwaccel": null,
+                    "hwaccel_vcodec": "",
+                    "hwaccel_device": "",
+                    "cust_input": ""
+                },
+                "output": {
+                    "stream_type": "hls",
+                    "rtmp_server_url": "",
+                    "rtmp_stream_key": "",
+                    "stream_mjpeg_clients": "",
+                    "stream_vcodec": "copy",
+                    "stream_acodec": "no",
+                    "hls_time": "",
+                    "hls_list_size": "",
+                    "preset_stream": "",
+                    "stream_quality": "",
+                    "stream_v_br": "",
+                    "stream_a_br": "",
+                    "stream_fps": "",
+                    "stream_scale_x": "640",
+                    "stream_scale_y": "480",
+                    "stream_rotate": null,
+                    "svf": "",
+                    "cust_stream": ""
+                }
+            }
         },
        "shto": "[]",
        "shfr": "[]"
@@ -372,6 +408,7 @@ window.getMonitorEditFormFields = function(){
     monitorConfig.details = safeJsonParse(monitorConfig.details)
     monitorConfig.details.substream = getSubStreamChannelFields()
     monitorConfig.details.groups = getMonitorGroupsSelected()
+    monitorConfig.details.input_map_choices = monitorSectionInputMapsave()
     // TODO : Input Maps and Stream Channels (does old way at the moment)
 
 
@@ -434,20 +471,24 @@ function drawStreamChannelHtml(options){
     monitorStreamChannels.find('.stream-channel').last().find('[channel-detail="stream_vcodec"]').change()
     return tempID;
 }
+function replaceMap(string,mapNumber){
+    var newString = string.split(':')
+    newString[0] = `${mapNumber}`
+    return newString.join(':')
+}
+function replaceMapInName(string,mapNumber){
+    var newString = string.split('(')
+    newString[1] = replaceMap(newString[1],mapNumber)
+    var lastIndex = newString.length - 1
+    if(!newString[lastIndex].endsWith(')')){
+        newString[lastIndex] = newString + ')'
+    }
+    return newString.join('(')
+}
 function buildMapSelectorOptionsBasedOnAddedMaps(){
     var baseOptionSet = definitions['Monitor Settings'].blocks.Input.info.find((item) => {return item.name === 'detail=primary_input'}).possible
     var newOptGroup = [baseOptionSet]
     var addedInputMaps = monitorEditorWindow.find('.input-map')
-    function replaceMap(string,mapNumber){
-        var newString = string.split(':')
-        newString[0] = `${mapNumber}`
-        return newString.join(':')
-    }
-    function replaceMapInName(string,mapNumber){
-        var newString = string.split('(')
-        newString[1] = replaceMap(newString[1],mapNumber)
-        return newString.join('(')
-    }
     $.each(addedInputMaps,function(n){
         var mapNumber = n + 1
         var newOptionSet = []
@@ -464,7 +505,7 @@ function buildMapSelectorOptionsBasedOnAddedMaps(){
 function drawInputMapSelectorHtml(options,parent){
     if(!options.map)options.map = '';
     var availableInputMapSelections = buildMapSelectorOptionsBasedOnAddedMaps()
-    var html = `<div class="form-group map-row d-flex flex-row">
+    var html = `<div class="map-row form-group map-row d-flex flex-row">
         <div class="flex-grow-1">
             <select class="form-control form-control-sm" map-input="map">`
                     $.each(availableInputMapSelections,function(n,optgroup){
@@ -473,6 +514,7 @@ function drawInputMapSelectorHtml(options,parent){
                                 html += createOptionHtml({
                                     label: option.name,
                                     value: option.value,
+                                    selected: option.value === options.map,
                                 })
                             })
                         html += `</optgroup>`
@@ -499,12 +541,7 @@ function importIntoMonitorEditor(options){
     //get maps
     monitorSectionInputMaps.empty()
     if(monitorDetails.input_maps && monitorDetails.input_maps !== ''){
-        var input_maps
-        try{
-            input_maps = safeJsonParse(monitorDetails.input_maps)
-        }catch(er){
-            input_maps = monitorDetails.input_maps;
-        }
+        var input_maps = safeJsonParse(monitorDetails.input_maps)
         if(input_maps.length > 0){
             showInputMappingFields()
             $.each(input_maps,function(n,v){
@@ -737,7 +774,7 @@ var mapPlacementInit = function(){
     })
 }
 var monitorSectionInputMapsave = function(){
-    var mapContainers = $('[input-mapping]');
+    var mapContainers = monitorEditorWindow.find('[input-mapping]');
     var stringForSave = {}
     mapContainers.each(function(q,t){
         var mapRowElement = $(t).find('.map-row');
@@ -751,7 +788,7 @@ var monitorSectionInputMapsave = function(){
         });
         stringForSave[$(t).attr('input-mapping')] = mapRow;
     });
-    monitorEditorWindow.find('[detail="input_map_choices"]').val(JSON.stringify(stringForSave)).change();
+    return stringForSave
 }
 monitorSectionInputMaps.on('click','.delete',function(){
     $(this).parents('.input-map').remove()
@@ -779,14 +816,9 @@ monitorEditorWindow.on('change','[map-detail]',function(){
 })
 monitorEditorWindow.on('click','[input-mapping] .add_map_row',function(){
     drawInputMapSelectorHtml({},$(this).parents('[input-mapping]').find('.choices'))
-    monitorSectionInputMapsave()
 })
 monitorEditorWindow.on('click','[input-mapping] .delete_map_row',function(){
     $(this).parents('.map-row').remove()
-    monitorSectionInputMapsave()
-})
-monitorEditorWindow.on('change','[map-input]',function(){
-    monitorSectionInputMapsave()
 })
 //////////////////
 //Stream Channels
@@ -808,7 +840,6 @@ var channelPlacementInit = function(){
         _this.attr('stream-channel',n)
         _this.find('.place').text(n)
         _this.find('[input-mapping]').attr('input-mapping','stream_channel-'+n)
-        monitorSectionInputMapsave()
     })
 }
 var getSubStreamChannelFields = function(){
@@ -1064,7 +1095,7 @@ editorForm.find('[name="type"]').change(function(e){
     }
     // presets
     var loadPresets = function(callback){
-        $.get(getApiPrefix() + '/monitorStates/' + $user.ke,function(d){
+        $.getJSON(getApiPrefix() + '/monitorStates/' + $user.ke,function(d){
             var presets = d.presets
             loadedPresets = {}
             $.each(presets,function(n,preset){
@@ -1459,6 +1490,18 @@ editorForm.find('[name="type"]').change(function(e){
             case'detector_unplugged':
                 removeDetectorPlugin(d.plug)
             break;
+        }
+    })
+    function checkToOpenSideMenu(){
+        if(isSideBarMenuCollapsed()){
+            sideMenuCollapsePoint.collapse('show')
+        }
+    }
+    addOnTabOpen('monitorSettings', checkToOpenSideMenu)
+    addOnTabReopen('monitorSettings', checkToOpenSideMenu)
+    addOnTabAway('monitorSettings', function(){
+        if(isSideBarMenuCollapsed()){
+            sideMenuCollapsePoint.collapse('hide')
         }
     })
     window.generateDefaultMonitorSettings = generateDefaultMonitorSettings

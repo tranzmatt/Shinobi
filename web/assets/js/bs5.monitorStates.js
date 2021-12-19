@@ -5,7 +5,7 @@ $(document).ready(function(){
     var monitorStatesMonitors = $('#monitorStatesMonitors')
     var theForm = monitorStatesPage.find('form')
     function loadMonitorStatesPresets(callback){
-        $.get(getApiPrefix(`monitorStates`),function(d){
+        $.getJSON(getApiPrefix(`monitorStates`),function(d){
             var html = ''
             $.each(d.presets,function(n,v){
                 monitorStatesLoaded[v.name] = v

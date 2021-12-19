@@ -34,8 +34,7 @@ module.exports = async (s,config,lang,onFinish) => {
                 mid: e.mid,
             }
             const ffmpegCommand = [`-progress pipe:5`];
-            ([
-                buildMainInput(e),
+            const allOutputs = [
                 buildMainStream(e),
                 buildJpegApiOutput(e),
                 buildMainRecording(e),
@@ -43,21 +42,25 @@ module.exports = async (s,config,lang,onFinish) => {
                 buildMainDetector(e),
                 buildEventRecordingOutput(e),
                 buildTimelapseOutput(e),
-            ]).forEach(function(commandStringPart){
-                ffmpegCommand.push(commandStringPart)
-            })
-            s.onFfmpegCameraStringCreationExtensions.forEach(function(extender){
-                extender(e,ffmpegCommand)
-            })
-            const stdioPipes = createPipeArray(e)
-            const ffmpegCommandString = ffmpegCommand.join(' ')
-            //hold ffmpeg command for log stream
-            s.group[e.ke].activeMonitors[e.mid].ffmpeg = sanitizedFfmpegCommand(e,ffmpegCommandString)
-            //clean the string of spatial impurities and split for spawn()
-            const ffmpegCommandParsed = splitForFFPMEG(ffmpegCommandString)
-            try{
-                fs.unlinkSync(e.sdir + 'cmd.txt')
-            }catch(err){
+            ];
+            if(allOutputs.filter(output => !!output).length > 0){
+                ([
+                    buildMainInput(e),
+                ]).concat(allOutputs).forEach(function(commandStringPart){
+                    ffmpegCommand.push(commandStringPart)
+                })
+                s.onFfmpegCameraStringCreationExtensions.forEach(function(extender){
+                    extender(e,ffmpegCommand)
+                })
+                const stdioPipes = createPipeArray(e)
+                const ffmpegCommandString = ffmpegCommand.join(' ')
+                //hold ffmpeg command for log stream
+                activeMonitor.ffmpeg = sanitizedFfmpegCommand(e,ffmpegCommandString)
+                //clean the string of spatial impurities and split for spawn()
+                const ffmpegCommandParsed = splitForFFPMEG(ffmpegCommandString)
+                try{
+                    fs.unlinkSync(e.sdir + 'cmd.txt')
+                }catch(err){
 
             }
             fs.writeFileSync(e.sdir + 'cmd.txt',JSON.stringify({
@@ -69,20 +72,31 @@ module.exports = async (s,config,lang,onFinish) => {
                     config: config,
                     isAtleatOneDetectorPluginConnected: s.isAtleatOneDetectorPluginConnected
                 }
-            },null,3),'utf8')
-            var cameraCommandParams = [
-              config.monitorDaemonPath ? config.monitorDaemonPath : __dirname + '/cameraThread/singleCamera.js',
-              config.ffmpegDir,
-              e.sdir + 'cmd.txt'
-            ]
-            const cameraProcess = spawn('node',cameraCommandParams,{detached: true,stdio: stdioPipes})
-            if(config.debugLog === true && config.debugLogMonitors === true){
-                cameraProcess.stderr.on('data',(data) => {
-                    console.log(`${e.ke} ${e.mid}`)
-                    console.log(data.toString())
-                })
+                fs.writeFileSync(e.sdir + 'cmd.txt',JSON.stringify({
+                    cmd: ffmpegCommandParsed,
+                    pipes: stdioPipes.length,
+                    rawMonitorConfig: s.group[e.ke].rawMonitorConfigurations[e.id],
+                    globalInfo: {
+                        config: config,
+                        isAtleatOneDetectorPluginConnected: s.isAtleatOneDetectorPluginConnected
+                    }
+                },null,3),'utf8')
+                var cameraCommandParams = [
+                  config.monitorDaemonPath ? config.monitorDaemonPath : __dirname + '/cameraThread/singleCamera.js',
+                  config.ffmpegDir,
+                  e.sdir + 'cmd.txt'
+                ]
+                const cameraProcess = spawn('node',cameraCommandParams,{detached: true,stdio: stdioPipes})
+                if(config.debugLog === true && config.debugLogMonitors === true){
+                    cameraProcess.stderr.on('data',(data) => {
+                        console.log(`${e.ke} ${e.mid}`)
+                        console.log(data.toString())
+                    })
+                }
+                return cameraProcess
+            }else{
+                return null
             }
-            return cameraProcess
         }catch(err){
             s.systemLog(err)
             return null

@@ -220,7 +220,7 @@ module.exports = function(s,config,lang){
                         filename: filename,
                         mid: e.id,
                         ke: e.ke,
-                        time: s.nameToTime(filename),
+                        time: new Date(s.nameToTime(filename)),
                         end: s.formattedTime(new Date,'YYYY-MM-DD HH:mm:ss')
                     },'GRP_'+e.ke);
                     var storageIndex = s.getVideoStorageIndex(e)
@@ -471,13 +471,13 @@ module.exports = function(s,config,lang){
         file.pipe(res)
         return file
     }
-    s.createVideoFromTimelapse = function(timelapseFrames,framesPerSecond,callback){
+    s.createVideoFromTimelapse = async function(timelapseFrames,framesPerSecond,callback){
         framesPerSecond = parseInt(framesPerSecond)
         if(!framesPerSecond || isNaN(framesPerSecond))framesPerSecond = 2
         var frames = timelapseFrames.reverse()
         var ke = frames[0].ke
         var mid = frames[0].mid
-        var finalFileName = frames[0].filename.split('.')[0] + '_' + frames[frames.length - 1].filename.split('.')[0] + `-${framesPerSecond}fps`
+        var finalFileName = `${s.md5(JSON.stringify(frames))}-${framesPerSecond}fps`
         var concatFiles = []
         var createLocation
         frames.forEach(function(frame,frameNumber){
@@ -515,7 +515,7 @@ module.exports = function(s,config,lang){
                             }
                         },4000)
                     })
-                    videoBuildProcess.on('exit',function(data){
+                    videoBuildProcess.on('close',function(data){
                         var timeNow = new Date()
                         var fileStats = fs.statSync(finalMp4OutputLocation)
                         var details = {}
@@ -547,12 +547,11 @@ module.exports = function(s,config,lang){
                             if(!err)videoBuildProcess.stdin.write(buffer)
                             if(currentFile === concatFiles.length - 1){
                                 //is last
-
                             }else{
-                                setTimeout(function(){
+                                setTimeout(async function(){
                                     ++currentFile
                                     readFile()
-                                },1/framesPerSecond)
+                                },10/framesPerSecond)
                             }
                         })
                     }
@@ -565,13 +564,22 @@ module.exports = function(s,config,lang){
                         msg: lang['Started Building']
                     })
                 }else{
-                    callback({
-                        ok: false,
-                        fileExists: true,
-                        filename: finalFileName + '.mp4',
-                        fileLocation: finalMp4OutputLocation,
-                        msg: lang['Already exists']
-                    })
+                    if(s.group[ke].activeMonitors[mid].buildingTimelapseVideo){
+                        callback({
+                            ok: false,
+                            fileExists: false,
+                            fileLocation: finalMp4OutputLocation,
+                            msg: lang.Building
+                        })
+                    }else{
+                        callback({
+                            ok: false,
+                            fileExists: true,
+                            filename: finalFileName + '.mp4',
+                            fileLocation: finalMp4OutputLocation,
+                            msg: lang['Already exists']
+                        })
+                    }
                 }
             }else{
                 callback({
@@ -591,9 +599,11 @@ module.exports = function(s,config,lang){
     }
     s.getVideoStorageIndex = function(video){
         try{
-            var details = s.parseJSON(video.details) || {}
-            var storageId = details.storageId
-            if(s.group[video.ke] && s.group[video.ke].activeMonitors[video.id] && s.group[video.ke].activeMonitors[video.id].addStorageId)storageId = s.group[video.ke].activeMonitors[video.id].addStorageId
+            const monitorId = video.id || video.mid
+            const details = s.parseJSON(video.details) || {}
+            let storageId = details.storageId
+            const activeMonitor = s.group[video.ke] && s.group[video.ke].activeMonitors[monitorId] ? s.group[video.ke].activeMonitors[monitorId] : null;
+            if(activeMonitor && activeMonitor.addStorageId)storageId = activeMonitor.addStorageId;
             if(storageId){
                 return s.group[video.ke].addStorageUse[storageId]
             }

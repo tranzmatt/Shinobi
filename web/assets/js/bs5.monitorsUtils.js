@@ -149,7 +149,7 @@ function getVideoSnapshot(videoElement,cb){
 function runPtzCommand(monitorId,switchChosen){
     switch(switchChosen){
         case'setHome':
-            $.get(getApiPrefix(`control`) + '/' + monitorId + '/setHome',function(data){
+            $.getJSON(getApiPrefix(`control`) + '/' + monitorId + '/setHome',function(data){
                 console.log(data)
             })
         break;
@@ -170,7 +170,26 @@ function runTestDetectionTrigger(monitorId,callback){
         if(callback)callback()
     })
 }
-
+function toggleSubStream(monitorId,callback){
+    var monitor = loadedMonitors[monitorId]
+    var substreamConfig = monitor.details.substream
+    var isSubStreamConfigured = !!substreamConfig.output;
+    if(!isSubStreamConfigured){
+        new PNotify({
+            type: 'warning',
+            title: lang['Invalid Settings'],
+            text: lang.SubstreamNotConfigured,
+        });
+        return;
+    }
+    if(monitor.subStreamToggleLock)return false;
+    monitor.subStreamToggleLock = true
+    $.getJSON(getApiPrefix() + '/toggleSubstream/'+$user.ke+'/'+monitorId,function(d){
+        monitor.subStreamToggleLock = false
+        debugLog(d)
+        if(callback)callback()
+    })
+}
 function playAudioAlert(){
     var fileName = $user.details.audio_alert
     if(fileName && window.soundAlarmed !== true){
@@ -195,7 +214,7 @@ function playAudioAlert(){
 
 function buildStreamUrl(monitorId){
     var monitor = loadedMonitors[monitorId]
-    var streamURL
+    var streamURL = ''
     var streamType = safeJsonParse(monitor.details).stream_type
     switch(streamType){
         case'jpeg':
@@ -215,6 +234,9 @@ function buildStreamUrl(monitorId){
         break;
         case'b64':
             streamURL = 'Websocket'
+        break;
+        case'useSubstream':
+            streamURL = lang['Use Substream']
         break;
     }
     if(!streamURL){
@@ -285,7 +307,7 @@ function importM3u8Playlist(textData){
     })
     $.each(parsedList,function(name,url){
         var link = getUrlPieces(url)
-        var newMon = $.aM.generateDefaultMonitorSettings()
+        var newMon = generateDefaultMonitorSettings()
         newMon.details = JSON.parse(newMon.details)
         newMon.mid = 'HLS' + name.toLowerCase()
         newMon.name = name
@@ -388,7 +410,7 @@ function deleteMonitors(monitorsSelected,afterDelete){
                 class:'btn-danger',
                 callback:function(){
                     $.each(monitorsSelected,function(n,monitor){
-                        $.get(`${getApiPrefix(`configureMonitor`)}/${monitor.mid}/delete`,function(data){
+                        $.getJSON(`${getApiPrefix(`configureMonitor`)}/${monitor.mid}/delete`,function(data){
                             console.log(data)
                             if(monitorsSelected.length === n + 1){
                                 //last
@@ -403,7 +425,7 @@ function deleteMonitors(monitorsSelected,afterDelete){
                 class:'btn-danger',
                 callback:function(){
                     $.each(monitorsSelected,function(n,monitor){
-                        $.get(`${getApiPrefix(`configureMonitor`)}/${monitor.mid}/delete?deleteFiles=true`,function(data){
+                        $.getJSON(`${getApiPrefix(`configureMonitor`)}/${monitor.mid}/delete?deleteFiles=true`,function(data){
                             console.log(data)
                             if(monitorsSelected.length === n + 1){
                                 //last

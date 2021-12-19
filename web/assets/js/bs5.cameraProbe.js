@@ -25,7 +25,7 @@ $(document).ready(function(e){
         var form = el.serializeObject()
         var flags = 'default'
         var url = form.url.trim()
-        $.get(`${getApiPrefix()}/probe/${$user.ke}?url=${url}`,function(data){
+        $.getJSON(`${getApiPrefix()}/probe/${$user.ke}?url=${url}`,function(data){
             if(data.ok === true){
                 var html
                 try{

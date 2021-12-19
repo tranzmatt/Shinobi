@@ -179,3 +179,7 @@
 #powerVideo .vis-item.vis-box {
     border-radius: 5px;
 }
+
+#powerVideo .vis-labelset .vis-label {
+        color: #fff;
+}

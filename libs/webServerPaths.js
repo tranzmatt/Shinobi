@@ -839,13 +839,20 @@ module.exports = function(s,config,lang,app,io){
             }else{
                 const monitorConfig = s.group[groupKey].rawMonitorConfigurations[monitorId]
                 const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
-                if(!activeMonitor.subStreamProcess){
-                    response.ok = true
-                    activeMonitor.allowDestroySubstream = false;
-                    spawnSubstreamProcess(monitorConfig)
+                const substreamConfig = monitorConfig.details.substream
+                if(
+                    substreamConfig.output
+                ){
+                    if(!activeMonitor.subStreamProcess){
+                        response.ok = true
+                        activeMonitor.allowDestroySubstream = false;
+                        spawnSubstreamProcess(monitorConfig)
+                    }else{
+                        activeMonitor.allowDestroySubstream = true
+                        await destroySubstreamProcess(activeMonitor)
+                    }
                 }else{
-                    activeMonitor.allowDestroySubstream = true
-                    await destroySubstreamProcess(activeMonitor)
+                    response.msg = lang['Invalid Settings']
                 }
             }
             s.closeJsonResponse(res,response);
@@ -942,6 +949,7 @@ module.exports = function(s,config,lang,app,io){
                 endTime: req.query.end,
                 startTimeOperator: req.query.startOperator,
                 endTimeOperator: req.query.endOperator,
+                noLimit: req.query.noLimit,
                 limit: req.query.limit,
                 archived: req.query.archived,
                 endIsStartTo: !!req.query.endIsStartTo,
@@ -1014,6 +1022,7 @@ module.exports = function(s,config,lang,app,io){
                     endTime: req.query.end,
                     startTimeOperator: req.query.startOperator,
                     endTimeOperator: req.query.endOperator,
+                    noLimit: req.query.noLimit,
                     limit: req.query.limit,
                     endIsStartTo: true,
                     parseRowDetails: true,

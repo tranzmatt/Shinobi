@@ -2,6 +2,7 @@ var mainSocket = {}
 var websocketPath = checkCorrectPathEnding(location.pathname) + 'socket.io'
 var websocketQuery = {}
 if(location.search === '?p2p=1'){
+    window.machineId = location.pathname.split('/')[2]
     websocketPath = '/socket.io'
     websocketQuery.machineId = machineId
 }

@@ -119,6 +119,9 @@ module.exports = (s,config,lang) => {
                     ProfileToken : device.current_profile.token,
                     Protocol : 'RTSP'
                 })
+                const snapUri = (await device.services.media.getSnapshotUri({
+                    ProfileToken : device.current_profile.token,
+                })).GetSnapshotUriResponse.MediaUri.Uri
                 var cameraResponse = {
                     ip: camera.ip,
                     port: camera.port,
@@ -147,7 +150,7 @@ module.exports = (s,config,lang) => {
                         imageSnap = (await s.getSnapshotFromOnvif({
                             username: onvifUsername,
                             password: onvifPassword,
-                            uri: cameraResponse.uri,
+                            uri: snapUri,
                         })).toString('base64');
                     }catch(err){
                         s.debugLog(err)
@@ -185,7 +188,7 @@ module.exports = (s,config,lang) => {
                         error: errorMessage
                     })
                 }
-                s.debugLog(err)
+                if(config.debugLogVerbose)s.debugLog(err);
             }
         })
         return responseList

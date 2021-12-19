@@ -2,7 +2,7 @@
 <script>definitions = <%- JSON.stringify(define) %></script>
 <script>addStorage = <%- JSON.stringify(addStorage) %>;</script>
 <script>logoLocation196x196 = `<%- window.libURL + config.logoLocation196x196 %>`;</script>
-<script>libURL = location.search === '?p2p=1' ? location.pathname + '/' : '<%-window.libURL%>';</script>
+<script>libURL = location.search === '?p2p=1' ? location.pathname : '<%-window.libURL%>';</script>
 <script>HWAccelChoices = [
 <% if(config.availableHWAccels) {
         var methods = {

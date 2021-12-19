@@ -71,6 +71,9 @@ function base64ArrayBuffer(arrayBuffer) {
 
       return base64
 }
+function getLocationPathName(){
+    return location.pathname.endsWith('/') ? location.pathname : location.pathname
+}
 function debugLog(...args){
     console.log(...args)
 }
@@ -198,7 +201,7 @@ function liveStamp(){
 }
 
 function loadMonitorsIntoMemory(callback){
-    $.get(`${getApiPrefix(`monitor`)}`,function(data){
+    $.getJSON(`${getApiPrefix(`monitor`)}`,function(data){
         $.each(data,function(n,monitor){
             monitor.details = safeJsonParse(monitor.details)
             loadedMonitors[monitor.mid] = monitor
@@ -261,6 +264,10 @@ function blipTo(xPageValue,yPageValue){
 
 function openTab(theTab,loadData,backAction,haltTrigger,type){
     loadData = loadData ? loadData : {}
+    if(tabTree && tabTree.back && tabTree.back.name === theTab){
+        goBackOneTab()
+        return;
+    }
     saveTabBlipPosition(activeTabName)
     var allTabs = $('.page-tab');
     allTabs.hide().removeClass('tab-active');
@@ -578,7 +585,7 @@ function diffObject(obj1, obj2) {
 function getAllSectionsFromDefinition(definitionsBase){
     var sections = {}
     var addSection = function(section,parentName){
-        sections[section.name] = {
+        sections[section.id + section.name] = {
             name: section.name,
             id: section.id,
             color: section.color,
@@ -593,7 +600,7 @@ function getAllSectionsFromDefinition(definitionsBase){
         }
         if(section.blocks){
             $.each(section.blocks,function(m,block){
-                addSection(block)
+                addSection(block,section.name)
             })
         }
     }
@@ -677,14 +684,28 @@ function drawMonitorListToSelector(jqTarget,selectFirst,showId){
         .change()
     }
 }
+var logWriterIconIndicator = $('#side-menu-link-logViewer i')
+var logWriterIconIndicatorShaking = false
+var logWriterIconIndicatorTimeout = null
+function shakeLogWriterIcon(){
+    if(logWriterIconIndicatorShaking)return;
+    logWriterIconIndicatorShaking = true;
+    logWriterIconIndicator.addClass('animate-shake')
+    logWriterIconIndicatorTimeout = setTimeout(function(){
+        logWriterIconIndicatorShaking = false;
+        logWriterIconIndicator.removeClass('animate-shake')
+    },3000)
+}
 var logWriterFloodTimeout = null
 var logWriterFloodCounter = 0
 var logWriterFloodLock = null
 function buildLogRow(v){
+    var monitor = loadedMonitors[v.mid]
+    var humanMonitorName = monitor ? monitor.name + ` (${monitor.mid}) : ` : ''
     var html = ''
-    html += `<div class="card shadow-lg mb-3 px-0 btn-default search-row">
+    html += `<div class="log-item card shadow-lg mb-3 px-0 btn-default search-row">
         <div class="card-header">
-            <small class="${definitions.Theme.isDark ? 'text-white' : ''}">${v.info && v.info.type ? v.info.type : v.mid}</small>
+            <small class="${definitions.Theme.isDark ? 'text-white' : ''}">${humanMonitorName}${v.info && v.info.type ? v.info.type : v.mid}</small>
         </div>
         <div class="card-body">
             <div>${jsonToHtmlBlock(v.info.msg)}</div>
@@ -718,10 +739,12 @@ function logWriterDraw(id,data){
         info: data.log,
         time: data.time,
     })
+    shakeLogWriterIcon()
     $(elementTags).prepend(html).each(function(n,v){
         var el = $(v);
-        if(el.find('.log-item').length > 10){
-            v.find('.log-item:last').remove()
+        var theRows = el.find('.log-item')
+        if(theRows.length > 10){
+            theRows.last().remove()
         }
     })
 }
@@ -850,6 +873,14 @@ $(document).ready(function(){
         if(activeTabName === tabName){
             goBackOneTab()
         }
+        deleteTab(tabName)
+        return false;
+    })
+    .on('click','.delete-tab-dynamic',function(e){
+        e.preventDefault()
+        e.stopPropagation()
+        var tabName = $(this).parents('.page-tab').attr('id').replace('tab-','')
+        goBackOneTab()
         deleteTab(tabName)
         return false;
     })

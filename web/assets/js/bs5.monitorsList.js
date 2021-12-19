@@ -131,7 +131,7 @@ $(document).ready(function(){
         }
     }
     function drawMonitorsListApiKeyList(){
-        $.get(getApiPrefix(`api`) + '/list',function(d){
+        $.getJSON(getApiPrefix(`api`) + '/list',function(d){
             var html = ''
             $.each(d.keys || [],function(n,key){
                 console.log(key)
@@ -169,7 +169,7 @@ $(document).ready(function(){
         var el = thisEl.parents('[data-mid]')
         var monitorId = el.attr('data-mid')
         var mode = thisEl.attr('set-mode')
-        $.get(`${getApiPrefix('monitor')}/${monitorId}/${mode}`,function(data){
+        $.getJSON(`${getApiPrefix('monitor')}/${monitorId}/${mode}`,function(data){
             console.log(data)
         })
     })

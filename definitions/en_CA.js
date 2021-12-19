@@ -120,6 +120,7 @@ module.exports = function(s,config,lang){
                    {
                        "fieldType": 'div',
                        "id": "monitorPresetsSelection",
+                       "style": "max-height:400px;overflow:auto;",
                        "class": "mdl-list"
                    },
                    {
@@ -497,23 +498,23 @@ module.exports = function(s,config,lang){
                       "form-group-class": "input-mapping",
                       "possible": [
                            {
-                              "name": lang['All streams in first feed'] + '(0, ' + lang.Default + ')',
+                              "name": lang['All streams in first feed'] + ' (0, ' + lang.Default + ')',
                               "value": "0"
                            },
                            {
-                              "name": lang['First stream in feed'] + '(0:0)',
+                              "name": lang['First stream in feed'] + ' (0:0)',
                               "value": "0:0"
                            },
                            {
-                              "name": lang['Second stream in feed'] + "(0:1)",
+                              "name": lang['Second stream in feed'] + " (0:1)",
                               "value": "0:1"
                            },
                            {
-                              "name": lang['Video streams only'] + "(0:v)",
+                              "name": lang['Video streams only'] + " (0:v)",
                               "value": "0:v"
                            },
                            {
-                              "name": lang['Video stream only from first feed'] + "(0:v:0)",
+                              "name": lang['Video stream only from first feed'] + " (0:v:0)",
                               "value": "0:v:0"
                            }
                         ]
@@ -764,6 +765,10 @@ module.exports = function(s,config,lang){
                               "name": lang['HLS (includes Audio)'],
                               "value": "hls",
                               "info": "Similar method to facebook live streams. <b>Includes audio</b> if input provides it. There is a delay of about 4-6 seconds because this method records segments then pushes them to the client rather than push as while it creates them."
+                          },
+                           {
+                              "name": lang.useSubStreamOnlyWhenWatching,
+                              "value": "useSubstream",
                            }
                         ]
                    },
@@ -1285,16 +1290,20 @@ module.exports = function(s,config,lang){
                isAdvanced: true,
                "isSection": true,
                "id": "monSectionSubstream",
+               "blockquote": lang.substreamText,
+               "blockquoteClass": 'global_tip',
                "info": [
                    {
                        "name": lang['Connection'],
                        "color": "orange",
                        id: "monSectionSubstreamInput",
+                       "blockquote": lang.substreamConnectionText,
+                       "blockquoteClass": 'global_tip',
                        isSection: true,
                        isFormGroupGroup: true,
                        "info": [
                            {
-                               name:'map-detail=type',
+                               name:'detail-substream-input=type',
                                field:lang['Input Type'],
                                default:'h264',
                                attribute:'selector="h_i_SUBSTREAM_FIELDS"',
@@ -1303,7 +1312,8 @@ module.exports = function(s,config,lang){
                                possible:[
                                  {
                                     "name": "H.264 / H.265 / H.265+",
-                                    "value": "h264"
+                                    "value": "h264",
+                                    selected: true,
                                  },
                                  {
                                     "name": "JPEG",
@@ -1371,6 +1381,7 @@ module.exports = function(s,config,lang){
                                    {
                                       "name": lang.Yes,
                                       "value": "1",
+                                      selected: true,
                                    }
                                ]
                            },
@@ -1385,7 +1396,8 @@ module.exports = function(s,config,lang){
                                    {
                                       "name": lang.Auto,
                                       "value": "",
-                                      "info": "Let FFMPEG decide. Normally it will try UDP first."
+                                      "info": "Let FFMPEG decide. Normally it will try UDP first.",
+                                      selected: true,
                                    },
                                    {
                                       "name": "TCP",
@@ -1410,6 +1422,7 @@ module.exports = function(s,config,lang){
                                    {
                                       "name": lang.No,
                                       "value": "0",
+                                      selected: true,
                                    },
                                    {
                                       "name": lang.Yes,
@@ -1438,7 +1451,8 @@ module.exports = function(s,config,lang){
                                possible:[
                                    {
                                       "name": lang.Auto + '('+lang.Recommended+')',
-                                      "value": ""
+                                      "value": "",
+                                      selected: true,
                                    },
                                    {
                                       "name": lang.NVIDIA,
@@ -1516,6 +1530,8 @@ module.exports = function(s,config,lang){
                        "name": lang['Output'],
                        "color": "blue",
                        id: "monSectionSubstreamOutput",
+                       "blockquote": lang.substreamOutputText,
+                       "blockquoteClass": 'global_tip',
                        isSection: true,
                        isFormGroupGroup: true,
                        "info": [
@@ -1531,40 +1547,21 @@ module.exports = function(s,config,lang){
                                    {
                                       "name": lang.Poseidon,
                                       "value": "mp4",
-                                      "info": "Poseidon is built on Kevin Godell's MP4 processing code. It simulates a streaming MP4 file but using the data of a live stream. Includes Audio. Some browsers can play it like a regular MP4 file. Streams over HTTP or WebSocket."
-                                   },
-                                   {
-                                      "name": lang["RTMP Stream"],
-                                      "value": "rtmp",
                                    },
                                    {
                                       "name": lang['MJPEG'],
                                       "value": "mjpeg",
-                                      "info": "Standard Motion JPEG image. No audio."
                                    },
                                    {
                                       "name": lang['FLV'],
                                       "value": "flv",
-                                      "info": "Sending FLV encoded frames over WebSocket."
                                    },
                                    {
                                       "name": lang['HLS (includes Audio)'],
                                       "value": "hls",
-                                      "info": "Similar method to facebook live streams. <b>Includes audio</b> if input provides it. There is a delay of about 4-6 seconds because this method records segments then pushes them to the client rather than push as while it creates them."
+                                      selected: true,
                                    }
                                 ]
-                           },
-                           {
-                              "field": lang['Server URL'],
-                              "name": `detail-substream-output="rtmp_server_url"`,
-                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_rtmp",
-                              "example": "rtmp://live-api.facebook.com:80/rtmp/",
-                           },
-                           {
-                              "field": lang['Stream Key'],
-                              "name": `detail-substream-output="rtmp_stream_key"`,
-                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_rtmp",
-                              "example": "1111111111?ds=1&a=xxxxxxxxxx",
                            },
                            {
                               "field": lang['# of Allow MJPEG Clients'],
@@ -1577,14 +1574,15 @@ module.exports = function(s,config,lang){
                               "name": `detail-substream-output="stream_vcodec"`,
                               "description": "Video codec for streaming.",
                               "default": "copy",
-                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4  h_st_channel_SUBSTREAM_FIELDS_h264",
+                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264",
                               "fieldType": "select",
                               "selector": "h_hls_v_channel_SUBSTREAM_FIELDS",
                               "possible": [
                                  {
                                     "name": lang.Auto,
                                     "value": "no",
-                                    "info": "Let FFMPEG choose."
+                                    "info": "Let FFMPEG choose.",
+                                    selected: true,
                                  },
                                  {
                                     "name": "libx264",
@@ -1659,12 +1657,13 @@ module.exports = function(s,config,lang){
                               "default": "",
                               "example": "",
                               "fieldType": "select",
-                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4  h_st_channel_SUBSTREAM_FIELDS_h264",
+                              "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264",
                               "possible": [
                                  {
                                     "name": lang.Auto,
                                     "info": "Let FFMPEG choose.",
-                                    "value": ""
+                                    "value": "",
+                                    selected: true,
                                  },
                                  {
                                     "name": lang["No Audio"],
@@ -1730,7 +1729,7 @@ module.exports = function(s,config,lang){
                               "description": "Low number means higher quality. Higher number means less quality.",
                               "default": "15",
                               "example": "1",
-                              "form-group-class-pre-layer": "h_hls_v_channel_SUBSTREAM_FIELDS_input h_hls_v_channel_SUBSTREAM_FIELDS_libx264 h_hls_v_channel_SUBSTREAM_FIELDS_libx265 h_hls_v_channel_SUBSTREAM_FIELDS_h264_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_hevc_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_no",
+                              // "form-group-class-pre-layer": "h_hls_v_channel_SUBSTREAM_FIELDS_input h_hls_v_channel_SUBSTREAM_FIELDS_libx264 h_hls_v_channel_SUBSTREAM_FIELDS_libx265 h_hls_v_channel_SUBSTREAM_FIELDS_h264_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_hevc_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_no",
                               "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_mjpeg h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_jsmpeg h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264",
                               "possible": "1-23"
                            },
@@ -1752,7 +1751,7 @@ module.exports = function(s,config,lang){
                               "name": "detail-substream-output=stream_fps",
                               "field": lang['Frame Rate'],
                               "description": "The speed in which frames are displayed to clients, in Frames Per Second. Be aware there is no default. This can lead to high bandwidth usage.",
-                              "form-group-class-pre-layer": "h_hls_v_channel_SUBSTREAM_FIELDS_input h_hls_v_channel_SUBSTREAM_FIELDS_libx264 h_hls_v_channel_SUBSTREAM_FIELDS_libx265 h_hls_v_channel_SUBSTREAM_FIELDS_h264_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_hevc_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_no",
+                              // "form-group-class-pre-layer": "h_hls_v_channel_SUBSTREAM_FIELDS_input h_hls_v_channel_SUBSTREAM_FIELDS_libx264 h_hls_v_channel_SUBSTREAM_FIELDS_libx265 h_hls_v_channel_SUBSTREAM_FIELDS_h264_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_hevc_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_no",
                               "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_mjpeg h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_jsmpeg h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264",
                            },
                            {
@@ -1762,7 +1761,7 @@ module.exports = function(s,config,lang){
                               "fieldType": "number",
                               "numberMin": "1",
                               "example": "640",
-                              "form-group-class-pre-layer": "h_hls_v_channel_SUBSTREAM_FIELDS_input h_hls_v_channel_SUBSTREAM_FIELDS_libx264 h_hls_v_channel_SUBSTREAM_FIELDS_libx265 h_hls_v_channel_SUBSTREAM_FIELDS_h264_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_hevc_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_no",
+                              // "form-group-class-pre-layer": "h_hls_v_channel_SUBSTREAM_FIELDS_input h_hls_v_channel_SUBSTREAM_FIELDS_libx264 h_hls_v_channel_SUBSTREAM_FIELDS_libx265 h_hls_v_channel_SUBSTREAM_FIELDS_h264_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_hevc_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_no",
                               "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_mjpeg h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_jsmpeg h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264",
                            },
                            {
@@ -1772,7 +1771,7 @@ module.exports = function(s,config,lang){
                               "fieldType": "number",
                               "numberMin": "1",
                               "example": "480",
-                              "form-group-class-pre-layer": "h_hls_v_channel_SUBSTREAM_FIELDS_input h_hls_v_channel_SUBSTREAM_FIELDS_libx264 h_hls_v_channel_SUBSTREAM_FIELDS_libx265 h_hls_v_channel_SUBSTREAM_FIELDS_h264_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_hevc_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_no",
+                              // "form-group-class-pre-layer": "h_hls_v_channel_SUBSTREAM_FIELDS_input h_hls_v_channel_SUBSTREAM_FIELDS_libx264 h_hls_v_channel_SUBSTREAM_FIELDS_libx265 h_hls_v_channel_SUBSTREAM_FIELDS_h264_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_hevc_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_no",
                               "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_mjpeg h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_jsmpeg h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264",
                            },
                            {
@@ -1780,7 +1779,7 @@ module.exports = function(s,config,lang){
                               "field": lang["Rotate"],
                               "description": "Change the viewing angle of the video stream.",
                               "fieldType": "select",
-                              "form-group-class-pre-layer": "h_hls_v_channel_SUBSTREAM_FIELDS_input h_hls_v_channel_SUBSTREAM_FIELDS_libx264 h_hls_v_channel_SUBSTREAM_FIELDS_libx265 h_hls_v_channel_SUBSTREAM_FIELDS_h264_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_hevc_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_no",
+                              // "form-group-class-pre-layer": "h_hls_v_channel_SUBSTREAM_FIELDS_input h_hls_v_channel_SUBSTREAM_FIELDS_libx264 h_hls_v_channel_SUBSTREAM_FIELDS_libx265 h_hls_v_channel_SUBSTREAM_FIELDS_h264_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_hevc_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_no",
                               "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_mjpeg h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_jsmpeg h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264",
                               "possible": [
                                    {
@@ -1813,7 +1812,7 @@ module.exports = function(s,config,lang){
                               "name": "detail-substream-output=svf",
                               "field": lang["Video Filter"],
                               "description": "Place FFMPEG video filters in this box to affect the streaming portion. No spaces.",
-                              "form-group-class-pre-layer": "h_hls_v_channel_SUBSTREAM_FIELDS_input h_hls_v_channel_SUBSTREAM_FIELDS_libx264 h_hls_v_channel_SUBSTREAM_FIELDS_libx265 h_hls_v_channel_SUBSTREAM_FIELDS_h264_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_hevc_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_no",
+                              // "form-group-class-pre-layer": "h_hls_v_channel_SUBSTREAM_FIELDS_input h_hls_v_channel_SUBSTREAM_FIELDS_libx264 h_hls_v_channel_SUBSTREAM_FIELDS_libx265 h_hls_v_channel_SUBSTREAM_FIELDS_h264_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_hevc_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_no",
                               "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_mjpeg h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_jsmpeg h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264",
                           },
                           {
@@ -2424,6 +2423,10 @@ module.exports = function(s,config,lang){
                         {
                             "name": `.5 ${lang.minutes}`,
                             "value": "30"
+                        },
+                        {
+                            "name": `1 ${lang.minute}`,
+                            "value": "60"
                         },
                         {
                             "name": `5 ${lang.minutes}`,
@@ -5104,10 +5107,21 @@ module.exports = function(s,config,lang){
                  "blockquote": lang.onvifdeviceManagerGlobalTip,
                  "info": [
                      {
+                         "field": lang["Monitor"],
+                         "fieldType": "select",
+                         "class": "monitors_list",
+                         "possible": []
+                     },
+                     {
                         "fieldType": "btn",
                         "class": `btn-warning onvif-device-reboot`,
                         "btnContent": `<i class="fa fa-refresh"></i> &nbsp; ${lang['Reboot Camera']}`,
                      },
+                     {
+                         "fieldType": "div",
+                         "class": "p-2",
+                         "divContent": `<pre class="bg-dark text-white" style="max-height: 400px;overflow: auto;" id="onvifDeviceManagerInfo"></pre>`,
+                     }
                  ]
              },
              "Network": {
@@ -5987,6 +6001,21 @@ module.exports = function(s,config,lang){
      "Schedules": {
          "section": "Schedules",
          "blocks": {
+             "Info": {
+                 "name": lang["Monitor States and Schedules"],
+                "color": "blue",
+                "section-pre-class": "col-md-12",
+                "blockquoteClass": "global_tip",
+                "blockquote": lang.MonitorStatesText,
+                "info": [
+                    {
+                       "fieldType": "btn",
+                       "attribute": `page-open="monitorStates"`,
+                       "class": `btn-primary`,
+                       "btnContent": `<i class="fa fa-align-right"></i> &nbsp; ${lang["Monitor States"]}`,
+                    },
+                ]
+             },
              "Schedules": {
                 "name": lang["Schedules"],
                 "color": "orange",
@@ -6118,8 +6147,23 @@ module.exports = function(s,config,lang){
      "Monitor States": {
          "section": "Monitor States",
          "blocks": {
+             "Info": {
+                 "name": lang["Monitor States and Schedules"],
+                "color": "blue",
+                "section-pre-class": "col-md-12",
+                "blockquoteClass": "global_tip",
+                "blockquote": lang.MonitorStatesText,
+                "info": [
+                    {
+                       "fieldType": "btn",
+                       "attribute": `page-open="schedules"`,
+                       "class": `btn-primary`,
+                       "btnContent": `<i class="fa fa-clock"></i> &nbsp; ${lang["Schedules"]}`,
+                    },
+                ]
+             },
              "Monitor States": {
-                "name": lang["Monitor States"],
+                 noHeader: true,
                 "color": "green",
                 "section-pre-class": "col-md-6",
                 "info": [
@@ -6758,7 +6802,7 @@ module.exports = function(s,config,lang){
            "section": "Monitor Settings Additional Input Map",
            "blocks": {
               "Connection" : {
-                 "id": `monSectionMap$[NUMBER]`,
+                 "id": `monSectionMap$[TEMP_ID]`,
                  "name": `${lang['Input Map']} $[NUMBER]`,
                  "section-class": "input-map",
                  "color": "orange",
@@ -7350,8 +7394,11 @@ module.exports = function(s,config,lang){
                <div class="monitor_details">
                    <div class="pull-left">
                        <a title="${lang['Options']}" class="btn btn-sm badge btn-secondary toggle-live-grid-monitor-menu"><i class="fa fa-bars"></i></a>
+                       <a title="${lang['Edit']}" class="btn btn-sm badge btn-primary open-monitor-settings"><i class="fa fa-wrench"></i></a>
+                       <a title="${lang['Toggle Substream']}" class="btn btn-sm badge btn-secondary toggle-monitor-substream"><i class="fa fa-eye"></i></a>
                        <a title="${lang['Snapshot']}" class="btn btn-sm badge btn-warning snapshot-live-grid-monitor"><i class="fa fa-camera"></i></a>
                        <a title="${lang['Videos List']}" class="btn btn-sm badge btn-secondary open-videos"><i class="fa fa-film"></i></a>
+                       <a title="${lang['Show Logs']}" class="btn btn-sm badge btn-warning toggle-live-grid-monitor-logs"><i class="fa fa-exclamation-triangle"></i></a>
                        <a title="${lang['Close']}" class="btn btn-sm badge btn-danger close-live-grid-monitor"><i class="fa fa-times"></i></a>
                   </div>
                    <div><span class="monitor_name">$MONITOR_NAME</span></div>
@@ -7379,6 +7426,11 @@ module.exports = function(s,config,lang){
                  "label": lang['Show Logs'],
                  "class": "warning toggle-live-grid-monitor-logs",
                  "icon": "exclamation-triangle"
+              },
+              "Show Logs": {
+                 "label": lang['Toggle Substream'],
+                 "class": "warning toggle-monitor-substream",
+                 "icon": "eye"
               },
               "Control": {
                  "label": lang['Control'],
@@ -7524,10 +7576,46 @@ module.exports = function(s,config,lang){
                           pageOpen: 'calendarView',
                       },
                       {
+                          icon: 'fast-forward',
+                          label: `${lang['Time-lapse']}`,
+                          pageOpen: 'timelapseViewer',
+                      },
+                      {
+                          divider: true,
+                      },
+                      {
                           icon: 'wrench',
                           label: `${lang['Monitor Settings']}`,
                           pageOpen: 'monitorSettings',
                           addUl: true,
+                      },
+                      {
+                          icon: 'grav',
+                          label: `${lang['Region Editor']}`,
+                          pageOpen: 'regionEditor',
+                      },
+                      {
+                          icon: 'filter',
+                          label: `${lang['Event Filters']}`,
+                          pageOpen: 'eventFilters',
+                      },
+                      {
+                          icon: 'align-right',
+                          label: `${lang['Monitor States']}`,
+                          pageOpen: 'monitorStates',
+                      },
+                      {
+                          icon: 'clock',
+                          label: `${lang['Schedules']}`,
+                          pageOpen: 'schedules',
+                      },
+                      {
+                          icon: 'exclamation-triangle',
+                          label: `${lang['Logs']}`,
+                          pageOpen: 'logViewer',
+                      },
+                      {
+                          divider: true,
                       },
                       {
                           icon: 'gears',
@@ -7542,42 +7630,12 @@ module.exports = function(s,config,lang){
                           addUl: true,
                       },
                       {
-                          icon: 'compass',
-                          label: `${lang['ShinobiHub']}`,
-                          pageOpen: 'configFinder',
-                          addUl: true,
-                      },
-                      {
-                          icon: 'grav',
-                          label: `${lang['Region Editor']}`,
-                          pageOpen: 'regionEditor',
-                          addUl:true
-                      },
-                      {
                           icon: 'key',
                           label: `${lang['API Keys']}`,
                           pageOpen: 'apiKeys',
                       },
                       {
-                          icon: 'align-right',
-                          label: `${lang['Monitor States']}`,
-                          pageOpen: 'monitorStates',
-                      },
-                      {
-                          icon: 'clock',
-                          label: `${lang['Schedules']}`,
-                          pageOpen: 'schedules',
-                      },
-                      {
-                          icon: 'fast-forward',
-                          label: `${lang['Time-lapse']}`,
-                          pageOpen: 'timelapseViewer',
-                      },
-                      {
-                          icon: 'filter',
-                          label: `${lang['Event Filters']}`,
-                          pageOpen: 'eventFilters',
-                          addUl:true
+                          divider: true,
                       },
                       {
                           icon: 'search',
@@ -7586,14 +7644,28 @@ module.exports = function(s,config,lang){
                           addUl:true
                       },
                       {
+                          icon: 'opera',
+                          label: `${lang['ONVIF Device Manager']}`,
+                          pageOpen: 'onvifDeviceManager',
+                      },
+                      {
                           icon: 'eyedropper',
                           label: `${lang['FFprobe']}`,
                           pageOpen: 'cameraProbe',
                       },
                       {
-                          icon: 'exclamation-triangle',
-                          label: `${lang['Logs']}`,
-                          pageOpen: 'logViewer',
+                          icon: 'compass',
+                          label: `${lang['ShinobiHub']}`,
+                          pageOpen: 'configFinder',
+                          addUl: true,
+                      },
+                      {
+                          divider: true,
+                      },
+                      {
+                          icon: 'info-circle',
+                          label: `${lang['Help']}`,
+                          pageOpen: 'helpWindow',
                       },
                       // {
                       //     icon: 'exclamation-circle',
@@ -7710,61 +7782,6 @@ module.exports = function(s,config,lang){
       "Power Viewer": {
            "section": lang["Power Viewer"],
            "blocks": {
-              "Search Settings": {
-                  id: "powerVideoTabs",
-                 "color": "blue",
-                 noHeader: true,
-                 noDefaultSectionClasses: true,
-                 attribute: `tab-chooser-parent`,
-                 "section-pre-class": "col-md-4",
-                 "info": [
-                     {
-                         "color": "blue",
-                         noHeader: true,
-                         isSection: true,
-                         isFormGroupGroup: true,
-                         "info": [
-                             {
-                                 "field": lang['Monitors'],
-                                 "id": "powerVideoMonitorsList",
-                                 "form-group-attribute": 'tab-section=monitors',
-                                 "attribute": "multiple",
-                                 "fieldType": "select",
-                             },
-                             {
-                                "id": "powerVideoDateRange",
-                                "field": lang['Date Range'],
-                             },
-                             {
-                                "id": "powerVideoVideoLimit",
-                                "field": lang['Video Limit'] + ` (${lang['Per Monitor']})`,
-                                "placeholder": "0",
-                             },
-                             {
-                                "id": "powerVideoEventLimit",
-                                "field": lang['Event Limit'] + ` (${lang['Per Monitor']})`,
-                                "placeholder": "500",
-                             },
-                             {
-                                 id:'powerVideoSet',
-                                 field: lang['Video Set'],
-                                 default:'h264',
-                                 "fieldType": "select",
-                                 possible:[
-                                   {
-                                       "name": lang.Local,
-                                      "value": "local"
-                                   },
-                                   {
-                                      "name": lang.Cloud,
-                                      "value": "cloud"
-                                   },
-                                ]
-                             },
-                         ]
-                     },
-                 ]
-            },
             "Video Playback": {
                 id: "powerVideoVideoPlayback",
                 noHeader: true,
@@ -7856,13 +7873,60 @@ module.exports = function(s,config,lang){
                            },
                        ]
                    },
+                   {
+                       id: "powerVideoTabs",
+                       attribute: `tab-chooser-parent`,
+                       "color": "blue",
+                       noHeader: true,
+                       isSection: true,
+                       isFormGroupGroup: true,
+                       "info": [
+                           {
+                               "field": lang['Monitors'],
+                               "id": "powerVideoMonitorsList",
+                               "form-group-attribute": 'tab-section=monitors',
+                               "attribute": "multiple",
+                               "fieldType": "select",
+                           },
+                           {
+                              "id": "powerVideoDateRange",
+                              "field": lang['Date Range'],
+                           },
+                           {
+                              "id": "powerVideoVideoLimit",
+                              "field": lang['Video Limit'] + ` (${lang['Per Monitor']})`,
+                              "placeholder": "0",
+                           },
+                           {
+                              "id": "powerVideoEventLimit",
+                              "field": lang['Event Limit'] + ` (${lang['Per Monitor']})`,
+                              "placeholder": "500",
+                           },
+                           {
+                               id:'powerVideoSet',
+                               field: lang['Video Set'],
+                               default:'h264',
+                               "fieldType": "select",
+                               possible:[
+                                 {
+                                     "name": lang.Local,
+                                    "value": "local"
+                                 },
+                                 {
+                                    "name": lang.Cloud,
+                                    "value": "cloud"
+                                 },
+                              ]
+                           },
+                       ]
+                   },
                ]
            },
            "Time Strip": {
                id: "powerVideoTimelineStripsContainer",
                noHeader: true,
               "color": "bg-gradient-blue text-white",
-              "section-pre-class": "col-md-12 mt-3",
+              "section-pre-class": "col-md-4",
               "info": [
                   {
                      "id": "powerVideoTimelineStrips",
@@ -7870,7 +7934,7 @@ module.exports = function(s,config,lang){
                      "divContent": `<div class="loading"><i class="fa fa-hand-pointer-o"></i><div class="epic-text">${lang['Select a Monitor']}</div></div>`,
                   },
               ]
-          }
+          },
          }
       },
       "Calendar": {

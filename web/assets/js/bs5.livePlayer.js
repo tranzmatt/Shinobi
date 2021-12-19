@@ -205,7 +205,7 @@ function initiateLivePlayer(monitor){
             function createSteamNow(){
                 clearTimeout(loadedPlayer.m3uCheck)
                 var url = getApiPrefix(`hls`) + '/' + monitor.mid + '/s.m3u8'
-                $.get(url,function(m3u){
+                $.getJSON(url,function(m3u){
                     if(m3u == 'File Not Found'){
                         loadedPlayer.m3uCheck = setTimeout(function(){
                             createSteamNow()

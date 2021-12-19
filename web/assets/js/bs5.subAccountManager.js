@@ -40,7 +40,7 @@ $(document).ready(function(){
                     var notifyColor = 'info'
                     if(data.ok){
                         loadedSubAccounts[uid] = null;
-                        accountTable.find('tr[uid="' + uid + '"]').remove()
+                        accountTable.find('[uid="' + uid + '"]').remove()
                     }else{
                         notifyTitle = lang.accountActionFailed
                         notifyText = lang.contactAdmin
@@ -165,7 +165,7 @@ $(document).ready(function(){
     }
     var setPermissionSelectionsToFields = function(uid){
         var account = loadedSubAccounts[uid]
-        var details = $.parseJSON(account.details)
+        var details = safeJsonParse(account.details)
         // load values to Account Information : email, password, etc.
         $.each(account,function(n,v){
             theWindowForm.find('[name="'+n+'"]').val(v)
@@ -324,6 +324,10 @@ $(document).ready(function(){
                 }else{
                     $(`#active-user-${user.uid}-${user.cnid}`).remove()
                 }
+            break;
+            case'delete_sub_account':
+                var user = d.user
+                accountTable.find(`[uid="${user.uid}"]`).remove()
             break;
         }
     })

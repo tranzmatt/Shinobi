@@ -159,6 +159,9 @@ function buildLiveGridBlock(monitor){
         <div class="mdl-overlay-menu-backdrop hidden">
             <ul class="mdl-overlay-menu list-group">`
             var buttons = streamBlockInfo.links
+            if(!monitor.details.control === '1'){
+                delete(buttons["Control"])
+            }
             if(!permissionCheck('video_view',monitor.mid)){
                 delete(buttons["Videos List"])
                 delete(buttons["Time-lapse"])
@@ -273,7 +276,6 @@ function drawLiveGridBlock(monitorConfig,subStreamChannel){
         setLiveGridOpenCount(1)
     }
     initiateLiveGridPlayer(loadedMonitors[monitorId],subStreamChannel)
-    loadVideoMiniList(monitorId)
 }
 function initiateLiveGridPlayer(monitor,subStreamChannel){
     var livePlayerElement = loadedLiveGrids[monitor.mid]
@@ -525,15 +527,17 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
         })
     }
     //initiate signal check
-    var signalCheckInterval = (isNaN(loadedMonitor.details.signal_check) ? 10 : parseFloat(loadedMonitor.details.signal_check)) * 1000 * 60
-    if(signalCheckInterval > 0){
-        clearInterval(loadedPlayer.signal)
-        loadedPlayer.signal = setInterval(function(){
-            signalCheckLiveStream({
-                mid: monitorId,
-                checkSpeed: 1000,
-            })
-        },signalCheckInterval);
+    if(streamType !== 'useSubstream'){
+        var signalCheckInterval = (isNaN(loadedMonitor.details.signal_check) ? 10 : parseFloat(loadedMonitor.details.signal_check)) * 1000 * 60
+        if(signalCheckInterval > 0){
+            clearInterval(loadedPlayer.signal)
+            loadedPlayer.signal = setInterval(function(){
+                signalCheckLiveStream({
+                    mid: monitorId,
+                    checkSpeed: 1000,
+                })
+            },signalCheckInterval);
+        }
     }
 }
 function revokeVideoPlayerUrl(monitorId){
@@ -602,11 +606,7 @@ function closeAllLiveGridPlayers(rememberClose){
     $.each(watchedOn,function(n,groupOfMons){
         $.each(groupOfMons,function(monitorId,monitor){
             if(monitor === 1){
-                if(rememberClose){
-                    mainSocket.f({f:'monitor',ff:'watch_off',id: monitorId})
-                }else{
-                    closeLiveGridPlayer(monitorId,true)
-                }
+                mainSocket.f({f:'monitor',ff:'watch_off',id: monitorId})
             }
         })
     })
@@ -817,15 +817,6 @@ $(document).ready(function(e){
     .resize(function(){
         resetAllLiveGridDimensionsInMemory()
     })
-    .on('click','.toggle-substream',function(){
-        var monitorId = $(this).parents('[data-mid]').attr('data-mid')
-        var monitor = loadedMonitors[monitorId]
-        if(monitor.subStreamToggleLock)return false;
-        monitor.subStreamToggleLock = true
-        $.get(getApiPrefix(`toggleSubstream`) + '/' + monitor.mid,function(data){
-            monitor.subStreamToggleLock = false
-        })
-    })
     .on('click','.launch-live-grid-monitor',function(){
         var monitorId = $(this).parents('[data-mid]').attr('data-mid')
         // if(isMobile){
@@ -868,9 +859,11 @@ $(document).ready(function(e){
     })
     .on('click','.toggle-live-grid-monitor-logs',function(){
         var monitorItem = $(this).parents('[data-mid]')
+        var monitorId = monitorItem.attr('data-mid')
         monitorItem.toggleClass('show_data')
         var dataBlocks = monitorItem.find('.stream-block,.mdl-data_window')
         if(monitorItem.hasClass('show_data')){
+            loadVideoMiniList(monitorId)
             dataBlocks.addClass('col-md-6').removeClass('col-md-12')
         }else{
             dataBlocks.addClass('col-md-12').removeClass('col-md-6')
@@ -896,6 +889,10 @@ $(document).ready(function(e){
     .on('click','.run-live-grid-monitor-pop',function(){
         var monitorId = $(this).parents('[data-mid]').attr('data-mid')
         popOutMonitor(monitorId)
+    })
+    .on('click','.toggle-monitor-substream',function(){
+        var monitorId = $(this).parents('[data-mid]').attr('data-mid')
+        toggleSubStream(monitorId)
     })
     .on('click','.run-live-grid-monitor-ptz',function(){
         var el = $(this)
@@ -925,6 +922,9 @@ $(document).ready(function(e){
                 ff: 'watch_off',
                 id: monitor.mid
             })
+            setTimeout(function(){
+                saveLiveGridBlockOpenState(monitorId,$user.ke,0)
+            },1000)
         })
     })
     liveGrid
@@ -990,9 +990,17 @@ $(document).ready(function(e){
             break;
             case'monitor_watch_on':
                 var monitorId = d.mid || d.id
+                var loadedMonitor = loadedMonitors[monitorId]
                 var subStreamChannel = d.subStreamChannel
-                drawLiveGridBlock(loadedMonitors[monitorId],subStreamChannel)
-                saveLiveGridBlockOpenState(monitorId,$user.ke,1)
+                if(!loadedMonitor.subStreamChannel && loadedMonitor.details.stream_type === 'useSubstream'){
+                    toggleSubStream(monitorId,function(){
+                        drawLiveGridBlock(loadedMonitors[monitorId],subStreamChannel)
+                        saveLiveGridBlockOpenState(monitorId,$user.ke,1)
+                    })
+                }else{
+                    drawLiveGridBlock(loadedMonitors[monitorId],subStreamChannel)
+                    saveLiveGridBlockOpenState(monitorId,$user.ke,1)
+                }
             break;
             case'mode_jpeg_off':
                 window.jpegModeOn = false

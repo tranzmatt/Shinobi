@@ -7,7 +7,7 @@ $(document).ready(function(){
     var selectedStates = schedulerWindow.find('[name="monitorStates"]')
     var selectedDays = schedulerWindow.find('[name="days"]')
     var loadSchedules = function(callback){
-        $.get(getApiPrefix() + '/schedule/' + $user.ke,function(d){
+        $.getJSON(getApiPrefix() + '/schedule/' + $user.ke,function(d){
             var html = ''
             $.each(d.schedules,function(n,v){
                 loadedSchedules[v.name] = v
@@ -21,7 +21,7 @@ $(document).ready(function(){
         })
     }
     var loadMonitorStates = function(){
-        $.get(getApiPrefix() + '/monitorStates/' + $user.ke,function(d){
+        $.getJSON(getApiPrefix() + '/monitorStates/' + $user.ke,function(d){
             var html = ''
             $.each(d.presets,function(n,v){
                 loadedMonitorStates[v.name] = v

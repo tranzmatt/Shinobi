@@ -628,7 +628,7 @@ module.exports = (s,config,lang,app,io) => {
             save : false,
             webhook : false,
             command : false,
-            record : false,
+            record : true,
             forceRecord : false,
             indifference : false,
             countObjects : false
@@ -646,8 +646,7 @@ module.exports = (s,config,lang,app,io) => {
         })
         const eventDetails = d.details
         const passedEventFilters = checkEventFilters(d,monitorDetails,filter)
-        if(!passedEventFilters)return
-        const detailString = JSON.stringify(eventDetails)
+        if(!passedEventFilters)return;
         const eventTime = new Date()
         if(
             filter.addToMotionCounter &&

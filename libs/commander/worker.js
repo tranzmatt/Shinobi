@@ -251,7 +251,9 @@ const initialize = (config,lang) => {
         connectionToP2PServer.on('disconnect',onDisconnect)
     }
     startBridge()
-    setInterval(() => {
-        startBridge(true)
-    },1000 * 60 * 60 * 15)
+    setInterval(function(){
+        if(!connectionToP2PServer || !connectionToP2PServer.connected){
+            connectionToP2PServer.connect()
+        }
+    },1000 * 60 * 15)
 }

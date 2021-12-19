@@ -24,6 +24,7 @@ $(document).ready(function(e){
     var downloaderIsChecking = false
     var allowKeepChecking = true
     var selectedFps = 15
+    var currentPlaylistArray = []
 
     var openTimelapseWindow = function(monitorId,startDate,endDate){
         drawTimelapseWindowElements(monitorId,startDate,endDate)
@@ -70,7 +71,11 @@ $(document).ready(function(e){
         if(!startDate)startDate = dateRange.startDate
         if(!endDate)endDate = dateRange.endDate
         if(!selectedMonitor)selectedMonitor = monitorsList.val()
-        var queryString = ['start=' + startDate,'end=' + endDate]
+        var queryString = [
+            'start=' + startDate,
+            'end=' + endDate,
+            'noLimit=1'
+        ]
         var frameIconsHtml = ''
         var apiURL = apiBaseUrl + '/timelapse/' + $user.ke + '/' + selectedMonitor
         $.getJSON(apiURL + '?' + queryString.join('&'),function(data){
@@ -82,7 +87,7 @@ $(document).ready(function(e){
                 $.each(data.reverse(),function(n,fileInfo){
                     fileInfo.href = apiURL + '/' + fileInfo.filename.split('T')[0] + '/' + fileInfo.filename
                     fileInfo.number = n
-                    frameIconsHtml += '<div class="col-md-4 frame-container"><div class="frame" data-filename="' + fileInfo.filename + '" style="background-image:url(\'' + fileInfo.href + '\')"><div class="button-strip"><button type="button" class="btn btn-sm btn-danger delete"><i class="fa fa-trash-o"></i></button></div><div class="shade">' + moment(fileInfo.time).format('YYYY-MM-DD HH:mm:ss') + '</div></div></div>'
+                    frameIconsHtml += '<div class="col-md-4 frame-container"><div class="frame" data-filename="' + fileInfo.filename + '" frame-container-unloaded="' + fileInfo.href + '"><div class="button-strip"><button type="button" class="btn btn-sm btn-danger delete"><i class="fa fa-trash-o"></i></button></div><div class="shade">' + moment(fileInfo.time).format('YYYY-MM-DD HH:mm:ss') + '</div></div></div>'
                     currentPlaylist[fileInfo.filename] = fileInfo
                 })
                 currentPlaylistArray = data
@@ -90,6 +95,7 @@ $(document).ready(function(e){
                 frameIcons.find(`.frame:first`).click()
                 // getLiveStream()
                 resetFilmStripPositions()
+                loadVisibleTimelapseFrames()
             }else{
                 frameIconsHtml = lang['No Data']
                 frameIcons.html(frameIconsHtml)
@@ -193,7 +199,7 @@ $(document).ready(function(e){
                 title: lang.Delete,
             },
             clickCallback: function(){
-                $.get(frame.href + '/delete',function(response){
+                $.getJSON(frame.href + '/delete',function(response){
                     if(response.ok){
                         el.parent().remove()
                     }
@@ -231,7 +237,7 @@ $(document).ready(function(e){
                     setDownloadButtonLabel(lang['Automatic Checking Cancelled'])
                     downloadRecheckTimers[timerId] = setTimeout(function(){
                         setDownloadButtonLabel(lang['Build Video'], 'database')
-                    },5000)
+                    },30000)
                     downloaderIsChecking = false
                     allowKeepChecking = true
                     return
@@ -258,7 +264,7 @@ $(document).ready(function(e){
                         downloadRecheckTimers[timerId] = setTimeout(function(){
                             setDownloadButtonLabel(lang['Please Wait or Click to Stop Checking'], 'spinner fa-pulse')
                             runDownloader()
-                        },5000)
+                        },30000)
                     }
                 })
             }
@@ -269,6 +275,25 @@ $(document).ready(function(e){
         playInterval = 1000 / ev.value
         selectedFps = ev.value + 0
     })
+    function isElementVisible (el) {
+      const holder = frameIcons[0]
+      const { top, bottom, height } = el.getBoundingClientRect()
+      const holderRect = holder.getBoundingClientRect()
+
+      return top <= holderRect.top
+        ? holderRect.top - top <= height
+        : bottom - holderRect.bottom <= height
+    }
+    function loadVisibleTimelapseFrames(){
+        frameIcons.find('[frame-container-unloaded]').each(function(n,v){
+            if(isElementVisible(v)){
+                var el = $(v)
+                var imgSrc = el.attr('frame-container-unloaded')
+                el.removeAttr('frame-container-unloaded').attr('style',`background-image:url(${imgSrc})`)
+            }
+        })
+    }
+    frameIcons.on('scroll',loadVisibleTimelapseFrames)
     $('body').on('click','.open-timelapse-viewer',function(){
         var el = $(this).parents('[data-mid]')
         var monitorId = el.attr('data-mid')

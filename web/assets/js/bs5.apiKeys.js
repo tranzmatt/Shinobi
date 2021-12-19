@@ -48,7 +48,7 @@ $(document).ready(function(e){
         detailsElement.val(JSON.stringify(details))
     }
     var getApiKeys = function(callback){
-        $.get(getApiPrefix('api') + '/list',function(data){
+        $.getJSON(getApiPrefix('api') + '/list',function(data){
             callback(data.keys)
         })
     }

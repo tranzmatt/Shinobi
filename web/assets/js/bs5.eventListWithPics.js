@@ -145,9 +145,9 @@ $(document).ready(function(){
             eventEndTime = formattedTimeForFilename(options.endDate,false)
             requestQueries.push(`end=${eventEndTime}`)
         }
-        $.get(`${getApiPrefix(`videos`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`limit=${limit}`]).join('&')}`,function(data){
+        $.getJSON(`${getApiPrefix(`videos`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`limit=${limit}`]).join('&')}`,function(data){
             var videos = data.videos
-            $.get(`${getApiPrefix(`events`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.join('&')}`,function(eventData){
+            $.getJSON(`${getApiPrefix(`events`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.join('&')}`,function(eventData){
                 var newEventList = applyVideosToEventsList(videos,eventData)
                 $.each(newEventList,function(n,event){
                     loadedEventsInMemory[`${event.mid}${event.time}`] = event

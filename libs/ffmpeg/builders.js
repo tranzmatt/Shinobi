@@ -185,7 +185,7 @@ module.exports = (s,config,lang) => {
     const createStreamChannel = function(e,number,channel){
         //`e` is the monitor object
         //`x` is an object used to contain temporary values.
-        const channelStreamDirectory = !isNaN(parseInt(number)) ? `${e.sdir}channel${number}/` : e.sdir
+        const channelStreamDirectory = !isNaN(parseInt(number)) ? `${e.sdir || s.getStreamsDirectory(e)}channel${number}/` : e.sdir
         if(channelStreamDirectory !== e.sdir && !fs.existsSync(channelStreamDirectory)){
             try{
                 fs.mkdirSync(channelStreamDirectory)
@@ -377,7 +377,7 @@ module.exports = (s,config,lang) => {
         //x = temporary values
         const streamFlags = []
         const streamType = e.details.stream_type ? e.details.stream_type : 'hls'
-        if(streamType !== 'jpeg'){
+        if(streamType !== 'jpeg' && streamType !== 'useSubstream'){
             const isCudaEnabled = hasCudaEnabled(e)
             const streamFilters = []
             const videoCodecisCopy = e.details.stream_vcodec === 'copy'
