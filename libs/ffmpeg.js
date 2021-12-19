@@ -62,17 +62,9 @@ module.exports = async (s,config,lang,onFinish) => {
                     fs.unlinkSync(e.sdir + 'cmd.txt')
                 }catch(err){
 
-            }
-            fs.writeFileSync(e.sdir + 'cmd.txt',JSON.stringify({
-                dataPortToken: dataPortToken,
-                cmd: ffmpegCommandParsed,
-                pipes: stdioPipes.length,
-                rawMonitorConfig: s.group[e.ke].rawMonitorConfigurations[e.id],
-                globalInfo: {
-                    config: config,
-                    isAtleatOneDetectorPluginConnected: s.isAtleatOneDetectorPluginConnected
                 }
                 fs.writeFileSync(e.sdir + 'cmd.txt',JSON.stringify({
+                    dataPortToken: dataPortToken,
                     cmd: ffmpegCommandParsed,
                     pipes: stdioPipes.length,
                     rawMonitorConfig: s.group[e.ke].rawMonitorConfigurations[e.id],
