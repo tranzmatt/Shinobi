@@ -23,13 +23,21 @@ function getLocalTimelapseImageLink(imageUrl){
     }
 }
 async function preloadAllTimelapseFramesToMemoryFromVideoList(videos){
+    async function syncWait(waitTime){
+        return new Promise((resolve,reject) => {
+            setTimeout(function(){
+                resolve()
+            },waitTime)
+        })
+    }
     for (let i = 0; i < videos.length; i++) {
         var video = videos[i]
         for (let ii = 0; ii < video.timelapseFrames.length; ii++) {
             var frame = video.timelapseFrames[ii]
-            // console.log ('Loading... ',frame.href)
+            console.log ('Loading... ',frame.href)
+            await syncWait(50)
             await getLocalTimelapseImageLink(frame.href)
-            // console.log ('Loaded! ',frame.href)
+            console.log ('Loaded! ',frame.href)
         }
     }
 }
@@ -123,7 +131,7 @@ function getVideoFromDay(percentageInward,videos){
     return foundVideo
 }
 function bindFrameFindingByMouseMove(createdCardCarrier,video){
-    var createdCardElement = createdCardCarrier.find('.card').first()
+    var createdCardElement = createdCardCarrier.find('.video-time-card').first()
     var timeImg = createdCardElement.find('.video-time-img')
     var timeStrip = createdCardElement.find('.video-time-strip')
     var timeNeedleSeeker = createdCardElement.find('.video-time-needle-seeker')
@@ -176,11 +184,10 @@ function bindFrameFindingByMouseMove(createdCardCarrier,video){
     }
 }
 function bindFrameFindingByMouseMoveForDay(createdCardCarrier,dayKey,videos){
-    var createdCardElement = createdCardCarrier.find('.card').first()
+    var createdCardElement = createdCardCarrier.find('.video-time-card').first()
     var timeImg = createdCardElement.find('.video-time-img')
     var timeStrip = createdCardElement.find('.video-time-strip')
     var timeNeedleSeeker = createdCardElement.find('.video-time-needle-seeker')
-    var videoLabel = createdCardElement.find('.video-time-label-selected-video')
     var dayStart = videos[0].time
     var dayEnd = videos[videos.length - 1].end
     var hasFrames = false
@@ -211,7 +218,7 @@ function bindFrameFindingByMouseMoveForDay(createdCardCarrier,dayKey,videos){
                 videoSlicePercentMoved = videoSlicePercentMoved > 100 ? 100 : videoSlicePercentMoved < 0 ? 0 : videoSlicePercentMoved
                 var result = getFrameOnVideoRow(videoSlicePercentMoved,videoFound)
                 var frameFound = result.foundFrame
-                videoTimeLabel.text(formattedTime(result.timeAdded))
+                videoTimeLabel.text(formattedTime(result.timeAdded,'hh:mm:ss AA, DD-MM-YYYY'))
                 if(frameFound){
                     currentlySelectedFrame = Object.assign({},frameFound)
                     setTimeout(async function(){
@@ -221,7 +228,6 @@ function bindFrameFindingByMouseMoveForDay(createdCardCarrier,dayKey,videos){
                 }
                 if(currentlySelected && currentlySelected.time !== videoFound.time){
                     timeNeedleSeeker.attr('video-time-seeked-video-position',videoFound.time)
-                    videoLabel.text(videoFound.time)
                 }
                 currentlySelected = Object.assign({},videoFound)
                 timeNeedleSeeker.attr('video-slice-seeked',result.timeInward)
@@ -251,7 +257,7 @@ function createVideoRow(row,classOverride){
     var videoEndpoint = getLocation() + '/' + $user.auth_token + '/videos/' + $user.ke + '/' + row.mid + '/' + row.filename
     return `
     <div class="video-row ${classOverride ? classOverride : `col-md-12 col-lg-6 mb-3`} search-row" data-mid="${row.mid}" data-time="${row.time}" data-time-formed="${new Date(row.time)}">
-        <div class="card shadow-lg px-0 btn-default">
+        <div class="video-time-card shadow-lg px-0 btn-default">
             <div class="card-header d-flex flex-row">
                 <div class="flex-grow-1 ${definitions.Theme.isDark ? 'text-white' : ''}">
                     ${loadedMonitors[row.mid] ? loadedMonitors[row.mid].name : row.mid}
@@ -322,22 +328,19 @@ function createDayCard(videos,dayKey,monitorId,classOverride){
         eventMatrixHtml += `</div>`
     })
     html += `
-    <div class="video-row ${classOverride ? classOverride : `col-md-12 col-lg-6 mb-3`} search-row">
-        <div class="card shadow-sm px-0 ${definitions.Theme.isDark ? 'bg-dark' : 'bg-light'}" style="border-radius: 10px;overflow: hidden;">
+    <div class="video-row ${classOverride ? classOverride : `col-lg-12 mb-3`} search-row">
+        <div class="video-time-card shadow-sm px-0 ${definitions.Theme.isDark ? 'bg-dark' : 'bg-light'}">
             <div class="video-time-header p-3">
                 <div class="d-flex flex-row ${definitions.Theme.isDark ? 'text-white' : ''}">
                     <div class="flex-grow-1">
                         <b>${loadedMonitors[monitorId] ? loadedMonitors[monitorId].name : monitorId}</b>
                     </div>
                     <div class="text-right">
-                        <span class="badge badge-sm badge-primary">${dayKey}</span>
+                        <span class="badge badge-sm">${dayKey}</span>
                     </div>
                 </div>
                 <div class="${definitions.Theme.isDark ? 'text-white' : ''}">
                     <span class="video-time-label">${formattedTime(videos[0].time)} to ${formattedTime(videos[videos.length - 1].end)}</span>
-                </div>
-                <div class="${definitions.Theme.isDark ? 'text-white' : ''}">
-                    <span class="video-time-label-selected-video"></span>
                 </div>
             </div>
             <div class="video-time-img" style="background-image: url(${videos[0].timelapseFrames[0] ? videos[0].timelapseFrames[0].href : ''})">

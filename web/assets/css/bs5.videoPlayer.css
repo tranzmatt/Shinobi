@@ -36,8 +36,22 @@
     background-size: contain;
     background-position: center;
     min-height: 400px;
+    /* min-height: 800px; */
     background-repeat: no-repeat;
 }
+
+/* @media screen and (max-width: 992px) {
+  .video-time-img {
+      min-height: 400px;
+  }
+}
+
+@media screen and (max-width: 600px) {
+    .video-time-img {
+        min-height: 400px;
+    }
+} */
+
 .video-time-img:not(.video-time-no-img) .card-body:hover {
     background: rgba(0,0,0,0.9);
     color: #fff;
@@ -54,10 +68,16 @@
     top: 0;
 }
 .video-time-needle-event {
-    border-left: 3px solid #f9f21f;
+    border-left: 3px solid rgb(249 242 31 / 20%);
+    border-radius: 0;
 }
 .video-day-slice {
     height: 100%;
+}
+.video-time-card {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
 }
 .video-time-header {
     position: absolute;

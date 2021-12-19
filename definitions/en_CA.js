@@ -7738,39 +7738,39 @@ module.exports = function(s,config,lang){
        "Home": {
            "section": "Home",
            "blocks": {
-              "Container1": {
-                 "name": "Container1",
-                 "color": "grey",
-                 "noHeader": true,
-                 "noDefaultSectionClasses": true,
-                 "section-class": "col-md-3 pt-3",
-                 "info": [
-                     {
-                         "fieldType": "div",
-                         "class": `card ${mainBackgroundColor} mb-3`,
-                         "divContent": `<div class="card-body ${textWhiteOnBgDark}">
-                             <h5 class="card-title"><i class="fa fa-th text-muted"></i> ${lang['Live Grid']}</h5>
-                             <p class="card-text">${lang.liveGridDescription}</p>
-                             <a page-open="liveGrid" class="btn btn-primary">${lang.Open}</a>
-                           </div>`
-                     },
-                     {
-                         "fieldType": "div",
-                         "class": `card ${mainBackgroundColor} mb-3`,
-                         "divContent": `<div class="card-body ${textWhiteOnBgDark}">
-                             <h5 class="card-title"><i class="fa fa-gears text-muted"></i> ${lang['Account Settings']}</h5>
-                             <p class="card-text">${lang.accountSettingsDescription}</p>
-                             <a page-open="accountSettings" class="btn btn-primary">${lang.Open}</a>
-                           </div>`
-                     },
-                 ]
-            },
+            //   "Container1": {
+            //      "name": "Container1",
+            //      "color": "grey",
+            //      "noHeader": true,
+            //      "noDefaultSectionClasses": true,
+            //      "section-class": "col-md-3 pt-3",
+            //      "info": [
+            //          {
+            //              "fieldType": "div",
+            //              "class": `card ${mainBackgroundColor} mb-3`,
+            //              "divContent": `<div class="card-body ${textWhiteOnBgDark}">
+            //                  <h5 class="card-title"><i class="fa fa-th text-muted"></i> ${lang['Live Grid']}</h5>
+            //                  <p class="card-text">${lang.liveGridDescription}</p>
+            //                  <a page-open="liveGrid" class="btn btn-primary">${lang.Open}</a>
+            //                </div>`
+            //          },
+            //          {
+            //              "fieldType": "div",
+            //              "class": `card ${mainBackgroundColor} mb-3`,
+            //              "divContent": `<div class="card-body ${textWhiteOnBgDark}">
+            //                  <h5 class="card-title"><i class="fa fa-gears text-muted"></i> ${lang['Account Settings']}</h5>
+            //                  <p class="card-text">${lang.accountSettingsDescription}</p>
+            //                  <a page-open="accountSettings" class="btn btn-primary">${lang.Open}</a>
+            //                </div>`
+            //          },
+            //      ]
+            // },
             "Container4": {
                 "name": "Container4",
                 "color": "grey",
                 "noHeader": true,
                 "noDefaultSectionClasses": true,
-                "section-class": "col-md-9",
+                "section-class": "col-lg-12",
                 "info": [
                     {
                         ejs: 'web/pages/blocks/home/recentVideos',

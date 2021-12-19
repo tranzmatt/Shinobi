@@ -1,6 +1,7 @@
 $(document).ready(function(){
     var theBlock = $('#recentVideos')
     var theList = $('#recentVideosList')
+    var videoRangeEl = $('#recentVideosRange')
     var monitorList = theBlock.find('.monitors_list')
     function drawRowToList(row,toBegin,returnLastChild){
         theList[toBegin ? 'prepend' : 'append'](createVideoRow(row))
@@ -25,7 +26,9 @@ $(document).ready(function(){
     function loadVideos(options,callback){
         theList.empty();
         var currentDate = new Date()
-        options.startDate = moment(currentDate).subtract(72, 'hours')._d;
+        var videoRange = parseInt(videoRangeEl.val()) || 72
+        options.videoRange = videoRange
+        options.startDate = moment(currentDate).subtract(videoRange, 'hours')._d;
         options.endDate = moment(currentDate)._d;
         console.log(options)
         function drawVideoData(data){
@@ -36,11 +39,7 @@ $(document).ready(function(){
             //     bindFrameFindingByMouseMove(createdCardCarrier,row)
             // })
             drawDaysToList(videos,false)
-            getCountOfEvents({
-                startDate: options.startDate,
-                endDate: options.endDate,
-                monitorId: options.monitorId,
-            })
+            getCountOfEvents(options)
             callback(data)
         }
         getVideos(options,function(data){
@@ -69,7 +68,7 @@ $(document).ready(function(){
             $('.events_from_last_24').text(data.count)
         })
     }
-    monitorList.change(function(){
+    function onRecentVideosFieldChange(){
         var theSelected = `${monitorList.val()}`
         loadVideos({
             limit: 10,
@@ -77,7 +76,9 @@ $(document).ready(function(){
         },function(){
             liveStamp()
         })
-    })
+    }
+    monitorList.change(onRecentVideosFieldChange);
+    videoRangeEl.change(onRecentVideosFieldChange);
     theBlock.find('.recent-videos-refresh').click(function(){
         var theSelected = `${monitorList.val()}`
         drawMonitorListToSelector(monitorList.find('optgroup'))
