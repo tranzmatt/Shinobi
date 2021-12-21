@@ -18,7 +18,7 @@ module.exports = function(s,config,lang,app,io){
         setClientKillTimerIfNotAuthenticatedInTime(client)
         function onAuthenticate(data){
             clearKillTimer(client)
-            if(s.dataPortTokens[data]){
+            if(data in s.dataPortTokens){
                 client.removeListener('message', onAuthenticate);
                 client.on('message', onAuthenticatedData)
                 delete(s.dataPortTokens[data]);
