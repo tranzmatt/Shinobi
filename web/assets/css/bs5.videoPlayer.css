@@ -74,6 +74,9 @@
 .video-day-slice {
     height: 100%;
 }
+.video-day-slice-spacer {
+    background: rgba(0,0,0,0.3);
+}
 .video-time-card {
     position: relative;
     border-radius: 10px;

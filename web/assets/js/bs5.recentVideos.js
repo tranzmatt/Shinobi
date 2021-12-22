@@ -10,16 +10,19 @@ $(document).ready(function(){
             return toBegin ? theChildren.first() : theChildren.last()
         }
     }
-    function drawDaysToList(videos,toBegin){
+    function drawDaysToList(videos,toBegin,frames){
         var videosSortedByDays = sortVideosByDays(videos)
+        var framesSortedByDays = sortFramesByDays(frames)
         $.each(videosSortedByDays,function(monitorId,days){
+            if(!framesSortedByDays[monitorId])framesSortedByDays[monitorId] = {};
             $.each(days,function(dayKey,videos){
                 var copyOfVideos = ([]).concat(videos).reverse()
+                var copyOfFrames = ([]).concat(framesSortedByDays[monitorId][dayKey] || []).reverse()
                 theList.append(createDayCard(copyOfVideos,dayKey,monitorId))
                 var theChildren = theList.children()
                 var createdCardCarrier = toBegin ? theChildren.first() : theChildren.last()
-                bindFrameFindingByMouseMoveForDay(createdCardCarrier,dayKey,copyOfVideos)
-                preloadAllTimelapseFramesToMemoryFromVideoList(copyOfVideos)
+                bindFrameFindingByMouseMoveForDay(createdCardCarrier,dayKey,copyOfVideos,copyOfFrames)
+                // preloadAllTimelapseFramesToMemoryFromVideoList(framesSortedByDays)
             })
         })
     }
@@ -30,15 +33,15 @@ $(document).ready(function(){
         options.videoRange = videoRange
         options.startDate = moment(currentDate).subtract(videoRange, 'hours')._d;
         options.endDate = moment(currentDate)._d;
-        console.log(options)
         function drawVideoData(data){
             var html = ``
             var videos = data.videos || []
+            var frames = data.frames || []
             // $.each(videos,function(n,row){
             //     var createdCardCarrier = drawRowToList(row,false,true)
             //     bindFrameFindingByMouseMove(createdCardCarrier,row)
             // })
-            drawDaysToList(videos,false)
+            drawDaysToList(videos,false,frames)
             getCountOfEvents(options)
             callback(data)
         }
