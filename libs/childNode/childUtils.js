@@ -111,7 +111,7 @@ module.exports = function(s,config,lang,app,io){
                     connectionId: s.childNodeIdOnMasterNode,
                 }))
                 setTimeout(() => {
-                    fs.createReadStream(filePath,{ highWaterMark: 500 })
+                    fs.createReadStream(filePath)
                     .on('data',function(data){
                         fileTransferConnection.send(data)
                     })
