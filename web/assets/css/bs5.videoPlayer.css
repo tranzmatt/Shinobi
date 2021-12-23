@@ -35,8 +35,7 @@
     background-color: #000;
     background-size: contain;
     background-position: center;
-    min-height: 400px;
-    /* min-height: 800px; */
+    height: 400px;
     background-repeat: no-repeat;
 }
 

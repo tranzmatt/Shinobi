@@ -178,7 +178,7 @@ function bindFrameFindingByMouseMove(createdCardCarrier,video){
                 eventMatrixHtml += `</table>`
                 timeStrip.append(eventMatrixHtml)
         }
-        timeImg.css('min-height',`auto`).addClass('video-time-no-img')
+        timeImg.remove()
     }
 }
 function bindFrameFindingByMouseMoveForDay(createdCardCarrier,dayKey,videos,allFrames){
@@ -196,10 +196,10 @@ function bindFrameFindingByMouseMoveForDay(createdCardCarrier,dayKey,videos,allF
         })
     })
     if(!firstFrameOfDay){
-        timeImg.css('min-height','auto')
+        timeImg.remove()
         rowHeader.css('position','initial')
     }else{
-        timeImg.css('background-image',`url(${firstFrameOfDay.href})`)
+        timeImg.attr('src',firstFrameOfDay.href)
     }
     var videoSlices = createdCardElement.find('.video-day-slice')
     var videoTimeLabel = createdCardElement.find('.video-time-label')
@@ -238,7 +238,7 @@ function bindFrameFindingByMouseMoveForDay(createdCardCarrier,dayKey,videos,allF
             currentlySelectedFrame = Object.assign({},frameFound)
             setTimeout(async function(){
                 var frameUrl = await getLocalTimelapseImageLink(frameFound.href)
-                if(currentlySelectedFrame.time === frameFound.time)timeImg.css('background-image',`url(${frameUrl})`);
+                if(currentlySelectedFrame.time === frameFound.time)timeImg.attr('src',frameUrl);
             },1)
         }
         timeNeedleSeeker.attr('video-slice-seeked',result.timeInward).css('left',`${percentMoved}%`)
@@ -339,6 +339,10 @@ function getVideoPercentWidthForDay(row,videos){
 function createDayCard(videos,dayKey,monitorId,classOverride){
     var html = ''
     var eventMatrixHtml = ``
+    var dayParts = dayKey.split('-')
+    var day = dayParts[0]
+    var month = dayParts[1]
+    var year = dayParts[2]
     $.each(videos,function(n,row){
         var nextRow = videos[n + 1]
         if(nextRow)console.log({time: row.end, end: nextRow.time},n + 1)
@@ -356,21 +360,22 @@ function createDayCard(videos,dayKey,monitorId,classOverride){
     html += `
     <div class="video-row ${classOverride ? classOverride : `col-md-12 col-lg-6 mb-3`} search-row">
         <div class="video-time-card shadow-sm px-0 ${definitions.Theme.isDark ? 'bg-dark' : 'bg-light'}">
-            <div class="video-time-header p-3">
-                <div class="d-flex flex-row ${definitions.Theme.isDark ? 'text-white' : ''}">
-                    <div class="flex-grow-1">
+            <div class="video-time-header">
+                <div class="d-flex flex-row vertical-center ${definitions.Theme.isDark ? 'text-white' : ''}">
+                    <div class="flex-grow-1 p-3">
                         <b>${loadedMonitors[monitorId] ? loadedMonitors[monitorId].name : monitorId}</b>
+                        <div class="${definitions.Theme.isDark ? 'text-white' : ''}">
+                            <span class="video-time-label">${formattedTime(videos[0].time)} to ${formattedTime(videos[videos.length - 1].end)}</span>
+                        </div>
                     </div>
-                    <div class="text-right">
-                        <span class="badge badge-sm">${dayKey}</span>
+                    <div class="text-right p-3" style="background:rgba(0,0,0,0.5)">
+                        <div class="text-center" style="font-size:20pt;font-weight:bold">${day}</div>
+                        <div>${month}, ${year}</div>
                     </div>
-                </div>
-                <div class="${definitions.Theme.isDark ? 'text-white' : ''}">
-                    <span class="video-time-label">${formattedTime(videos[0].time)} to ${formattedTime(videos[videos.length - 1].end)}</span>
                 </div>
             </div>
-            <div class="video-time-img">
-
+            <div class="text-center">
+                <img class="video-time-img">
             </div>
             <div class="video-time-strip card-footer p-0">
                 <div class="flex-row d-flex" style="height:30px">${eventMatrixHtml}</div>
