@@ -36,6 +36,7 @@
     background-size: contain;
     background-position: center;
     height: 400px;
+    min-height: 400px;
     background-repeat: no-repeat;
 }
 
