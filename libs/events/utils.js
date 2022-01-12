@@ -402,7 +402,7 @@ module.exports = (s,config,lang,app,io) => {
                     ke: d.ke,
                     mid: d.id,
                     details: detailString,
-                    time: eventTime,
+                    time: s.formattedTime(eventTime),
                 }
             })
         }
@@ -439,7 +439,10 @@ module.exports = (s,config,lang,app,io) => {
             })
         }
 
-        if(filter.command && monitorDetails.detector_command_enable === '1' && !s.group[d.ke].activeMonitors[d.id].detector_command){
+        if(
+            filter.command ||
+            (monitorDetails.detector_command_enable === '1' && !s.group[d.ke].activeMonitors[d.id].detector_command)
+        ){
             s.group[d.ke].activeMonitors[d.id].detector_command = s.createTimeout('detector_command',s.group[d.ke].activeMonitors[d.id],monitorDetails.detector_command_timeout,10)
             var detector_command = addEventDetailsToString(d,monitorDetails.detector_command)
             if(detector_command === '')return

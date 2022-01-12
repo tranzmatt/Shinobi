@@ -219,7 +219,7 @@ module.exports = (s,config,lang,app,io) => {
                {
                   "id": "mqttclient_list",
                   "fieldType": "div",
-              },
+               },
                {
                   "fieldType": "script",
                   "src": "assets/js/bs5.mqtt.js",

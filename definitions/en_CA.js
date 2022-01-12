@@ -2869,7 +2869,6 @@ module.exports = function(s,config,lang){
                       "field": lang["Timeout Reset on Next Event"],
                       "description": "If there is an overlap in trigger record should it reset.",
                       "default": "1",
-                      "example": "",
                       "fieldType": "select",
                       "form-group-class": "h_det_input h_det_1",
                       "form-group-class-pre-layer": "h_rec_mtd_input h_rec_mtd_hot h_rec_mtd_sip",
@@ -2888,9 +2887,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                       "name": "detail=detector_delete_motionless_videos",
                       "field": lang['Delete Motionless Video'],
-                      "description": "",
                       "default": "0",
-                      "example": "",
                       "form-group-class": "h_det_input h_det_1",
                       "form-group-class-pre-layer": "h_rec_mtd_input h_rec_mtd_del",
                       "fieldType": "select",
@@ -7732,6 +7729,12 @@ module.exports = function(s,config,lang){
                          ]
                      }
                  ]
+              },
+              "SideMenuAfterList": {
+                 "name": "SideMenuAfterList",
+                 "noHeader": true,
+                 "noDefaultSectionClasses": true,
+                 "info": []
               }
            }
        },
