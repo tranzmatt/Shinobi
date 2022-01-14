@@ -45,7 +45,7 @@ function generateDefaultMonitorSettings(){
            "skip_ping": null,
            "is_onvif": null,
            "onvif_port": "",
-           "primary_input": "0:0",
+           "primary_input": "0",
            "aduration": "1000000000",
            "probesize": "1000000000",
            "stream_loop": "0",
