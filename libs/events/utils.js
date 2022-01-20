@@ -471,7 +471,7 @@ module.exports = (s,config,lang,app,io) => {
                 const filename = `${fileTime}.mp4`
                 response.filename = `${filename}`
                 response.filePath = `${recordingDirectory}${filename}`
-                eventBasedRecording.process.on('close',function(){
+                eventBasedRecording.process.on('exit',function(){
                     setTimeout(async () => {
                         if(!isNaN(videoLength)){
                             const cutResponse = await cutVideoLength({
