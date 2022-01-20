@@ -513,9 +513,9 @@ module.exports = function(s,config,lang){
                             if(currentFile === concatFiles.length - 1){
                                 videoBuildProcess.kill('SIGTERM')
                             }
-                        },4000)
+                        },60000)
                     })
-                    videoBuildProcess.on('close',function(data){
+                    videoBuildProcess.on('exit',function(data){
                         var timeNow = new Date()
                         var fileStats = fs.statSync(finalMp4OutputLocation)
                         var details = {}
