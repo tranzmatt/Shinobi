@@ -25,6 +25,9 @@ $(document).ready(function(){
         console.log('Sending Data',data)
         return mainSocket.emit('f',data)
     }
+    mainSocket.on('ping', function(){
+        mainSocket.emit('pong',{beat:1})
+    })
     mainSocket.on('connect',function (d){
         console.log('Connected to Websocket!')
         if(location.search === '?p2p=1'){
