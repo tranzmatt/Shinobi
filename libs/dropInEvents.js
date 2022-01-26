@@ -188,14 +188,21 @@ module.exports = function(s,config,lang,app,io){
             createDropInEventsDirectory()
             if(!config.ftpServerPort)config.ftpServerPort = 21
             if(!config.ftpServerUrl)config.ftpServerUrl = `ftp://0.0.0.0:${config.ftpServerPort}`
+            if(!config.ftpServerPasvUrl)config.ftpServerPasvUrl = config.ftpServerUrl.replace(/.*:\/\//, '').replace(/:.*/, ''),
+            if(!config.ftpServerPasvMinPort)config.ftpServerPasvMinPort = 10050;
+            if(!config.ftpServerPasvMaxPort)config.ftpServerPasvMaxPort = 10100;
             config.ftpServerUrl = config.ftpServerUrl.replace('{{PORT}}',config.ftpServerPort)
             const FtpSrv = require('ftp-srv')
+
             const ftpServer = new FtpSrv({
                 url: config.ftpServerUrl,
                 // pasv_url must be set to enable PASV; ftp-srv uses its known IP if given 127.0.0.1,
                 // and smart clients will ignore the IP anyway. Some Dahua IP cams require PASV mode.
                 // ftp-srv just wants an IP only (no protocol or port)
-                pasv_url: config.ftpServerUrl.replace(/.*:\/\//, '').replace(/:.*/, ''),
+                pasv_url: config.ftpServerPasvUrl,
+                pasv_min: config.ftpServerPasvMinPort,
+                pasv_max: config.ftpServerPasvMaxPort,
+                greeting: "Shinobi FTP dropInEvent Server says hello!",
                 log: require('bunyan').createLogger({
                   name: 'ftp-srv',
                   level: 100
