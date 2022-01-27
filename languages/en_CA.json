@@ -32,6 +32,7 @@
    "Output": "Output",
    "SubstreamNotConfigured": "Substream not configured. Open your Monitor Settings and configure it.",
    "Substream Process": "Substream Process",
+   "Montage Process": "Montage Process",
    "Welcome": "Welcome!",
    "API Key Action Failed": "API Key Action Failed",
    "Authenticate": "Authenticate",

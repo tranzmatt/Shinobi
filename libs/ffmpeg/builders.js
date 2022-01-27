@@ -9,6 +9,12 @@ module.exports = (s,config,lang) => {
     const {
         validateDimensions,
     } = require('./utils.js')(s,config,lang)
+    const {
+        buildMontageInputsFromPriorConsumption,
+        calculateFilterComplexForMontage,
+        filterMonitorsListForMontage,
+        buildHlsOutputForMontage,
+    } = require('./montage.js')(s,config,lang)
     if(!config.outputsWithAudio)config.outputsWithAudio = ['hls','flv','mp4','rtmp'];
     if(!config.outputsNotCapableOfPresets)config.outputsNotCapableOfPresets = [];
     const hasCudaEnabled = (monitor) => {
@@ -816,6 +822,30 @@ module.exports = (s,config,lang) => {
         ffmpegParts.push(createStreamChannel(monitor,channelNumber,outputFields))
         return ffmpegParts.join(' ')
     }
+    const buildMontageInputsFromSource = function(monitorsForMontage){
+        const monitorsInputs = []
+        monitorsForMontage.forEach((monitor) => {
+            let monitorCopy = Object.assign({},monitor)
+            const monitorDetails = Object.assign({},monitor.details)
+            delete(monitorCopy.details)
+            monitorCopy = Object.assign(monitorCopy,monitorDetails)
+            monitorsInputs.push(createInputMap(monitor,null,monitorCopy))
+        })
+        return monitorsInputs
+    }
+    const buildMontageString = function(monitors,reusePriorConsumption){
+        let ffmpegParts = []
+        const groupKey = monitors[0].ke
+        const monitorsForMontage = filterMonitorsListForMontage(monitors)
+        const monitorsInputs = reusePriorConsumption ?
+            buildMontageInputsFromPriorConsumption(monitorsForMontage) :
+            buildMontageInputsFromSource(monitorsForMontage);
+        ffmpegParts.push(`-loglevel ${monitor.details.loglevel || 'warning'}`)
+        ffmpegParts.push(...monitorsInputs)
+        ffmpegParts.push(calculateFilterComplexForMontage(monitorsForMontage))
+        ffmpegParts.push(buildHlsOutputForMontage(groupKey))
+        return ffmpegParts.join(' ')
+    }
     return {
         createStreamChannel: createStreamChannel,
         buildMainInput: buildMainInput,
@@ -828,5 +858,6 @@ module.exports = (s,config,lang) => {
         buildTimelapseOutput: buildTimelapseOutput,
         getDefaultSubstreamFields: getDefaultSubstreamFields,
         buildSubstreamString: buildSubstreamString,
+        buildMontageString: buildMontageString,
     }
 }
