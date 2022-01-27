@@ -2,20 +2,23 @@ module.exports = (s,config,lang) => {
     const {
         buildMontageString,
     } = require('./libs/ffmpeg/builders.js')(s,config,lang)
-    const spawnMontageProcess = function(monitors){
+    const spawnMontageProcess = function(groupKey,monitorIds){
         // e = monitorConfig
         try{
-            const firstMonitor = monitors[0]
-            const groupKey = firstMonitor.ke
-            const monitorId = firstMonitor.mid
             const theGroup = s.group[groupKey]
-            const monitorConfig = Object.assign({},s.group[groupKey].rawMonitorConfigurations[monitorId])
-            const monitorDetails = monitorConfig.details
-            const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
+            const monitorConfigs = []
+            monitorIds.forEach((monitor) => {
+                const monitorId = monitor.mid
+                const monitorConfig = Object.assign({},s.group[groupKey].rawMonitorConfigurations[monitorId])
+                const monitorDetails = monitorConfig.details
+                const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
+                monitorConfigs.push(monitorConfig)
+            })
+
             const ffmpegCommand = [`-progress pipe:5`];
             const logLevel = monitorDetails.loglevel ? e.details.loglevel : 'warning'
-            const ffmpegCommandString = buildMontageString(monitors,true)
-            activeMonitor.ffmpegSubstream = sanitizedFfmpegCommand(e,ffmpegCommandString)
+            const ffmpegCommandString = buildMontageString(monitorConfigs,true)
+            theGroup.ffmpegMontage = sanitizedFfmpegCommand(e,ffmpegCommandString)
             const ffmpegCommandParsed = splitForFFPMEG(ffmpegCommandString)
             s.userLog({
                 ke: groupKey,
@@ -67,37 +70,36 @@ module.exports = (s,config,lang) => {
                 f: 'montage_start',
                 ke: groupKey,
             },'GRP_'+groupKey);
+            theGroup.montageProcess = montageProcess
             return montageProcess
         }catch(err){
             s.systemLog(err)
             return null
         }
     }
-    const destroyMontageProcess = async function(activeMonitor){
-        // e = monitorConfig.details.substream
+    const destroyMontageProcess = async function(groupKey){
         const response = {
-            hadSubStream: false,
+            hadMontage: false,
             alreadyClosing: false
         }
         try{
-            if(activeMonitor.subStreamProcessClosing){
+            const theGroup = s.group[groupKey]
+            if(theGroup.montageProcessClosing){
                 response.alreadyClosing = true
-            }else if(activeMonitor.subStreamProcess){
-                activeMonitor.subStreamProcessClosing = true
-                activeMonitor.subStreamChannel = null;
-                const closeResponse = await processKill(activeMonitor.subStreamProcess)
-                response.hadSubStream = true
+            }else if(theGroup.montageProcess){
+                theGroup.montageProcessClosing = true
+                const closeResponse = await processKill(theGroup.montageProcess)
+                response.hadMontage = true
                 response.closeResponse = closeResponse
-                delete(activeMonitor.subStreamProcess)
+                delete(theGroup.montageProcess)
                 s.tx({
                     f: 'montage_end',
-                    mid: activeMonitor.mid,
                     ke: activeMonitor.ke
                 },'GRP_'+activeMonitor.ke);
-                activeMonitor.subStreamProcessClosing = false
+                activeMonitor.montageProcessClosing = false
             }
         }catch(err){
-            s.debugLog('destroySubstreamProcess',err)
+            s.debugLog('destroyMontageProcess',err)
         }
         return response
     }
