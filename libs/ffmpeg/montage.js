@@ -42,7 +42,7 @@ module.exports = (s,config,lang) => {
         const theString = []
         let monitorsSelected = ([]).concat(monitors)
         monitorsSelected = monitorsSelected.slice(0, 8)
-        theString.push(`-filter_complex "[0:v]scale=320:180[v0];[1:v]scale=320:180[v1];[2:v]scale=320:180[v2];[3:v]scale=320:180[v3];[4:v]scale=320:180[v4];[5:v]scale=320:180[v5];[6:v]scale=320:180[v6];[7:v]scale=320:180[v7];[8:v]scale=320:180[v8];[v0][v1][v2]hstack=3[Row0];[v3][v4][v5]hstack=3[Row1];[v6][v7][v8]hstack=3[Row2];[Row0][Row1][Row2]vstack=3[v]"`)
+        theString.push(`-filter_complex "[0:v]scale=320:180,fps=6[v0];[1:v]scale=320:180,fps=6[v1];[2:v]scale=320:180,fps=6[v2];[3:v]scale=320:180,fps=6[v3];[4:v]scale=320:180,fps=6[v4];[5:v]scale=320:180,fps=6[v5];[6:v]scale=320:180,fps=6[v6];[7:v]scale=320:180,fps=6[v7];[8:v]scale=320:180,fps=6[v8];[v0][v1][v2]hstack=3[Row0];[v3][v4][v5]hstack=3[Row1];[v6][v7][v8]hstack=3[Row2];[Row0][Row1][Row2]vstack=3[v]"`)
         return theString.join(' ')
     }
     function buildHlsOutputForMontage(groupKey){
