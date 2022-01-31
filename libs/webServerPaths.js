@@ -881,7 +881,6 @@ module.exports = function(s,config,lang,app,io){
                 const theGroup = s.group[groupKey]
                 const monitors = s.getPostData(req,'monitors',true)
                 const reusePriorConsumption = req.query.reuse === '1'
-                console.log('reusePriorConsumption',reusePriorConsumption)
                 const monitorsToMontage = []
                 monitors.forEach((monitorId) => {
                     const monitorConfig = s.group[groupKey].rawMonitorConfigurations[monitorId]

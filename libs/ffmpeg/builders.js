@@ -829,11 +829,9 @@ module.exports = (s,config,lang) => {
             monitorsInputs.push(buildMainInput(monitor,null,monitorCopy))
         })
         if(monitorsInputs.length < 9){
-            var pipeStart = 6
             const numberOfInputsToAdd = 9 - monitorsInputs.length
             for (let i = 0; i < numberOfInputsToAdd; i++) {
                 monitorsInputs.push(`-loop 1 -i ${s.mainDirectory + '/web/libs/img/bg.jpg'}`)
-                ++pipeStart
             }
         }
         return monitorsInputs
@@ -842,9 +840,8 @@ module.exports = (s,config,lang) => {
         let ffmpegParts = []
         const groupKey = monitors[0].ke
         const monitorsForMontage = filterMonitorsListForMontage(monitors)
-        const monitorsInputs = reusePriorConsumption ?
-            buildMontageInputsFromPriorConsumption(monitorsForMontage) :
-            buildMontageInputsFromSource(monitorsForMontage);
+        // const monitorsInputs = !!reusePriorConsumption ? buildMontageInputsFromPriorConsumption(monitorsForMontage) : buildMontageInputsFromSource(monitorsForMontage);
+        const monitorsInputs = buildMontageInputsFromPriorConsumption(monitorsForMontage);
         ffmpegParts.push(`-loglevel warning`)
         ffmpegParts.push(...monitorsInputs)
         ffmpegParts.push(calculateFilterComplexForMontage(monitorsForMontage))

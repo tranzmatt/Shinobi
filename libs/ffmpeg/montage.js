@@ -1,6 +1,6 @@
 module.exports = (s,config,lang) => {
     function buildMontageInputsFromPriorConsumption(monitorsForMontage){
-        const inputs = []
+        const monitorsInputs = []
         monitorsForMontage.forEach((monitor) => {
             const groupKey = monitor.ke
             const monitorId = monitor.mid
@@ -20,16 +20,15 @@ module.exports = (s,config,lang) => {
                 //     streamURL = '/'+req.params.auth+'/mp4/'+v.ke+'/'+v.mid+'/s.mp4'
                 // break;
             }
-            if(streamURL)inputs.push(`-i ${streamURL}`)
+            if(streamURL)monitorsInputs.push(`-re -i ${streamURL}`)
         })
-        if(monitorsForMontage.length < 9){
-            var pipeStart = 6
-            for (let i = 0; i < monitorsForMontage.length - 9; i++) {
-                monitorsInputs.push(`-i pipe:${pipeStart}`)
-                ++pipeStart
+        if(monitorsInputs.length < 9){
+            const numberOfInputsToAdd = 9 - monitorsInputs.length
+            for (let i = 0; i < numberOfInputsToAdd; i++) {
+                monitorsInputs.push(`-loop 1 -i ${s.mainDirectory + '/web/libs/img/bg.jpg'}`)
             }
         }
-        return inputs
+        return monitorsInputs
     }
     function filterMonitorsListForMontage(monitors){
         let monitorsSelected = ([]).concat(monitors).filter((monitor) => {
