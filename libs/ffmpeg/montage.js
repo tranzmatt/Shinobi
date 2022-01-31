@@ -2,26 +2,25 @@ module.exports = (s,config,lang) => {
     function buildMontageInputsFromPriorConsumption(monitorsForMontage){
         const inputs = []
         monitorsForMontage.forEach((monitor) => {
+            const groupKey = monitor.ke
+            const monitorId = monitor.mid
             const hostPoint = `http://${config.ip || 'localhost'}:${config.port}`
             var streamURL = ''
-            switch(monitor.type){
-                case'mjpeg':
-                    streamURL = '/'+req.params.auth+'/mjpeg/'+v.ke+'/'+v.mid
-                break;
+            switch(monitor.details.stream_type){
+                // case'mjpeg':
+                //     streamURL = '/'+req.params.auth+'/mjpeg/'+v.ke+'/'+v.mid
+                // break;
                 case'hls':
-                    streamURL = '/'+req.params.auth+'/hls/'+v.ke+'/'+v.mid+'/s.m3u8'
+                    streamURL = `${s.dir.streams}/${groupKey}/${monitorId}/s.m3u8`
                 break;
-                case'h264':
-                    streamURL = '/'+req.params.auth+'/h264/'+v.ke+'/'+v.mid
-                break;
-                case'flv':
-                    streamURL = '/'+req.params.auth+'/flv/'+v.ke+'/'+v.mid+'/s.flv'
-                break;
-                case'mp4':
-                    streamURL = '/'+req.params.auth+'/mp4/'+v.ke+'/'+v.mid+'/s.mp4'
-                break;
+                // case'flv':
+                //     streamURL = '/'+req.params.auth+'/flv/'+v.ke+'/'+v.mid+'/s.flv'
+                // break;
+                // case'mp4':
+                //     streamURL = '/'+req.params.auth+'/mp4/'+v.ke+'/'+v.mid+'/s.mp4'
+                // break;
             }
-            if(streamURL)inputs.push(`-i ${hostPoint + streamURL}`)
+            if(streamURL)inputs.push(`-i ${streamURL}`)
         })
         if(monitorsForMontage.length < 9){
             var pipeStart = 6
@@ -34,12 +33,8 @@ module.exports = (s,config,lang) => {
     }
     function filterMonitorsListForMontage(monitors){
         let monitorsSelected = ([]).concat(monitors).filter((monitor) => {
-            const monitorType = monitor.type;
-            return monitorType === 'mjpeg' ||
-                monitorType === 'hls' ||
-                monitorType === 'flv' ||
-                monitorType === 'mp4' ||
-                monitorType === 'h264'
+            const monitorType = monitor.details.stream_type;
+            return monitorType === 'hls'
         });
         monitorsSelected = monitorsSelected.slice(0, 8)
         return monitorsSelected
@@ -53,7 +48,7 @@ module.exports = (s,config,lang) => {
     }
     function buildHlsOutputForMontage(groupKey){
         // filter_complex requires `-map "[v]"` for mosaic
-        return `-map "[v]" -c:v libx264 -an -f hls -hls_time 5 -hls_list_size 3 -start_number 0 -hls_allow_cache 0 -hls_flags +delete_segments+omit_endlist "${s.dir.streams}${groupKey}/montage_temp/montage.m3u8"`
+        return `-map "[v]" -c:v ${config.ffmpegforJetsonNano ? 'h264_nvmpi' : 'libx264'} -an -f hls -hls_time 5 -hls_list_size 3 -start_number 0 -hls_allow_cache 0 -hls_flags +delete_segments+omit_endlist "${s.dir.streams}${groupKey}/montage_temp/montage.m3u8"`
     }
     return {
         buildMontageInputsFromPriorConsumption,
