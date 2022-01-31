@@ -1,54 +1,62 @@
+const fs = require('fs');
+const spawn = require('child_process').spawn;
 module.exports = (s,config,lang) => {
     const {
         buildMontageString,
-    } = require('./libs/ffmpeg/builders.js')(s,config,lang)
-    const spawnMontageProcess = function(groupKey,monitorIds){
+    } = require('../ffmpeg/builders.js')(s,config,lang)
+    const {
+        processKill,
+    } = require('../monitor/utils.js')(s,config,lang)
+    const {
+        sanitizedFfmpegCommand,
+        splitForFFPMEG,
+    } = require('../ffmpeg/utils.js')(s,config,lang)
+    const spawnMontageProcess = function(groupKey,monitorIds,reusePriorConsumption){
         // e = monitorConfig
         try{
             const theGroup = s.group[groupKey]
             const monitorConfigs = []
-            monitorIds.forEach((monitor) => {
-                const monitorId = monitor.mid
+            monitorIds.forEach((monitorId) => {
                 const monitorConfig = Object.assign({},s.group[groupKey].rawMonitorConfigurations[monitorId])
                 const monitorDetails = monitorConfig.details
                 const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
                 monitorConfigs.push(monitorConfig)
             })
-
-            const ffmpegCommand = [`-progress pipe:5`];
-            const logLevel = monitorDetails.loglevel ? e.details.loglevel : 'warning'
-            const ffmpegCommandString = buildMontageString(monitorConfigs,true)
-            theGroup.ffmpegMontage = sanitizedFfmpegCommand(e,ffmpegCommandString)
+            const ffmpegCommandString = buildMontageString(monitorConfigs,reusePriorConsumption)
+            theGroup.ffmpegMontage = sanitizedFfmpegCommand({details: {}},ffmpegCommandString)
             const ffmpegCommandParsed = splitForFFPMEG(ffmpegCommandString)
+            console.log(ffmpegCommandString)
+            try{
+                fs.mkdirSync(`${s.dir.streams}${groupKey}/montage_temp`)
+            }catch(err){
+                s.debugLog(err)
+            }
             s.userLog({
                 ke: groupKey,
                 mid: '$USER',
-            },
-            {
+            },{
                 type: lang["Montage Process"],
                 msg: {
                     msg: lang["Process Started"],
                     cmd: ffmpegCommandString,
                 },
             });
-            const montageProcess = spawn(config.ffmpegDir,ffmpegCommandParsed,{detached: true,stdio: stdioPipes})
+            const montageProcess = spawn(config.ffmpegDir,ffmpegCommandParsed,{detached: true, stdio: ['pipe','pipe','pipe','pipe','pipe','pipe','pipe','pipe','pipe','pipe','pipe','pipe','pipe','pipe','pipe','pipe']})
             if(config.debugLog === true){
                 montageProcess.stderr.on('data',(data) => {
                     console.log(`Montage Debug, ${groupKey} :`)
                     console.log(data.toString())
                 })
             }
-            if(logLevel !== 'quiet'){
-                montageProcess.stderr.on('data',(data) => {
-                    s.userLog({
-                        ke: groupKey,
-                        mid: '$USER',
-                    },{
-                        type: lang["Montage Process"],
-                        msg: data.toString()
-                    })
+            montageProcess.stderr.on('data',(data) => {
+                s.userLog({
+                    ke: groupKey,
+                    mid: '$USER',
+                },{
+                    type: lang["Montage Process"],
+                    msg: data.toString()
                 })
-            }
+            })
             montageProcess.on('close',(data) => {
                 if(!theGroup.allowDestroyMontage){
                     montageProcess.stderr.on('data',(data) => {
@@ -62,7 +70,7 @@ module.exports = (s,config,lang) => {
                         })
                     })
                     setTimeout(() => {
-                        spawnMontageProcess(e)
+                        spawnMontageProcess(groupKey,monitorIds)
                     },2000)
                 }
             })
@@ -94,9 +102,9 @@ module.exports = (s,config,lang) => {
                 delete(theGroup.montageProcess)
                 s.tx({
                     f: 'montage_end',
-                    ke: activeMonitor.ke
-                },'GRP_'+activeMonitor.ke);
-                activeMonitor.montageProcessClosing = false
+                    ke: groupKey
+                },'GRP_'+groupKey);
+                theGroup.montageProcessClosing = false
             }
         }catch(err){
             s.debugLog('destroyMontageProcess',err)
@@ -104,6 +112,7 @@ module.exports = (s,config,lang) => {
         return response
     }
     return {
-
+        spawnMontageProcess,
+        destroyMontageProcess,
     }
 }

@@ -159,7 +159,7 @@ module.exports = (s,config,lang) => {
         }
         if(
             (input.type === 'h264' || input.type === 'mp4') &&
-            input.fulladdress.indexOf('rtsp://') >- 1 &&
+            (input.protocol === 'rtsp' || input.fulladdress.indexOf('rtsp://') >- 1) &&
             input.rtsp_transport &&
             input.rtsp_transport !== 'no'
         ){
@@ -185,7 +185,7 @@ module.exports = (s,config,lang) => {
             }
         }
         //custom - input flags
-        return `${getInputTypeFlags(input.type)} ${inputFlags.join(' ')} -i "${input.fulladdress}"`
+        return `${getInputTypeFlags(input.type)} ${inputFlags.join(' ')} -i "${input.fulladdress || s.buildMonitorUrl(input,{details:{}})}"`
     }
     //create sub stream channel
     const createStreamChannel = function(e,number,channel){
@@ -826,11 +826,16 @@ module.exports = (s,config,lang) => {
         const monitorsInputs = []
         monitorsForMontage.forEach((monitor) => {
             let monitorCopy = Object.assign({},monitor)
-            const monitorDetails = Object.assign({},monitor.details)
-            delete(monitorCopy.details)
-            monitorCopy = Object.assign(monitorCopy,monitorDetails)
-            monitorsInputs.push(createInputMap(monitor,null,monitorCopy))
+            monitorsInputs.push(buildMainInput(monitor,null,monitorCopy))
         })
+        if(monitorsInputs.length < 9){
+            var pipeStart = 6
+            const numberOfInputsToAdd = 9 - monitorsInputs.length
+            for (let i = 0; i < numberOfInputsToAdd; i++) {
+                monitorsInputs.push(`-loop 1 -i ${s.mainDirectory + '/web/libs/img/bg.jpg'}`)
+                ++pipeStart
+            }
+        }
         return monitorsInputs
     }
     const buildMontageString = function(monitors,reusePriorConsumption){
@@ -840,7 +845,7 @@ module.exports = (s,config,lang) => {
         const monitorsInputs = reusePriorConsumption ?
             buildMontageInputsFromPriorConsumption(monitorsForMontage) :
             buildMontageInputsFromSource(monitorsForMontage);
-        ffmpegParts.push(`-loglevel ${monitor.details.loglevel || 'warning'}`)
+        ffmpegParts.push(`-loglevel warning`)
         ffmpegParts.push(...monitorsInputs)
         ffmpegParts.push(calculateFilterComplexForMontage(monitorsForMontage))
         ffmpegParts.push(buildHlsOutputForMontage(groupKey))

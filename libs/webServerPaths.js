@@ -30,6 +30,10 @@ module.exports = function(s,config,lang,app,io){
         spawnSubstreamProcess,
         destroySubstreamProcess,
     } = require('./monitor/utils.js')(s,config,lang)
+    const {
+        spawnMontageProcess,
+        destroyMontageProcess,
+    } = require('./monitor/montage.js')(s,config,lang)
     s.renderPage = function(req,res,paths,passables,callback){
         passables.window = {}
         passables.data = req.params
@@ -853,6 +857,44 @@ module.exports = function(s,config,lang,app,io){
                     }
                 }else{
                     response.msg = lang['Invalid Settings']
+                }
+            }
+            s.closeJsonResponse(res,response);
+        },res,req);
+    });
+    /**
+    * API : Toggle Substream Process on and off
+     */
+    app.get(config.webPaths.apiPrefix+':auth/toggleMontage/:ke', function (req,res){
+        const response = {ok: false};
+        s.auth(req.params,async (user) => {
+            const groupKey = req.params.ke
+            const monitorId = req.params.id
+            if(
+                user.permissions.control_monitors === "0" ||
+                user.details.sub &&
+                user.details.allmonitors !== '1' &&
+                user.details.monitor_edit.indexOf(monitorId) === -1
+            ){
+                response.msg = user.lang['Not Permitted']
+            }else{
+                const theGroup = s.group[groupKey]
+                const monitors = s.getPostData(req,'monitors',true)
+                const reusePriorConsumption = s.getPostData(req,'reuse') === '1'
+                const monitorsToMontage = []
+                monitors.forEach((monitorId) => {
+                    const monitorConfig = s.group[groupKey].rawMonitorConfigurations[monitorId]
+                    if(monitorConfig){
+                        monitorsToMontage.push(monitorId)
+                    }
+                })
+                if(!theGroup.montageProcess){
+                    response.ok = true
+                    theGroup.allowDestroyMontage = false;
+                    spawnMontageProcess(groupKey,monitorsToMontage,reusePriorConsumption)
+                }else{
+                    theGroup.allowDestroyMontage = true
+                    await destroyMontageProcess(groupKey)
                 }
             }
             s.closeJsonResponse(res,response);

@@ -189,6 +189,23 @@ module.exports = function(s,config,lang,app){
         s.auth(req.params,req.fn,res,req);
     })
     /**
+    * API : Get Montage HLS Stream
+    */
+    app.get(config.webPaths.apiPrefix+':auth/montage/:ke/:file', function (req,res){
+        s.auth(req.params,function(user){
+            s.checkChildProxy(req.params,function(){
+                noCache(res)
+                const filePath = s.dir.streams + req.params.ke + '/montage_temp/' + req.params.file
+                res.on('finish',() => {res.end()})
+                try{
+                    fs.createReadStream(filePath).pipe(res);
+                }catch(err){
+                    res.end(lang['File Not Found'])
+                }
+            },res,req)
+        },res,req);
+    })
+    /**
     * API : Get JPEG Snapshot
     */
     app.get(config.webPaths.apiPrefix+':auth/jpeg/:ke/:id/s.jpg', function(req,res){

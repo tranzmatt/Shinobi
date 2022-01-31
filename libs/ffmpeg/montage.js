@@ -1,7 +1,7 @@
 module.exports = (s,config,lang) => {
-    function buildMontageInputsFromPriorConsumption(monitors){
+    function buildMontageInputsFromPriorConsumption(monitorsForMontage){
         const inputs = []
-        monitors.forEach((monitor) => {
+        monitorsForMontage.forEach((monitor) => {
             const hostPoint = `http://${config.ip || 'localhost'}:${config.port}`
             var streamURL = ''
             switch(monitor.type){
@@ -23,7 +23,14 @@ module.exports = (s,config,lang) => {
             }
             if(streamURL)inputs.push(`-i ${hostPoint + streamURL}`)
         })
-        return inputs.join(' ')
+        if(monitorsForMontage.length < 9){
+            var pipeStart = 6
+            for (let i = 0; i < monitorsForMontage.length - 9; i++) {
+                monitorsInputs.push(`-i pipe:${pipeStart}`)
+                ++pipeStart
+            }
+        }
+        return inputs
     }
     function filterMonitorsListForMontage(monitors){
         let monitorsSelected = ([]).concat(monitors).filter((monitor) => {
@@ -34,57 +41,19 @@ module.exports = (s,config,lang) => {
                 monitorType === 'mp4' ||
                 monitorType === 'h264'
         });
-        if(monitorsSelected.length <= 4){
-            monitorsSelected = monitorsSelected.slice(0, 3)
-        }else if(monitorsSelected.length <= 9){
-            monitorsSelected = monitorsSelected.slice(0, 8)
-        }
+        monitorsSelected = monitorsSelected.slice(0, 8)
         return monitorsSelected
     }
     function calculateFilterComplexForMontage(monitors){
         const theString = []
         let monitorsSelected = ([]).concat(monitors)
-        if(monitorsSelected.length <= 4){
-            monitorsSelected = monitorsSelected.slice(0, 3)
-            theString.push(`-filter_complex "
-                nullsrc=size=640x480 [base];
-                [0:v] setpts=PTS-STARTPTS, scale=320x240 [upperleft];
-                [1:v] setpts=PTS-STARTPTS, scale=320x240 [upperright];
-                [2:v] setpts=PTS-STARTPTS, scale=320x240 [lowerleft];
-                [3:v] setpts=PTS-STARTPTS, scale=320x240 [lowerright];
-                [base][upperleft] overlay=shortest=1 [tmp1];
-                [tmp1][upperright] overlay=shortest=1:x=320 [tmp2];
-                [tmp2][lowerleft] overlay=shortest=1:y=240 [tmp3];
-                [tmp3][lowerright] overlay=shortest=1:x=320:y=240
-            "`)
-        }else if(monitorsSelected.length <= 9){
-            monitorsSelected = monitorsSelected.slice(0, 8)
-            theString.push(`-filter_complex "
-        		nullsrc=size=1920x1080 [base];
-        		[0:v] setpts=PTS-STARTPTS, scale=640x360 [upperleft];
-        		[1:v] setpts=PTS-STARTPTS, scale=640x360 [uppercenter];
-        		[2:v] setpts=PTS-STARTPTS, scale=640x360 [upperright];
-        		[3:v] setpts=PTS-STARTPTS, scale=640x360 [centerleft];
-        		[4:v] setpts=PTS-STARTPTS, scale=640x360 [centercenter];
-        		[5:v] setpts=PTS-STARTPTS, scale=640x360 [centerright];
-        		[6:v] setpts=PTS-STARTPTS, scale=640x360 [lowerleft];
-        		[7:v] setpts=PTS-STARTPTS, scale=640x360 [lowercenter];
-        		[8:v] setpts=PTS-STARTPTS, scale=640x360 [lowerright];
-        		[base][upperleft] overlay=shortest=1 [tmp1];
-        		[tmp1][uppercenter] overlay=shortest=1:x=640 [tmp2];
-        		[tmp2][upperright] overlay=shortest=1:x=1280 [tmp3];
-        		[tmp3][centerleft] overlay=shortest=1:y=360 [tmp4];
-        		[tmp4][centercenter] overlay=shortest=1:x=640:y=360 [tmp5];
-        		[tmp5][centerright] overlay=shortest=1:x=1280:y=360 [tmp6];
-        		[tmp6][lowerleft] overlay=shortest=1:y=720 [tmp7];
-        		[tmp7][lowercenter] overlay=shortest=1:x=640:y=720 [tmp8];
-        		[tmp8][lowerright] overlay=shortest=1:x=1280:y=720
-        	"`)
-        }
+        monitorsSelected = monitorsSelected.slice(0, 8)
+        theString.push(`-filter_complex "[0:v]scale=320:180[v0];[1:v]scale=320:180[v1];[2:v]scale=320:180[v2];[3:v]scale=320:180[v3];[4:v]scale=320:180[v4];[5:v]scale=320:180[v5];[6:v]scale=320:180[v6];[7:v]scale=320:180[v7];[8:v]scale=320:180[v8];[v0][v1][v2]hstack=3[Row0];[v3][v4][v5]hstack=3[Row1];[v6][v7][v8]hstack=3[Row2];[Row0][Row1][Row2]vstack=3[v]"`)
         return theString.join(' ')
     }
     function buildHlsOutputForMontage(groupKey){
-        return `-c:v libx264 -an -f hls -live_start_index -3 -hls_time 5 -hls_list_size 3 -start_number 0 -hls_allow_cache 0 -hls_flags +delete_segments+omit_endlist "${s.dir.streams}${groupKey}/montage.m3u8"`
+        // filter_complex requires `-map "[v]"` for mosaic
+        return `-map "[v]" -c:v libx264 -an -f hls -hls_time 5 -hls_list_size 3 -start_number 0 -hls_allow_cache 0 -hls_flags +delete_segments+omit_endlist "${s.dir.streams}${groupKey}/montage_temp/montage.m3u8"`
     }
     return {
         buildMontageInputsFromPriorConsumption,
