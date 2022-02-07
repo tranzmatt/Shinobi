@@ -23,29 +23,28 @@ module.exports = function (s, config, lang, getSnapshot) {
                 return;
             }
             try {
-                const appOptions = s.group[groupKey].emailClientOptions.transport;
-                const sendTo = appOptions.sendTo;
-                const sendData = {
-                    from: `"shinobi.video" <${transportOptions.auth.user}>`,
-                    to: sendTo,
-                    subject: sendBody.subject,
-                    html: sendBody.html,
-                };
-                if (files.length > 0) {
-                    // sadly pushover allows only ONE single attachment
-                    msg.file = {
-                        name: files[0].name,
-                        data: files[0].attachment,
+                const emailClientOptions = s.group[groupKey].emailClientOptions;
+                const appOptions = emailClientOptions.transport;
+                const sendTo = emailClientOptions.sendTo;
+                sendTo.split(',').forEach((reciepientAddress) => {
+                    const sendData = {
+                        from: `"shinobi.video" <${appOptions.auth.user}>`,
+                        to: reciepientAddress,
+                        subject: sendBody.subject,
+                        html: sendBody.html,
+                        attachments: files || []
                     };
-                }
-                transporter.sendMail(sendData, function (err, result) {
-                    if (err) {
-                        throw err;
-                    }
-                    s.userLog(result);
-                    s.debugLog(result);
-                });
+                    transporter.sendMail(sendData, function (err, result) {
+                        if (err) {
+                            throw err;
+                        }
+                        s.userLog(result);
+                        s.debugLog(result);
+                    });
+                })
+                console.log(sendBody)
             } catch (err) {
+                s.debugLog(err)
                 s.userLog(
                     { ke: groupKey, mid: '$USER' },
                     { type: lang.NotifyErrorText, msg: err }
@@ -119,18 +118,10 @@ module.exports = function (s, config, lang, getSnapshot) {
                 !s.group[d.ke].activeMonitors[d.id].detector_emailClient
             ) {
                 var detector_emailClient_timeout;
-                if (
-                    !monitorConfig.details.detector_emailClient_timeout ||
-                    monitorConfig.details.detector_emailClient_timeout === ''
-                ) {
-                    detector_emailClient_timeout = 1000 * 60 * 10;
-                } else {
-                    detector_emailClient_timeout =
-                        parseFloat(
-                            monitorConfig.details.detector_emailClient_timeout
-                        ) *
-                        1000 *
-                        60;
+                if (!monitorConfig.details.detector_emailClient_timeout){
+                    detector_emailClient_timeout = 1000 * 60 * 10
+                }else{
+                    detector_emailClient_timeout = parseFloat(monitorConfig.details.detector_emailClient_timeout) * 1000 * 60
                 }
                 s.group[d.ke].activeMonitors[d.id].detector_emailClient = setTimeout(function () {
                     s.group[d.ke].activeMonitors[d.id].detector_emailClient = null;
@@ -157,7 +148,7 @@ module.exports = function (s, config, lang, getSnapshot) {
                             subtitle: lang.Event,
                             body: infoRows.join(''),
                         }),
-                    },files || [],r.ke)
+                    },files || [],d.ke)
                 }
                 if(monitorConfig.details.detector_mail_send_video === '1'){
                     let videoPath = null
@@ -255,9 +246,7 @@ module.exports = function (s, config, lang, getSnapshot) {
         s.onEventTriggerBeforeFilter(onEventTriggerBeforeFilterForApp);
         s.onDetectorNoTriggerTimeout(onDetectorNoTriggerTimeoutForApp);
         s.onMonitorUnexpectedExit(onMonitorUnexpectedExitForApp);
-        s.definitions['Monitor Settings'].blocks[
-            'Notifications'
-        ].info[0].info.push({
+        s.definitions['Monitor Settings'].blocks['Notifications'].info[0].info.push({
             name: 'detail=notify_emailClient',
             field: lang.Email,
             description: '',
@@ -292,9 +281,7 @@ module.exports = function (s, config, lang, getSnapshot) {
                 ],
             }
         );
-        s.definitions['Account Settings'].blocks[
-            '2-Factor Authentication'
-        ].info.push({
+        s.definitions['Account Settings'].blocks['2-Factor Authentication'].info.push({
             name: 'detail=factor_emailClient',
             field: lang.Email,
             default: '1',
@@ -313,7 +300,8 @@ module.exports = function (s, config, lang, getSnapshot) {
         });
         s.definitions['Account Settings'].blocks['Email'] = {
             evaluation: "$user.details.use_emailClient !== '0'",
-            field: lang.Email,
+            name: lang.Email,
+            id: lang.Email,
             color: 'blue',
             info: [
                 {
@@ -349,7 +337,9 @@ module.exports = function (s, config, lang, getSnapshot) {
                     'form-group-class': 'u_emailClient_input u_emailClient_1',
                 },
                 {
+                    hidden: true,
                     name: 'detail=emailClient_secure',
+                    'form-group-class': 'u_emailClient_input u_emailClient_1',
                     field: lang.Secure,
                     default: '0',
                     example: '',
@@ -375,6 +365,7 @@ module.exports = function (s, config, lang, getSnapshot) {
                 {
                     hidden: true,
                     field: lang.Password,
+                    fieldType: 'password',
                     name: 'detail=emailClient_pass',
                     'form-group-class': 'u_emailClient_input u_emailClient_1',
                 },
@@ -382,6 +373,7 @@ module.exports = function (s, config, lang, getSnapshot) {
                     hidden: true,
                     field: lang['Send to'],
                     name: 'detail=emailClient_sendTo',
+                    example: 'testrecipient@gmail.com',
                     'form-group-class': 'u_emailClient_input u_emailClient_1',
                 },
             ],

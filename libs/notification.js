@@ -10,7 +10,15 @@ module.exports = function(s,config,lang){
             d.screenshotBuffer = screenShot
         }
     }
-    require('./notifications/email.js')(s,config,lang,getSnapshot)
+    if(
+        config.mail &&
+        config.mail.auth &&
+        config.mail.auth.user !== 'your_email@gmail.com' &&
+        config.mail.auth.pass !== 'your_password_or_app_specific_password'
+    ){
+        require('./notifications/email.js')(s,config,lang,getSnapshot)
+    }
+    require('./notifications/emailByUser.js')(s,config,lang,getSnapshot)
     require('./notifications/discordBot.js')(s,config,lang,getSnapshot)
     require('./notifications/telegram.js')(s,config,lang,getSnapshot)
     require('./notifications/pushover.js')(s,config,lang,getSnapshot)

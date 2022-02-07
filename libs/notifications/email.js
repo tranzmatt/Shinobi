@@ -240,9 +240,27 @@ module.exports = function(s,config,lang,getSnapshot){
         s.onFilterEvent(onFilterEventForEmail)
         s.onDetectorNoTriggerTimeout(onDetectorNoTriggerTimeoutForEmail)
         s.onMonitorUnexpectedExit(onMonitorUnexpectedExitForEmail)
+        s.definitions['Account Settings'].blocks['2-Factor Authentication'].info.push(                   {
+           "name": "detail=factor_mail",
+           "field": `${lang.Email} (${lang['System Level']})`,
+           "description": "Send 2-Factor Authentication codes to the email address of the account.",
+           "default": "1",
+           "example": "",
+           "fieldType": "select",
+           "possible": [
+              {
+                 "name": lang.No,
+                 "value": "0"
+              },
+              {
+                 "name": lang.Yes,
+                 "value": "1"
+              }
+           ]
+        });
         s.definitions["Event Filters"].blocks["Action for Selected"].info.push(                    {
           "name": "actions=mail",
-          "field": "Email on Trigger",
+          "field": `${lang['Email on Trigger']} (${lang['System Level']})`,
           "fieldType": "select",
           "form-group-class": "actions-row",
           "default": "",
@@ -259,6 +277,75 @@ module.exports = function(s,config,lang,getSnapshot){
              }
           ]
         })
+        s.definitions['Monitor Settings'].blocks['Notifications'].info[0].info.push(
+            {
+              "name": "detail=notify_email",
+              "field": `${lang.Email} (${lang['System Level']})`,
+              "default": "0",
+              "fieldType": "select",
+              "possible": [
+                 {
+                    "name": lang.No,
+                    "value": "0"
+                 },
+                 {
+                    "name": lang.Yes,
+                    "value": "1"
+                 }
+              ]
+           },
+        )
+        s.definitions['Monitor Settings'].blocks['Notifications'].info.push(
+            {
+                isFormGroupGroup: true,
+                name: `${lang.Email} (${lang['System Level']})`,
+                color: 'blue',
+                'section-class': 'h_det_input h_det_1',
+                info: [
+                    {
+                       "name": "detail=detector_mail",
+                       "field": lang['Email on Trigger'],
+                       "description": "Recieve an email of an image during a motion event to the master account for the camera group. You must setup SMTP details in conf.json.",
+                       "default": "0",
+                       "selector": "h_det_email",
+                       "fieldType": "select",
+                       "possible": [
+                          {
+                             "name": lang.No,
+                             "value": "0"
+                          },
+                          {
+                             "name": lang.Yes,
+                             "value": "1"
+                          }
+                       ]
+                    },
+                    {
+                       "name": "detail=detector_mail_timeout",
+                       "field": lang['Allow Next Email'],
+                       "description": "The amount of time until a trigger is allowed to send another email with motion details and another image.",
+                       "default": "10",
+                    },
+                    {
+                       "name": "detail=detector_notrigger_mail",
+                       "field": lang['No Trigger'],
+                       "description": "If motion has not been detected after the timeout period you will recieve an email.",
+                       "default": "0",
+                       "fieldType": "select",
+                       "possible": [
+                          {
+                             "name": lang.No,
+                             "value": "0"
+                          },
+                          {
+                             "name": lang.Yes,
+                             "value": "1"
+                          }
+                       ]
+                    },
+                ],
+            }
+        );
     }catch(err){
         console.log(err)
     }

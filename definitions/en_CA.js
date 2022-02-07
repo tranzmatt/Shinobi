@@ -2854,17 +2854,6 @@ module.exports = function(s,config,lang){
                    },
                    {
                        hidden: true,
-                      "name": "detail=detector_send_video_length",
-                      "field": lang["Notification Video Length"],
-                      "description": "In seconds. The length of the video that gets sent to your Notification service, like Email or Discord.",
-                      "default": "10",
-                      "example": "",
-                      "form-group-class": "h_det_input h_det_1",
-                      "form-group-class-pre-layer": "h_rec_mtd_input h_rec_mtd_hot h_rec_mtd_sip",
-                      "possible": ""
-                   },
-                   {
-                       hidden: true,
                       "name": "detail=watchdog_reset",
                       "field": lang["Timeout Reset on Next Event"],
                       "description": "If there is an overlap in trigger record should it reset.",
@@ -3083,35 +3072,6 @@ module.exports = function(s,config,lang){
                       "description": lang['in seconds'],
                       "form-group-class": "h_det_input h_det_1",
                       "default": "0",
-                   },
-                   {
-                      "name": "detail=detector_mail",
-                      "field": lang['Email on Trigger'],
-                      "description": "Recieve an email of an image during a motion event to the master account for the camera group. You must setup SMTP details in conf.json.",
-                      "default": "0",
-                      "example": "",
-                      "selector": "h_det_email",
-                      "fieldType": "select",
-                      "form-group-class-pre-layer": "h_det_input h_det_1",
-                      "possible": [
-                         {
-                            "name": lang.No,
-                            "value": "0"
-                         },
-                         {
-                            "name": lang.Yes,
-                            "value": "1"
-                         }
-                      ]
-                   },
-                   {
-                      "name": "detail=detector_mail_timeout",
-                      "field": lang['Allow Next Email'],
-                      "description": "The amount of time until a trigger is allowed to send another email with motion details and another image.",
-                      "default": "10",
-                      "example": "",
-                      "form-group-class-pre-layer": "h_det_input h_det_1",
-                      "possible": ""
                    },
                    {
                       "name": "detail=use_detector_filters",
@@ -3346,22 +3306,12 @@ module.exports = function(s,config,lang){
                              ]
                          },
                          {
-                            "name": "detail=detector_notrigger_mail",
-                            "field": lang['Email'],
-                            "description": "If motion has not been detected after the timeout period you will recieve an email.",
-                            "default": "0",
+                            "name": "detail=detector_notrigger_timeout",
+                            "field": lang.Timeout,
+                            "description": "Timeout is calculated in minutes.",
+                            "default": "10",
                             "example": "",
-                            "fieldType": "select",
-                            "possible": [
-                               {
-                                  "name": lang.No,
-                                  "value": "0"
-                               },
-                               {
-                                  "name": lang.Yes,
-                                  "value": "1"
-                               }
-                            ]
+                            "possible": ""
                          },
                          {
                             "name": "detail=detector_notrigger_discord",
@@ -3381,14 +3331,6 @@ module.exports = function(s,config,lang){
                                }
                             ]
                          },
-                         {
-                            "name": "detail=detector_notrigger_timeout",
-                            "field": lang.Timeout,
-                            "description": "Timeout is calculated in minutes.",
-                            "default": "10",
-                            "example": "",
-                            "possible": ""
-                        },
                         {
                            "name": "detail=detector_notrigger_webhook",
                            "field": "Webhook",
@@ -4494,32 +4436,13 @@ module.exports = function(s,config,lang){
                 isAdvanced: true,
                 "isSection": true,
                 "id": "monSectionNotifications",
-                "selector": "h_det",
-                "attribute": `triggerChange="#add_monitor [detail=detector_record_method]"`,
-                "blockquote": `${lang.DetectorText}\n<p class="shinobi-detector-msg"></p>`,
                 "info": [
                     {
                        "name": lang.Methods,
                        "color": "blue",
                         isFormGroupGroup: true,
                        "info": [
-                           {
-                              "name": "detail=notify_email",
-                              "field": lang.Email,
-                              "default": "0",
-                              "example": "",
-                              "fieldType": "select",
-                              "possible": [
-                                 {
-                                    "name": lang.No,
-                                    "value": "0"
-                                 },
-                                 {
-                                    "name": lang.Yes,
-                                    "value": "1"
-                                 }
-                              ]
-                           },
+
                        ],
                     },
                    {
@@ -4555,6 +4478,15 @@ module.exports = function(s,config,lang){
                             "value": "1"
                          }
                       ]
+                   },
+                   {
+                       hidden: true,
+                      "name": "detail=detector_send_video_length",
+                      "field": lang["Notification Video Length"],
+                      "description": "In seconds. The length of the video that gets sent to your Notification service, like Email or Discord.",
+                      "default": "10",
+                      "example": "",
+                      "possible": ""
                    },
                ]
              },
@@ -4728,24 +4660,6 @@ module.exports = function(s,config,lang){
                        "field": lang.Enabled,
                        "description": "Enable a secondary requirement for login through one of the enabled methods.",
                        "default": "0",
-                       "example": "",
-                       "fieldType": "select",
-                       "possible": [
-                          {
-                             "name": lang.No,
-                             "value": "0"
-                          },
-                          {
-                             "name": lang.Yes,
-                             "value": "1"
-                          }
-                       ]
-                   },
-                   {
-                       "name": "detail=factor_mail",
-                       "field": lang.Email,
-                       "description": "Send 2-Factor Authentication codes to the email address of the account.",
-                       "default": "1",
                        "example": "",
                        "fieldType": "select",
                        "possible": [
