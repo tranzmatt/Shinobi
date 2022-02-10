@@ -26,9 +26,9 @@ module.exports = function (s, config, lang, getSnapshot) {
                 const emailClientOptions = s.group[groupKey].emailClientOptions;
                 const appOptions = emailClientOptions.transport;
                 const sendTo = emailClientOptions.sendTo;
-                sendTo.split(',').forEach((reciepientAddress) => {
+                sendTo.forEach((reciepientAddress) => {
                     const sendData = {
-                        from: `"shinobi.video" <${appOptions.auth.user}>`,
+                        from: `"${config.mailFromName || 'shinobi.video'}" <${appOptions.auth.user}>`,
                         to: reciepientAddress,
                         subject: sendBody.subject,
                         html: sendBody.html,
@@ -78,7 +78,7 @@ module.exports = function (s, config, lang, getSnapshot) {
                 }
                 s.group[user.ke].emailClientOptions = {
                     transport: clientOptions,
-                    sendTo: optionsSendTo,
+                    sendTo: optionsSendTo.split(',').map((text) => {return text.trim()}),
                 }
                 s.group[user.ke].emailClient = nodeMailer.createTransport(clientOptions)
             }
