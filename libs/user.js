@@ -303,6 +303,7 @@ module.exports = function(s,config,lang){
                     }
                     //admin permissions
                     formDetails.permissions = details.permissions
+                    formDetails.max_camera = details.max_camera
                     formDetails.edit_size = details.edit_size
                     formDetails.edit_days = details.edit_days
                     formDetails.use_admin = details.use_admin
