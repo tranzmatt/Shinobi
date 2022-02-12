@@ -458,7 +458,7 @@ module.exports = function(s,config,lang,app,io){
                     failedAuthentication(req.body.function,req.body.mail)
                 }
             }
-            if(req.body.function === 'super'){
+            if(req.body.function === 'super' && !config.superUserLoginDisabled){
                 const superLoginResponse = await superLogin(req.body.mail,req.body.pass);
                 if(superLoginResponse.ok){
                     renderPage(config.renderPaths.super,{
