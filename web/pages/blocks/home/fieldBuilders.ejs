@@ -173,7 +173,7 @@ drawBlock = function(monitorSettings){
                        }
                        fieldBtnContent += `<${btnBaseElement} class="btn ${btnClass.join(' ')}" ${btnAttributes.join(' ')}>${btn.btnContent}</${btnBaseElement}>`
                    })
-                   fieldElement = `<div class="btn-group btn-group-justified ${fieldClass.join(' ')}" ${attributes.join(' ')}>${fieldBtnContent}</div>`
+                   fieldElement = `<div class="btn-group ${field.normalWidth ? '' : 'btn-group-justified'} ${fieldClass.join(' ')}" ${attributes.join(' ')}>${fieldBtnContent}</div>`
              break;
              case'btn':
                    baseElement = field.forForm ? 'button' : 'a'
