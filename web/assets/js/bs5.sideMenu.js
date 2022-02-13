@@ -118,6 +118,29 @@ function loadSideMenuCollapseStatus(){
 function isSideBarMenuCollapsed(){
     return dashboardOptions().sideMenuCollapsed === 1
 }
+function makeMonitorListSortable(){
+    var monitorSideList = $('#monitorSideList')
+    var options = {
+        cellHeight: 80,
+        verticalMargin: 10,
+    };
+    monitorSideList.sortable({
+        containment: "parent",
+        stop : function(event,ui){
+            var order = []
+            var monitorBlocks = monitorSideList.find('.monitor_block')
+            $.each(monitorBlocks,function(n,block){
+                var mid = $(block).attr('data-mid')
+                order.push(mid)
+            })
+            $user.details.monitorListOrder = {0: order}
+            mainSocket.f({
+                f:'monitorListOrder',
+                monitorListOrder: {0: order}
+            })
+        },
+    })
+}
 $('#monitors_list_search').keyup(function(){
     var monitorBlocks = monitorSideList.find('.monitor_block');
     var searchTerms = $(this).val().toLowerCase().split(' ')
@@ -162,6 +185,7 @@ onDashboardReady(function(){
     fixSideMenuScroll()
     sortListMonitors()
     loadSideMenuCollapseStatus()
+    makeMonitorListSortable()
     $('.toggle-menu-collapse').click(function(){
         toggleSideMenuCollapse()
     })

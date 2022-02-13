@@ -410,8 +410,18 @@ module.exports = function(s,config,lang,io){
                                 ]
                             },(err,r) => {
                                 if(r && r[0]){
+                                    const monitorListOrder = {}
+                                    const orderKeys = Object.keys(d.monitorListOrder)
                                     details = JSON.parse(r[0].details)
-                                    details.monitorListOrder = d.monitorListOrder
+                                    orderKeys.forEach((orderKey) => {
+                                        const monitorIds = d.monitorListOrder[orderKey]
+                                        const uniqueList = {}
+                                        monitorIds.forEach((monitorId) => {
+                                            uniqueList[monitorId] = 1
+                                        })
+                                        monitorListOrder[orderKey] = Object.keys(uniqueList)
+                                    })
+                                    details.monitorListOrder = monitorListOrder
                                     s.knexQuery({
                                         action: "update",
                                         table: "Users",
