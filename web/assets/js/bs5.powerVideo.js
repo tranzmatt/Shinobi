@@ -50,18 +50,26 @@ $(document).ready(function(e){
         powerVideoLoadedEvents[monitorId] = events
     }
     var drawMonitorsList = function(){
-        var monitorList = Object.values(loadedMonitors).map(function(item){
-            return {
-                value: item.mid,
-                label: item.name,
-            }
-        });
-        powerVideoMonitorsListElement.html(createOptionListHtml(monitorList))
+        // var monitorList = Object.values(loadedMonitors).map(function(item){
+        //     return {
+        //         value: item.mid,
+        //         label: item.name,
+        //     }
+        // });
+        var html = ``
+        $.each(loadedMonitors,function(n,monitor){
+            html += `<div class="flex-row d-flex">
+                <div class="flex-grow-1 p-2">${monitor.name}</div>
+                <div class="p-2 text-right"><small>${monitor.host}</small></div>
+                <div class="p-2"><input name="${monitor.mid}" value="1" type="checkbox" class="form-check-input position-initial ml-0"></div>
+            </div>`
+        })
+        powerVideoMonitorsListElement.html(html)
     }
     var requestTableData = function(monitorId,user){
         if(!user)user = $user
         var dateData = powerVideoDateRangeElement.data('daterangepicker')
-        mainSocket.f({
+        var newRequest = {
             f: 'monitor',
             ff: 'get',
             fff: 'videos&events',
@@ -72,7 +80,9 @@ $(document).ready(function(e){
             endDate: dateData.endDate.clone().utc().format('YYYY-MM-DDTHH:mm:ss'),
             ke: user.ke,
             mid: monitorId
-        })
+        }
+        console.log(newRequest)
+        mainSocket.f(newRequest)
     }
     var unloadTableData = function(monitorId,user){
         if(!user)user = $user
@@ -251,6 +261,7 @@ $(document).ready(function(e){
             })
             groupsDataSet.add(groups)
             var chartData = getAllChartDataForLoadedVideos()
+            console.log(chartData)
             if(chartData.length > 0){
                 var items = new vis.DataSet(chartData)
                 var options = {
@@ -523,7 +534,9 @@ $(document).ready(function(e){
         drawMiniEventsChart(video,getMiniEventsChartConfig(video))
     }
     var getSelectedMonitors = function(){
-        return powerVideoMonitorsListElement.val()
+        var form = powerVideoMonitorsListElement.serializeObject()
+        var selectedMonitors = Object.keys(form).filter(key => form[key] == '1')
+        return selectedMonitors
     }
     var getAllActiveVideosInSlots = function(){
         return powerVideoMonitorViewsElement.find('video.videoNow')
@@ -607,21 +620,19 @@ $(document).ready(function(e){
         })
     }
     function onPowerVideoSettingsChange(){
-        var monitorIdsSelectedNow = powerVideoMonitorsListElement.val()
-        var monitorsChanged = lastPowerVideoSelectedMonitors.filter(x => monitorIdsSelectedNow.includes(x))
-        monitorsChanged.forEach((monitorId) => {
-            var isSelected = powerVideoMonitorsListElement.find(`option[value="${monitorId}"]`).attr('selected')
-            if(!!isSelected){
-                requestTableData(monitorId)
-            }else{
-                unloadTableData(monitorId)
-            }
+        var monitorIdsSelectedNow = getSelectedMonitors()
+        lastPowerVideoSelectedMonitors.forEach((monitorId) => {
+            unloadTableData(monitorId)
+        })
+        monitorIdsSelectedNow.forEach((monitorId) => {
+            requestTableData(monitorId)
         })
         lastPowerVideoSelectedMonitors = ([]).concat(monitorIdsSelectedNow || [])
     }
     onWebSocketEvent(function (d){
         switch(d.f){
             case'videos&events':
+                console.log('videos&events',d)
                 if(tabTree.name === 'powerVideo'){
                     var videos = d.videos.videos
                     var events = d.events
@@ -631,7 +642,7 @@ $(document).ready(function(e){
             break;
         }
     })
-    powerVideoMonitorsListElement.change(onPowerVideoSettingsChange);
+    powerVideoMonitorsListElement.on('change','input',onPowerVideoSettingsChange);
     powerVideoVideoLimitElement.change(onPowerVideoSettingsChange);
     powerVideoEventLimitElement.change(onPowerVideoSettingsChange);
     powerVideoSet.change(onPowerVideoSettingsChange);

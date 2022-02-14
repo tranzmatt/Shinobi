@@ -7804,9 +7804,8 @@ module.exports = function(s,config,lang){
                   {
                       "field": lang['Monitors'],
                       "id": "powerVideoMonitorsList",
-                      "form-group-attribute": 'tab-section=monitors',
-                      "attribute": "multiple",
-                      "fieldType": "select",
+                      "fieldType": "form",
+                      "style": "overflow-y:auto;max-height:200px;",
                   },
                   {
                      "id": "powerVideoDateRange",

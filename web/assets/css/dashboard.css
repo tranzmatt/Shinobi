@@ -383,6 +383,15 @@ ul.squeeze {
     align-items: center;
     justify-content: center;
 }
+.position-initial {
+    position: initial;
+}
+.position-absolute {
+    position: absolute;
+}
+.position-fixed {
+    position: fixed;
+}
 
 /* Shake Animation */
 .animate-shake {
