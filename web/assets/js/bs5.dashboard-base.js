@@ -653,7 +653,7 @@ function getMonitorIdFromElement(_this){
 
 function permissionCheck(toCheck,monitorId){
     var details = $user.details
-    if(details.sub && details.allmonitors === '0'){
+    if($user.subAccount === 1 && details.allmonitors === '0'){
         var chosenValue = details[toCheck]
         if(details[toCheck] instanceof Array && chosenValue.indexOf(monitorId) > -1){
             return true

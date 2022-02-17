@@ -83,7 +83,7 @@ module.exports = function(s,config,lang){
                     permissions: s.parseJSON(apiKey.details),
                     details: {}
                 })
-                getUserByUid(apiKey,'mail,details',function(err,user){
+                getUserByUid(apiKey,'mail,details,subAccount',function(err,user){
                     if(user){
                         try{
                             editSession({

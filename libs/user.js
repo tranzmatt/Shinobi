@@ -271,7 +271,7 @@ module.exports = function(s,config,lang){
     s.accountSettingsEdit = function(d,dontRunExtensions){
         s.knexQuery({
             action: "select",
-            columns: "details",
+            columns: "details,subAccount",
             table: "Users",
             where: [
                 ['ke','=',d.ke],
@@ -281,7 +281,7 @@ module.exports = function(s,config,lang){
             if(r && r[0]){
                 r = r[0];
                 const details = JSON.parse(r.details);
-                if(!details.sub || details.user_change !== "0"){
+                if(!r.subAccount === 1 || details.user_change !== "0"){
                     if(d.cnid){
                         if(details.get_server_log === '1'){
                             s.clientSocketConnection[d.cnid].join('GRPLOG_'+d.ke)
@@ -317,8 +317,8 @@ module.exports = function(s,config,lang){
                         formDetails.size = details.size;
                         formDetails.addStorage = details.addStorage;
                     }
-                    if(details.sub){
-                        formDetails.sub = details.sub;
+                    if(r.subAccount === 1){
+                        form.subAccount = 1
                         if(details.monitors){formDetails.monitors = details.monitors;}
                         if(details.allmonitors){formDetails.allmonitors = details.allmonitors;}
                         if(details.monitor_create){formDetails.monitor_create = details.monitor_create;}
@@ -385,7 +385,7 @@ module.exports = function(s,config,lang){
                         ]
                     },() => {
                         const user = Object.assign({ke : d.ke},form)
-                        if(!details.sub){
+                        if(!r.subAccount === 1){
                             s.group[d.ke].sizeLimit = parseFloat(newSize)
                             resetAllStorageCounters(d.ke)
                             if(!dontRunExtensions){

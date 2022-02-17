@@ -23,7 +23,7 @@ module.exports = function(s,config,lang,app){
         req.params.protocol=req.protocol;
         s.auth(req.params,function(user){
             noCache(res)
-            if(user.permissions.watch_stream==="0"||user.details.sub&&user.details.allmonitors!=='1'&&user.details.monitors.indexOf(req.params.id)===-1){
+            if(user.permissions.watch_stream==="0"||user.subAccount === 1&&user.details.allmonitors!=='1'&&user.details.monitors.indexOf(req.params.id)===-1){
                 res.end(user.lang['Not Permitted'])
                 return
             }
@@ -111,7 +111,7 @@ module.exports = function(s,config,lang,app){
             s.auth(req.params,function(user){
                 s.checkChildProxy(req.params,function(){
                     if(s.group[req.params.ke]&&s.group[req.params.ke].activeMonitors[req.params.id]){
-                        if(user.permissions.watch_stream==="0"||user.details.sub&&user.details.allmonitors!=='1'&&user.details.monitors.indexOf(req.params.id)===-1){
+                        if(user.permissions.watch_stream==="0"||user.subAccount === 1&&user.details.allmonitors!=='1'&&user.details.monitors.indexOf(req.params.id)===-1){
                             res.end(user.lang['Not Permitted'])
                             return
                         }
@@ -195,7 +195,7 @@ module.exports = function(s,config,lang,app){
         s.auth(req.params,function(user){
             s.checkChildProxy(req.params,function(){
                 noCache(res)
-                if(user.details.sub&&user.details.allmonitors!=='1'&&user.details.monitors&&user.details.monitors.indexOf(req.params.id)===-1){
+                if(user.subAccount === 1&&user.details.allmonitors!=='1'&&user.details.monitors&&user.details.monitors.indexOf(req.params.id)===-1){
                     res.end(user.lang['Not Permitted'])
                     return
                 }
@@ -219,7 +219,7 @@ module.exports = function(s,config,lang,app){
     */
     app.get(config.webPaths.apiPrefix+':auth/icon/:ke/:id', function(req,res){
         s.auth(req.params,async (user) => {
-            if(user.details.sub&&user.details.allmonitors!=='1'&&user.details.monitors&&user.details.monitors.indexOf(req.params.id)===-1){
+            if(user.subAccount === 1&&user.details.allmonitors!=='1'&&user.details.monitors&&user.details.monitors.indexOf(req.params.id)===-1){
                 res.end(user.lang['Not Permitted'])
                 return
             }

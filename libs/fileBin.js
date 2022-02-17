@@ -176,7 +176,7 @@ module.exports = function(s,config,lang,app,io){
             const userDetails = user.details
             const monitorId = req.params.id
             const groupKey = req.params.ke
-            const hasRestrictions = userDetails.sub && userDetails.allmonitors !== '1';
+            const hasRestrictions = user.subAccount === 1 && userDetails.allmonitors !== '1';
             s.sqlQueryBetweenTimesWithPermissions({
                 table: 'Files',
                 user: user,
@@ -219,8 +219,8 @@ module.exports = function(s,config,lang,app,io){
             if (!s.group[req.params.ke].fileBin[req.params.id+'/'+req.params.file]){
                 const groupKey = req.params.ke
                 const monitorId = req.params.id
-                const monitorRestrictions = s.getMonitorRestrictions(user.details,monitorId)
-                if(user.details.sub && user.details.allmonitors === '0' && (user.permissions.get_monitors === "0" || monitorRestrictions.length === 0)){
+                const monitorRestrictions = s.getMonitorRestrictions(user,monitorId)
+                if(user.subAccount === 1 && user.details.allmonitors === '0' && (user.permissions.get_monitors === "0" || monitorRestrictions.length === 0)){
                     s.closeJsonResponse(res,{
                         ok: false,
                         msg: lang['Not Permitted']

@@ -154,7 +154,7 @@ module.exports = function(s,config,lang,app,io){
     ], function (req,res){
         res.setHeader('Content-Type', 'application/json');
         s.auth(req.params,function(user){
-            var hasRestrictions = user.details.sub && user.details.allmonitors !== '1'
+            var hasRestrictions = user.subAccount === 1 && user.details.allmonitors !== '1'
             if(
                 user.permissions.watch_videos==="0" ||
                 hasRestrictions &&
@@ -166,7 +166,7 @@ module.exports = function(s,config,lang,app,io){
                 s.closeJsonResponse(res,[])
                 return
             }
-            const monitorRestrictions = s.getMonitorRestrictions(user.details,req.params.id)
+            const monitorRestrictions = s.getMonitorRestrictions(user,req.params.id)
             s.getDatabaseRows({
                 monitorRestrictions: monitorRestrictions,
                 table: 'Timelapse Frames',
@@ -219,7 +219,7 @@ module.exports = function(s,config,lang,app,io){
     ], function (req,res){
         res.setHeader('Content-Type', 'application/json');
         s.auth(req.params,function(user){
-            var hasRestrictions = user.details.sub && user.details.allmonitors !== '1'
+            var hasRestrictions = user.subAccount === 1 && user.details.allmonitors !== '1'
             if(
                 user.permissions.watch_videos==="0" ||
                 hasRestrictions &&
@@ -231,7 +231,7 @@ module.exports = function(s,config,lang,app,io){
                 s.closeJsonResponse(res,[])
                 return
             }
-            const monitorRestrictions = s.getMonitorRestrictions(user.details,req.params.id)
+            const monitorRestrictions = s.getMonitorRestrictions(user,req.params.id)
             if(monitorRestrictions.length === 0){
                 s.closeJsonResponse(res,{
                     ok: false
@@ -280,7 +280,7 @@ module.exports = function(s,config,lang,app,io){
     ], function (req,res){
         res.setHeader('Content-Type', 'application/json');
         s.auth(req.params,function(user){
-            var hasRestrictions = user.details.sub && user.details.allmonitors !== '1'
+            var hasRestrictions = user.subAccount === 1 && user.details.allmonitors !== '1'
             if(
                 user.permissions.watch_videos==="0" ||
                 hasRestrictions && (!user.details.video_view || user.details.video_view.indexOf(req.params.id)===-1)
@@ -288,7 +288,7 @@ module.exports = function(s,config,lang,app,io){
                 res.end(s.prettyPrint([]))
                 return
             }
-            const monitorRestrictions = s.getMonitorRestrictions(user.details,req.params.id)
+            const monitorRestrictions = s.getMonitorRestrictions(user,req.params.id)
             const cacheKey = req.params.ke + req.params.id + req.params.filename
             const processFrame = (frame) => {
                 var fileLocation
@@ -356,7 +356,7 @@ module.exports = function(s,config,lang,app,io){
     app.get(config.webPaths.apiPrefix+':auth/timelapsePage/:ke', function (req,res){
         req.params.protocol=req.protocol;
         s.auth(req.params,function(user){
-            // if(user.permissions.watch_stream==="0"||user.details.sub&&user.details.allmonitors!=='1'&&user.details.monitors.indexOf(req.params.id)===-1){
+            // if(user.permissions.watch_stream==="0"||user.subAccount === 1&&user.details.allmonitors!=='1'&&user.details.monitors.indexOf(req.params.id)===-1){
             //     res.end(user.lang['Not Permitted'])
             //     return
             // }

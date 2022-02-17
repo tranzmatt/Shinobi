@@ -194,7 +194,7 @@ module.exports = function(s,config,lang,app){
             }
             s.knexQuery({
                 action: "select",
-                columns: "ke,uid,auth,mail,details",
+                columns: "ke,uid,auth,mail,details,subAccount",
                 table: "Users",
                 where: whereQuery
             },(err,users) => {

@@ -54,7 +54,7 @@ $(document).ready(function(){
                  html += drawBlock(field)
              }else{
                  if(field.notForSubAccount === true){
-                      var notForSubAccount = '!details.sub'
+                      var notForSubAccount = '!$user.subAccount === 1'
                       if(!field.evaluation){
                           field.evaluation = notForSubAccount
                       }else{

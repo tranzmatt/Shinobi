@@ -192,7 +192,7 @@ module.exports = (s,config,lang,app) => {
             if(tokenResponse.ok){
                 const ldapUser = tokenResponse.user
                 const loginId = ldapUser.id
-                if(!user.details.sub){
+                if(!user.subAccount === 1){
                     updateLdapBaseDetails({
                         groupKey: groupKey,
                         userId: user.uid,

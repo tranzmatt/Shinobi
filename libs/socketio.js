@@ -38,7 +38,7 @@ module.exports = function(s,config,lang,io){
         if(s.group[z.ke]){
             Object.keys(s.group[z.ke].users).forEach(function(v){
                 var user = s.group[z.ke].users[v]
-                if(user.details.sub){
+                if(user.subAccount === 1){
                     if(user.details.allmonitors!=='1'){
                         var valid=0
                         var checked=permissionChoices.length
@@ -72,7 +72,7 @@ module.exports = function(s,config,lang,io){
             ]
             s.knexQuery({
                 action: "select",
-                columns: "ke,uid,auth,mail,details",
+                columns: "ke,uid,auth,mail,details,subAccount",
                 table: "Users",
                 where: baseWheres.concat(!isInternal ? [['auth','=',options.auth]] : [])
             },(err,r) => {
@@ -91,7 +91,7 @@ module.exports = function(s,config,lang,io){
                             if(r.details.auth_socket === '1'){
                                 s.knexQuery({
                                     action: "select",
-                                    columns: "ke,uid,auth,mail,details",
+                                    columns: "ke,uid,auth,mail,details,subAccount",
                                     table: "Users",
                                     where: [
                                         ['ke','=',options.ke],
@@ -505,9 +505,10 @@ module.exports = function(s,config,lang,io){
                                             d.eventEndDate = stringToSqlTime(d.endDate)
                                         }
                                         var monitorRestrictions = []
+                                        var theUser = s.group[d.ke].users[cn.auth]
                                         var permissions = s.group[d.ke].users[cn.auth].details;
                                         if(!d.mid){
-                                            if(permissions.sub && permissions.monitors && permissions.allmonitors !== '1'){
+                                            if(theUser.subAccount === 1 && permissions.monitors && permissions.allmonitors !== '1'){
                                                 try{
                                                     permissions.monitors = JSON.parse(permissions.monitors);
                                                     permissions.monitors.forEach(function(v,n){
@@ -521,7 +522,7 @@ module.exports = function(s,config,lang,io){
                                                     console.log(er)
                                                 }
                                             }
-                                        }else if(!permissions.sub||permissions.allmonitors!=='0'||permissions.monitors.indexOf(d.mid)>-1){
+                                        }else if(!theUser.subAccount === 1 || permissions.allmonitors !== '0' || permissions.monitors.indexOf(d.mid) >- 1){
                                             monitorRestrictions.push(['mid','=',d.mid])
                                         }
                                         var getEvents = function(callback){
@@ -827,7 +828,7 @@ module.exports = function(s,config,lang,io){
             if(!cn.ke&&d.f==='init'){
                 s.knexQuery({
                     action: "select",
-                    columns: "ke,uid,auth,mail,details",
+                    columns: "ke,uid,auth,mail,details,subAccount",
                     table: "Users",
                     where: [
                         ['ke','=',d.ke],

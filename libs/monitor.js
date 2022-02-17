@@ -1756,11 +1756,12 @@ module.exports = function(s,config,lang){
         })
         return cameras
     }
-    s.getMonitorRestrictions = (permissions,monitorId) => {
+    s.getMonitorRestrictions = (user,monitorId) => {
+        const permissions = user.details
         const monitorRestrictions = []
         if(
             !monitorId &&
-            permissions.sub &&
+            user.subAccount &&
             permissions.monitors &&
             permissions.allmonitors !== '1'
         ){
@@ -1777,7 +1778,7 @@ module.exports = function(s,config,lang){
             }
         }else if(
             monitorId && (
-                !permissions.sub ||
+                !user.subAccount ||
                 permissions.allmonitors !== '0' ||
                 permissions.monitors.indexOf(monitorId) >- 1
             )
@@ -1785,7 +1786,7 @@ module.exports = function(s,config,lang){
             monitorRestrictions.push(['mid','=',monitorId])
         }else if(
             !monitorId &&
-            permissions.sub &&
+            user.subAccount &&
             permissions.allmonitors !== '0'
         ){}
         return monitorRestrictions

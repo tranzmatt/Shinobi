@@ -285,7 +285,7 @@ module.exports = function(s,config,lang,app,io){
             }else{
                 s.knexQuery({
                     action: "select",
-                    columns: "ke,uid,details",
+                    columns: "ke,uid,details,subAccount",
                     table: "Users",
                     where: [
                         ['mail','=',failIdentifier],
@@ -405,7 +405,7 @@ module.exports = function(s,config,lang,app,io){
                             ['uid','=',user.uid],
                         ]
                     })
-                    if(user.details.sub){
+                    if(user.subAccount === 1){
                         const adminUserCheckResponse = await s.knexQueryPromise({
                             action: "select",
                             columns: "details",
@@ -437,7 +437,7 @@ module.exports = function(s,config,lang,app,io){
                                     uid: user.uid,
                                     mail: user.mail,
                                     details: {
-                                        sub: user.details.sub
+                                        sub: user.subAccount === 1
                                     }
                                 },
                                 lang: user.lang,
@@ -526,7 +526,7 @@ module.exports = function(s,config,lang,app,io){
     //         req.params.protocol=req.protocol;
     //         req.sql='SELECT * FROM Monitors WHERE mode!=? AND mode!=? AND ke=?';req.ar=['stop','idle',req.params.ke];
     //         if(!req.params.id){
-    //             if(user.details.sub&&user.details.monitors&&user.details.allmonitors!=='1'){
+    //             if(user.subAccount === 1&&user.details.monitors&&user.details.allmonitors!=='1'){
     //                 try{user.details.monitors=JSON.parse(user.details.monitors);}catch(er){}
     //                 req.or=[];
     //                 user.details.monitors.forEach(function(v,n){
@@ -535,7 +535,7 @@ module.exports = function(s,config,lang,app,io){
     //                 req.sql+=' AND ('+req.or.join(' OR ')+')'
     //             }
     //         }else{
-    //             if(!user.details.sub||user.details.allmonitors!=='0'||user.details.monitors.indexOf(req.params.id)>-1){
+    //             if(!user.subAccount === 1||user.details.allmonitors!=='0'||user.details.monitors.indexOf(req.params.id)>-1){
     //                 req.sql+=' and mid=?';req.ar.push(req.params.id)
     //             }else{
     //                 res.end(user.lang['There are no monitors that you can view with this account.']);
@@ -645,8 +645,8 @@ module.exports = function(s,config,lang,app,io){
         s.auth(req.params,function(user){
             const groupKey = req.params.ke
             const monitorId = req.params.id
-            const monitorRestrictions = s.getMonitorRestrictions(user.details,monitorId)
-            if(user.details.sub && user.details.allmonitors === '0' && (user.permissions.get_monitors === "0" || monitorRestrictions.length === 0)){
+            const monitorRestrictions = s.getMonitorRestrictions(user,monitorId)
+            if(user.subAccount === 1 && user.details.allmonitors === '0' && (user.permissions.get_monitors === "0" || monitorRestrictions.length === 0)){
                 s.closeJsonResponse(res,[]);
                 return
             }
@@ -750,8 +750,8 @@ module.exports = function(s,config,lang,app,io){
         s.auth(req.params,(user) => {
             const groupKey = req.params.ke
             const monitorId = req.params.id
-            const monitorRestrictions = s.getMonitorRestrictions(user.details,monitorId)
-            if(user.details.sub && user.details.allmonitors === '0' && (user.permissions.get_monitors === "0" || monitorRestrictions.length === 0)){
+            const monitorRestrictions = s.getMonitorRestrictions(user,monitorId)
+            if(user.subAccount === 1 && user.details.allmonitors === '0' && (user.permissions.get_monitors === "0" || monitorRestrictions.length === 0)){
                 s.closeJsonResponse(res,[]);
                 return
             }
@@ -831,7 +831,7 @@ module.exports = function(s,config,lang,app,io){
             const monitorId = req.params.id
             if(
                 user.permissions.control_monitors === "0" ||
-                user.details.sub &&
+                user.subAccount === 1 &&
                 user.details.allmonitors !== '1' &&
                 user.details.monitor_edit.indexOf(monitorId) === -1
             ){
@@ -930,7 +930,7 @@ module.exports = function(s,config,lang,app,io){
             const userDetails = user.details
             const monitorId = req.params.id
             const groupKey = req.params.ke
-            const hasRestrictions = userDetails.sub && userDetails.allmonitors !== '1';
+            const hasRestrictions = user.subAccount === 1 && userDetails.allmonitors !== '1';
             var origURL = req.originalUrl.split('/')
             var videoParam = origURL[origURL.indexOf(req.params.auth) + 1]
             var videoSet = 'Videos'
@@ -984,8 +984,8 @@ module.exports = function(s,config,lang,app,io){
             const userDetails = user.details
             const monitorId = req.params.id
             const groupKey = req.params.ke
-            const hasRestrictions = userDetails.sub && userDetails.allmonitors !== '1';
-            const monitorRestrictions = s.getMonitorRestrictions(user.details,monitorId)
+            const hasRestrictions = user.subAccount === 1 && userDetails.allmonitors !== '1';
+            const monitorRestrictions = s.getMonitorRestrictions(user,monitorId)
             const preliminaryValidationFailed = (
                 user.permissions.watch_videos === "0" ||
                 hasRestrictions &&
@@ -1048,7 +1048,7 @@ module.exports = function(s,config,lang,app,io){
             const userDetails = user.details
             const monitorId = req.params.id
             const groupKey = req.params.ke
-            const hasRestrictions = userDetails.sub && userDetails.allmonitors !== '1';
+            const hasRestrictions = user.subAccount === 1 && userDetails.allmonitors !== '1';
             s.sqlQueryBetweenTimesWithPermissions({
                 table: 'Logs',
                 user: user,
@@ -1064,7 +1064,7 @@ module.exports = function(s,config,lang,app,io){
                 noCount: true,
                 rowName: 'logs',
                 preliminaryValidationFailed: (
-                    user.permissions.get_logs === "0" || userDetails.sub && userDetails.view_logs !== '1'
+                    user.permissions.get_logs === "0" || user.subAccount === 1 && userDetails.view_logs !== '1'
                 )
             },(response) => {
                 response.forEach(function(v,n){
@@ -1083,8 +1083,8 @@ module.exports = function(s,config,lang,app,io){
         s.auth(req.params,(user) => {
             const groupKey = req.params.ke
             const monitorId = req.params.id
-            const monitorRestrictions = s.getMonitorRestrictions(user.details,monitorId)
-            if(user.details.sub && user.details.allmonitors === '0' && (user.permissions.get_monitors === "0" || monitorRestrictions.length === 0)){
+            const monitorRestrictions = s.getMonitorRestrictions(user,monitorId)
+            if(user.subAccount === 1 && user.details.allmonitors === '0' && (user.permissions.get_monitors === "0" || monitorRestrictions.length === 0)){
                 s.closeJsonResponse(res,[]);
                 return
             }
@@ -1118,7 +1118,7 @@ module.exports = function(s,config,lang,app,io){
         var response = {ok:false};
         res.setHeader('Content-Type', 'application/json');
         s.auth(req.params,function(user){
-            if(user.permissions.control_monitors==="0"||user.details.sub&&user.details.allmonitors!=='1'&&user.details.monitor_edit.indexOf(req.params.id)===-1){
+            if(user.permissions.control_monitors==="0"||user.subAccount === 1&&user.details.allmonitors!=='1'&&user.details.monitor_edit.indexOf(req.params.id)===-1){
                 res.end(user.lang['Not Permitted'])
                 return
             }
@@ -1242,8 +1242,8 @@ module.exports = function(s,config,lang,app,io){
         s.auth(req.params,function(user){
             const groupKey = req.params.ke
             const monitorId = req.params.id
-            const monitorRestrictions = s.getMonitorRestrictions(user.details,monitorId)
-            if(user.details.sub && user.details.allmonitors === '0' && (user.permissions.watch_videos === "0" || monitorRestrictions.length === 0)){
+            const monitorRestrictions = s.getMonitorRestrictions(user,monitorId)
+            if(user.subAccount === 1 && user.details.allmonitors === '0' && (user.permissions.watch_videos === "0" || monitorRestrictions.length === 0)){
                 s.closeJsonResponse(res,{
                     ok: false,
                     msg: lang['Not Permitted']
@@ -1293,8 +1293,8 @@ module.exports = function(s,config,lang,app,io){
         s.auth(req.params,function(user){
             const groupKey = req.params.ke
             const monitorId = req.params.id
-            const monitorRestrictions = s.getMonitorRestrictions(user.details,monitorId)
-            if(user.details.sub && user.details.allmonitors === '0' && (user.permissions.watch_videos === "0" || monitorRestrictions.length === 0)){
+            const monitorRestrictions = s.getMonitorRestrictions(user,monitorId)
+            if(user.subAccount === 1 && user.details.allmonitors === '0' && (user.permissions.watch_videos === "0" || monitorRestrictions.length === 0)){
                 s.closeJsonResponse(res,{
                     ok: false,
                     msg: lang['Not Permitted']
@@ -1360,8 +1360,8 @@ module.exports = function(s,config,lang,app,io){
          s.auth(req.params,function(user){
              const groupKey = req.params.ke
              const monitorId = req.params.id
-             const monitorRestrictions = s.getMonitorRestrictions(user.details,monitorId)
-             if(user.details.sub && user.details.allmonitors === '0' && monitorRestrictions.length === 0){
+             const monitorRestrictions = s.getMonitorRestrictions(user,monitorId)
+             if(user.subAccount === 1 && user.details.allmonitors === '0' && monitorRestrictions.length === 0){
                  s.closeJsonResponse(res,{
                      ok: false,
                      msg: lang['Not Permitted']
@@ -1456,7 +1456,7 @@ module.exports = function(s,config,lang,app,io){
     app.get(config.webPaths.apiPrefix+':auth/eventCountStatus/:ke/:id', function (req,res){
         res.setHeader('Content-Type', 'application/json');
         s.auth(req.params,function(user){
-            if(user.permissions.watch_videos==="0"||user.details.sub&&user.details.allmonitors!=='1'&&user.details.monitors.indexOf(req.params.id)===-1){
+            if(user.permissions.watch_videos==="0"||user.subAccount === 1&&user.details.allmonitors!=='1'&&user.details.monitors.indexOf(req.params.id)===-1){
                 res.end(user.lang['Not Permitted'])
                 return
             }
@@ -1480,7 +1480,7 @@ module.exports = function(s,config,lang,app,io){
             const userDetails = user.details
             const monitorId = req.params.id
             const groupKey = req.params.ke
-            var hasRestrictions = userDetails.sub && userDetails.allmonitors !== '1';
+            var hasRestrictions = user.subAccount === 1 && userDetails.allmonitors !== '1';
             s.sqlQueryBetweenTimesWithPermissions({
                 table: 'Events Counts',
                 user: user,
@@ -1541,7 +1541,7 @@ module.exports = function(s,config,lang,app,io){
         var response = {ok:false}
         res.setHeader('Content-Type', 'application/json');
         s.auth(req.params,function(user){
-            if(user.permissions.watch_videos==="0"||user.details.sub&&user.details.allmonitors!=='1'&&user.details.video_delete.indexOf(req.params.id)===-1){
+            if(user.permissions.watch_videos==="0"||user.subAccount === 1&&user.details.allmonitors!=='1'&&user.details.video_delete.indexOf(req.params.id)===-1){
                 res.end(user.lang['Not Permitted'])
                 return
             }
@@ -1602,7 +1602,7 @@ module.exports = function(s,config,lang,app,io){
         var response = {ok:false};
         res.setHeader('Content-Type', 'application/json');
         s.auth(req.params,function(user){
-            if(user.permissions.watch_videos==="0"||user.details.sub&&user.details.allmonitors!=='1'&&user.details.video_delete.indexOf(req.params.id)===-1){
+            if(user.permissions.watch_videos==="0"||user.subAccount === 1&&user.details.allmonitors!=='1'&&user.details.video_delete.indexOf(req.params.id)===-1){
                 res.end(user.lang['Not Permitted'])
                 return
             }

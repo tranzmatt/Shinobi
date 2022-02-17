@@ -193,7 +193,7 @@ module.exports = function(s,config,lang,app,io){
             var endData = {
                 ok : false
             }
-            if(user.details.sub){
+            if(user.subAccount === 1){
                 endData.msg = user.lang['Not Permitted']
                 s.closeJsonResponse(res,endData)
                 return
@@ -233,7 +233,7 @@ module.exports = function(s,config,lang,app,io){
             var endData = {
                 ok : false
             }
-            if(user.details.sub){
+            if(user.subAccount === 1){
                 endData.msg = user.lang['Not Permitted']
                 s.closeJsonResponse(res,endData)
                 return

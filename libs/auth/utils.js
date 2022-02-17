@@ -29,7 +29,7 @@ module.exports = function(s,config,lang){
     //     const response = { ok: false }
     //     const basicAuthResponse = await basicAuth(username,password)
     //     const user = basicAuthResponse.user
-    //     if(user && !user.details.sub){
+    //     if(user && !user.subAccount === 1){
     //         response.ok = true
     //         response.user = user
     //     }

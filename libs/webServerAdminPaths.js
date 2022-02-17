@@ -15,7 +15,7 @@ module.exports = function(s,config,lang,app){
             var endData = {
                 ok : false
             }
-            if(user.details.sub){
+            if(user.subAccount === 1){
                 endData.msg = user.lang['Not Permitted']
                 s.closeJsonResponse(res,endData)
                 return
@@ -100,7 +100,7 @@ module.exports = function(s,config,lang,app){
             var endData = {
                 ok : false
             }
-            if(user.details.sub){
+            if(user.subAccount === 1){
                 endData.msg = user.lang['Not Permitted']
                 s.closeJsonResponse(res,endData)
                 return
@@ -171,7 +171,7 @@ module.exports = function(s,config,lang,app){
             var endData = {
                 ok : false
             }
-            if(user.details.sub){
+            if(user.subAccount === 1){
                 endData.msg = user.lang['Not Permitted']
                 s.closeJsonResponse(res,endData)
                 return
@@ -179,7 +179,7 @@ module.exports = function(s,config,lang,app){
                 endData.ok = true
                 s.knexQuery({
                     action: "select",
-                    columns: "ke,uid,mail,details",
+                    columns: "ke,uid,mail,details,subAccount",
                     table: "Users",
                     where: [
                         ['ke','=',req.params.ke],
@@ -206,7 +206,7 @@ module.exports = function(s,config,lang,app){
         }
         res.setHeader('Content-Type', 'application/json');
         s.auth(req.params,function(user){
-            if(user.details.sub){
+            if(user.subAccount === 1){
                 endData.msg = user.lang['Not an Administrator Account']
                 s.closeJsonResponse(res,endData)
                 return
@@ -287,7 +287,7 @@ module.exports = function(s,config,lang,app){
         }
         res.setHeader('Content-Type', 'application/json');
         s.auth(req.params,function(user){
-            var hasRestrictions = user.details.sub && user.details.allmonitors !== '1'
+            var hasRestrictions = user.subAccount === 1 && user.details.allmonitors !== '1'
             if(req.params.f !== 'delete'){
                 var form = s.getPostData(req)
                 if(!form){
@@ -296,7 +296,7 @@ module.exports = function(s,config,lang,app){
                    return
                 }
                 form.mid = req.params.id.replace(/[^\w\s]/gi,'').replace(/ /g,'')
-                if(!user.details.sub ||
+                if(!user.subAccount === 1 ||
                    user.details.allmonitors === '1' ||
                    hasRestrictions && user.details.monitor_edit.indexOf(form.mid) >- 1 ||
                    hasRestrictions && user.details.monitor_create === '1'){
@@ -315,7 +315,7 @@ module.exports = function(s,config,lang,app){
                         res.end(s.prettyPrint(endData))
                 }
             }else{
-                if(!user.details.sub || user.details.allmonitors === '1' || user.details.monitor_edit.indexOf(req.params.id) > -1 || hasRestrictions && user.details.monitor_create === '1'){
+                if(!user.subAccount === 1 || user.details.allmonitors === '1' || user.details.monitor_edit.indexOf(req.params.id) > -1 || hasRestrictions && user.details.monitor_create === '1'){
                     s.userLog({
                         ke: req.params.ke,
                         mid: req.params.id
@@ -522,7 +522,7 @@ module.exports = function(s,config,lang,app){
             var endData = {
                 ok : false
             }
-            if(user.details.sub){
+            if(user.subAccount === 1){
                 endData.msg = user.lang['Not Permitted']
                 s.closeJsonResponse(res,endData)
                 return
@@ -560,7 +560,7 @@ module.exports = function(s,config,lang,app){
             var endData = {
                 ok : false
             }
-            if(user.details.sub){
+            if(user.subAccount === 1){
                 endData.msg = user.lang['Not Permitted']
                 s.closeJsonResponse(res,endData)
                 return
