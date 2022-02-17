@@ -156,7 +156,7 @@ module.exports = function(s,config,lang){
             table: "Users",
             where: [
                 ['ke','=',e.ke],
-                ['details','NOT LIKE',`%"sub"%`],
+                ['subAccount','=',`0`],
             ],
             limit: 1
         },(err,r) => {

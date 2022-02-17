@@ -72,7 +72,7 @@ module.exports = function(s,config,lang,io){
             ]
             s.knexQuery({
                 action: "select",
-                columns: "ke,uid,auth,mail,details,subAccount",
+                columns: "ke,uid,auth,mail,details",
                 table: "Users",
                 where: baseWheres.concat(!isInternal ? [['auth','=',options.auth]] : [])
             },(err,r) => {
@@ -91,7 +91,7 @@ module.exports = function(s,config,lang,io){
                             if(r.details.auth_socket === '1'){
                                 s.knexQuery({
                                     action: "select",
-                                    columns: "ke,uid,auth,mail,details,subAccount",
+                                    columns: "ke,uid,auth,mail,details",
                                     table: "Users",
                                     where: [
                                         ['ke','=',options.ke],
