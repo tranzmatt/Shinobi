@@ -436,7 +436,7 @@ module.exports = function(s,config,lang,app,io){
                                     ke: user.ke,
                                     uid: user.uid,
                                     mail: user.mail,
-                                    subAccount: user.subAccount === 1,
+                                    subAccount: user.subAccount === 1 ? 1 : 0,
                                     details: {}
                                 },
                                 lang: user.lang,

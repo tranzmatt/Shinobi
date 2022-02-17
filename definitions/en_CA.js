@@ -4599,7 +4599,7 @@ module.exports = function(s,config,lang){
           "section": "Account Settings",
           "blocks": {
              "ShinobiHub": {
-                 "evaluation": "!details.sub && details.use_shinobihub !== '0'",
+                 "evaluation": "!$user.subAccount === 1 && details.use_shinobihub !== '0'",
                  "name": lang["ShinobiHub"],
                  "color": "purple",
                  "info": [
