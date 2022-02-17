@@ -162,6 +162,57 @@ module.exports = function(s,config){
         }catch(err){
             console.log(err)
         }
+        try{
+            s.databaseEngine.schema.table('Videos', table => {
+                table.tinyint('archive',1).defaultTo(0)
+                table.string('saveDir',255).defaultTo('')
+            }).then(() => {
+                s.systemLog('Created new columns in Videos table : archive, saveDir')
+            }).catch((err) => {
+                if(err && err.code !== 'ER_DUP_FIELDNAME'){
+                    console.log('Error creating new columns in Videos table : archive, saveDir')
+                    console.log(err)
+                }
+            });
+            s.databaseEngine.schema.table('Timelapse Frames', table => {
+                table.tinyint('archive',1).defaultTo(0)
+                table.string('saveDir',255).defaultTo('')
+            }).then(() => {
+                s.systemLog('Created new columns in Timelapse Frames table : archive, saveDir')
+            }).catch((err) => {
+                if(err && err.code !== 'ER_DUP_FIELDNAME'){
+                    console.log('Error creating new columns in Timelapse Frames table : archive, saveDir')
+                    console.log(err)
+                }
+            });
+            s.databaseEngine.schema.table('Cloud Timelapse Frames', table => {
+                table.tinyint('archive',1).defaultTo(0)
+                table.string('saveDir',255).defaultTo('')
+            }).then(() => {
+                s.systemLog('Created new columns in Cloud Timelapse Frames table : archive, saveDir')
+            }).catch((err) => {
+                if(err && err.code !== 'ER_DUP_FIELDNAME'){
+                    console.log('Error creating new columns in Cloud Timelapse Frames table : archive, saveDir')
+                    console.log(err)
+                }
+            });
+            s.databaseEngine.schema.table('Users', table => {
+                table.tinyint('subAccount',1).defaultTo(0)
+            }).then(() => {
+                s.systemLog('Created new columns in Users table : subAccount');
+                s.databaseEngine('Users')
+                    .update({'subAccount': '1'})
+                    .where('details', 'like', '%"sub":"1"%');
+            }).catch((err) => {
+                if(err && err.code !== 'ER_DUP_FIELDNAME'){
+                    console.log('Error creating new columns in Users table : subAccount')
+                    console.log(err)
+                }
+            });
+        }catch(err){
+            console.log('Error creating new columns from 2022-02-15')
+            console.log(err)
+        }
         delete(s.preQueries)
     }
 }
