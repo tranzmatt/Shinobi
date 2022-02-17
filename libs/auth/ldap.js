@@ -116,7 +116,7 @@ module.exports = (s,config,lang,app) => {
                 table: "Users",
                 where: [
                     ['ke','=',params.key],
-                    ['details','NOT LIKE','%"sub"%'],
+                    ['subAccount','=',`0`],
                 ],
             })
             if(userResponse.rows[0]){

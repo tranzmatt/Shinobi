@@ -412,7 +412,7 @@ module.exports = function(s,config,lang,app,io){
                             table: "Users",
                             where: [
                                 ['ke','=',user.ke],
-                                ['details','NOT LIKE','%"sub"%'],
+                                ['subAccount','=',`0`],
                             ],
                             limit: 1,
                         })

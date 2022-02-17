@@ -183,7 +183,7 @@ module.exports = function(s,config,lang,app){
                     table: "Users",
                     where: [
                         ['ke','=',req.params.ke],
-                        ['details','LIKE','%"sub"%']
+                        ['subAccount','=',`1`]
                     ]
                 },function(err,rows){
                     endData.accounts = rows

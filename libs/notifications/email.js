@@ -25,7 +25,7 @@ module.exports = function(s,config,lang,getSnapshot){
                     table: "Users",
                     where: [
                         ['ke','=',e.ke],
-                        ['details','NOT LIKE','%"sub"%'],
+                        ['subAccount','=',`0`],
                     ]
                 },(err,r) => {
                     r = r[0]
@@ -105,7 +105,7 @@ module.exports = function(s,config,lang,getSnapshot){
                     table: "Users",
                     where: [
                         ['ke','=',d.ke],
-                        ['details','NOT LIKE','%"sub"%'],
+                        ['subAccount','=',`0`],
                     ]
                 },async (err,r) => {
                     r = r[0];
@@ -210,7 +210,7 @@ module.exports = function(s,config,lang,getSnapshot){
                     table: "Users",
                     where: [
                         ['ke','=',monitorConfig.ke],
-                        ['details','NOT LIKE','%"sub"%'],
+                        ['subAccount','=',`0`],
                     ]
                 },(err,r) => {
                     r = r[0]
