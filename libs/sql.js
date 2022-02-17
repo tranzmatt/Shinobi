@@ -200,9 +200,17 @@ module.exports = function(s,config){
                 table.tinyint('subAccount',1).defaultTo(0)
             }).then(() => {
                 s.systemLog('Created new columns in Users table : subAccount');
-                s.databaseEngine('Users')
-                    .update({'subAccount': '1'})
-                    .where('details', 'like', '%"sub":"1"%');
+                s.systemLog('Updating Sub-Acccounts to use new column');
+                s.knexQuery({
+                    action: "update",
+                    table: "Users",
+                    update: {
+                        subAccount: 1
+                    },
+                    where: [
+                        ['details', 'LIKE', '%"sub"%'],
+                    ]
+                });
             }).catch((err) => {
                 if(err && err.code !== 'ER_DUP_FIELDNAME'){
                     console.log('Error creating new columns in Users table : subAccount')
