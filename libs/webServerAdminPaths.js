@@ -26,7 +26,6 @@ module.exports = function(s,config,lang,app){
             if(form){
                 var keys = ['details']
                 form.details = s.parseJSON(form.details) || {"allmonitors": "1"}
-                form.details.sub = 1
                 const updateQuery = {
                     details: s.stringJSON(form.details)
                 }
