@@ -353,7 +353,7 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
                 }
                 if(!loadedPlayer.PoseidonErrorCount)loadedPlayer.PoseidonErrorCount = 0
                 if(loadedPlayer.PoseidonErrorCount >= 5)return
-                if(monitor.details.stream_flv_type==='ws'){
+                if(subStreamChannel ? details.substream.output.stream_flv_type === 'ws' : monitor.details.stream_flv_type === 'ws'){
                     if(loadedPlayer.Poseidon){
                         loadedPlayer.Poseidon.stop()
                         revokeVideoPlayerUrl(monitorId)

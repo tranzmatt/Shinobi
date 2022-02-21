@@ -1342,6 +1342,25 @@ module.exports = function(s,config,lang){
                               ]
                            },
                            {
+                               name:'detail-substream-input=stream_flv_type',
+                               field:lang['Loop Stream'],
+                               class:'h_i_SUBSTREAM_FIELDS_input h_i_SUBSTREAM_FIELDS_mp4',
+                               hidden:true,
+                               default:'0',
+                               "fieldType": "select",
+                               type:'selector',
+                               possible:[
+                                   {
+                                      "name": lang.HTTP,
+                                      "value": "http",
+                                   },
+                                   {
+                                      "name": lang.Websocket,
+                                      "value": "ws",
+                                   }
+                               ]
+                           },
+                           {
                                name:'detail-substream-input=fulladdress',
                                field:lang['Full URL Path'],
                                placeholder:'Example : rtsp://admin:password@123.123.123.123/stream/1',
