@@ -35,7 +35,7 @@
       "node12"
     ],
     "scripts": [
-      "pluginBase.js"
+      "../pluginBase.js"
     ],
     "assets": [
     ]
