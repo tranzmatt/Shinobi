@@ -34,7 +34,7 @@ module.exports = function(s,config,lang){
                       "name": "mode",
                       "field": lang.Mode,
                       "fieldType": "select",
-                      "description": "This is the primary task of the monitor.",
+                      "description": lang.fieldTextMode,
                       "default": "start",
                       "example": "",
                       "selector": "h_m",
@@ -42,17 +42,17 @@ module.exports = function(s,config,lang){
                          {
                             "name": lang.Disabled,
                             "value": "stop",
-                            "info": "Inactive monitor, no process will be created in this mode."
+                            "info": lang.fieldTextModeIsabled
                          },
                          {
                             "name": lang["Watch-Only"],
                             "value": "start",
-                            "info": "Monitor will only stream, no recording will occur unless otherwise ordered by API or Detector."
+                            "info": lang.fieldTextModeAtchNly
                          },
                          {
                             "name": lang.Record,
                             "value": "record",
-                            "info": "Continuous Recording. Segments are made every 15 minutes by default."
+                            "info": lang.fieldTextModeEcord
                          },
                          {
                             "name": lang.Idle,
@@ -64,31 +64,31 @@ module.exports = function(s,config,lang){
                    {
                       "name": "mid",
                       "field": lang["Monitor ID"],
-                      "description": "This is a non-changeable identifier for the monitor. You can duplicate a monitor by double clicking the Monitor ID and changing it.",
+                      "description": lang.fieldTextMid,
                       "example": s.gid()
                    },
                    {
                       "name": "name",
                       "field": lang.Name,
-                      "description": "This is the human-readable display name for the monitor.",
+                      "description": lang.fieldTextName,
                       "example": "Home-Front"
                    },
                    {
                       "name": "detail=max_keep_days",
                       "field": lang["Number of Days to keep"] + ' ' + lang['Videos'],
                       "placeholder": "Default is Global value.",
-                      "description": "The number of days to keep videos before purging for this monitor specifically.",
+                      "description": lang.fieldTextMaxkeepdays,
                    },
                    {
                       "name": "detail=notes",
                       "field": lang.Notes,
-                      "description": "Comments you want to leave for this camera.",
+                      "description": lang.fieldTextNotes,
                       "fieldType": "textarea",
                    },
                    {
                       "name": "detail=dir",
                       "field": lang["Storage Location"],
-                      "description": "Location of where recorded files will be saved. You can configure more locations with the <code>addStorage</code> variable.",
+                      "description": lang.fieldTextDir,
                       "fieldType": "select",
                       "possible": s.listOfStorage
                   }
@@ -146,49 +146,49 @@ module.exports = function(s,config,lang){
                        "fieldType": "select",
                        "selector": "h_t",
                        "field": lang["Input Type"],
-                       "description": "The method that will used to consume the video stream.",
+                       "description": lang.fieldTextType,
                        "default": "h264",
                        "example": "",
                        "possible": [
                             {
                                "name": "JPEG",
                                "value": "jpeg",
-                               "info": "Reading snapshots from a URL and making a stream and/or video from them."
+                               "info": lang.fieldTextType
                             },
                             {
                                "name": "MJPEG",
                                "value": "mjpeg",
-                               "info": "Similar to JPEG except the frame handling is done by FFMPEG, not Shinobi."
+                               "info": lang.fieldTextType
                             },
                             {
                                "name": "H.264 / H.265 / H.265+",
                                "value": "h264",
-                               "info": "Reading a high quality video streas that sometimes include audio."
+                               "info": lang.fieldTextType264265265
                             },
                             {
                                "name": "HLS (.m3u8)",
                                "value": "hls",
-                               "info": "Reading a high quality video streas that sometimes include audio."
+                               "info": lang.fieldTextTypeM3u8
                             },
                             {
                                "name": "MPEG-4 (.mp4 / .ts)",
                                "value": "mp4",
-                               "info": "A static file. Read at a lower rate and should not be used for an actual live stream."
+                               "info": lang.fieldTextType4Mp4Ts
                             },
                             {
                                "name": "Shinobi Streamer",
                                "value": "socket",
-                               "info": "Websocket JPEG-based P2P stream."
+                               "info": lang.fieldTextTypeHinobiTreamer
                             },
                             {
                                "name": "Dashcam (Streamer v2)",
                                "value": "dashcam",
-                               "info": "Websocket WebM-based P2P stream."
+                               "info": lang.fieldTextTypeAshcamTreamerV2
                             },
                             {
                                "name": lang.Local,
                                "value": "local",
-                               "info": "Reading Capture Cards, Webcams, or Integrated Cameras."
+                               "info": lang.fieldTextTypeOcal
                             },
                             {
                                "evaluation": "!!config.rtmpServer",
@@ -199,7 +199,7 @@ module.exports = function(s,config,lang){
                             {
                                "name": "MxPEG",
                                "value": "mxpeg",
-                               "info": "Mobotix MJPEG Stream"
+                               "info": lang.fieldTextTypeX
                             },
                          ]
                     },
@@ -208,7 +208,7 @@ module.exports = function(s,config,lang){
                        "name": "detail=rtmp_key",
                        "form-group-class": "h_t_input h_t_rtmp",
                        "field": lang['Stream Key'],
-                       "description": "Stream Key for incoming streams on the RTMP port.",
+                       "description": lang.fieldTextRtmpkey,
                        "default": "",
                        "example": "",
                        "possible": ""
@@ -217,7 +217,7 @@ module.exports = function(s,config,lang){
                         hidden:true,
                        "name": "detail=auto_host_enable",
                        "field": lang.Automatic,
-                       "description": "Feed the individual pieces required to build a stream URL or provide the full URL and allow Shinobi to parse it for you.",
+                       "description": lang.fieldTextAutohostenable,
                        "selector": "h_auto_host",
                        "form-group-class": "h_t_input h_t_h264 h_t_hls h_t_mp4 h_t_jpeg h_t_mjpeg h_t_mxpeg",
                        "form-group-class-pre-layer":"h_t_input h_t_h264 h_t_hls h_t_mp4 h_t_jpeg h_t_mjpeg h_t_mxpeg h_t_local",
@@ -240,7 +240,7 @@ module.exports = function(s,config,lang){
                        "name": "detail=auto_host",
                        "field": lang["Full URL Path"],
                        "form-group-class": "h_auto_host_input h_auto_host_1",
-                       "description": "The full Stream URL.",
+                       "description": lang.fieldTextAutohost,
                        "default": "",
                        "example": "rtsp://username:password@123.123.123.123/stream/1",
                        "possible": ""
@@ -249,7 +249,7 @@ module.exports = function(s,config,lang){
                         hidden:true,
                        "name": "protocol",
                        "field": lang["Connection Type"],
-                       "description": "The protocol that will used to consume the video stream.",
+                       "description": lang.fieldTextProtocol,
                        "default": "RTSP",
                        "example": "",
                        "form-group-class": "h_t_input h_t_h264 h_t_hls h_t_mp4 h_t_jpeg h_t_mjpeg",
@@ -286,7 +286,7 @@ module.exports = function(s,config,lang){
                         hidden:true,
                        "name": "detail=rtsp_transport",
                        "field": lang["RTSP Transport"],
-                       "description": "The transport protocol your camera will use. TCP is usually the best choice.",
+                       "description": lang.fieldTextRtsptransport,
                        "default": "",
                        "example": "",
                        "form-group-class": "h_t_input h_t_h264 h_t_hls h_t_mp4 h_t_jpeg h_t_mjpeg",
@@ -297,22 +297,22 @@ module.exports = function(s,config,lang){
                            {
                               "name": lang.Auto,
                               "value": "no",
-                              "info": "Let FFMPEG decide. Normally it will try UDP first."
+                              "info": lang.fieldTextRtsptransportUto
                            },
                            {
                               "name": "TCP",
                               "value": "tcp",
-                              "info": "Set it to this if UDP starts giving undesired results."
+                              "info": lang.fieldTextRtsptransport
                            },
                            {
                               "name": "UDP",
                               "value": "udp",
-                              "info": "FFMPEG tries this first."
+                              "info": lang.fieldTextRtsptransport
                            },
                            {
                               "name": "HTTP",
                               "value": "http",
-                              "info": "Standard connection method."
+                              "info": lang.fieldTextRtsptransport
                            }
                         ]
                     },
@@ -320,7 +320,7 @@ module.exports = function(s,config,lang){
                         hidden:true,
                        "name": "detail=muser",
                        "field": lang.Username,
-                       "description": "The user login for your camera",
+                       "description": lang.fieldTextMuser,
                        "default": "",
                        "example": "kittenFinder",
                        "form-group-class": "h_t_input h_t_h264 h_t_hls h_t_mp4 h_t_jpeg h_t_mjpeg",
@@ -332,7 +332,7 @@ module.exports = function(s,config,lang){
                        "name": "detail=mpass",
                        "fieldType": "password",
                        "field": lang.Password,
-                       "description": "The password for your camera",
+                       "description": lang.fieldTextMpass,
                        "default": "",
                        "example": "kittenCuddler",
                        "form-group-class": "h_t_input h_t_h264 h_t_hls h_t_mp4 h_t_jpeg h_t_mjpeg",
@@ -343,7 +343,7 @@ module.exports = function(s,config,lang){
                         hidden:true,
                        "name": "host",
                        "field": lang.Host,
-                       "description": "Connection address",
+                       "description": lang.fieldTextHost,
                        "default": "",
                        "example": "111.111.111.111",
                        "form-group-class": "h_t_input h_t_h264 h_t_hls h_t_mp4 h_t_jpeg h_t_mjpeg",
@@ -354,7 +354,7 @@ module.exports = function(s,config,lang){
                         hidden:true,
                        "name": "port",
                        "field": lang.Port,
-                       "description": "Port number that your camera is streaming out on.",
+                       "description": lang.fieldTextPort,
                        "default": "80",
                        "example": "554",
                        "possible": "1-65535",
@@ -365,7 +365,7 @@ module.exports = function(s,config,lang){
                         hidden:true,
                        "name": "detail=port_force",
                        "field": lang["Force Port"],
-                       "description": "Using the default web port can allow automatic switch to other ports for streams like RTSP.",
+                       "description": lang.fieldTextPortforce,
                        "default": "0",
                        "example": "",
                        "form-group-class": "h_t_input h_t_h264 h_t_hls h_t_mp4 h_t_jpeg h_t_mjpeg",
@@ -386,7 +386,7 @@ module.exports = function(s,config,lang){
                         hidden:true,
                        "name": "path",
                        "field": lang.Path,
-                       "description": "The path to your camera",
+                       "description": lang.fieldTextPath,
                        "default": "",
                        "example": "/videostream.cgi?1",
                        "possible": "",
@@ -397,7 +397,7 @@ module.exports = function(s,config,lang){
                         hidden:true,
                        "name": "detail=fatal_max",
                        "field": lang['Retry Connection'],
-                       "description": "The number of times to retry for network connection between the server and camera before setting the monitor to Disabled. No decimals. Set to 0 to retry forever.",
+                       "description": lang.fieldTextFatalmax,
                        "default": "10",
                        "example": "",
                        "possible": "",
@@ -405,7 +405,7 @@ module.exports = function(s,config,lang){
                     {
                        "name": "detail=skip_ping",
                        "field": lang['Skip Ping'],
-                       "description": "Choose if a successful ping is required before a monitor process is started.",
+                       "description": lang.fieldTextSkipping,
                        "default": "0",
                        "example": "",
                        "fieldType": "select",
@@ -423,7 +423,7 @@ module.exports = function(s,config,lang){
                     {
                        "name": "detail=is_onvif",
                        "field": lang.ONVIF,
-                       "description": "Is this an ONVIF compliant camera?",
+                       "description": lang.fieldTextIsonvif,
                        "default": "0",
                        "example": "",
                        "selector": "h_onvif",
@@ -442,7 +442,7 @@ module.exports = function(s,config,lang){
                     {
                        "name": "detail=onvif_non_standard",
                        "field": lang['Non-Standard ONVIF'],
-                       "description": "Is this a Non-Standard ONVIF camera?",
+                       "description": lang.fieldTextOnvifnonstandard,
                        "default": "0",
                        "example": "",
                        "form-group-class": "h_onvif_input h_onvif_1",
@@ -522,7 +522,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=aduration",
                       "field": lang["Analyzation Duration"],
-                      "description": "Specify how many microseconds are analyzed to probe the input. Set to 100000 if you are using RTSP and having stream issues.",
+                      "description": lang.fieldTextAduration,
                       "default": "",
                       "example": "100000",
                       "possible": ""
@@ -530,7 +530,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=probesize",
                       "field": lang["Probe Size"],
-                      "description": "Specify how big to make the analyzation probe for the input. Set to 100000 if you are using RTSP and having stream issues.",
+                      "description": lang.fieldTextProbesize,
                       "default": "",
                       "example": "100000",
                       "possible": ""
@@ -539,7 +539,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                       "name": "detail=stream_loop",
                       "field": lang['Loop Stream'],
-                      "description": "Loop a static file so the file stream behaves like a live stream.",
+                      "description": lang.fieldTextStreamloop,
                       "default": "1",
                       "example": "",
                       "form-group-class": "h_t_input h_t_mp4 h_t_local",
@@ -558,7 +558,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=sfps",
                       "field": lang['Monitor Capture Rate'],
-                      "description": "Specify the Frame Rate (FPS) in which the camera is providing its stream in.",
+                      "description": lang.fieldTextSfps,
                       "default": "",
                       "example": "25",
                       "possible": ""
@@ -566,7 +566,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=wall_clock_timestamp_ignore",
                       "field": lang['Use Camera Timestamps'],
-                      "description": "Base all incoming camera data in camera time instead of server time.",
+                      "description": lang.fieldTextWallclocktimestampignore,
                       "default": "0",
                       "example": "",
                       "form-group-class": "h_t_input h_t_h264",
@@ -586,7 +586,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                       "name": "height",
                       "field": lang["Height"],
-                      "description": "Height of the stream image.",
+                      "description": lang.fieldTextHeight,
                       "default": "480",
                       "example": "720, 0 for Auto",
                       "possible": ""
@@ -595,7 +595,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                       "name": "width",
                       "field": lang["Width"],
-                      "description": "Width of the stream image.",
+                      "description": lang.fieldTextWidth,
                       "default": "640",
                       "example": "1280, 0 for Auto",
                       "possible": ""
@@ -603,7 +603,7 @@ module.exports = function(s,config,lang){
                    {
                      "name": "detail=accelerator",
                      "field": lang.Accelerator,
-                     "description": "Hardware Acceleration (HWAccel) for decoding streams.",
+                     "description": lang.fieldTextAccelerator,
                      "default": "",
                      "example": "",
                      "selector": "h_gpud",
@@ -622,7 +622,7 @@ module.exports = function(s,config,lang){
                    {
                         "name": "detail=hwaccel",
                         "field": lang.hwaccel,
-                        "description": "Decoding Engine",
+                        "description": lang.fieldTextHwaccel,
                         "default": "",
                         "example": "",
                         "form-group-class": "h_gpud_input h_gpud_1",
@@ -632,7 +632,7 @@ module.exports = function(s,config,lang){
                    {
                         "name": "detail=hwaccel_vcodec",
                         "field": lang.hwaccel_vcodec,
-                        "description": "Decoding Engine",
+                        "description": lang.fieldTextHwaccelvcodec,
                         "default": "",
                         "example": "",
                         "form-group-class": "h_gpud_input h_gpud_1",
@@ -730,7 +730,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=stream_type",
                       "field": lang["Stream Type"],
-                      "description": "The method that will used to consume the video stream.",
+                      "description": lang.fieldTextStreamtype,
                       "default": "mp4",
                       "example": "",
                       "selector": "h_st",
@@ -740,12 +740,12 @@ module.exports = function(s,config,lang){
                            {
                               "name": lang.Poseidon,
                               "value": "mp4",
-                              "info": "Poseidon is built on Kevin Godell's MP4 processing code. It simulates a streaming MP4 file but using the data of a live stream. Includes Audio. Some browsers can play it like a regular MP4 file. Streams over HTTP or WebSocket."
+                              "info": lang.fieldTextStreamtypeOseidon
                            },
                            {
                               "name": lang['Base64 over Websocket'],
                               "value": "b64",
-                              "info": "Sending Base64 encoded frames over WebSocket. This avoids caching but there is no audio."
+                              "info": lang.fieldTextStreamtypeAse64OverEbsocket
                            },
                            {
                               "name": lang['JPEG (Auto Enables JPEG API)'],
@@ -754,17 +754,17 @@ module.exports = function(s,config,lang){
                            {
                               "name": lang['MJPEG'],
                               "value": "mjpeg",
-                              "info": "Standard Motion JPEG image. No audio."
+                              "info": lang.fieldTextStreamtype
                            },
                            {
                               "name": lang['FLV'],
                               "value": "flv",
-                              "info": "Sending FLV encoded frames over WebSocket."
+                              "info": lang.fieldTextStreamtype
                            },
                            {
                               "name": lang['HLS (includes Audio)'],
                               "value": "hls",
-                              "info": "Similar method to facebook live streams. <b>Includes audio</b> if input provides it. There is a delay of about 4-6 seconds because this method records segments then pushes them to the client rather than push as while it creates them."
+                              "info": lang.fieldTextStreamtypeIncludesUdio
                           },
                            {
                               "name": lang.useSubStreamOnlyWhenWatching,
@@ -776,7 +776,7 @@ module.exports = function(s,config,lang){
                        hidden:true,
                        "name": "detail=stream_flv_type",
                        "field": lang["Connection Type"],
-                       "description": "This is for the Shinobi dashboard only. Both stream methods are still active and ready to use.",
+                       "description": lang.fieldTextStreamflvtype,
                        "default": "0",
                        "example": "",
                        "fieldType": "select",
@@ -816,7 +816,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=stream_vcodec",
                       "field": lang['Video Codec'],
-                      "description": "Video codec for streaming.",
+                      "description": lang.fieldTextStreamvcodec,
                       "default": "copy",
                       "example": "",
                       "form-group-class": "h_st_input h_st_hls h_st_flv h_st_mp4",
@@ -826,22 +826,22 @@ module.exports = function(s,config,lang){
                          {
                             "name": lang.Auto,
                             "value": "no",
-                            "info": "Let FFMPEG choose."
+                            "info": lang.fieldTextStreamvcodecUto
                          },
                          {
                             "name": "libx264",
                             "value": "libx264",
-                            "info": "Used for MP4 video."
+                            "info": lang.fieldTextStreamvcodecLibx264
                          },
                          {
                             "name": "libx265",
                             "value": "libx265",
-                            "info": "Used for MP4 video."
+                            "info": lang.fieldTextStreamvcodecLibx265
                          },
                          {
                             "name": lang.copy,
                             "value": "copy",
-                            "info": "Used for MP4 video. Has very low CPU usage but cannot use video filters and filesizes may be gigantic.  Best to setup your MP4 settings camera-side when using this option."
+                            "info": lang.fieldTextStreamvcodecCopy
                          },
                          {
                              "name": lang['Hardware Accelerated'],
@@ -897,7 +897,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=stream_acodec",
                       "field": lang["Audio Codec"],
-                      "description": "Audio codec for streaming.",
+                      "description": lang.fieldTextStreamacodec,
                       "default": "0",
                       "example": "",
                       "fieldType": "select",
@@ -905,42 +905,42 @@ module.exports = function(s,config,lang){
                       "possible": [
                          {
                             "name": lang.Auto,
-                            "info": "Let FFMPEG choose.",
+                            "info": lang.fieldTextStreamacodecUto,
                             "value": ""
                          },
                          {
                             "name": lang["No Audio"],
-                            "info": "No Audio, this is an option that must be set in some parts of the world due to legal reasons.",
+                            "info": lang.fieldTextStreamacodecOUdio,
                             "value": "no"
                          },
                          {
                             "name": "libvorbis",
-                            "info": "Used for WebM video.",
+                            "info": lang.fieldTextStreamacodecLibvorbis,
                             "value": "libvorbis"
                          },
                          {
                             "name": "libopus",
-                            "info": "Used for WebM video.",
+                            "info": lang.fieldTextStreamacodecLibopus,
                             "value": "libopus"
                          },
                          {
                             "name": "libmp3lame",
-                            "info": "Used for MP4 video.",
+                            "info": lang.fieldTextStreamacodecLibmp3lame,
                             "value": "libmp3lame"
                          },
                          {
                             "name": "aac",
-                            "info": "Used for MP4 video.",
+                            "info": lang.fieldTextStreamacodecAac,
                             "value": "aac"
                          },
                          {
                             "name": "ac3",
-                            "info": "Used for MP4 video.",
+                            "info": lang.fieldTextStreamacodecAc3,
                             "value": "ac3"
                          },
                          {
                             "name": "copy",
-                            "info": "Used for MP4 video. Has very low CPU usage but some audio codecs need custom flags like <code>-strict 2</code> for aac.",
+                            "info": lang.fieldTextStreamacodecCopy,
                             "value": "copy"
                          }
                       ]
@@ -948,7 +948,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=hls_time",
                       "field": "HLS Segment Length",
-                      "description": "How long each video segment should be, in minutes. Each segment will be drawn by the client through an m3u8 file. Shorter segments take less space.",
+                      "description": lang.fieldTextHlstime,
                       "default": "2",
                       "example": "",
                       "form-group-class": "h_st_input h_st_hls",
@@ -957,7 +957,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=hls_list_size",
                       "field": "HLS List Size",
-                      "description": "The number of segments maximum before deleting old segments automatically.",
+                      "description": lang.fieldTextHlslistsize,
                       "default": "2",
                       "example": "",
                       "form-group-class": "h_st_input h_st_hls",
@@ -966,7 +966,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=preset_stream",
                       "field": "HLS Preset",
-                      "description": "Preset flag for certain video encoders. If you find your camera is crashing every few seconds : try leaving it blank.",
+                      "description": lang.fieldTextPresetstream,
                       "default": "",
                       "example": "ultrafast",
                       "form-group-class": "h_st_input h_st_hls h_st_flv h_st_mp4",
@@ -975,7 +975,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=stream_quality",
                       "field": lang.Quality,
-                      "description": "Low number means higher quality. Higher number means less quality.",
+                      "description": lang.fieldTextStreamquality,
                       "default": "15",
                       "example": "1",
                       "form-group-class": "h_st_input h_st_mjpeg h_st_b64 h_st_hls h_st_gif h_st_flv h_st_mp4 h_hls_v_input h_hls_v_libx264 h_hls_v_libx265 h_hls_v_h264_nvenc h_hls_v_hevc_nvenc h_hls_v_no",
@@ -984,7 +984,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=stream_fps",
                       "field": lang['Frame Rate'],
-                      "description": "The speed in which frames are displayed to clients, in Frames Per Second. Be aware there is no default. This can lead to high bandwidth usage.",
+                      "description": lang.fieldTextStreamfps,
                       "default": "",
                       "example": "1",
                       "form-group-class": "h_st_input h_st_mjpeg h_st_b64 h_st_hls h_st_gif h_st_flv h_st_mp4 h_hls_v_input h_hls_v_libx264 h_hls_v_libx265 h_hls_v_h264_nvenc h_hls_v_hevc_nvenc h_hls_v_no",
@@ -993,7 +993,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=stream_scale_x",
                       "field": lang.Width,
-                      "description": "Width of the stream image that is output after processing.",
+                      "description": lang.fieldTextStreamscalex,
                       "default": "",
                       "fieldType": "number",
                       "numberMin": "1",
@@ -1004,7 +1004,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=stream_scale_y",
                       "field": lang.Height,
-                      "description": "Height of the stream image that is output after processing.",
+                      "description": lang.fieldTextStreamscaley,
                       "default": "",
                       "fieldType": "number",
                       "numberMin": "1",
@@ -1015,7 +1015,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=stream_rotate",
                       "field": lang["Rotate"],
-                      "description": "Change the viewing angle of the video stream.",
+                      "description": lang.fieldTextStreamrotate,
                       "default": "",
                       "example": "",
                       "fieldType": "select",
@@ -1050,7 +1050,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=signal_check",
                       "field": lang["Check Signal Interval"],
-                      "description": "How often your client will check the stream to see if it is alive. This is calculated in minutes.",
+                      "description": lang.fieldTextSignalcheck,
                       "default": "0",
                       "example": "",
                       "possible": ""
@@ -1058,7 +1058,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=signal_check_log",
                       "field": lang["Log Signal Event"],
-                      "description": "This is for the client side only. It will display in the log thread when client side signal checks occur.",
+                      "description": lang.fieldTextSignalchecklog,
                       "default": "0",
                       "example": "",
                       "fieldType": "select",
@@ -1076,7 +1076,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=stream_vf",
                       "field": lang["Video Filter"],
-                      "description": "Place FFMPEG video filters in this box to affect the streaming portion. No spaces.",
+                      "description": lang.fieldTextStreamvf,
                       "default": "",
                       "example": "",
                       "form-group-class": "h_st_input h_st_mjpeg h_st_b64 h_st_hls h_st_gif h_st_flv h_st_mp4 h_hls_v_input h_hls_v_libx264 h_hls_v_libx265 h_hls_v_h264_nvenc h_hls_v_hevc_nvenc h_hls_v_no",
@@ -1085,7 +1085,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=tv_channel",
                       "field": lang["TV Channel"],
-                      "description": "This monitor will have TV Channel features enabled. You will be able to view it in your TV Channel list.",
+                      "description": lang.fieldTextTvchannel,
                       "default": "",
                       "selector": "h_tvc",
                       "fieldType": "select",
@@ -1104,7 +1104,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=tv_channel_id",
                       "field": lang["TV Channel ID"],
-                      "description": "A Custom ID for the Channel.",
+                      "description": lang.fieldTextTvchannelid,
                       "default": "",
                       "example": "",
                       "form-group-class": "h_tvc_input h_tvc_1",
@@ -1113,7 +1113,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=tv_channel_group_title",
                       "field": lang["TV Channel Group"],
-                      "description": "A Custom Group for the Channel.",
+                      "description": lang.fieldTextTvchannelgrouptitle,
                       "default": "",
                       "example": "",
                       "form-group-class": "h_tvc_input h_tvc_1",
@@ -1133,7 +1133,7 @@ module.exports = function(s,config,lang){
                        "name": "detail=stream_timestamp",
                        "selector":"h_stm",
                        "field": lang.Enabled,
-                       "description": "A clock that is burned onto the frames of the video stream.",
+                       "description": lang.fieldTextStreamtimestamp,
                        "default": "0",
                        "example": "",
                        "fieldType": "select",
@@ -1152,7 +1152,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                       "name": "detail=stream_timestamp_font",
                       "field": "Font Path",
-                      "description": "Font File to style your timestamp.",
+                      "description": lang.fieldTextStreamtimestampfont,
                       "default": "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
                       "example": "",
                       "form-group-class": "h_stm_input h_stm_1",
@@ -1162,7 +1162,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                       "name": "detail=stream_timestamp_font_size",
                       "field": "Font Size",
-                      "description": "Font size in pt.",
+                      "description": lang.fieldTextStreamtimestampfontsize,
                       "default": "10",
                       "example": "",
                       "form-group-class": "h_stm_input h_stm_1",
@@ -1172,7 +1172,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                       "name": "detail=stream_timestamp_color",
                       "field": "Text Color",
-                      "description": "Timstamp text color.",
+                      "description": lang.fieldTextStreamtimestampcolor,
                       "default": "white",
                       "example": "",
                       "form-group-class": "h_stm_input h_stm_1",
@@ -1182,7 +1182,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                       "name": "detail=stream_timestamp_box_color",
                       "field": "Text Box Color",
-                      "description": "Timstamp backdrop color.",
+                      "description": lang.fieldTextStreamtimestampboxcolor,
                       "default": "0x00000000@1",
                       "example": "",
                       "form-group-class": "h_stm_input h_stm_1",
@@ -1192,7 +1192,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                       "name": "detail=stream_timestamp_x",
                       "field": "Position X",
-                      "description": "Horiztonal Position of Timestamp",
+                      "description": lang.fieldTextStreamtimestampx,
                       "default": "(w-tw)/2",
                       "example": "",
                       "form-group-class": "h_stm_input h_stm_1",
@@ -1202,7 +1202,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                       "name": "detail=stream_timestamp_y",
                       "field": "Position Y",
-                      "description": "Vertical Position of Timestamp",
+                      "description": lang.fieldTextStreamtimestampy,
                       "default": "0",
                       "example": "",
                       "form-group-class": "h_stm_input h_stm_1",
@@ -1221,7 +1221,7 @@ module.exports = function(s,config,lang){
                     {
                        "name": "detail=stream_watermark",
                        "field": lang.Enabled,
-                       "description": "An image that is burned onto the frames of the video stream.",
+                       "description": lang.fieldTextStreamwatermark,
                        "default": "0",
                        "example": "",
                        "fieldType": "select",
@@ -1241,7 +1241,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                       "name": "detail=stream_watermark_location",
                       "field": lang['Image Location'],
-                      "description": "Image Location that will be used as Watermark.",
+                      "description": lang.fieldTextStreamwatermarklocation,
                       "default": "0",
                       "example": "/usr/share/watermark.logo",
                       "form-group-class": "h_wat_input h_wat_1",
@@ -1251,7 +1251,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                        "name": "detail=stream_watermark_position",
                        "field": lang['Image Position'],
-                       "description": "An image that is burned onto the frames of the video stream.",
+                       "description": lang.fieldTextStreamwatermarkposition,
                        "default": "0",
                        "example": "",
                        "fieldType": "select",
@@ -1415,18 +1415,18 @@ module.exports = function(s,config,lang){
                                    {
                                       "name": lang.Auto,
                                       "value": "",
-                                      "info": "Let FFMPEG decide. Normally it will try UDP first.",
+                                      "info": lang.fieldTextDetailSubstreamInputrtsptransportUto,
                                       selected: true,
                                    },
                                    {
                                       "name": "TCP",
                                       "value": "tcp",
-                                      "info": "Set it to this if UDP starts giving undesired results."
+                                      "info": lang.fieldTextDetailSubstreamInputrtsptransport
                                    },
                                    {
                                       "name": "UDP",
                                       "value": "udp",
-                                      "info": "FFMPEG tries this first."
+                                      "info": lang.fieldTextDetailSubstreamInputrtsptransport
                                    }
                                ]
                            },
@@ -1557,7 +1557,7 @@ module.exports = function(s,config,lang){
                            {
                               "field": lang["Stream Type"],
                               "name": `detail-substream-output="stream_type"`,
-                              "description": "The method that will used to consume the video stream.",
+                              "description": lang.fieldTextDetailSubstreamOutputstreamtype,
                               "default": "hls",
                               "selector": "h_st_channel_SUBSTREAM_FIELDS",
                               "fieldType": "select",
@@ -1591,7 +1591,7 @@ module.exports = function(s,config,lang){
                            {
                               "field": lang['Video Codec'],
                               "name": `detail-substream-output="stream_vcodec"`,
-                              "description": "Video codec for streaming.",
+                              "description": lang.fieldTextDetailSubstreamOutputstreamvcodec,
                               "default": "copy",
                               "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264",
                               "fieldType": "select",
@@ -1600,23 +1600,23 @@ module.exports = function(s,config,lang){
                                  {
                                     "name": lang.Auto,
                                     "value": "no",
-                                    "info": "Let FFMPEG choose.",
+                                    "info": lang.fieldTextDetailSubstreamOutputstreamvcodecUto,
                                     selected: true,
                                  },
                                  {
                                     "name": "libx264",
                                     "value": "libx264",
-                                    "info": "Used for MP4 video."
+                                    "info": lang.fieldTextDetailSubstreamOutputstreamvcodecLibx264
                                  },
                                  {
                                     "name": "libx265",
                                     "value": "libx265",
-                                    "info": "Used for MP4 video."
+                                    "info": lang.fieldTextDetailSubstreamOutputstreamvcodecLibx265
                                  },
                                  {
                                     "name": lang.copy,
                                     "value": "copy",
-                                    "info": "Used for MP4 video. Has very low CPU usage but cannot use video filters and filesizes may be gigantic.  Best to setup your MP4 settings camera-side when using this option."
+                                    "info": lang.fieldTextDetailSubstreamOutputstreamvcodecCopy
                                  },
                                  {
                                      "name": lang['Hardware Accelerated'],
@@ -1672,7 +1672,7 @@ module.exports = function(s,config,lang){
                            {
                               "field": lang["Audio Codec"],
                               "name": `detail-substream-output="stream_acodec"`,
-                              "description": "Audio codec for streaming.",
+                              "description": lang.fieldTextDetailSubstreamOutputstreamacodec,
                               "default": "",
                               "example": "",
                               "fieldType": "select",
@@ -1680,43 +1680,43 @@ module.exports = function(s,config,lang){
                               "possible": [
                                  {
                                     "name": lang.Auto,
-                                    "info": "Let FFMPEG choose.",
+                                    "info": lang.fieldTextDetailSubstreamOutputstreamacodecUto,
                                     "value": "",
                                     selected: true,
                                  },
                                  {
                                     "name": lang["No Audio"],
-                                    "info": "No Audio, this is an option that must be set in some parts of the world due to legal reasons.",
+                                    "info": lang.fieldTextDetailSubstreamOutputstreamacodecOUdio,
                                     "value": "no"
                                  },
                                  {
                                     "name": "libvorbis",
-                                    "info": "Used for WebM video.",
+                                    "info": lang.fieldTextDetailSubstreamOutputstreamacodecLibvorbis,
                                     "value": "libvorbis"
                                  },
                                  {
                                     "name": "libopus",
-                                    "info": "Used for WebM video.",
+                                    "info": lang.fieldTextDetailSubstreamOutputstreamacodecLibopus,
                                     "value": "libopus"
                                  },
                                  {
                                     "name": "libmp3lame",
-                                    "info": "Used for MP4 video.",
+                                    "info": lang.fieldTextDetailSubstreamOutputstreamacodecLibmp3lame,
                                     "value": "libmp3lame"
                                  },
                                  {
                                     "name": "aac",
-                                    "info": "Used for MP4 video.",
+                                    "info": lang.fieldTextDetailSubstreamOutputstreamacodecAac,
                                     "value": "aac"
                                  },
                                  {
                                     "name": "ac3",
-                                    "info": "Used for MP4 video.",
+                                    "info": lang.fieldTextDetailSubstreamOutputstreamacodecAc3,
                                     "value": "ac3"
                                  },
                                  {
                                     "name": "copy",
-                                    "info": "Used for MP4 video. Has very low CPU usage but some audio codecs need custom flags like <code>-strict 2</code> for aac.",
+                                    "info": lang.fieldTextDetailSubstreamOutputstreamacodecCopy,
                                     "value": "copy"
                                  }
                               ]
@@ -1724,28 +1724,28 @@ module.exports = function(s,config,lang){
                            {
                               "name": "detail-substream-output=hls_time",
                               "field": lang["HLS Segment Length"],
-                              "description": "How long each video segment should be, in minutes. Each segment will be drawn by the client through an m3u8 file. Shorter segments take less space.",
+                              "description": lang.fieldTextDetailSubstreamOutputhlstime,
                               "default": "2",
                               "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_hls",
                            },
                            {
                               "name": "detail-substream-output=hls_list_size",
                               "field": lang["HLS List Size"],
-                              "description": "The number of segments maximum before deleting old segments automatically.",
+                              "description": lang.fieldTextDetailSubstreamOutputhlslistsize,
                               "default": "2",
                               "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_hls",
                            },
                            {
                               "name": "detail-substream-output=preset_stream",
                               "field": lang["HLS Preset"],
-                              "description": "Preset flag for certain video encoders. If you find your camera is crashing every few seconds : try leaving it blank.",
+                              "description": lang.fieldTextDetailSubstreamOutputpresetstream,
                               "example": "ultrafast",
                               "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_hls",
                            },
                            {
                               "name": "detail-substream-output=stream_quality",
                               "field": lang.Quality,
-                              "description": "Low number means higher quality. Higher number means less quality.",
+                              "description": lang.fieldTextDetailSubstreamOutputstreamquality,
                               "default": "15",
                               "example": "1",
                               // "form-group-class-pre-layer": "h_hls_v_channel_SUBSTREAM_FIELDS_input h_hls_v_channel_SUBSTREAM_FIELDS_libx264 h_hls_v_channel_SUBSTREAM_FIELDS_libx265 h_hls_v_channel_SUBSTREAM_FIELDS_h264_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_hevc_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_no",
@@ -1769,14 +1769,14 @@ module.exports = function(s,config,lang){
                            {
                               "name": "detail-substream-output=stream_fps",
                               "field": lang['Frame Rate'],
-                              "description": "The speed in which frames are displayed to clients, in Frames Per Second. Be aware there is no default. This can lead to high bandwidth usage.",
+                              "description": lang.fieldTextDetailSubstreamOutputstreamfps,
                               // "form-group-class-pre-layer": "h_hls_v_channel_SUBSTREAM_FIELDS_input h_hls_v_channel_SUBSTREAM_FIELDS_libx264 h_hls_v_channel_SUBSTREAM_FIELDS_libx265 h_hls_v_channel_SUBSTREAM_FIELDS_h264_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_hevc_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_no",
                               "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_mjpeg h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_jsmpeg h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264",
                            },
                            {
                               "name": "detail-substream-output=stream_scale_x",
                               "field": lang.Width,
-                              "description": "Width of the stream image that is output after processing.",
+                              "description": lang.fieldTextDetailSubstreamOutputstreamscalex,
                               "fieldType": "number",
                               "numberMin": "1",
                               "example": "640",
@@ -1786,7 +1786,7 @@ module.exports = function(s,config,lang){
                            {
                               "name": "detail-substream-output=stream_scale_y",
                               "field": lang.Height,
-                              "description": "Height of the stream image that is output after processing.",
+                              "description": lang.fieldTextDetailSubstreamOutputstreamscaley,
                               "fieldType": "number",
                               "numberMin": "1",
                               "example": "480",
@@ -1796,7 +1796,7 @@ module.exports = function(s,config,lang){
                            {
                               "name": "detail-substream-output=stream_rotate",
                               "field": lang["Rotate"],
-                              "description": "Change the viewing angle of the video stream.",
+                              "description": lang.fieldTextDetailSubstreamOutputstreamrotate,
                               "fieldType": "select",
                               // "form-group-class-pre-layer": "h_hls_v_channel_SUBSTREAM_FIELDS_input h_hls_v_channel_SUBSTREAM_FIELDS_libx264 h_hls_v_channel_SUBSTREAM_FIELDS_libx265 h_hls_v_channel_SUBSTREAM_FIELDS_h264_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_hevc_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_no",
                               "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_mjpeg h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_jsmpeg h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264",
@@ -1830,7 +1830,7 @@ module.exports = function(s,config,lang){
                            {
                               "name": "detail-substream-output=svf",
                               "field": lang["Video Filter"],
-                              "description": "Place FFMPEG video filters in this box to affect the streaming portion. No spaces.",
+                              "description": lang.fieldTextDetailSubstreamOutputsvf,
                               // "form-group-class-pre-layer": "h_hls_v_channel_SUBSTREAM_FIELDS_input h_hls_v_channel_SUBSTREAM_FIELDS_libx264 h_hls_v_channel_SUBSTREAM_FIELDS_libx265 h_hls_v_channel_SUBSTREAM_FIELDS_h264_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_hevc_nvenc h_hls_v_channel_SUBSTREAM_FIELDS_no",
                               "form-group-class": "h_st_channel_SUBSTREAM_FIELDS_input h_st_channel_SUBSTREAM_FIELDS_mjpeg h_st_channel_SUBSTREAM_FIELDS_hls h_st_channel_SUBSTREAM_FIELDS_rtmp h_st_channel_SUBSTREAM_FIELDS_jsmpeg h_st_channel_SUBSTREAM_FIELDS_flv h_st_channel_SUBSTREAM_FIELDS_mp4 h_st_channel_SUBSTREAM_FIELDS_h264",
                           },
@@ -1853,7 +1853,7 @@ module.exports = function(s,config,lang){
                     {
                        "name": "detail=snap",
                        "field": lang.Enabled,
-                       "description": "Get the latest frame in JPEG.",
+                       "description": lang.fieldTextSnap,
                        "default": "0",
                        "example": "",
                        "fieldType": "select",
@@ -1924,7 +1924,7 @@ module.exports = function(s,config,lang){
                     // {
                     //    "name": "height",
                     //    "field": lang.Height,
-                    //    "description": "Height of the stream image.",
+                    //    "description": lang.fieldTextRecordscaley,
                     //    "default": "640",
                     //    "example": "1280",
                     //    "possible": ""
@@ -1932,7 +1932,7 @@ module.exports = function(s,config,lang){
                     // {
                     //    "name": "width",
                     //    "field": lang.Width,
-                    //    "description": "Width of the stream image.",
+                    //    "description": lang.fieldTextRecordscalex,
                     //    "default": "480",
                     //    "example": "720",
                     //    "possible": ""
@@ -1940,7 +1940,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "ext",
                       "field": lang["Record File Type"],
-                      "description": "The file type for your recorded video file.",
+                      "description": lang.fieldTextExt,
                       "default": "MP4",
                       "example": "",
                       "selector": "h_f",
@@ -1949,19 +1949,19 @@ module.exports = function(s,config,lang){
                          {
                             "name": "MP4",
                             "value": "mp4",
-                            "info": "This file type is playable is almost all modern web browsers, that includes mobile. The filesize just tends to be larger unless you lower the quality."
+                            "info": lang.fieldTextExt4
                          },
                          {
                             "name": "WebM",
                             "value": "webm",
-                            "info": "Small filesize, low client compatibility. Good for uploading to sites like YouTube."
+                            "info": lang.fieldTextExtEb
                          }
                       ]
                    },
                    {
                       "name": "detail=vcodec",
                       "field": lang["Video Codec"],
-                      "description": "Video codec for recording.",
+                      "description": lang.fieldTextVcodec,
                       "default": "copy",
                       "example": "",
                       "selector": "h_vc",
@@ -2064,7 +2064,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=crf",
                       "field": lang.Quality,
-                      "description": "Low number means higher quality. Higher number means less quality.",
+                      "description": lang.fieldTextCrf,
                       "default": "15",
                       "example": "1",
                       "form-group-class": "h_vc_input h_vc_libvpx h_vc_libvpx-vp9 h_vc_libx264 h_vc_libx265 h_vc_hevc_nvenc h_vc_h264_nvenc h_vc_h264_vaapi h_vc_hevc_vaapi h_vc_h264_qsv h_vc_hevc_qsv h_vc_mpeg2_qsv h_vc_default h_vc_none",
@@ -2073,7 +2073,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=preset_record",
                       "field": lang.Preset,
-                      "description": "Preset flag for certain video encoders. If you find your camera is crashing every few seconds : try leaving it blank.",
+                      "description": lang.fieldTextPresetrecord,
                       "default": "",
                       "example": "ultrafast",
                       "form-group-class": "h_vc_input h_vc_libvpx h_vc_libvpx-vp9 h_vc_libx264 h_vc_libx265 h_vc_hevc_nvenc h_vc_h264_nvenc h_vc_h264_vaapi h_vc_hevc_vaapi h_vc_h264_qsv h_vc_hevc_qsv h_vc_mpeg2_qsv h_vc_default h_vc_none",
@@ -2082,7 +2082,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=acodec",
                       "field": lang['Audio Codec'],
-                      "description": "Audio codec for recording.",
+                      "description": lang.fieldTextAcodec,
                       "default": "0",
                       "example": "",
                       "fieldType": "select",
@@ -2138,7 +2138,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "fps",
                       "field": lang["Video Record Rate"],
-                      "description": "The speed in which frames are recorded to files, Frames Per Second. Be aware there is no default. This can lead to large files. Best to set this camera-side.",
+                      "description": lang.fieldTextFps,
                       "default": "",
                       "example": "2",
                       "form-group-class": "h_vc_input h_vc_libvpx h_vc_libvpx-vp9 h_vc_libx264 h_vc_libx265 h_vc_hevc_nvenc h_vc_h264_nvenc h_vc_h264_vaapi h_vc_hevc_vaapi h_vc_h264_qsv h_vc_hevc_qsv h_vc_mpeg2_qsv h_vc_default h_vc_none",
@@ -2165,7 +2165,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=cutoff",
                       "field": lang['Recording Segment Interval'],
-                      "description": "In minutes. When to slice off and start a new video file.",
+                      "description": lang.fieldTextCutoff,
                       "default": "15",
                       "example": "60",
                       "attribute": `triggerChange="#add_monitor [detail=vcodec]"`,
@@ -2174,7 +2174,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=rotate",
                       "field": lang["Rotate"],
-                      "description": "Change the recording angle of the video stream.",
+                      "description": lang.fieldTextRotate,
                       "default": "copy",
                       "example": "",
                       "selector": "h_vc",
@@ -2210,7 +2210,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=vf",
                       "field": lang['Record Video Filter'],
-                      "description": "Place FFMPEG video filters in this box to affect the recording portion. No spaces.",
+                      "description": lang.fieldTextVf,
                       "default": "",
                       "example": "",
                       "form-group-class": "h_vc_input h_vc_libvpx h_vc_libvpx-vp9 h_vc_libx264 h_vc_libx265 h_vc_hevc_nvenc h_vc_h264_nvenc h_vc_h264_vaapi h_vc_hevc_vaapi h_vc_h264_qsv h_vc_hevc_qsv h_vc_mpeg2_qsv h_vc_default h_vc_none",
@@ -2231,7 +2231,7 @@ module.exports = function(s,config,lang){
                        "name": "detail=timestamp",
                        "selector":"h_rtm",
                        "field": lang.Enabled,
-                       "description": "A clock that is burned onto the frames of the recorded video.",
+                       "description": lang.fieldTextTimestamp,
                        "default": "0",
                        "example": "",
                        "fieldType": "select",
@@ -2250,7 +2250,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                       "name": "detail=timestamp_font",
                       "field": "Font Path",
-                      "description": "Font File to style your timestamp.",
+                      "description": lang.fieldTextTimestampfont,
                       "default": "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
                       "example": "",
                       "form-group-class": "h_rtm_input h_rtm_1",
@@ -2260,7 +2260,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                       "name": "detail=timestamp_font_size",
                       "field": "Font Size",
-                      "description": "Font size in pt.",
+                      "description": lang.fieldTextTimestampfontsize,
                       "default": "10",
                       "example": "",
                       "form-group-class": "h_rtm_input h_rtm_1",
@@ -2270,7 +2270,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                       "name": "detail=timestamp_color",
                       "field": "Text Color",
-                      "description": "Timstamp text color.",
+                      "description": lang.fieldTextTimestampcolor,
                       "default": "white",
                       "example": "",
                       "form-group-class": "h_rtm_input h_rtm_1",
@@ -2280,7 +2280,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                       "name": "detail=timestamp_box_color",
                       "field": "Text Box Color",
-                      "description": "Timstamp backdrop color.",
+                      "description": lang.fieldTextTimestampboxcolor,
                       "default": "0x00000000@1",
                       "example": "",
                       "form-group-class": "h_rtm_input h_rtm_1",
@@ -2290,7 +2290,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                       "name": "detail=timestamp_x",
                       "field": "Position X",
-                      "description": "Horiztonal Position of Timestamp",
+                      "description": lang.fieldTextTimestampx,
                       "default": "(w-tw)/2",
                       "example": "",
                       "form-group-class": "h_rtm_input h_rtm_1",
@@ -2300,7 +2300,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                       "name": "detail=timestamp_y",
                       "field": "Position Y",
-                      "description": "Vertical Position of Timestamp",
+                      "description": lang.fieldTextTimestampy,
                       "default": "0",
                       "example": "",
                       "form-group-class": "h_rtm_input h_rtm_1",
@@ -2320,7 +2320,7 @@ module.exports = function(s,config,lang){
                     {
                        "name": "detail=watermark",
                        "field": lang.Enabled,
-                       "description": "An image that is burned onto the frames of the recorded video.",
+                       "description": lang.fieldTextWatermark,
                        "default": "0",
                        "example": "",
                        "fieldType": "select",
@@ -2340,7 +2340,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                       "name": "detail=watermark_location",
                       "field": lang['Image Location'],
-                      "description": "Image Location that will be used as Watermark.",
+                      "description": lang.fieldTextWatermarklocation,
                       "default": "0",
                       "example": "/usr/share/watermark.logo",
                       "form-group-class": "h_wat_input h_wat_1",
@@ -2350,7 +2350,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                        "name": "detail=watermark_position",
                        "field": lang['Image Position'],
-                       "description": "An image that is burned onto the frames of the recorded video.",
+                       "description": lang.fieldTextWatermarkposition,
                        "default": "0",
                        "example": "",
                        "fieldType": "select",
@@ -2386,7 +2386,7 @@ module.exports = function(s,config,lang){
                     {
                        "name": "detail=record_timelapse",
                        "field": lang.Enabled,
-                       "description": "Create a JPEG based timelapse.",
+                       "description": lang.fieldTextRecordtimelapse,
                        "default": "0",
                        "example": "",
                        "fieldType": "select",
@@ -2406,7 +2406,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                       "name": "detail=record_timelapse_mp4",
                       "field": lang.Enabled,
-                      "description": "Create an MP4 file at the end of each day for the timelapse.",
+                      "description": lang.fieldTextRecordtimelapsemp4,
                       "default": "0",
                       "example": "",
                       "fieldType": "select",
@@ -2517,7 +2517,7 @@ module.exports = function(s,config,lang){
                     {
                        "name": "detail=record_timelapse_watermark",
                        "field": lang.Enabled,
-                       "description": "An image that is burned onto the frames of the recorded video.",
+                       "description": lang.fieldTextRecordtimelapsewatermark,
                        "default": "0",
                        "example": "",
                        "fieldType": "select",
@@ -2537,7 +2537,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                       "name": "detail=record_timelapse_watermark_location",
                       "field": lang['Image Location'],
-                      "description": "Image Location that will be used as Watermark.",
+                      "description": lang.fieldTextRecordtimelapsewatermarklocation,
                       "default": "0",
                       "example": "/usr/share/watermark.logo",
                       "form-group-class": "h_wat_timelapse_input h_wat_timelapse_1",
@@ -2547,7 +2547,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                        "name": "detail=record_timelapse_watermark_position",
                        "field": lang['Image Position'],
-                       "description": "An image that is burned onto the frames of the recorded video.",
+                       "description": lang.fieldTextRecordtimelapsewatermarkposition,
                        "default": "0",
                        "example": "",
                        "fieldType": "select",
@@ -2583,7 +2583,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=cust_input",
                       "field": lang['Input Flags'],
-                      "description": "Custom Flags that bind to the Input of the FFMPEG process.",
+                      "description": lang.fieldTextCustinput,
                       "default": "",
                       "example": "",
                       "possible": ""
@@ -2601,7 +2601,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=cust_stream",
                       "field": lang["Stream Flags"],
-                      "description": "Custom Flags that bind to the Stream (client side view) of the FFMPEG process.",
+                      "description": lang.fieldTextCuststream,
                       "default": "",
                       "example": "",
                       "form-group-class": "",
@@ -2611,7 +2611,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                       "name": "detail=cust_snap",
                       "field": "Snapshot Flags",
-                      "description": "Custom Flags that bind to the Snapshots.",
+                      "description": lang.fieldTextCustsnap,
                       "default": "",
                       "example": "",
                       "form-group-class": "h_sn_input h_sn_1",
@@ -2621,7 +2621,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                       "name": "detail=cust_record",
                       "field": lang["Recording Flags"],
-                      "description": "Custom Flags that bind to the recording of the FFMPEG process.",
+                      "description": lang.fieldTextCustrecord,
                       "default": "",
                       "example": "",
                       "form-group-class": "h_m_input h_m_record",
@@ -2631,7 +2631,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                       "name": "detail=cust_detect",
                       "field": lang["Detector Flags"],
-                      "description": "Custom Flags that bind to the stream Detector uses for analyzation.",
+                      "description": lang.fieldTextCustdetect,
                       "default": "",
                       "example": "",
                       "form-group-class": "shinobi-detector",
@@ -2641,7 +2641,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                       "name": "detail=cust_detect_object",
                       "field": lang["Object Detector Flags"],
-                      "description": "Custom Flags that bind to the stream Detector uses for analyzation.",
+                      "description": lang.fieldTextCustdetectobject,
                       "default": "",
                       "example": "",
                       "form-group-class": "shinobi-detector",
@@ -2651,7 +2651,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                       "name": "detail=cust_sip_record",
                       "field": lang['Traditional Recording Flags'],
-                      "description": "Custom Flags that bind to the output that the Event-Based Recordings siphon from.",
+                      "description": lang.fieldTextCustsiprecord,
                       "default": "",
                       "example": "",
                       "form-group-class": "h_rec_mtd_input h_rec_mtd_sip",
@@ -2660,7 +2660,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=custom_output",
                       "field": "Output Method",
-                      "description": "Add a custom output like JPEG frames or send data straight to another server.",
+                      "description": lang.fieldTextCustomoutput,
                       "default": "",
                       "example": "",
                       "form-group-class": "",
@@ -2683,7 +2683,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=detector",
                       "field": lang.Enabled,
-                      "description": "This will add another output in the FFMPEG command for the motion detector.",
+                      "description": lang.fieldTextDetector,
                       "default": "0",
                       "example": "",
                       "fieldType": "select",
@@ -2702,7 +2702,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=detector_http_api",
                       "field": lang["Allow API Trigger"],
-                      "description": "Do you want to allow HTTP triggers to this camera?",
+                      "description": lang.fieldTextDetectorhttpapi,
                       "default": "1",
                       "example": "",
                       "fieldType": "select",
@@ -2729,7 +2729,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                       "name": "detail=detector_send_frames",
                       "field": lang["Send Frames"],
-                      "description": "Push frames to the connected plugin to be analyzed.",
+                      "description": lang.fieldTextDetectorsendframes,
                       "default": "0",
                       "example": "",
                       "selector": "h_det_fra",
@@ -2751,7 +2751,7 @@ module.exports = function(s,config,lang){
                        "form-group-class": "h_det_input h_det_1",
                       "name": "detail=detector_fps",
                       "field": lang["Detector Rate"],
-                      "description": "How many frames a second to send to the motion detector; 2 is the default.",
+                      "description": lang.fieldTextDetectorfps,
                       "default": "2",
                       "example": "",
                       "possible": ""
@@ -2761,7 +2761,7 @@ module.exports = function(s,config,lang){
                        "form-group-class": "h_det_input h_det_1",
                       "name": "detail=detector_scale_x",
                       "field": lang["Feed-in Image Width"],
-                      "description": "Width of the image being detected. Smaller sizes take less CPU.",
+                      "description": lang.fieldTextDetectorscalex,
                       "default": "",
                       "example": "640",
                       "possible": ""
@@ -2771,7 +2771,7 @@ module.exports = function(s,config,lang){
                        "form-group-class": "h_det_input h_det_1",
                       "name": "detail=detector_scale_y",
                       "field": lang["Feed-in Image Height"],
-                      "description": "Height of the image being detected. Smaller sizes take less CPU.",
+                      "description": lang.fieldTextDetectorscaley,
                       "default": "",
                       "example": "480",
                       "possible": ""
@@ -2780,7 +2780,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                       "name": "detail=detector_lock_timeout",
                       "field": lang['Allow Next Trigger'],
-                      "description": "Lockout for when the next trigger is allowed, to avoid overloading the database and receiving clients. Measured in milliseconds.",
+                      "description": lang.fieldTextDetectorlocktimeout,
                       "default": "2000",
                       "example": "",
                       "form-group-class": "h_det_input h_det_1",
@@ -2790,7 +2790,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                       "name": "detail=detector_save",
                       "field": lang["Save Events"],
-                      "description": "Save Motion Events in SQL. This will allow display of motion over video during the time motion events occured in the Power Viewer.",
+                      "description": lang.fieldTextDetectorsave,
                       "default": "1",
                       "example": "",
                       "form-group-class": "h_det_input h_det_1",
@@ -2810,7 +2810,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                       "name": "detail=detector_record_method",
                       "field": lang['How to Record'],
-                      "description": "There are multiple ways to begin recording when an event occurs, like motion. Traditional Recording is the most user-friendly.",
+                      "description": lang.fieldTextDetectorrecordmethod,
                       "selector": "h_rec_mtd",
                       "default": "sip",
                       "example": "",
@@ -2875,7 +2875,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                       "name": "detail=watchdog_reset",
                       "field": lang["Timeout Reset on Next Event"],
-                      "description": "If there is an overlap in trigger record should it reset.",
+                      "description": lang.fieldTextWatchdogreset,
                       "default": "1",
                       "fieldType": "select",
                       "form-group-class": "h_det_input h_det_1",
@@ -2969,7 +2969,7 @@ module.exports = function(s,config,lang){
                            {
                               "name": "detail=detector_webhook",
                               "field": "Webhook",
-                              "description": "Send a GET request to a URL with some values from the event.",
+                              "description": lang.fieldTextDetectorwebhook,
                               "default": "0",
                               "example": "",
                               "selector": "h_det_web",
@@ -2989,7 +2989,7 @@ module.exports = function(s,config,lang){
                            {
                               "name": "detail=detector_webhook_timeout",
                               "field": lang['Allow Next Webhook'],
-                              "description": "This value is a timer to allow the next running of your Webhook. This value is in minutes.",
+                              "description": lang.fieldTextDetectorwebhooktimeout,
                               "default": "10",
                               "example": "",
                               "form-group-class": "h_det_web_input h_det_web_1",
@@ -3066,7 +3066,7 @@ module.exports = function(s,config,lang){
                            {
                               "name": "detail=detector_command",
                               "field": lang['Command'],
-                              "description": "The command that will run. This is the equivalent of running a shell command from terminal.",
+                              "description": lang.fieldTextDetectorcommand,
                               "default": "",
                               "form-group-class": "h_det_com_input h_det_com_1",
                               "example": "/home/script.sh {{MONITOR_ID}} {{GROUP_KEY}} {{CONFIDENCE}}",
@@ -3076,7 +3076,7 @@ module.exports = function(s,config,lang){
                            {
                               "name": "detail=detector_command_timeout",
                               "field": lang['Allow Next Command'],
-                              "description": "This value is a timer to allow the next running of your script. This value is in minutes.",
+                              "description": lang.fieldTextDetectorcommandtimeout,
                               "default": "10",
                               "example": "",
                               "form-group-class": "h_det_com_input h_det_com_1",
@@ -3088,7 +3088,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=snap_seconds_inward",
                       "field": lang['Delay for Snapshot'],
-                      "description": lang['in seconds'],
+                      "description": lang[lang.fieldTextSnapsecondsinward],
                       "form-group-class": "h_det_input h_det_1",
                       "default": "0",
                    },
@@ -3165,7 +3165,7 @@ module.exports = function(s,config,lang){
                            {
                               "name": "detail=detector_pam",
                               "field": lang["Use Built-In"],
-                              "description": "Use Kevin Godell's Motion Detector. This is built into Shinobi and requires no other configuration to activate.",
+                              "description": lang.fieldTextDetectorpam,
                               "selector": "h_det_pam",
                               "default": "0",
                               "example": "",
@@ -3219,7 +3219,7 @@ module.exports = function(s,config,lang){
                            {
                               "name": "detail=detector_threshold",
                               "field": lang["Trigger Threshold"],
-                              "description": "Minimum number of detections to fire a motion event. Detections must be within the detector the threshold divided by detector fps seconds. For example, if detector fps is 2 and trigger threshold is 3, then three detections must occur within 1.5 seconds to trigger a motion event. This threshold is per detection region.",
+                              "description": lang.fieldTextDetectorthreshold,
                               "default": "1",
                               "example": "3",
                               "possible": "Any non-negative integer."
@@ -3227,7 +3227,7 @@ module.exports = function(s,config,lang){
                            {
                               "name": "detail=detector_color_threshold",
                               "field": lang["Color Threshold"],
-                              "description": "The amount of difference allowed in a pixel before it is considered motion.",
+                              "description": lang.fieldTextDetectorcolorthreshold,
                               "default": "9",
                               "example": "9",
                               "possible": "Any non-negative integer."
@@ -3235,7 +3235,7 @@ module.exports = function(s,config,lang){
                            {
                               "name": "detail=inverse_trigger",
                               "field": lang["Inverse Trigger"],
-                              "description": "To trigger outside specified regions. Will not trigger with Full Frame Detection enabled.",
+                              "description": lang.fieldTextInversetrigger,
                               "default": "0",
                               "example": "",
                               "fieldType": "select",
@@ -3253,7 +3253,7 @@ module.exports = function(s,config,lang){
                            {
                               "name": "detail=detector_frame",
                               "field": lang["Full Frame Detection"],
-                              "description": "This will read the entire frame for pixel differences. This is the same as creating a region that covers the entire screen.",
+                              "description": lang.fieldTextDetectorframe,
                               "default": "1",
                               "example": "",
                               "fieldType": "select",
@@ -3271,7 +3271,7 @@ module.exports = function(s,config,lang){
                            {
                               "name": "detail=detector_noise_filter",
                               "field": lang['Noise Filter'],
-                              "description": "Attempt to filter grain or repeated motion at a particular indifference.",
+                              "description": lang.fieldTextDetectornoisefilter,
                               "default": "1",
                               "example": "",
                               "fieldType": "select",
@@ -3289,7 +3289,7 @@ module.exports = function(s,config,lang){
                            {
                               "name": "detail=detector_noise_filter_range",
                               "field": lang["Noise Filter Range"],
-                              "description": "The amount of difference allowed in a pixel before it is considered motion.",
+                              "description": lang.fieldTextDetectornoisefilterrange,
                               "default": "6",
                               "example": "9",
                               "possible": "Any non-negative integer."
@@ -3309,7 +3309,7 @@ module.exports = function(s,config,lang){
                           {
                              "name": "detail=detector_notrigger",
                              "field": lang.Enabled,
-                             "description": "Check if motion has occured on an interval. If motion has occurred the check will be reset.",
+                             "description": lang.fieldTextDetectornotrigger,
                              "default": "0",
                              "example": "",
                              "fieldType": "select",
@@ -3327,7 +3327,7 @@ module.exports = function(s,config,lang){
                          {
                             "name": "detail=detector_notrigger_timeout",
                             "field": lang.Timeout,
-                            "description": "Timeout is calculated in minutes.",
+                            "description": lang.fieldTextDetectornotriggertimeout,
                             "default": "10",
                             "example": "",
                             "possible": ""
@@ -3335,7 +3335,7 @@ module.exports = function(s,config,lang){
                          {
                             "name": "detail=detector_notrigger_discord",
                             "field": lang['No Trigger'],
-                            "description": "If motion has not been detected after the timeout period you will recieve an Discord notification.",
+                            "description": lang.fieldTextDetectornotriggerdiscord,
                             "default": "0",
                             "example": "",
                             "fieldType": "select",
@@ -3353,7 +3353,7 @@ module.exports = function(s,config,lang){
                         {
                            "name": "detail=detector_notrigger_webhook",
                            "field": "Webhook",
-                           "description": "Send a GET request to a URL with some values from the event.",
+                           "description": lang.fieldTextDetectornotriggerwebhook,
                            "default": "0",
                            "example": "",
                            "selector": "h_det_web_notrig",
@@ -3424,7 +3424,7 @@ module.exports = function(s,config,lang){
                         {
                            "name": "detail=detector_notrigger_command",
                            "field": lang['Command'],
-                           "description": "The command that will run. This is the equivalent of running a shell command from terminal.",
+                           "description": lang.fieldTextDetectornotriggercommand,
                            "default": "",
                            "form-group-class": "h_det_com_notrig_input h_det_com_notrig_1",
                            "example": "/home/script.sh {{MONITOR_ID}} {{GROUP_KEY}} {{CONFIDENCE}}",
@@ -3433,7 +3433,7 @@ module.exports = function(s,config,lang){
                         {
                            "name": "detail=detector_notrigger_command_timeout",
                            "field": lang['Allow Next Command'],
-                           "description": "This value is a timer to allow the next running of your script. This value is in minutes.",
+                           "description": lang.fieldTextDetectornotriggercommandtimeout,
                            "default": "10",
                            "example": "",
                            "form-group-class": "h_det_com_notrig_input h_det_com_notrig_1",
@@ -3454,7 +3454,7 @@ module.exports = function(s,config,lang){
                           {
                              "name": "detail=detector_audio",
                              "field": lang.Enabled,
-                             "description": "Check if Audio has occured at a certiain decible. Decible reading may not be accurate to real-world measurement.",
+                             "description": lang.fieldTextDetectoraudio,
                              "default": "0",
                              "example": "",
                              "fieldType": "select",
@@ -3500,7 +3500,7 @@ module.exports = function(s,config,lang){
                           {
                              "name": "detail=detector_use_detect_object",
                              "field": lang.Enabled,
-                             "description": "Create frames for sending to any connected Plugin.",
+                             "description": lang.fieldTextDetectorusedetectobject,
                              "default": "0",
                              "example": "",
                              "selector": "h_casc",
@@ -3519,7 +3519,7 @@ module.exports = function(s,config,lang){
                          {
                             "name": "detail=detector_send_frames_object",
                             "field": lang["Send Frames"],
-                            "description": "Push frames to the connected plugin to be analyzed.",
+                            "description": lang.fieldTextDetectorsendframesobject,
                             "default": "0",
                             "example": "",
                             "fieldType": "select",
@@ -3538,7 +3538,7 @@ module.exports = function(s,config,lang){
                              hidden: true,
                             "name": "detail=detector_obj_count_in_region",
                             "field": lang["Count Objects only inside Regions"],
-                            "description": "Count Objects only inside Regions.",
+                            "description": lang.fieldTextDetectorobjcountinregion,
                             "default": "0",
                             "example": "",
                             "form-group-class": "h_det_count_input h_det_count_1",
@@ -3643,7 +3643,7 @@ module.exports = function(s,config,lang){
                          {
                             "name": "detail=detector_lisence_plate",
                             "field": lang.Enabled,
-                            "description": "Enable License Plate Recognition. OpenALPR plugin has this always enabled.",
+                            "description": lang.fieldTextDetectorlisenceplate,
                             "default": "0",
                             "example": "",
                             "fieldType": "select",
@@ -3661,7 +3661,7 @@ module.exports = function(s,config,lang){
                          {
                             "name": "detail=detector_lisence_plate_country",
                             "field": lang['Country of Plates'],
-                            "description": "Choose the type of plates to recognize. Only US and EU are supported at this time.",
+                            "description": lang.fieldTextDetectorlisenceplatecountry,
                             "default": "0",
                             "example": "",
                             "fieldType": "select",
@@ -3766,7 +3766,7 @@ module.exports = function(s,config,lang){
                           {
                              "name": "detail=event_record_scale_x",
                              "field": lang.Width,
-                             "description": "Width of the Event-based Recording image that is output after processing.",
+                             "description": lang.fieldTextEventrecordscalex,
                              "default": "",
                              "fieldType": "number",
                              "numberMin": "1",
@@ -3777,7 +3777,7 @@ module.exports = function(s,config,lang){
                           {
                              "name": "detail=event_record_scale_y",
                              "field": lang.Height,
-                             "description": "Height of the Event-based Recording image that is output after processing.",
+                             "description": lang.fieldTextEventrecordscaley,
                              "default": "",
                              "fieldType": "number",
                              "numberMin": "1",
@@ -3788,7 +3788,7 @@ module.exports = function(s,config,lang){
                           {
                              "name": "detail=detector_buffer_hls_time",
                              "field": lang['HLS Segment Length'],
-                             "description": "How long each video segment should be, in seconds. Each segment will be drawn by the client through an m3u8 file. Shorter segments take less space.",
+                             "description": lang.fieldTextDetectorbufferhlstime,
                              "default": "2",
                              "example": "",
                              "possible": ""
@@ -3796,7 +3796,7 @@ module.exports = function(s,config,lang){
                           {
                              "name": "detail=detector_buffer_hls_list_size",
                              "field": lang['HLS List Size'],
-                             "description": "The number of segments maximum before deleting old segments automatically.",
+                             "description": lang.fieldTextDetectorbufferhlslistsize,
                              "default": "10",
                              "example": "",
                              "possible": ""
@@ -3950,7 +3950,7 @@ module.exports = function(s,config,lang){
                     {
                        "name": "detail=detector_ptz_follow",
                        "field": lang['PTZ Tracking'],
-                       "description": "Follow the largest detected object with PTZ? Requires an Object Detector running or matrices provided with events.",
+                       "description": lang.fieldTextDetectorptzfollow,
                        "default": "0",
                        "example": "",
                        "selector": "h_det_tracking",
@@ -3978,7 +3978,7 @@ module.exports = function(s,config,lang){
                     {
                        "name": "detail=detector_obj_count",
                        "field": lang["Count Objects"],
-                       "description": "Count detected objects.",
+                       "description": lang.fieldTextDetectorobjcount,
                        "default": "0",
                        "example": "",
                        "selector": "h_det_count",
@@ -4138,7 +4138,7 @@ module.exports = function(s,config,lang){
                     {
                        "name": "detail=control_invert_y",
                        "field": lang["Invert Y-Axis"],
-                       "description": "For When your camera is mounted upside down or uses inverted vertical controls.",
+                       "description": lang.fieldTextControlinverty,
                        "default": "0",
                        "example": "",
                        "fieldType": "select",
@@ -4502,7 +4502,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                       "name": "detail=detector_send_video_length",
                       "field": lang["Notification Video Length"],
-                      "description": "In seconds. The length of the video that gets sent to your Notification service, like Email or Discord.",
+                      "description": lang.fieldTextDetectorsendvideolength,
                       "default": "10",
                       "example": "",
                       "possible": ""
@@ -4519,7 +4519,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=loglevel",
                       "field": lang['Log Level'],
-                      "description": "The amount of data to provide while doing the job.",
+                      "description": lang.fieldTextLoglevel,
                       "default": "0",
                       "example": "",
                       "fieldType": "select",
@@ -4527,29 +4527,29 @@ module.exports = function(s,config,lang){
                            {
                               "name": lang.Silent,
                               "value": "quiet",
-                              "info": "None. This will silence all logging."
+                              "info": lang.fieldTextLoglevelIlent
                            },
                            {
                               "name": lang.Fatal,
                               "value": "fatal",
-                              "info": "Display only fatal errors."
+                              "info": lang.fieldTextLoglevelAtal
                            },
                            {
                               "name": lang['on Error'],
                               "value": "error",
-                              "info": "Display all important errors. Note : this doesn't always show important information."
+                              "info": lang.fieldTextLoglevelOnRror
                            },
                            {
                               "name": lang['All Warnings'],
                               "value": "warning",
-                              "info": "Display all warnings. Use this if you can't find out what's wrong with your camera."
+                              "info": lang.fieldTextLoglevelLlArnings
                            }
                         ]
                    },
                    {
                       "name": "detail=sqllog",
                       "field": lang["Save Log in SQL"],
-                      "description": "Use this with caution as FFMPEG likes to throw up superfluous data at times which can lead to a lot of database rows.",
+                      "description": lang.fieldTextSqllog,
                       "default": "0",
                       "example": "",
                       "fieldType": "select",
@@ -4557,12 +4557,12 @@ module.exports = function(s,config,lang){
                          {
                             "name": lang.No,
                             "value": "0",
-                            "info": "No is the default."
+                            "info": lang.fieldTextSqllogO
                          },
                          {
                             "name": lang.Yes,
                             "value": "1",
-                            "info": "Do this if you are having recurring issues only."
+                            "info": lang.fieldTextSqllogEs
                          }
                       ]
                   },
@@ -4677,7 +4677,7 @@ module.exports = function(s,config,lang){
                     {
                        "name": "detail=factorAuth",
                        "field": lang.Enabled,
-                       "description": "Enable a secondary requirement for login through one of the enabled methods.",
+                       "description": lang.fieldTextFactoruth,
                        "default": "0",
                        "example": "",
                        "fieldType": "select",
@@ -4701,7 +4701,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "mail",
                       "field": lang.Email,
-                      "description": "The login for accounts. The main account holder's email address will get notifications.",
+                      "description": lang.fieldTextMail,
                       "default": "",
                       "example": "ccio@m03.ca",
                       "possible": ""
@@ -4710,7 +4710,7 @@ module.exports = function(s,config,lang){
                       "name": "pass",
                       "field": lang.Password,
                       "fieldType": "password",
-                      "description": "Leave blank to keep the same password during settings modification.",
+                      "description": lang.fieldTextPass,
                       "fieldType": "password",
                       "default": "",
                       "example": "",
@@ -4720,7 +4720,7 @@ module.exports = function(s,config,lang){
                       "name": "password_again",
                       "field": lang["Password Again"],
                       "fieldType": "password",
-                      "description": "Must match Password field if you desire to change it.",
+                      "description": lang.fieldTextPasswordagain,
                       "default": "",
                       "example": "",
                       "possible": ""
@@ -4728,7 +4728,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=size",
                       "field": lang["Max Storage Amount"],
-                      "description": "The amount of disk space Shinobi will allow to be consumed before purging. This value is read in megabytes.",
+                      "description": lang.fieldTextSize,
                       "default": "10000",
                       "example": "600000",
                       "possible": "Up to 95% of your maximum storage space if only one master account exists.",
@@ -4738,21 +4738,21 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=size_video_percent",
                       "field": lang["Video Share"],
-                      "description": "Percent of Max Storage Amount the videos can record to.",
+                      "description": lang.fieldTextSizevideopercent,
                       "default": "90",
                       "notForSubAccount": true,
                    },
                    {
                       "name": "detail=size_timelapse_percent",
                       "field": lang["Timelapse Frames Share"],
-                      "description": "Percent of Max Storage Amount the timelapse frames can record to.",
+                      "description": lang.fieldTextSizetimelapsepercent,
                       "default": "5",
                       "notForSubAccount": true,
                    },
                    {
                       "name": "detail=size_filebin_percent",
                       "field": lang["FileBin Share"],
-                      "description": "Percent of Max Storage Amount the FileBin archive can use.",
+                      "description": lang.fieldTextSizefilebinpercent,
                       "default": "5",
                       "notForSubAccount": true,
                    },
@@ -4769,7 +4769,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=days",
                       "field": lang["Number of Days to keep"] + ' ' + lang['Videos'],
-                      "description": "The number of days to keep videos before purging.",
+                      "description": lang.fieldTextDays,
                       "default": "5",
                       "example": "30",
                       "possible": "",
@@ -4779,7 +4779,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=event_days",
                       "field": lang["Number of Days to keep"] + ' ' + lang['Events'],
-                      "description": "The number of days to keep events before purging.",
+                      "description": lang.fieldTextEventdays,
                       "default": "10",
                       "example": "30",
                       "possible": "",
@@ -4789,7 +4789,7 @@ module.exports = function(s,config,lang){
                    {
                       "name": "detail=log_days",
                       "field": lang["Number of Days to keep"] + ' ' + lang['Logs'],
-                      "description": "The number of days to keep logs before purging.",
+                      "description": lang.fieldTextLogdays,
                       "default": "10",
                       "example": "30",
                       "possible": "",
@@ -4799,7 +4799,7 @@ module.exports = function(s,config,lang){
                   {
                      "name": "detail=lang",
                      "field": lang["Dashboard Language"],
-                     "description": 'The primary language of text elements. For complete translation add your language in conf.json e.g:<code>"language": "en_CA",</code>',
+                     "description": lang.fieldTextLang,
                      "default": "en_CA",
                      "example": "",
                      "fieldType": "select",
@@ -4808,7 +4808,7 @@ module.exports = function(s,config,lang){
                  {
                      "name": "detail=audio_note",
                      "field": lang["Notification Sound"],
-                     "description": "Sound when information bubble appears.",
+                     "description": lang.fieldTextAudionote,
                      "default": "",
                      "example": "",
                      "fieldType": "select",
@@ -4817,7 +4817,7 @@ module.exports = function(s,config,lang){
                  {
                      "name": "detail=audio_alert",
                      "field": lang["Alert Sound"],
-                     "description": "Sound when Event occurs.",
+                     "description": lang.fieldTextAudioalert,
                      "default": "",
                      "example": "",
                      "fieldType": "select",
@@ -4826,7 +4826,7 @@ module.exports = function(s,config,lang){
                  {
                      "name": "detail=audio_delay",
                      "field": lang["Alert Sound Delay"],
-                     "description": "Delay until next time an Event can start an Alert. Measured in seconds.",
+                     "description": lang.fieldTextAudiodelay,
                      "default": "1",
                      "example": "",
                      "possible": ""
@@ -4834,7 +4834,7 @@ module.exports = function(s,config,lang){
                  {
                      "name": "detail=event_mon_pop",
                      "field": lang["Popout Monitor on Event"],
-                     "description": "When an Event occurs popout the monitor stream.",
+                     "description": lang.fieldTextEventmonpop,
                      "default": "en_CA",
                      "example": "",
                      "fieldType": "select",
@@ -5225,17 +5225,17 @@ module.exports = function(s,config,lang){
                            {
                               "name": lang.On,
                               "value": "ON",
-                              "info": "Enable Ir cut fiter. Typically Day mode."
+                              "info": lang.fieldTextRutilterN
                            },
                            {
                               "name": lang.Off,
                               "value": "OFF",
-                              "info": "Disable Ir cut fiter. Typically Night mode."
+                              "info": lang.fieldTextRutilterFf
                            },
                            {
                               "name": lang.Auto,
                               "value": "AUTO",
-                              "info": "Ir cut filter is automatically activated by the device."
+                              "info": lang.fieldTextRutilterUto
                            },
                        ]
                      },
@@ -5711,7 +5711,7 @@ module.exports = function(s,config,lang){
                         "field": lang['Allowed IPs'],
                         "default": `0.0.0.0`,
                         "placeholder": `0.0.0.0 ${lang['for Global Access']}`,
-                        "description": lang['Separate with commas, no spaces'],
+                        "description": lang[lang.fieldTextIp],
                         "fieldType": "text"
                      },
                      {
@@ -6305,7 +6305,7 @@ module.exports = function(s,config,lang){
                       "field": "Drop Event",
                       "fieldType": "select",
                       "form-group-class": "actions-row",
-                      "description": "Make the event do nothing, as if it never happened.",
+                      "description": lang.fieldTextActionshalt,
                       "default": "0",
                       "possible": [
                          {
@@ -6340,7 +6340,7 @@ module.exports = function(s,config,lang){
                     {
                        "name": "actions=indifference",
                        "field": "Modify Indifference",
-                       "description": "Modify minimum indifference required for event.",
+                       "description": lang.fieldTextActionsindifference,
                        "form-group-class": "actions-row",
                     },
                     {
@@ -6367,7 +6367,7 @@ module.exports = function(s,config,lang){
                       "field": "Detector Command",
                       "fieldType": "select",
                       "form-group-class": "actions-row",
-                      "description": "You may use this to trigger a script on command.",
+                      "description": lang.fieldTextActionscommand,
                       "default": "No",
                       "form-group-class": "actions-row",
                       "possible": [
@@ -6386,7 +6386,7 @@ module.exports = function(s,config,lang){
                       "name": "actions=record",
                       "field": "Use Record Method",
                       "fieldType": "select",
-                      "description": "Use Traditional Recording, Hotswap, or Delete Motionless with their currently set options in the Global Detection Settings section.",
+                      "description": lang.fieldTextActionsrecord,
                       "default": "",
                       "form-group-class": "actions-row",
                       "possible": [
@@ -6417,7 +6417,7 @@ module.exports = function(s,config,lang){
                      {
                         "name": "ip",
                         "field": lang['IP Address'],
-                        "description": lang['Range or Single'],
+                        "description": lang[lang.fieldTextIp],
                         "example": "10.1.100.1-10.1.100.254",
                      },
                      {
@@ -6840,17 +6840,17 @@ module.exports = function(s,config,lang){
                              {
                                 "name": lang.Auto,
                                 "value": "",
-                                "info": "Let FFMPEG decide. Normally it will try UDP first."
+                                "info": lang.fieldTextMapRtsptransportUto
                              },
                              {
                                 "name": "TCP",
                                 "value": "tcp",
-                                "info": "Set it to this if UDP starts giving undesired results."
+                                "info": lang.fieldTextMapRtsptransport
                              },
                              {
                                 "name": "UDP",
                                 "value": "udp",
-                                "info": "FFMPEG tries this first."
+                                "info": lang.fieldTextMapRtsptransport
                              }
                          ]
                      },
@@ -6993,7 +6993,7 @@ module.exports = function(s,config,lang){
                      {
                         "field": lang["Stream Type"],
                         "name": `channel-detail="stream_type"`,
-                        "description": "The method that will used to consume the video stream.",
+                        "description": lang.fieldTextChannelStreamtype,
                         "default": "mp4",
                         "selector": "h_st_channel_$[TEMP_ID]",
                         "fieldType": "select",
@@ -7002,7 +7002,7 @@ module.exports = function(s,config,lang){
                              {
                                 "name": lang.Poseidon,
                                 "value": "mp4",
-                                "info": "Poseidon is built on Kevin Godell's MP4 processing code. It simulates a streaming MP4 file but using the data of a live stream. Includes Audio. Some browsers can play it like a regular MP4 file. Streams over HTTP or WebSocket."
+                                "info": lang.fieldTextChannelStreamtypeOseidon
                              },
                              {
                                 "name": lang["RTMP Stream"],
@@ -7011,17 +7011,17 @@ module.exports = function(s,config,lang){
                              {
                                 "name": lang['MJPEG'],
                                 "value": "mjpeg",
-                                "info": "Standard Motion JPEG image. No audio."
+                                "info": lang.fieldTextChannelStreamtype
                              },
                              {
                                 "name": lang['FLV'],
                                 "value": "flv",
-                                "info": "Sending FLV encoded frames over WebSocket."
+                                "info": lang.fieldTextChannelStreamtype
                              },
                              {
                                 "name": lang['HLS (includes Audio)'],
                                 "value": "hls",
-                                "info": "Similar method to facebook live streams. <b>Includes audio</b> if input provides it. There is a delay of about 4-6 seconds because this method records segments then pushes them to the client rather than push as while it creates them."
+                                "info": lang.fieldTextChannelStreamtypeIncludesUdio
                              }
                           ]
                      },
@@ -7046,7 +7046,7 @@ module.exports = function(s,config,lang){
                      {
                         "field": lang['Video Codec'],
                         "name": `channel-detail="stream_vcodec"`,
-                        "description": "Video codec for streaming.",
+                        "description": lang.fieldTextChannelStreamvcodec,
                         "default": "no",
                         "form-group-class": "h_st_channel_$[TEMP_ID]_input h_st_channel_$[TEMP_ID]_hls h_st_channel_$[TEMP_ID]_rtmp h_st_channel_$[TEMP_ID]_flv h_st_channel_$[TEMP_ID]_mp4  h_st_channel_$[TEMP_ID]_h264",
                         "fieldType": "select",
@@ -7055,22 +7055,22 @@ module.exports = function(s,config,lang){
                            {
                               "name": lang.Auto,
                               "value": "no",
-                              "info": "Let FFMPEG choose."
+                              "info": lang.fieldTextChannelStreamvcodecUto
                            },
                            {
                               "name": "libx264",
                               "value": "libx264",
-                              "info": "Used for MP4 video."
+                              "info": lang.fieldTextChannelStreamvcodecLibx264
                            },
                            {
                               "name": "libx265",
                               "value": "libx265",
-                              "info": "Used for MP4 video."
+                              "info": lang.fieldTextChannelStreamvcodecLibx265
                            },
                            {
                               "name": lang.copy,
                               "value": "copy",
-                              "info": "Used for MP4 video. Has very low CPU usage but cannot use video filters and filesizes may be gigantic.  Best to setup your MP4 settings camera-side when using this option."
+                              "info": lang.fieldTextChannelStreamvcodecCopy
                            },
                            {
                                "name": lang['Hardware Accelerated'],
@@ -7126,7 +7126,7 @@ module.exports = function(s,config,lang){
                      {
                         "field": lang["Audio Codec"],
                         "name": `channel-detail="stream_acodec"`,
-                        "description": "Audio codec for streaming.",
+                        "description": lang.fieldTextChannelStreamacodec,
                         "default": "0",
                         "example": "",
                         "fieldType": "select",
@@ -7134,42 +7134,42 @@ module.exports = function(s,config,lang){
                         "possible": [
                            {
                               "name": lang.Auto,
-                              "info": "Let FFMPEG choose.",
+                              "info": lang.fieldTextChannelStreamacodecUto,
                               "value": ""
                            },
                            {
                               "name": lang["No Audio"],
-                              "info": "No Audio, this is an option that must be set in some parts of the world due to legal reasons.",
+                              "info": lang.fieldTextChannelStreamacodecOUdio,
                               "value": "no"
                            },
                            {
                               "name": "libvorbis",
-                              "info": "Used for WebM video.",
+                              "info": lang.fieldTextChannelStreamacodecLibvorbis,
                               "value": "libvorbis"
                            },
                            {
                               "name": "libopus",
-                              "info": "Used for WebM video.",
+                              "info": lang.fieldTextChannelStreamacodecLibopus,
                               "value": "libopus"
                            },
                            {
                               "name": "libmp3lame",
-                              "info": "Used for MP4 video.",
+                              "info": lang.fieldTextChannelStreamacodecLibmp3lame,
                               "value": "libmp3lame"
                            },
                            {
                               "name": "aac",
-                              "info": "Used for MP4 video.",
+                              "info": lang.fieldTextChannelStreamacodecAac,
                               "value": "aac"
                            },
                            {
                               "name": "ac3",
-                              "info": "Used for MP4 video.",
+                              "info": lang.fieldTextChannelStreamacodecAc3,
                               "value": "ac3"
                            },
                            {
                               "name": "copy",
-                              "info": "Used for MP4 video. Has very low CPU usage but some audio codecs need custom flags like <code>-strict 2</code> for aac.",
+                              "info": lang.fieldTextChannelStreamacodecCopy,
                               "value": "copy"
                            }
                         ]
@@ -7177,28 +7177,28 @@ module.exports = function(s,config,lang){
                      {
                         "name": "channel-detail=hls_time",
                         "field": lang["HLS Segment Length"],
-                        "description": "How long each video segment should be, in minutes. Each segment will be drawn by the client through an m3u8 file. Shorter segments take less space.",
+                        "description": lang.fieldTextChannelHlstime,
                         "default": "2",
                         "form-group-class": "h_st_channel_$[TEMP_ID]_input h_st_channel_$[TEMP_ID]_hls",
                      },
                      {
                         "name": "channel-detail=hls_list_size",
                         "field": lang["HLS List Size"],
-                        "description": "The number of segments maximum before deleting old segments automatically.",
+                        "description": lang.fieldTextChannelHlslistsize,
                         "default": "2",
                         "form-group-class": "h_st_channel_$[TEMP_ID]_input h_st_channel_$[TEMP_ID]_hls",
                      },
                      {
                         "name": "channel-detail=preset_stream",
                         "field": lang["HLS Preset"],
-                        "description": "Preset flag for certain video encoders. If you find your camera is crashing every few seconds : try leaving it blank.",
+                        "description": lang.fieldTextChannelPresetstream,
                         "example": "ultrafast",
                         "form-group-class": "h_st_channel_$[TEMP_ID]_input h_st_channel_$[TEMP_ID]_hls",
                      },
                      {
                         "name": "channel-detail=stream_quality",
                         "field": lang.Quality,
-                        "description": "Low number means higher quality. Higher number means less quality.",
+                        "description": lang.fieldTextChannelStreamquality,
                         "default": "15",
                         "example": "1",
                         "form-group-class-pre-layer": "h_hls_v_channel_$[TEMP_ID]_input h_hls_v_channel_$[TEMP_ID]_libx264 h_hls_v_channel_$[TEMP_ID]_libx265 h_hls_v_channel_$[TEMP_ID]_h264_nvenc h_hls_v_channel_$[TEMP_ID]_hevc_nvenc h_hls_v_channel_$[TEMP_ID]_no",
@@ -7222,14 +7222,14 @@ module.exports = function(s,config,lang){
                      {
                         "name": "channel-detail=stream_fps",
                         "field": lang['Frame Rate'],
-                        "description": "The speed in which frames are displayed to clients, in Frames Per Second. Be aware there is no default. This can lead to high bandwidth usage.",
+                        "description": lang.fieldTextChannelStreamfps,
                         "form-group-class-pre-layer": "h_hls_v_channel_$[TEMP_ID]_input h_hls_v_channel_$[TEMP_ID]_libx264 h_hls_v_channel_$[TEMP_ID]_libx265 h_hls_v_channel_$[TEMP_ID]_h264_nvenc h_hls_v_channel_$[TEMP_ID]_hevc_nvenc h_hls_v_channel_$[TEMP_ID]_no",
                         "form-group-class": "h_st_channel_$[TEMP_ID]_input h_st_channel_$[TEMP_ID]_mjpeg h_st_channel_$[TEMP_ID]_hls h_st_channel_$[TEMP_ID]_rtmp h_st_channel_$[TEMP_ID]_jsmpeg h_st_channel_$[TEMP_ID]_flv h_st_channel_$[TEMP_ID]_mp4 h_st_channel_$[TEMP_ID]_h264",
                      },
                      {
                         "name": "channel-detail=stream_scale_x",
                         "field": lang.Width,
-                        "description": "Width of the stream image that is output after processing.",
+                        "description": lang.fieldTextChannelStreamscalex,
                         "fieldType": "number",
                         "numberMin": "1",
                         "example": "640",
@@ -7239,7 +7239,7 @@ module.exports = function(s,config,lang){
                      {
                         "name": "channel-detail=stream_scale_y",
                         "field": lang.Height,
-                        "description": "Height of the stream image that is output after processing.",
+                        "description": lang.fieldTextChannelStreamscaley,
                         "fieldType": "number",
                         "numberMin": "1",
                         "example": "480",
@@ -7249,7 +7249,7 @@ module.exports = function(s,config,lang){
                      {
                         "name": "channel-detail=stream_rotate",
                         "field": lang["Rotate"],
-                        "description": "Change the viewing angle of the video stream.",
+                        "description": lang.fieldTextChannelStreamrotate,
                         "fieldType": "select",
                         "form-group-class-pre-layer": "h_hls_v_channel_$[TEMP_ID]_input h_hls_v_channel_$[TEMP_ID]_libx264 h_hls_v_channel_$[TEMP_ID]_libx265 h_hls_v_channel_$[TEMP_ID]_h264_nvenc h_hls_v_channel_$[TEMP_ID]_hevc_nvenc h_hls_v_channel_$[TEMP_ID]_no",
                         "form-group-class": "h_st_channel_$[TEMP_ID]_input h_st_channel_$[TEMP_ID]_mjpeg h_st_channel_$[TEMP_ID]_hls h_st_channel_$[TEMP_ID]_rtmp h_st_channel_$[TEMP_ID]_jsmpeg h_st_channel_$[TEMP_ID]_flv h_st_channel_$[TEMP_ID]_mp4 h_st_channel_$[TEMP_ID]_h264",
@@ -7283,7 +7283,7 @@ module.exports = function(s,config,lang){
                      {
                         "name": "channel-detail=svf",
                         "field": lang["Video Filter"],
-                        "description": "Place FFMPEG video filters in this box to affect the streaming portion. No spaces.",
+                        "description": lang.fieldTextChannelSvf,
                         "form-group-class-pre-layer": "h_hls_v_channel_$[TEMP_ID]_input h_hls_v_channel_$[TEMP_ID]_libx264 h_hls_v_channel_$[TEMP_ID]_libx265 h_hls_v_channel_$[TEMP_ID]_h264_nvenc h_hls_v_channel_$[TEMP_ID]_hevc_nvenc h_hls_v_channel_$[TEMP_ID]_no",
                         "form-group-class": "h_st_channel_$[TEMP_ID]_input h_st_channel_$[TEMP_ID]_mjpeg h_st_channel_$[TEMP_ID]_hls h_st_channel_$[TEMP_ID]_rtmp h_st_channel_$[TEMP_ID]_jsmpeg h_st_channel_$[TEMP_ID]_flv h_st_channel_$[TEMP_ID]_mp4 h_st_channel_$[TEMP_ID]_h264",
                     },
