@@ -88,12 +88,15 @@ const initialize = (config,lang) => {
     }
     //
     function startBridge(noLog){
-        s.debugLog('p2p',`Connecting to ${selectedHost}...`)
+        console.log('p2p',`Connecting to ${selectedHost}...`)
         if(connectionToP2PServer && connectionToP2PServer.connected){
             connectionToP2PServer.allowDisconnect = true;
             connectionToP2PServer.disconnect()
         }
-        connectionToP2PServer = socketIOClient('ws://' + selectedHost, {transports:['websocket']});
+        connectionToP2PServer = socketIOClient('ws://' + selectedHost, {
+            transports:['websocket'],
+            reconnection: false
+        });
         if(!config.p2pApiKey){
             if(!noLog)s.systemLog('p2p',`Please fill 'p2pApiKey' in your conf.json.`)
         }
