@@ -83,7 +83,7 @@ module.exports = function(s,config,lang,app){
     const startWorker = () => {
         stopWorker()
         // set the first parameter as a string.
-        const pathToWorkerScript = __dirname + '/commander/worker.js'
+        const pathToWorkerScript = __dirname + `/commander/${config.useBetterP2P ? 'workerv2' : 'worker'}.js`
         const workerProcess = new Worker(pathToWorkerScript)
         workerProcess.on('message',function(data){
             switch(data.f){
