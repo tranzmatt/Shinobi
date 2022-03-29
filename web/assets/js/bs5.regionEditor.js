@@ -294,6 +294,7 @@ $(document).ready(function(e){
         if(!regionEditorMonitorsList.val()){
             drawMonitorListToSelector(regionEditorMonitorsList,true)
         }
+        initLiveStream()
     })
     addOnTabReopen('regionEditor', function () {
         initLiveStream()
