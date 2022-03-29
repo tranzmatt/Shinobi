@@ -37,9 +37,9 @@ function startConnection(p2pServerAddress,subscriptionId){
     const allMessageHandlers = []
     function startWebsocketConnection(key,callback){
         function disconnectedConnection(code,reason){
-            console.log('stayDisconnected',stayDisconnected)
+            s.debugLog('stayDisconnected',stayDisconnected)
             if(stayDisconnected)return;
-            console.log('DISCONNECTED! RESTARTING!')
+            s.debugLog('DISCONNECTED! RESTARTING!')
             setTimeout(() => {
                 startWebsocketConnection()
             },2000)
@@ -49,7 +49,7 @@ function startConnection(p2pServerAddress,subscriptionId){
         }catch(err){
             console.log(err)
         }
-        console.log(p2pServerAddress)
+        s.debugLog(p2pServerAddress)
         tunnelToShinobi = new WebSocket(p2pServerAddress || 'ws://172.16.101.218:81');
 
         tunnelToShinobi.on('open', function(){
@@ -126,10 +126,10 @@ function startConnection(p2pServerAddress,subscriptionId){
         // const hostParts = data.host.split(':')
         // const host = hostParts[0]
         // const port = parseInt(hostParts[1]) || 80
-        console.log('New Request Incoming', null, null, requestId)
+        s.debugLog('New Request Incoming', null, null, requestId)
         const socket = createRemoteSocket(null, null, requestId)
         socket.on('ready',() => {
-            console.log('READY')
+            s.debugLog('READY')
             writeToServer(data.init,requestId)
         })
     })
