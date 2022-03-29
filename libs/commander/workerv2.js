@@ -144,7 +144,7 @@ function startConnection(p2pServerAddress,subscriptionId){
         try{
             requestConnections[requestId].end()
         }catch(err){
-            console.log(err)
+            s.debugLog(err)
             // console.log('requestConnections',requestConnections)
         }
     })

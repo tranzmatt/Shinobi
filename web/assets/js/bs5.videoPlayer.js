@@ -8,7 +8,7 @@ $(document).ready(function(){
         var humanStartTime = formattedTime(video.time,true)
         var humanEndTime = formattedTime(video.end,true)
         var tabLabel = `<b>${lang['Video']}</b> : ${loadedMonitors[video.mid].name} : ${formattedTime(video.time,true)}`
-        var videoUrl = getLocation() + video.href
+        var videoUrl = getApiPrefix(`videos`) + '/' + video.mid + '/' + video.filename
         var hasRows = video.events && video.events.length > 0
         var loadedEvents = {}
         var eventMatrixHtml = ``

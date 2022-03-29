@@ -261,7 +261,7 @@ function createVideoRow(row,classOverride){
             eventMatrixHtml += `<div class="video-time-needle video-time-needle-event" style="left:${leftPercent}%"></div>`
         })
     }
-    var videoEndpoint = getLocation() + '/' + $user.auth_token + '/videos/' + $user.ke + '/' + row.mid + '/' + row.filename
+    var videoEndpoint = getApiPrefix(`videos`) + '/' + row.mid + '/' + row.filename
     return `
     <div class="video-row ${classOverride ? classOverride : `col-md-12 col-lg-6 mb-3`} search-row" data-mid="${row.mid}" data-time="${row.time}" data-time-formed="${new Date(row.time)}">
         <div class="video-time-card shadow-lg px-0 btn-default">
@@ -497,7 +497,7 @@ $(document).ready(function(){
         var video = loadedVideosInMemory[`${monitorId}${videoTime}`]
         var ext = video.filename.split('.')
         ext = ext[ext.length - 1]
-        var videoEndpoint = getLocation() + '/' + $user.auth_token + '/videos/' + $user.ke + '/' + video.mid + '/' + video.filename
+        var videoEndpoint = getApiPrefix(`videos`) + '/' + video.mid + '/' + video.filename
         $.confirm.create({
             title: lang["Delete Video"] + ' : ' + video.filename,
             body: `${lang.DeleteVideoMsg}<br><br><div class="row"><video class="video_video" autoplay loop controls><source src="${videoEndpoint}" type="video/${ext}"></video></div>`,
