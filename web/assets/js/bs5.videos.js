@@ -339,10 +339,10 @@ function getVideoPercentWidthForDay(row,videos){
 function createDayCard(videos,dayKey,monitorId,classOverride){
     var html = ''
     var eventMatrixHtml = ``
-    var dayParts = dayKey.split('-')
-    var day = dayParts[0]
+    var dayParts = formattedTime(videos[0].time).split(' ')[1].split('-')
+    var day = dayParts[2]
     var month = dayParts[1]
-    var year = dayParts[2]
+    var year = dayParts[0]
     $.each(videos,function(n,row){
         var nextRow = videos[n + 1]
         if(nextRow)console.log({time: row.end, end: nextRow.time},n + 1)
