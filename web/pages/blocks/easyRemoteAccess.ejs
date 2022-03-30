@@ -19,6 +19,7 @@
  </style>
  <script>
      window.p2pServerList = <%- JSON.stringify(p2pServerList) %>
+     window.useBetterP2P = <%- !!config.useBetterP2P %>
      window.currentlySelectedP2PServerId = `<%- config.p2pHostSelected %>`
  </script>
 <link rel="stylesheet" href="<%-window.libURL%>libs/css/super.easyRemoteAccess.css">

@@ -35,7 +35,8 @@ $(document).ready(function(){
         var chartViewerCount = cardEl.find('.chartViewerCount')
         var connectedUsers = cardEl.find('.connectedUsers')
         var registeredServers = cardEl.find('.registeredServers')
-        var socketConnection = io(`ws://${server.host}:${server.p2pPort}`,{
+        var chartPort = server.v2 ? server.chartPort || server.webPort  + 2 : server.p2pPort
+        var socketConnection = io(`ws://${server.host}:${chartPort}`,{
             transports: ['websocket'],
             query: {
                 charts: '1'
@@ -154,6 +155,7 @@ $(document).ready(function(){
     })
     $.each(p2pServerList,function(key,server){
         server.key = key
+        if(useBetterP2P && !server.v2)return;
         beginStatusConnectionForServer(key,server)
     })
     displayCurrentlySelectedInternally()
