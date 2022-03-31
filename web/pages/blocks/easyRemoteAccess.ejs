@@ -57,6 +57,8 @@
         <div class="row" id="p2pServerList">
             <% Object.keys(p2pServerList).forEach((key) => {
                 const details = p2pServerList[key]
+                if(config.useBetterP2P && !details.v2)return;
+                if(!config.useBetterP2P && details.v2)return;
             %>
                 <div class="col-md-4 mt-2">
                     <div class="card <% if(config.p2pHostSelected === key){ %>active<% } %>" drawn-id="<%- key %>">

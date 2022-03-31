@@ -155,6 +155,7 @@ $(document).ready(function(){
     $.each(p2pServerList,function(key,server){
         server.key = key
         if(window.useBetterP2P && !server.v2)return;
+        if(!window.useBetterP2P && server.v2)return;
         beginStatusConnectionForServer(key,server)
     })
     displayCurrentlySelectedInternally()
