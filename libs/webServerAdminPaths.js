@@ -1,7 +1,6 @@
 var fs = require('fs');
 var os = require('os');
 var moment = require('moment')
-var jsonfile = require("jsonfile")
 var exec = require('child_process').exec;
 var spawn = require('child_process').spawn;
 var execSync = require('child_process').execSync;
