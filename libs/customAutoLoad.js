@@ -1,10 +1,10 @@
 const fs = require('fs-extra');
 const express = require('express')
-const request = require('request')
 const unzipper = require('unzipper')
 const fetch = require("node-fetch")
 const spawn = require('child_process').spawn
 module.exports = async (s,config,lang,app,io) => {
+    const { fetchDownloadAndWrite } = require('./basic/utils.js')(process.cwd(),config)
     s.debugLog(`+++++++++++CustomAutoLoad Modules++++++++++++`)
     const runningInstallProcesses = {}
     const modulesBasePath = __dirname + '/customAutoLoad/'
@@ -65,10 +65,9 @@ module.exports = async (s,config,lang,app,io) => {
         fs.mkdirSync(downloadPath)
         return new Promise(async (resolve, reject) => {
             fs.mkdir(downloadPath, () => {
-                request(downloadUrl).pipe(fs.createWriteStream(downloadPath + '.zip'))
-                .on('finish',() => {
-                    zip = fs.createReadStream(downloadPath + '.zip')
-                    .pipe(unzipper.Parse())
+                fetchDownloadAndWrite(downloadUrl,downloadPath + '.zip', 1)
+                .then((readStream) => {
+                    readStream.pipe(unzipper.Parse())
                     .on('entry', async (file) => {
                         if(file.type === 'Directory'){
                             try{
