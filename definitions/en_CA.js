@@ -394,7 +394,6 @@ module.exports = function(s,config,lang){
                        "form-group-class-pre-layer": "h_auto_host_input h_auto_host_0 auto_host_fill",
                     },
                     {
-                        hidden:true,
                        "name": "detail=fatal_max",
                        "field": lang['Retry Connection'],
                        "description": lang["fieldTextFatalMax"],
