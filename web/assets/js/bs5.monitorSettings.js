@@ -1,3 +1,4 @@
+var monitorEditorSelectedMonitor = null
 $(document).ready(function(e){
 
 //Monitor Editor
@@ -12,7 +13,6 @@ var monitorPresetsSelection = $('#monitorPresetsSelection')
 var monitorPresetsNameField = $('#monitorPresetsName')
 var monitorGroupSelectors = $('#monitor_groups')
 var editorForm = monitorEditorWindow.find('form')
-var monitorEditorSelectedMonitor = null
 var fieldsLoaded = {}
 var sections = {}
 var loadedPresets = {}
