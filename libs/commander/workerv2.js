@@ -2,6 +2,7 @@ const { parentPort } = require('worker_threads');
 process.on("uncaughtException", function(error) {
   console.error(error);
 });
+let remoteConnectionPort = 8080
 const net = require("net")
 const bson = require('bson')
 const WebSocket = require('cws')
@@ -22,7 +23,9 @@ const s = {
 parentPort.on('message',(data) => {
     switch(data.f){
         case'init':
-            initialize(data.config,data.lang)
+            const config = data.config
+            remoteConnectionPort = config.ssl ? config.ssl.port || 443 : config.port || 8080
+            initialize(config,data.lang)
         break;
         case'exit':
             s.debugLog('Closing P2P Connection...')
@@ -83,6 +86,13 @@ function startConnection(p2pServerAddress,subscriptionId){
             callback: callback,
         })
     }
+    function outboundMessage(key,data,requestId){
+        sendDataToTunnel({
+            f: key,
+            data: data,
+            rid: requestId
+        })
+    }
     function createRemoteSocket(host,port,requestId){
         // if(requestConnections[requestId]){
         //     remotesocket.off('data')
@@ -91,15 +101,8 @@ function startConnection(p2pServerAddress,subscriptionId){
         //     requestConnections[requestId].end()
         // }
         let remotesocket = new net.Socket();
-        remotesocket.connect(port || 8080, host || 'localhost');
+        remotesocket.connect(port || remoteConnectionPort, host || 'localhost');
         requestConnections[requestId] = remotesocket
-        function outboundMessage(key,data,requestId){
-            sendDataToTunnel({
-                f: key,
-                data: data,
-                rid: requestId
-            })
-        }
         remotesocket.on('data', function(data) {
             outboundMessage('data',data,requestId)
         })
