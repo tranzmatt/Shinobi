@@ -347,7 +347,7 @@ module.exports = function(s,config,lang,io){
                         }
                     })
                     try{
-                        Object.values(s.group[d.ke].rawMonitorConfigurations).forEach((monitor) => {
+                        (s.group[d.ke] ? Object.values(s.group[d.ke].rawMonitorConfigurations) : []).forEach((monitor) => {
                             s.cameraSendSnapshot({
                                 mid: monitor.mid,
                                 ke: monitor.ke,

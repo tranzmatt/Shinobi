@@ -731,7 +731,7 @@ function signalCheckLiveStream(options){
         var checkCount = 0
         var base64Data = null;
         var checkSpeed = options.checkSpeed || 1000
-        var subStreamChannel = monitor.subStreamChannel
+        var subStreamChannel = monitorConfig.subStreamChannel
         var streamType = subStreamChannel ? monitorDetails.substream ? monitorDetails.substream.output.stream_type : 'hls' : monitorDetails.stream_type
         function failedStreamCheck(){
             if(monitorConfig.signal_check_log == 1){
@@ -799,6 +799,7 @@ function signalCheckLiveStream(options){
         }
         executeCheck();
     }catch(err){
+        console.log(err)
         var errorStack = err.stack;
         function phraseFoundInErrorStack(x){return errorStack.indexOf(x) > -1}
         if(phraseFoundInErrorStack("The HTMLImageElement provided is in the 'broken' state.")){
