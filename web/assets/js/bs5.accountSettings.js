@@ -119,7 +119,7 @@ $(document).ready(function(){
         writewMonGroups()
         var formData = theForm.serializeObject()
         var errors = []
-        if(formData.pass !== '' && formData.password_again === formData.pass){
+        if(formData.pass !== '' && formData.password_again !== formData.pass){
             errors.push(lang[`Passwords don't match`])
         }
         if(errors.length > 0){
