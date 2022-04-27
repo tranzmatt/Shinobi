@@ -59,7 +59,13 @@ $(document).ready(function(){
         }
         dashboardOptions('subscription_checked',new Date());
     }
-    if(!userHasSubscribed && !dashboardOptions().subscription_checked || lessThanOneWeekAgo(new Date(dashboardOptions().subscription_checked))){
+    if(
+        !userHasSubscribed &&
+        (
+            !dashboardOptions().subscription_checked ||
+            lessThanOneWeekAgo(new Date(dashboardOptions().subscription_checked))
+        )
+    ){
         setTimeout(function(){
             showHelpNotice()
         },1000 * 60 * 0.2)
