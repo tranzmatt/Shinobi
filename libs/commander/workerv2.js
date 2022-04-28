@@ -33,12 +33,20 @@ parentPort.on('message',(data) => {
         break;
     }
 })
+function createWebsocketConnection(p2pServerAddress){
+    return new Promise((resolve,reject) => {
+        const newTunnel = new WebSocket(p2pServerAddress || 'ws://172.16.101.218:81');
+        newTunnel.on('open', function(){
+            resolve(newTunnel)
+        })
+    })
+}
 function startConnection(p2pServerAddress,subscriptionId){
     console.log('Connecting to Konekta P2P Server...')
     let tunnelToShinobi
     let stayDisconnected = false
     const allMessageHandlers = []
-    function startWebsocketConnection(key,callback){
+    async function startWebsocketConnection(key,callback){
         function disconnectedConnection(code,reason){
             s.debugLog('stayDisconnected',stayDisconnected)
             if(stayDisconnected)return;
@@ -53,14 +61,11 @@ function startConnection(p2pServerAddress,subscriptionId){
             console.log(err)
         }
         s.debugLog(p2pServerAddress)
-        tunnelToShinobi = new WebSocket(p2pServerAddress || 'ws://172.16.101.218:81');
-
-        tunnelToShinobi.on('open', function(){
-            console.log('Connected! Authenticating...')
-            sendDataToTunnel({
-                subscriptionId: subscriptionId || '0z7BTxsCgk76nyn6kxfSkTzjYQ1CyofCiUktxdo4'
-            })
-        });
+        tunnelToShinobi = await createWebsocketConnection(p2pServerAddress)
+        console.log('Connected! Authenticating...')
+        sendDataToTunnel({
+            subscriptionId: subscriptionId || '0z7BTxsCgk76nyn6kxfSkTzjYQ1CyofCiUktxdo4'
+        })
         tunnelToShinobi.on('error', (err) => {
             console.log(err)
         });
