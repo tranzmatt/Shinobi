@@ -33,20 +33,44 @@ parentPort.on('message',(data) => {
         break;
     }
 })
-function createWebsocketConnection(p2pServerAddress){
-    return new Promise((resolve,reject) => {
-        const newTunnel = new WebSocket(p2pServerAddress || 'ws://172.16.101.218:81');
-        newTunnel.on('open', function(){
-            resolve(newTunnel)
-        })
-    })
-}
+var socketCheckTimer = null
+var heartbeatTimer = null
+let stayDisconnected = false
 function startConnection(p2pServerAddress,subscriptionId){
-    console.log('Connecting to Konekta P2P Server...')
+    console.log('P2P : Connecting to Konekta P2P Server...')
     let tunnelToShinobi
-    let stayDisconnected = false
+    stayDisconnected = false
     const allMessageHandlers = []
     async function startWebsocketConnection(key,callback){
+        function createWebsocketConnection(){
+            return new Promise((resolve,reject) => {
+                const newTunnel = new WebSocket(p2pServerAddress || 'ws://172.16.101.218:81');
+                newTunnel.on('open', function(){
+                    resolve(newTunnel)
+                })
+                newTunnel.on('error', (err) => {
+                    console.log(`P2P newTunnel Error : `,err)
+                })
+                newTunnel.on('close', disconnectedConnection);
+                newTunnel.onmessage = function(event){
+                    const data = bson.deserialize(Buffer.from(event.data))
+                    allMessageHandlers.forEach((handler) => {
+                        if(data.f === handler.key){
+                            handler.callback(data.data,data.rid)
+                        }
+                    })
+                }
+
+                clearInterval(socketCheckTimer)
+                socketCheckTimer = setInterval(() => {
+                    s.debugLog('Tunnel Ready State :',newTunnel.readyState)
+                    if(newTunnel.readyState !== 1){
+                        s.debugLog('Tunnel NOT Ready! Reconnecting...')
+                        disconnectedConnection()
+                    }
+                },1000 * 60)
+            })
+        }
         function disconnectedConnection(code,reason){
             s.debugLog('stayDisconnected',stayDisconnected)
             if(stayDisconnected)return;
@@ -61,23 +85,17 @@ function startConnection(p2pServerAddress,subscriptionId){
             console.log(err)
         }
         s.debugLog(p2pServerAddress)
-        tunnelToShinobi = await createWebsocketConnection(p2pServerAddress)
-        console.log('Connected! Authenticating...')
+        tunnelToShinobi = await createWebsocketConnection(p2pServerAddress,allMessageHandlers)
+        console.log('P2P : Connected! Authenticating...')
         sendDataToTunnel({
-            subscriptionId: subscriptionId || '0z7BTxsCgk76nyn6kxfSkTzjYQ1CyofCiUktxdo4'
+            subscriptionId: subscriptionId
         })
-        tunnelToShinobi.on('error', (err) => {
-            console.log(err)
-        });
-        tunnelToShinobi.on('close', disconnectedConnection);
-        tunnelToShinobi.onmessage = function(event){
-            const data = bson.deserialize(Buffer.from(event.data))
-            allMessageHandlers.forEach((handler) => {
-                if(data.f === handler.key){
-                    handler.callback(data.data,data.rid)
-                }
+        clearInterval(heartbeatTimer)
+        heartbeatTimer = setInterval(() => {
+            sendDataToTunnel({
+                f: 'ping',
             })
-        }
+        }, 1000 * 10)
     }
     function sendDataToTunnel(data){
         tunnelToShinobi.send(
@@ -147,6 +165,12 @@ function startConnection(p2pServerAddress,subscriptionId){
     })
     onIncomingMessage('pause',function(data,requestId){
         requestConnections[requestId].pause()
+    })
+    onIncomingMessage('pong',function(data,requestId){
+        s.debugLog('Heartbeat')
+    })
+    onIncomingMessage('init',function(data,requestId){
+        console.log(`P2P : Authenticated!`)
     })
     onIncomingMessage('end',function(data,requestId){
         try{
