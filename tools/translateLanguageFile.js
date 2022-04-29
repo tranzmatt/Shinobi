@@ -59,7 +59,7 @@ var next=function(v){
     translate(source[v], {to: process.argv[4],from: process.argv[3]}).then(res => {
         translation = res.text
         newList[v] = translation;
-        console.log(current + '/' + list.length + ',' + v + ' ---> ' + translation)
+        console.log(current + '/' + list.length,v,' ---> ',translation)
         goNext()
     }).catch(err => {
         translation = `${source[v]}`
