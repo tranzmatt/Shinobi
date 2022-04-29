@@ -7,6 +7,7 @@ $(document).ready(function(e){
     var powerVideoVideoLimitElement = $('#powerVideoVideoLimit')
     var powerVideoEventLimitElement = $('#powerVideoEventLimit')
     var powerVideoSet = $('#powerVideoSet')
+    var powerVideoMuteIcon = powerVideoWindow.find('[powerVideo-control="toggleMute"] i')
     var powerVideoLoadedVideos = {}
     var powerVideoLoadedEvents = {}
     var powerVideoLoadedChartData = {}
@@ -14,6 +15,7 @@ $(document).ready(function(e){
     var eventsLabeledByTime = {}
     var monitorSlotPlaySpeeds = {}
     var currentlyPlayingVideos = {}
+    var powerVideoMute = true
     var lastPowerVideoSelectedMonitors = []
     var extenders = {
         onVideoPlayerTimeUpdateExtensions: [],
@@ -45,11 +47,11 @@ $(document).ready(function(e){
         })
     });
     // fix utc/localtime translation (use timelapseJpeg as guide, it works as expected) />
-    var loadVideosToTimeLineMemory = function(monitorId,videos,events){
+    function loadVideosToTimeLineMemory(monitorId,videos,events){
         powerVideoLoadedVideos[monitorId] = videos
         powerVideoLoadedEvents[monitorId] = events
     }
-    var drawMonitorsList = function(){
+    function drawMonitorsList(){
         // var monitorList = Object.values(loadedMonitors).map(function(item){
         //     return {
         //         value: item.mid,
@@ -66,7 +68,7 @@ $(document).ready(function(e){
         })
         powerVideoMonitorsListElement.html(html)
     }
-    var requestTableData = function(monitorId,user){
+    function requestTableData(monitorId,user){
         if(!user)user = $user
         var dateData = powerVideoDateRangeElement.data('daterangepicker')
         var newRequest = {
@@ -84,7 +86,7 @@ $(document).ready(function(e){
         console.log(newRequest)
         mainSocket.f(newRequest)
     }
-    var unloadTableData = function(monitorId,user){
+    function unloadTableData(monitorId,user){
         if(!user)user = $user
         delete(powerVideoLoadedVideos[monitorId])
         delete(powerVideoLoadedEvents[monitorId])
@@ -93,7 +95,7 @@ $(document).ready(function(e){
         powerVideoMonitorViewsElement.find(`.videoPlayer[data-mid="${monitorId}"]`).remove()
         drawLoadedTableData()
     }
-    var checkEventsAgainstVideo = function(video,events){
+    function checkEventsAgainstVideo(video,events){
         var videoStartTime = new Date(video.time)
         var videoEndTime = new Date(video.end)
         var eventsToCheck = events
@@ -112,7 +114,7 @@ $(document).ready(function(e){
         })
         eventsToCheck = newSetOfEventsWithoutChecked
     }
-    var prepareVideosAndEventsForTable = function(monitorId,videos,events){
+    function prepareVideosAndEventsForTable(monitorId,videos,events){
         var chartData = []
         eventsLabeledByTime[monitorId] = {}
         $.each(videos,function(n,video){
@@ -152,7 +154,7 @@ $(document).ready(function(e){
         })
         return chartData
     }
-    var getMiniEventsChartConfig = function(video){
+    function getMiniEventsChartConfig(video){
         var monitorId = video.mid
         var labels = []
         var chartData = []
@@ -196,7 +198,7 @@ $(document).ready(function(e){
         };
         return config
     }
-    var drawMiniEventsChart = function(video,chartConfig){
+    function drawMiniEventsChart(video,chartConfig){
         var videoContainer = powerVideoMonitorViewsElement.find(`.videoPlayer[data-mid=${video.mid}]`)
         var canvas = videoContainer.find('canvas')
         var ctx = canvas[0].getContext("2d")
@@ -210,7 +212,7 @@ $(document).ready(function(e){
             video1.play()
         })
     }
-    var getAllChartDataForLoadedVideos = function(){
+    function getAllChartDataForLoadedVideos(){
         var chartData = []
         Object.keys(powerVideoLoadedVideos).forEach(function(monitorId,n){
             var videos = powerVideoLoadedVideos[monitorId]
@@ -221,14 +223,14 @@ $(document).ready(function(e){
         })
         return chartData
     }
-    var visuallySelectItemInRow = function(video){
+    function visuallySelectItemInRow(video){
         powerVideoTimelineStripsContainer.find(`[timeline-video-file="${video.mid}${video.time}"]`).parents('.vis-item').addClass('vis-selected')
     }
-    var visuallyDeselectItemInRow = function(video){
+    function visuallyDeselectItemInRow(video){
         powerVideoTimelineStripsContainer.find(`[timeline-video-file="${video.mid}${video.time}"]`).parents('.vis-item').removeClass('vis-selected')
     }
     var drawTableTimeout = null
-    var drawLoadedTableData = function(){
+    function drawLoadedTableData(){
         // destroy old
         try{
             if(activeTimeline && activeTimeline.destroy){
@@ -301,7 +303,7 @@ $(document).ready(function(e){
             }
         },1000)
     }
-    var drawMatrices = function(event,options){
+    function drawMatrices(event,options){
         var streamObjectsContainer = options.streamObjectsContainer
         var height = options.height
         var width = options.width
@@ -318,7 +320,7 @@ $(document).ready(function(e){
         })
         streamObjectsContainer.append(html)
     }
-    var attachEventsToVideoActiveElement = function(video){
+    function attachEventsToVideoActiveElement(video){
         var monitorId = video.mid
         var videoPlayerContainer = powerVideoMonitorViewsElement.find(`.videoPlayer[data-mid=${monitorId}]`)
         var videoElement = videoPlayerContainer.find(`video.videoNow`)
@@ -403,7 +405,7 @@ $(document).ready(function(e){
             videoElement[0].onended = onEnded
             videoElement[0].onerror = onEnded
     }
-    var dettachEventsToVideoActiveElement = function(monitorId){
+    function dettachEventsToVideoActiveElement(monitorId){
         var videoElement = powerVideoMonitorViewsElement.find(`.videoPlayer[data-mid=${monitorId}] video.videoNow`)
         $(videoElement)
             // .off('loadeddata')
@@ -411,7 +413,7 @@ $(document).ready(function(e){
             .off("play")
             .off("timeupdate")
     }
-    var findAllVideosAtTime = function(selectedTime){
+    function findAllVideosAtTime(selectedTime){
         var time = new Date(selectedTime)
         var parsedVideos = {}
         $.each(powerVideoLoadedVideos,function(monitorId,videos){
@@ -424,7 +426,7 @@ $(document).ready(function(e){
         })
         return parsedVideos
     }
-    var resetVisualDetectionDataForMonitorSlot = function(monitorId){
+    function resetVisualDetectionDataForMonitorSlot(monitorId){
         var videoPlayerContainer = powerVideoMonitorViewsElement.find(`.videoPlayer[data-mid=${monitorId}]`)
         var streamObjectsContainer = videoPlayerContainer.find(`.videoPlayer-stream-objects`)
         var detectionInfoContainerObject = videoPlayerContainer.find(`.videoPlayer-detection-info-object`)
@@ -437,7 +439,7 @@ $(document).ready(function(e){
         motionMeterProgressBar.css('width','0')
         motionMeterProgressBarTextBox.text('0')
     }
-    var loadVideoIntoMonitorSlot = function(video,selectedTime){
+    function loadVideoIntoMonitorSlot(video,selectedTime){
         if(!video)return
         resetVisualDetectionDataForMonitorSlot(video.mid)
         currentlyPlayingVideos[video.mid] = video
@@ -533,20 +535,20 @@ $(document).ready(function(e){
         })
         drawMiniEventsChart(video,getMiniEventsChartConfig(video))
     }
-    var getSelectedMonitors = function(){
+    function getSelectedMonitors(){
         var form = powerVideoMonitorsListElement.serializeObject()
         var selectedMonitors = Object.keys(form).filter(key => form[key] == '1')
         return selectedMonitors
     }
-    var getAllActiveVideosInSlots = function(){
+    function getAllActiveVideosInSlots(){
         return powerVideoMonitorViewsElement.find('video.videoNow')
     }
-    var pauseAllSlots = function(){
+    function pauseAllSlots(){
         getAllActiveVideosInSlots().each(function(n,video){
             if(!video.paused)video.pause()
         })
     }
-    var toggleZoomAllSlots = function(){
+    function toggleZoomAllSlots(){
         powerVideoMonitorViewsElement.find(`.videoPlayer`).each(function(n,videoContainer){
             var streamWindow = $(videoContainer)
             var monitorId = streamWindow.attr('data-mid')
@@ -590,12 +592,24 @@ $(document).ready(function(e){
             }
         })
     }
-    var playAllSlots = function(){
+    function playAllSlots(){
         getAllActiveVideosInSlots().each(function(n,video){
             if(video.paused)video.play()
         })
     }
-    var setPlaySpeedOnAllSlots = function(playSpeed){
+    function toggleMute(){
+        powerVideoMute = !powerVideoMute
+        getAllActiveVideosInSlots().each(function(n,video){
+            if(powerVideoMute){
+                powerVideoMuteIcon.removeClass('fa-volume-up').addClass('fa-volume-off')
+                video.muted = true
+            }else{
+                powerVideoMuteIcon.removeClass('fa-volume-off').addClass('fa-volume-up')
+                video.muted = false
+            }
+        })
+    }
+    function setPlaySpeedOnAllSlots(playSpeed){
         Object.keys(powerVideoLoadedVideos).forEach(function(monitorId){
             monitorSlotPlaySpeeds[monitorId] = playSpeed
         })
@@ -603,7 +617,7 @@ $(document).ready(function(e){
             video.playbackRate = playSpeed
         })
     }
-    var nextVideoAllSlots = function(){
+    function nextVideoAllSlots(){
         Object.keys(currentlyPlayingVideos).forEach(function(monitorId){
             var video = currentlyPlayingVideos[monitorId]
             visuallyDeselectItemInRow(video)
@@ -611,7 +625,7 @@ $(document).ready(function(e){
             loadVideoIntoMonitorSlot(video.videoAfter,0)
         })
     }
-    var previousVideoAllSlots = function(){
+    function previousVideoAllSlots(){
         Object.keys(currentlyPlayingVideos).forEach(function(monitorId){
             var video = currentlyPlayingVideos[monitorId]
             visuallyDeselectItemInRow(video)
@@ -656,6 +670,9 @@ $(document).ready(function(e){
             var el = $(this)
             var controlType = el.attr('powerVideo-control')
             switch(controlType){
+                case'toggleMute':
+                    toggleMute()
+                break;
                 case'toggleZoom':
                     toggleZoomAllSlots()
                 break;

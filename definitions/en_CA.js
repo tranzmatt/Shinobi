@@ -7746,6 +7746,12 @@ module.exports = function(s,config,lang){
                                       "attribute": `powerVideo-control="toggleZoom" title="${lang['Zoom In']}"`,
                                       "btnContent": `<i class="fa fa-search-plus"></i>`,
                                   },
+                                  {
+                                      "fieldType": "btn",
+                                      "class": `btn-default btn-sm`,
+                                      "attribute": `powerVideo-control="toggleMute" title="${lang['Zoom In']}"`,
+                                      "btnContent": `<i class="fa fa-volume-off"></i>`,
+                                  },
                               ],
                            },
                            {
