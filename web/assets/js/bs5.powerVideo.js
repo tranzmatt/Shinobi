@@ -500,6 +500,7 @@ $(document).ready(function(e){
                     if(!videoNow.paused)videoNow.pause()
                     videoNow.currentTime = timeToStartAt / 1000
                     if(videoNow.paused)videoNow.play()
+                    attachEventsToVideoActiveElement(video)
                     return
                 break;
                 case videoIsAfter:
