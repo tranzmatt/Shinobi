@@ -987,7 +987,7 @@
   "Recording Timestamp": "録画タイムスタンプ",
   "Recording Watermark": "録画透かし",
   "Recording": "録画",
-  "RecordingText": " <b>入力タイプ</b> が <b class=\"h_t_text\"></b> に設定されているので、<b>録音ファイルのタイプ</b> を <b class=\"h_t_input h_t_jpeg h_t_socket\">WebM</b><b class=\"h_t_input h_t_mjpeg h_t_h264 h_t_hls h_t_mp4 h_t_local\">MP4</b>に<b>ビデオコーデックを</b> to <b class=\"h_t_input h_t_jpeg h_t_socket\">libvpx</b><b class=\"h_t_input h_t_h264 h_t_hls h_t_mp4\">にコピーまたは</b><b class=\"h_t_input h_t_mjpeg h_t_h264 h_t_hls h_t_mp4 h_t_local\">libx264</b> に設定することを推奨します。
+  "RecordingText": " <b>入力タイプ</b> が <b class=\"h_t_text\"></b> に設定されているので、<b>録音ファイルのタイプ</b> を <b class=\"h_t_input h_t_jpeg h_t_socket\">WebM</b><b class=\"h_t_input h_t_mjpeg h_t_h264 h_t_hls h_t_mp4 h_t_local\">MP4</b>に<b>ビデオコーデックを</b> to <b class=\"h_t_input h_t_jpeg h_t_socket\">libvpx</b><b class=\"h_t_input h_t_h264 h_t_hls h_t_mp4\">にコピーまたは</b><b class=\"h_t_input h_t_mjpeg h_t_h264 h_t_hls h_t_mp4 h_t_local\">libx264</b> に設定することを推奨します。",
   "Refresh List of Cascades": "カスケードのリフレッシュリスト",
   "refrigerator": "冷蔵庫",
   "Region Editor": "リージョンのエディタ",
@@ -1253,5 +1253,5 @@
   "Zoom In Stop": "ズームイン停止 <small>のURLアドレス</small>",
   "Zoom In": "ズームイン <small>のURLアドレス</small>",
   "Zoom Out Stop": "ズームアウト停止 <small>のURLアドレス</small>",
-  "Zoom Out": "ズームアウト <small>URLアドレス</small>",
+  "Zoom Out": "ズームアウト <small>URLアドレス</small>"
 }
