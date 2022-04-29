@@ -289,7 +289,7 @@ module.exports = (s,config,lang) => {
                         streamFlags.push(`-g 1`)
                     }
                 }
-                streamFlags.push(`-f hls -hls_time ${hlsTime} -hls_list_size ${hlsListSize} -start_number 0 -hls_allow_cache 0 -hls_flags +delete_segments+omit_endlist "${channelStreamDirectory}s.m3u8"`)
+                streamFlags.push(`-f hls -hls_time ${hlsTime} -hls_list_size ${hlsListSize} -start_number 0 -hls_allow_cache 0 -hls_flags +delete_segments+omit_endlist+discont_start "${channelStreamDirectory}s.m3u8"`)
             break;
             case'mjpeg':
                 streamFlags.push(`-an -c:v mjpeg -f mpjpeg -boundary_tag shinobi pipe:${number}`)
@@ -462,7 +462,7 @@ module.exports = (s,config,lang) => {
                             streamFlags.push(`-g 1`)
                         }
                     }
-                    streamFlags.push(`-f hls -hls_time ${hlsTime} -hls_list_size ${hlsListSize} -start_number 0 -hls_allow_cache 0 -hls_flags +delete_segments+omit_endlist "${e.sdir}s.m3u8"`)
+                    streamFlags.push(`-f hls -hls_time ${hlsTime} -hls_list_size ${hlsListSize} -start_number 0 -hls_allow_cache 0 -hls_flags +delete_segments+omit_endlist+discont_start "${e.sdir}s.m3u8"`)
                 break;
                 case'mjpeg':
                     streamFlags.push(`-an -c:v mjpeg -f mpjpeg -boundary_tag shinobi pipe:1`)
@@ -739,7 +739,7 @@ module.exports = (s,config,lang) => {
                     outputFlags.push(`-g 1`)
                 }
             }
-            outputFlags.push(`-f hls -live_start_index -3 -hls_time ${hlsTime} -hls_list_size ${hlsListSize} -start_number 0 -hls_allow_cache 0 -hls_flags +delete_segments+omit_endlist "${e.sdir}detectorStream.m3u8"`)
+            outputFlags.push(`-f hls -live_start_index -3 -hls_time ${hlsTime} -hls_list_size ${hlsListSize} -start_number 0 -hls_allow_cache 0 -hls_flags +delete_segments+omit_endlist+discont_start "${e.sdir}detectorStream.m3u8"`)
         }
         return outputFlags.join(' ')
     }
