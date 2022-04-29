@@ -34,9 +34,9 @@ $(document).ready(function(e){
             color_threshold: 9,
             points: [
                 [0, 0],
-                [0, height],
-                [width, height],
-                [width, 0]
+                [0, height * 0.6],
+                [width * 0.6, height * 0.6],
+                [width * 0.6, 0]
             ]
         }
     }
