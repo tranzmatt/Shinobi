@@ -268,6 +268,12 @@ module.exports = function(s,config,lang){
             }
         })
     }
+    function filterMonitorListOrder(groupKey,details){
+        const loadedMonitors = s.group[groupKey].rawMonitorConfigurations
+        var monitorListOrder = details.monitorListOrder[0].filter(monitorId => !!loadedMonitors[monitorId]);
+        monitorListOrder = [...new Set(monitorListOrder)];
+        return monitorListOrder
+    }
     s.accountSettingsEdit = function(d,dontRunExtensions){
         s.knexQuery({
             action: "select",
@@ -361,6 +367,7 @@ module.exports = function(s,config,lang){
                     readStorageArray()
                     ///
                     formDetails = s.mergeDeep(details,formDetails)
+                    formDetails.monitorListOrder[0] = filterMonitorListOrder(d.ke,formDetails)
                     formDetailsString = JSON.stringify(s.mergeDeep(details,formDetails))
                     ///
                     const updateQuery = {}

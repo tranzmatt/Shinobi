@@ -28,12 +28,15 @@ module.exports = function(s,config){
     s.getLanguageFile = function(rule){
         if(rule && rule !== ''){
             var file = s.loadedLanguages[file]
+            s.debugLog(file)
             if(!file){
                 try{
-                    s.loadedLanguages[rule] = require(s.location.languages+'/'+rule+'.json')
-                    s.loadedLanguages[rule] = Object.assign({},s.copySystemDefaultLanguage(),s.loadedLanguages[rule])
+                    let newLang = {}
+                    eval(`newLang = ${fs.readFileSync(s.location.languages+'/'+rule+'.json','utf8')}`)
+                    s.loadedLanguages[rule] = Object.assign(s.copySystemDefaultLanguage(),newLang)
                     file = s.loadedLanguages[rule]
                 }catch(err){
+                    console.error(err)
                     file = s.copySystemDefaultLanguage()
                 }
             }
