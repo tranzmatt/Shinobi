@@ -270,7 +270,7 @@ module.exports = function(s,config,lang){
     }
     function filterMonitorListOrder(groupKey,details){
         const loadedMonitors = s.group[groupKey].rawMonitorConfigurations
-        var monitorListOrder = details.monitorListOrder[0].filter(monitorId => !!loadedMonitors[monitorId]);
+        var monitorListOrder = (details.monitorListOrder && details.monitorListOrder[0] ? details.monitorListOrder[0] : []).filter(monitorId => !!loadedMonitors[monitorId]);
         monitorListOrder = [...new Set(monitorListOrder)];
         return monitorListOrder
     }
@@ -367,7 +367,7 @@ module.exports = function(s,config,lang){
                     readStorageArray()
                     ///
                     formDetails = s.mergeDeep(details,formDetails)
-                    formDetails.monitorListOrder[0] = filterMonitorListOrder(d.ke,formDetails)
+                    if(formDetails.monitorListOrder)formDetails.monitorListOrder[0] = filterMonitorListOrder(d.ke,formDetails);
                     formDetailsString = JSON.stringify(s.mergeDeep(details,formDetails))
                     ///
                     const updateQuery = {}
