@@ -327,7 +327,7 @@ module.exports = function(s,config,lang,io){
                     if(s.group[d.ke].users[d.auth].details.get_server_log!=='0'){
                         cn.join('GRPLOG_'+d.ke)
                     }
-                    s.group[d.ke].users[d.auth].lang=s.getLanguageFile(s.group[d.ke].users[d.auth].details.lang)
+                    s.group[d.ke].users[d.auth].lang = s.getLanguageFile(s.group[d.ke].users[d.auth].details.lang)
                     s.userLog({ke:d.ke,mid:'$USER'},{type:s.group[d.ke].users[d.auth].lang['Websocket Connected'],msg:{mail:r.mail,id:d.uid,ip:cn.ip}})
                     if(!s.group[d.ke].activeMonitors){
                         s.group[d.ke].activeMonitors={}

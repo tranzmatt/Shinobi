@@ -4,11 +4,12 @@ module.exports = function(s,config){
         config.language='en_CA'
     }
     try{
-        var lang = require(s.location.languages+'/'+config.language+'.json');
+        var lang = {};
+        eval(`lang = ${fs.readFileSync(s.location.languages+'/'+config.language+'.json','utf8')}`)
     }catch(er){
         console.error(er)
         console.log('There was an error loading your language file.')
-        var lang = require(s.location.languages+'/en_CA.json');
+        eval(`lang = ${fs.readFileSync(s.location.languages+'/en_CA.json','utf8')}`)
     }
     //load languages dynamically
     s.copySystemDefaultLanguage = function(){

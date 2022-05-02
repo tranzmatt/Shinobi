@@ -327,6 +327,7 @@ module.exports = function(s,config,lang,app,io){
                     })
                 break;
                 case'admin':
+                // dash
                 default:
                     var chosenRender = 'home'
                     if(userInfo.details.sub && userInfo.details.landing_page && userInfo.details.landing_page !== '' && config.renderPaths[userInfo.details.landing_page]){

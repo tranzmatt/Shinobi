@@ -893,6 +893,7 @@
    "Starting": "Starting",
    "Watching": "Watching",
    "Stopped": "Stopped",
+   "Stopping": "Stopping",
    "Died": "Died",
    "Restart": "Restart",
    "Monitor Stopped": "Monitor Stopped",

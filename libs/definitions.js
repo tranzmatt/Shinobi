@@ -20,7 +20,6 @@ module.exports = function(s,config,lang,app,io){
     s.getDefinitonFile = function(rule){
         if(rule && rule !== ''){
             var file = s.loadedDefinitons[rule]
-            s.debugLog(file ? file.SideMenu.blocks.Container1 : undefined)
             if(!file){
                 try{
                     // console.log(getFramework(lang))
