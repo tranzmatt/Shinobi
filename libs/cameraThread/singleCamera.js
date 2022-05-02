@@ -36,11 +36,11 @@ const dataPort = require('./libs/dataPortConnection.js')(jsonData,
 
 var writeToStderr = function(argsAsArray){
   try{
-    // process.stderr.write(Buffer.from(`${text}`, 'utf8' ))
-    dataPort.send({
-        f: 'debugLog',
-        data: argsAsArray,
-    })
+    process.stderr.write(Buffer.from(`${JSON.stringify(argsAsArray)}`, 'utf8' ))
+    // dataPort.send({
+    //     f: 'debugLog',
+    //     data: argsAsArray,
+    // })
       // stdioWriters[2].write(Buffer.from(`${new Error('writeToStderr').stack}`, 'utf8' ))
   }catch(err){
   }
