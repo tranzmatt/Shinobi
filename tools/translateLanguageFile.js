@@ -66,6 +66,11 @@ async function makeFolderForOutput(timeout){
 async function moveNewLanguageFile(){
     try{
         await fs.promises.unlink(chosenFile)
+    }catch(err){
+        console.log('Failed to Delete old File!')
+        console.log(err)
+    }
+    try{
         await writeLanguageFile(newList,chosenFile)
     }catch(err){
         console.log('Failed to Move File!')
