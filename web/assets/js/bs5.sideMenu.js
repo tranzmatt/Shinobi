@@ -21,7 +21,7 @@ function drawMonitorIconToMenu(item){
           <div class="lh-1 text-start hidden-squeeze">
             <h1 class="h6 mb-0 lh-1"><span class="monitor_name">${item.name}</span></h1>
             <div class="pt-1">
-                <small class="monitor_status">${item.status}</small>
+                <small class="monitor_status">${definitions['Monitor Status Codes'][item.code] || item.status}</small>
             </div>
           </div>
           <div class="flex-fill text-end squeeze-button">

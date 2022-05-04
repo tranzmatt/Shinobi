@@ -35,7 +35,8 @@ let newList
 try{
     const buildOutputSource = usePendingFileForOutputSource ? generatedFilePath : chosenFile
     console.log(`Source Path : ${buildOutputSource}`)
-    newList = require(buildOutputSource)
+    eval(`newList = ${fs.readFileSync(buildOutputSource,'utf8')}`)
+    console.log(`The word "Save" in this language : `,newList['Save'])
 }catch(err){
     console.log(`There was an error loading : ${chosenFile}`)
     console.log(`Using blank base file. This will translate against all available terms!!!`)

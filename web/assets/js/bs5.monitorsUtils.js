@@ -39,7 +39,7 @@ function setCosmeticMonitorInfo(monitorConfig){
     monitorElements.find('.monitor_mid').text(monitorId)
     monitorElements.find('.monitor_ext').text(monitorConfig.ext)
     monitorElements.find('.monitor_mode').text(humanReadableMode)
-    monitorElements.find('.monitor_status').html(monitorConfig.status || '<i class="fa fa-spinner fa-pulse"></i>')
+    monitorElements.find('.monitor_status').html(definitions['Monitor Status Codes'][monitorConfig.code] || monitorConfig.status || '<i class="fa fa-spinner fa-pulse"></i>')
     monitorElements.attr('mode',humanReadableMode)
     monitorElements.find('.lamp').attr('title',humanReadableMode)
     if(monitorConfig.details.control=="1"){
