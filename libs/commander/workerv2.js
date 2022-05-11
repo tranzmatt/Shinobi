@@ -35,6 +35,7 @@ parentPort.on('message',(data) => {
 })
 var socketCheckTimer = null
 var heartbeatTimer = null
+var heartBeatCheckTimout = null
 let stayDisconnected = false
 function startConnection(p2pServerAddress,subscriptionId){
     console.log('P2P : Connecting to Konekta P2P Server...')
@@ -143,6 +144,12 @@ function startConnection(p2pServerAddress,subscriptionId){
             outboundMessage('pause',{},requestId)
         }
     }
+    function refreshHeartBeatCheck(){
+        clearTimeout(heartBeatCheckTimout)
+        heartBeatCheckTimout = setTimeout(() => {
+            startWebsocketConnection()
+        },1000 * 10 * 1.5)
+    }
     const requestConnections = []
     // onIncomingMessage('connect',(data,requestId) => {
     //     console.log('New Request Incoming',requestId)
@@ -167,6 +174,7 @@ function startConnection(p2pServerAddress,subscriptionId){
         requestConnections[requestId].pause()
     })
     onIncomingMessage('pong',function(data,requestId){
+        refreshHeartBeatCheck()
         s.debugLog('Heartbeat')
     })
     onIncomingMessage('init',function(data,requestId){
