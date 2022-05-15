@@ -465,7 +465,7 @@ module.exports = (s,config,lang,app,io) => {
             if(activeMonitor && activeMonitor.eventBasedRecording && activeMonitor.eventBasedRecording.process){
                 const eventBasedRecording = activeMonitor.eventBasedRecording
                 const monitorConfig = s.group[groupKey].rawMonitorConfigurations[monitorId]
-                const videoLength = monitorConfig.details.detector_send_video_length
+                const videoLength = parseInt(monitorConfig.details.detector_send_video_length) || 10
                 const recordingDirectory = s.getVideoDirectory(monitorConfig)
                 const fileTime = eventBasedRecording.lastFileTime
                 const filename = `${fileTime}.mp4`
@@ -478,10 +478,14 @@ module.exports = (s,config,lang,app,io) => {
                                 ke: groupKey,
                                 mid: monitorId,
                                 filePath: response.filePath,
-                                cutLength: parseInt(videoLength),
+                                cutLength: videoLength,
                             })
-                            response.filename = cutResponse.filename
-                            response.filePath = cutResponse.filePath
+                            if(cutResponse.ok){
+                                response.filename = cutResponse.filename
+                                response.filePath = cutResponse.filePath
+                            }else{
+                                s.debugLog('cutResponse',cutResponse)
+                            }
                         }
                         resolve(response)
                     },1000)
