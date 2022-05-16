@@ -49,6 +49,8 @@ module.exports = function(s,config,lang,app){
                             s.closeJsonResponse(res,endData)
                             return
                         }
+                    }else{
+                        updateQuery.mail = form.mail
                     }
                 }
                 await s.knexQueryPromise({

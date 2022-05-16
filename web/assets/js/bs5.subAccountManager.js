@@ -98,19 +98,20 @@ $(document).ready(function(){
             mail: form.mail,
             data: form
         },function(data){
+            console.log(data)
             if(data.ok){
                 $.each(form,function(n,v){
                     account[n] = v
                 });
-                accountTable.find(`[uid="${account.uid}"] .mail`).text(form.mail)
+                accountTable.find(`[uid="${uid}"] .mail`).text(form.mail)
                 new PNotify({
-                    title : 'Account Edited',
+                    title : lang['Account Edited'],
                     text : '<b>' + account.mail + '</b> has been updated.',
                     type : 'success'
                 })
             }else{
                 new PNotify({
-                    title : 'Failed to Add Account',
+                    title : lang['Failed to Edit Account'],
                     text : data.msg,
                     type : 'error'
                 })
@@ -121,7 +122,7 @@ $(document).ready(function(){
     var drawSubAccountRow = function(account){
         var html = `<div class="card ${definitions.Theme.isDark ? 'btn-default text-white' : 'bg-light text-dark'} mb-3 shadow-sm p-2" uid="${account.uid}">
             <div>
-                ${account.mail}<br>
+                <span class="mail">${account.mail}</span><br>
                 <small class="text-muted">${account.uid}</small><br>
             </div>
             <div>

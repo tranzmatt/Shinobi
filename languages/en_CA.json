@@ -21,6 +21,8 @@
    "Active Monitors": "Active Monitors",
    "Storage Use": "Storage Use",
    "Use Raw Snapshot": "Use Raw Snapshot",
+   "Account Edited": "Account Edited",
+   "Failed to Edit Account": "Failed to Edit Account",
    "Login": "Login",
    "Substream": "Substream",
    "Use Substream": "Use Substream",
