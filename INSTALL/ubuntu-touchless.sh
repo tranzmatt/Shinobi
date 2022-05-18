@@ -55,12 +55,12 @@ if ! [ -x "$(command -v ifconfig)" ]; then
 fi
 echo "============="
 echo "Shinobi - Installing Node.js"
-wget https://deb.nodesource.com/setup_12.x
-chmod +x setup_12.x
-./setup_12.x
+wget https://deb.nodesource.com/setup_16.x
+chmod +x setup_16.x
+./setup_16.x
 sudo apt install nodejs -y
 sudo apt install node-pre-gyp -y
-rm setup_12.x
+rm setup_16.x
 if ! [ -x "$(command -v npm)" ]; then
     sudo apt install npm -y
 fi
