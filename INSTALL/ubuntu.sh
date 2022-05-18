@@ -112,7 +112,7 @@ sudo npm install --unsafe-perm
 # sudo npm audit fix --force
 echo "============="
 echo "Shinobi - Install PM2"
-sudo npm install pm2@3.0.0 -g
+sudo npm install pm2@latest -g
 echo "Shinobi - Finished"
 sudo chmod -R 755 .
 touch INSTALL/installed.txt
