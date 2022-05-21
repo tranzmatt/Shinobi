@@ -37,6 +37,8 @@ var socketCheckTimer = null
 var heartbeatTimer = null
 var heartBeatCheckTimout = null
 let stayDisconnected = false
+const requestConnections = {}
+const requestConnectionsData = {}
 function startConnection(p2pServerAddress,subscriptionId){
     console.log('P2P : Connecting to Konekta P2P Server...')
     let tunnelToShinobi
@@ -51,6 +53,8 @@ function startConnection(p2pServerAddress,subscriptionId){
                 })
                 newTunnel.on('error', (err) => {
                     console.log(`P2P newTunnel Error : `,err)
+                    console.log(`P2P Restarting...`)
+                    disconnectedConnection()
                 })
                 newTunnel.on('close', disconnectedConnection);
                 newTunnel.onmessage = function(event){
@@ -128,12 +132,14 @@ function startConnection(p2pServerAddress,subscriptionId){
         remotesocket.connect(port || remoteConnectionPort, host || 'localhost');
         requestConnections[requestId] = remotesocket
         remotesocket.on('data', function(data) {
+            requestConnectionsData[requestId] = data.toString()
             outboundMessage('data',data,requestId)
         })
         remotesocket.on('drain', function() {
             outboundMessage('resume',{},requestId)
         });
         remotesocket.on('close', function() {
+            delete(requestConnectionsData[requestId])
             outboundMessage('end',{},requestId)
         });
         return remotesocket
@@ -150,7 +156,6 @@ function startConnection(p2pServerAddress,subscriptionId){
             startWebsocketConnection()
         },1000 * 10 * 1.5)
     }
-    const requestConnections = []
     // onIncomingMessage('connect',(data,requestId) => {
     //     console.log('New Request Incoming',requestId)
     //     createRemoteSocket('172.16.101.94', 8080, requestId)
@@ -184,6 +189,9 @@ function startConnection(p2pServerAddress,subscriptionId){
         try{
             requestConnections[requestId].end()
         }catch(err){
+            s.debugLog(`Reqest Failed to END ${requestId}`)
+            s.debugLog(`Failed Request ${requestConnectionsData[requestId]}`)
+            delete(requestConnectionsData[requestId])
             s.debugLog(err)
             // console.log('requestConnections',requestConnections)
         }
