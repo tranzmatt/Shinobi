@@ -401,7 +401,7 @@ function getVideos(options,callback){
     options = options ? options : {}
     var requestQueries = []
     var monitorId = options.monitorId
-    var limit = options.limit || 5000
+    var limit = options.limit || 300
     var eventStartTime
     var eventEndTime
     // var startDate = options.startDate
@@ -417,7 +417,7 @@ function getVideos(options,callback){
     $.getJSON(`${getApiPrefix(`videos`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`noLimit=1`]).join('&')}`,function(data){
         var videos = data.videos
         $.getJSON(`${getApiPrefix(`timelapse`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`noLimit=1`]).join('&')}`,function(timelapseFrames){
-            $.getJSON(`${getApiPrefix(`events`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`noLimit=1`]).join('&')}`,function(eventData){
+            $.getJSON(`${getApiPrefix(`events`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`limit=${limit}`]).join('&')}`,function(eventData){
                 var newVideos = applyDataListToVideos(videos,eventData)
                 newVideos = applyTimelapseFramesListToVideos(newVideos,timelapseFrames,'timelapseFrames',true)
                 $.each(newVideos,function(n,video){
