@@ -581,7 +581,7 @@ function callMonitorToLiveGrid(v){
     var watchedOn = dashboardOptions().watch_on || {}
     if(watchedOn[v.ke] && watchedOn[v.ke][v.mid] === 1 && loadedMonitors[v.mid] && loadedMonitors[v.mid].mode !== 'stop'){
         mainSocket.f({f:'monitor',ff:'watch_on',id:v.mid})
-        openLiveGrid()
+        if(tabTree.name !== 'monitorSettings')openLiveGrid()
     }
 }
 function loadPreviouslyOpenedLiveGridBlocks(){
