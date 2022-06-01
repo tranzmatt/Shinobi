@@ -102,14 +102,14 @@ function drawAddStorageIndicators(){
 }
 function showLoginNotices(){
     $.each([
-        {
+        !$user.details.sub ? {
             isValid: !$user.details.size || parseInt($user.details.size) < 20000,
             PNotify: {
                 type:'warning',
                 title: lang['Max Storage Amount'],
                 text: lang.setMaxStorageAmountText,
             }
-        }
+        } : {}
     ],function(n,notice){
         if(notice.isValid){
             new PNotify(notice.PNotify)
