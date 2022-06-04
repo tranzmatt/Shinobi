@@ -1366,6 +1366,7 @@ module.exports = function(s,config,lang,app,io){
              const groupKey = req.params.ke
              const monitorId = req.params.id
              const monitorRestrictions = s.getMonitorRestrictions(user.details,monitorId)
+             
              if(user.details.sub && user.details.allmonitors === '0' && monitorRestrictions.length === 0){
                  s.closeJsonResponse(res,{
                      ok: false,
@@ -1373,13 +1374,15 @@ module.exports = function(s,config,lang,app,io){
                  })
                  return
              }
+             
+            const d = {
+                id: req.params.id,
+                ke: req.params.ke
+            }
+
              if(req.query.data){
                  try{
-                     var d = {
-                         id: req.params.id,
-                         ke: req.params.ke,
-                         details: s.parseJSON(req.query.data)
-                     }
+                     Object.assign(d, {details: s.parseJSON(req.query.data)});
                  }catch(err){
                      s.closeJsonResponse(res,{
                          ok: false,
@@ -1387,7 +1390,19 @@ module.exports = function(s,config,lang,app,io){
                      })
                      return
                  }
-             }else{
+             }
+             // fallback for cameras that doesn't support JSON in query parameters ( i.e Sercom ICamera1000 will fail to save HTTP_Notifications as invalid url)
+             else if( req.query.plug && req.query.name && req.query.reason && req.query.confidence) {
+                Object.assign(d, {
+                    details: {
+                        plug: req.query.plug,
+                        reason: req.query.reason,
+                        confidence: req.query.confidence,
+                        name: req.query.name
+                    }
+                });
+             }
+             else{
                  s.closeJsonResponse(res,{
                      ok: false,
                      msg: user.lang['No Data']
