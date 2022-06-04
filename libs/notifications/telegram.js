@@ -1,4 +1,11 @@
 var fs = require("fs")
+// function asyncSetTimeout(timeout){
+//     return new Promise((resolve,reject) => {
+//         setTimeout(() => {
+//             resolve()
+//         },timeout || 1000)
+//     })
+// }
 module.exports = function(s,config,lang,getSnapshot){
     const {
         getEventBasedRecordingUponCompletion,
@@ -62,6 +69,7 @@ module.exports = function(s,config,lang,getSnapshot){
                         s.group[d.ke].activeMonitors[d.id].detector_telegrambot = null
                     },detector_telegrambot_timeout)
                     if(monitorConfig.details.detector_telegrambot_send_video === '1'){
+                        // await asyncSetTimeout(3000)
                         let videoPath = null
                         let videoName = null
                         const eventBasedRecording = await getEventBasedRecordingUponCompletion({
@@ -283,23 +291,27 @@ module.exports = function(s,config,lang,getSnapshot){
                ]
             }
             s.definitions["Event Filters"].blocks["Action for Selected"].info.push({
-                 "name": "actions=telegram",
-                 "field": lang['Telegram'],
-                 "fieldType": "select",
-                 "form-group-class": "actions-row",
-                 "default": "",
-                 "example": "1",
-                 "possible": [
+                "name": "actions=telegram",
+                "field": lang['Telegram'],
+                "fieldType": "select",
+                "form-group-class": "actions-row",
+                "default": "",
+                "example": "1",
+                "possible": [
                     {
-                       "name": lang['Original Choice'],
-                       "value": "",
-                       "selected": true
+                        "name": lang.Default,
+                        "value": "",
+                        "selected": true
                     },
                     {
-                       "name": lang.Yes,
-                       "value": "1",
+                        "name": lang.No,
+                        "value": "0",
+                    },
+                    {
+                        "name": lang.Yes,
+                        "value": "1",
                     }
-                 ]
+                ]
             })
         }catch(err){
             console.error(err)
