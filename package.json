@@ -69,7 +69,7 @@
   },
   "pkg": {
     "targets": [
-      "node12"
+      "node16"
     ],
     "scripts": [
       "libs/cameraThread/detector.js",
