@@ -33,7 +33,7 @@
         a {cursor:pointer}
     </style>
     <script>
-        var superApiPrefix = location.search === '?p2p=1' ? location.pathname + '/' : "<%=originalURL%><%=config.webPaths.superApiPrefix%>"
+        var superApiPrefix = location.search === '?p2p=1' ? (location.pathname.endsWith('/') ? location.pathname : location.pathname) : "<%=originalURL%><%=config.webPaths.superApiPrefix%>"
     </script>
     <% customAutoLoad.superLibsCss.forEach(function(lib){ %>
         <link rel="stylesheet" href="<%-window.libURL%>libs/css/<%-lib%>">
@@ -162,7 +162,7 @@
 <script src="<%-window.libURL%>libs/js/pnotify.custom.min.js" type="text/javascript"></script>
 <script><% include ../libs/js/moment.js %></script>
 <script src="<%-window.libURL%>libs/js/livestamp.min.js" type="text/javascript"></script>
-<script src="<%-window.libURL%>libs/js/socket.io.js" type="text/javascript"></script>
+<script src="<%-window.libURL%>libs/js/socket.io.min.js" type="text/javascript"></script>
 <script src="<%-window.libURL%>libs/js/placeholder.js" type="text/javascript"></script>
 <script src="<%-window.libURL%>libs/js/now-ui-kit.js?v=1.1.0" type="text/javascript"></script>
 <script type="text/javascript">

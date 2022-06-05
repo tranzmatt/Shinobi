@@ -14,6 +14,7 @@ module.exports = function(s,config,lang){
         deleteFileBinFiles,
         deleteCloudVideos,
         deleteCloudTimelapseFrames,
+        resetAllStorageCounters,
     } = require("./user/utils.js")(s,config,lang);
     let purgeDiskGroup = () => {}
     const runQuery = async.queue(function(groupKey, callback) {
@@ -267,6 +268,12 @@ module.exports = function(s,config,lang){
             }
         })
     }
+    function filterMonitorListOrder(groupKey,details){
+        const loadedMonitors = s.group[groupKey].rawMonitorConfigurations
+        var monitorListOrder = (details.monitorListOrder && details.monitorListOrder[0] ? details.monitorListOrder[0] : []).filter(monitorId => !!loadedMonitors[monitorId]);
+        monitorListOrder = [...new Set(monitorListOrder)];
+        return monitorListOrder
+    }
     s.accountSettingsEdit = function(d,dontRunExtensions){
         s.knexQuery({
             action: "select",
@@ -302,6 +309,7 @@ module.exports = function(s,config,lang){
                     }
                     //admin permissions
                     formDetails.permissions = details.permissions
+                    formDetails.max_camera = details.max_camera
                     formDetails.edit_size = details.edit_size
                     formDetails.edit_days = details.edit_days
                     formDetails.use_admin = details.use_admin
@@ -358,7 +366,9 @@ module.exports = function(s,config,lang){
                     }
                     readStorageArray()
                     ///
-                    formDetails = JSON.stringify(s.mergeDeep(details,formDetails))
+                    formDetails = s.mergeDeep(details,formDetails)
+                    if(formDetails.monitorListOrder)formDetails.monitorListOrder[0] = filterMonitorListOrder(d.ke,formDetails);
+                    formDetailsString = JSON.stringify(s.mergeDeep(details,formDetails))
                     ///
                     const updateQuery = {}
                     if(form.pass && form.pass !== ''){
@@ -371,7 +381,7 @@ module.exports = function(s,config,lang){
                         const value = form[key]
                         updateQuery[key] = value
                     })
-                    updateQuery.details = formDetails
+                    updateQuery.details = formDetailsString
                     s.knexQuery({
                         action: "update",
                         table: "Users",
@@ -381,20 +391,20 @@ module.exports = function(s,config,lang){
                             ['uid','=',d.uid],
                         ]
                     },() => {
+                        const user = Object.assign({ke : d.ke},form)
                         if(!details.sub){
-                            var user = Object.assign(form,{ke : d.ke})
-                            var userDetails = JSON.parse(formDetails)
                             s.group[d.ke].sizeLimit = parseFloat(newSize)
+                            resetAllStorageCounters(d.ke)
                             if(!dontRunExtensions){
-                                s.onAccountSaveExtensions.forEach(function(extender){
-                                    extender(s.group[d.ke],userDetails,user)
-                                })
                                 s.unloadGroupAppExtensions.forEach(function(extender){
                                     extender(user)
                                 })
                                 s.loadGroupApps(d)
                             }
                         }
+                        s.onAccountSaveExtensions.forEach(function(extender){
+                            extender(s.group[d.ke],formDetails,user)
+                        })
                         if(d.cnid)s.tx({f:'user_settings_change',uid:d.uid,ke:d.ke,form:form},d.cnid)
                     })
                 }

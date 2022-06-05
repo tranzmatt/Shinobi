@@ -1,5 +1,4 @@
 const fs = require('fs')
-const request = require('request')
 const exec = require('child_process').exec
 const spawn = require('child_process').spawn
 const isWindows = (process.platform === 'win32' || process.platform === 'win64')
@@ -14,9 +13,34 @@ const stdioPipes = jsonData.pipes || []
 var newPipes = []
 var stdioWriters = [];
 
-var writeToStderr = function(text){
+const { fetchTimeout } = require('../basic/utils.js')(process.cwd(),config)
+const dataPort = require('./libs/dataPortConnection.js')(jsonData,
+// onConnected
+() => {
+    dataPort.send(jsonData.dataPortToken)
+},
+// onError
+(err) => {
+    writeToStderr([
+        'dataPort:Connection:Error',
+        err
+    ])
+},
+// onClose
+(e) => {
+    writeToStderr([
+        'dataPort:Connection:Closed',
+        e
+    ])
+})
+
+var writeToStderr = function(argsAsArray){
   try{
-    process.stderr.write(Buffer.from(`${text}`, 'utf8' ))
+    process.stderr.write(Buffer.from(`${JSON.stringify(argsAsArray)}`, 'utf8' ))
+    // dataPort.send({
+    //     f: 'debugLog',
+    //     data: argsAsArray,
+    // })
       // stdioWriters[2].write(Buffer.from(`${new Error('writeToStderr').stack}`, 'utf8' ))
   }catch(err){
   }
@@ -111,7 +135,9 @@ writeToStderr('Thread Opening')
 
 if(rawMonitorConfig.details.detector === '1' && rawMonitorConfig.details.detector_pam === '1'){
   try{
-    const attachPamDetector = require(config.monitorDetectorDaemonPath ? config.monitorDetectorDaemonPath : __dirname + '/detector.js')(jsonData,stdioWriters[3])
+    const attachPamDetector = require(config.monitorDetectorDaemonPath ? config.monitorDetectorDaemonPath : __dirname + '/detector.js')(jsonData,(detectorObject) => {
+        dataPort.send(JSON.stringify(detectorObject))
+    })
     attachPamDetector(cameraProcess)
   }catch(err){
     writeToStderr(err.stack)
@@ -119,7 +145,6 @@ if(rawMonitorConfig.details.detector === '1' && rawMonitorConfig.details.detecto
 }
 
 if(rawMonitorConfig.type === 'jpeg'){
-    var recordingSnapRequest
     var recordingSnapper
     var errorTimeout
     var errorCount = 0
@@ -137,16 +162,11 @@ if(rawMonitorConfig.type === 'jpeg'){
     setTimeout(() => {
         if(!cameraProcess.stdio[0])return writeToStderr('No Camera Process Found for Snapper');
         const captureOne = function(f){
-            recordingSnapRequest = request({
-                url: buildMonitorUrl(rawMonitorConfig),
+            fetchTimeout(buildMonitorUrl(rawMonitorConfig),15000,{
                 method: 'GET',
-                encoding: null,
-                timeout: 15000
-            },function(err,data){
-                if(err){
-                    writeToStderr(JSON.stringify(err))
-                    return;
-                }
+            })
+            .then(response => response.text())
+            .then(function(body){
                 // writeToStderr(data.body.length)
                 cameraProcess.stdio[0].write(data.body)
                 recordingSnapper = setTimeout(function(){
@@ -159,7 +179,7 @@ if(rawMonitorConfig.type === 'jpeg'){
                         delete(errorTimeout)
                     },3000)
                 }
-            }).on('error', function(err){
+            }).catch(function(err){
                 ++errorCount
                 clearTimeout(errorTimeout)
                 errorTimeout = null

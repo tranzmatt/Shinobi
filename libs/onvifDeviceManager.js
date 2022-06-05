@@ -17,6 +17,10 @@ const {
 } = require('./onvifDeviceManager/utils.js')
 
 module.exports = function(s,config,lang,app,io){
+    async function getOnvifDevice(groupKey,monitorId){
+        const onvifDevice = s.group[groupKey].activeMonitors[monitorId].onvifConnection || (await s.createOnvifDevice({id: monitorId, ke: groupKey})).device
+        return onvifDevice
+    }
     /**
     * API : Get ONVIF Data from Camera
      */
@@ -26,7 +30,7 @@ module.exports = function(s,config,lang,app,io){
             try{
                 const groupKey = req.params.ke
                 const monitorId = req.params.id
-                const onvifDevice = s.group[groupKey].activeMonitors[monitorId].onvifConnection
+                const onvifDevice = await getOnvifDevice(groupKey,monitorId)
                 const cameraInfo = await getUIFieldValues(onvifDevice)
                 endData.onvifData = cameraInfo
             }catch(err){
@@ -47,7 +51,7 @@ module.exports = function(s,config,lang,app,io){
             try{
                 const groupKey = req.params.ke
                 const monitorId = req.params.id
-                const onvifDevice = s.group[groupKey].activeMonitors[monitorId].onvifConnection
+                const onvifDevice = await getOnvifDevice(groupKey,monitorId)
                 const form = s.getPostData(req)
                 const videoToken = form.VideoConfiguration && form.VideoConfiguration.videoToken ? form.VideoConfiguration.videoToken : null
                 if(form.DateandTime){
@@ -100,7 +104,7 @@ module.exports = function(s,config,lang,app,io){
             try{
                 const groupKey = req.params.ke
                 const monitorId = req.params.id
-                const onvifDevice = s.group[groupKey].activeMonitors[monitorId].onvifConnection
+                const onvifDevice = await getOnvifDevice(groupKey,monitorId)
                 const cameraInfo = await rebootCamera(onvifDevice)
                 endData.onvifData = cameraInfo
             }catch(err){

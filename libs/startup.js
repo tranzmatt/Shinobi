@@ -11,6 +11,9 @@ module.exports = function(s,config,lang,io){
     const {
         checkSubscription
     } = require('./basic/utils.js')(process.cwd(),config)
+    const {
+        checkForStaticUsers
+    } = require('./user/startup.js')(s,config,lang,io)
     return new Promise((resolve, reject) => {
         var checkedAdminUsers = {}
         console.log('FFmpeg version : '+s.ffmpegVersion)
@@ -409,7 +412,8 @@ module.exports = function(s,config,lang,io){
             s.databaseEngine = require('knex')(s.databaseOptions)
             //run prerequsite queries
             s.preQueries()
-            setTimeout(() => {
+            setTimeout(async () => {
+                await checkForStaticUsers()
                 //check for subscription
                 checkSubscription(config.subscriptionId,function(hasSubcribed){
                     config.userHasSubscribed = hasSubcribed

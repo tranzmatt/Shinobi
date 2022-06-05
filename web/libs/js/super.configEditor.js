@@ -1,6 +1,6 @@
 $(document).ready(function(){
     var schema = {
-      "title": "Shinobi Configuration",
+      "title": "Main Configuration",
       "type": "object",
       "properties": {
           "debugLog": {

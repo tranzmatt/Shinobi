@@ -8,7 +8,7 @@
 // Subscribe : https://licenses.shinobi.video/subscribe?planSubscribe=plan_G31AZ9mknNCa6z
 // PayPal : paypal@m03.ca
 //
-const io = new (require('socket.io'))()
+const io = new (require('socket.io').Server)()
 //process handlers
 const s = require('./libs/process.js')(process,__dirname)
 //load extender functions
@@ -33,6 +33,10 @@ require('./libs/ffmpeg.js')(s,config,lang, async () => {
     require('./libs/auth.js')(s,config,lang)
     //express web server with ejs
     const app = require('./libs/webServer.js')(s,config,lang,io)
+    //data port
+    require('./libs/dataPort.js')(s,config,lang,app,io)
+    //page layout load
+    require('./libs/definitions.js')(s,config,lang,app,io)
     //web server routes : page handling..
     require('./libs/webServerPaths.js')(s,config,lang,app,io)
     //web server routes for streams : streams..
@@ -67,8 +71,6 @@ require('./libs/ffmpeg.js')(s,config,lang, async () => {
     require('./libs/rtmpserver.js')(s,config,lang)
     //dropInEvents server (file manipulation to create event trigger)
     require('./libs/dropInEvents.js')(s,config,lang,app,io)
-    //form fields to drive the internals
-    require('./libs/definitions.js')(s,config,lang,app,io)
     //notifiers : discord..
     require('./libs/notification.js')(s,config,lang)
     //branding functions and config defaults

@@ -1,10 +1,10 @@
 const fs = require('fs-extra');
 const express = require('express')
-const request = require('request')
 const unzipper = require('unzipper')
 const fetch = require("node-fetch")
 const spawn = require('child_process').spawn
 module.exports = async (s,config,lang,app,io) => {
+    const { fetchDownloadAndWrite } = require('./basic/utils.js')(process.cwd(),config)
     s.debugLog(`+++++++++++CustomAutoLoad Modules++++++++++++`)
     const runningInstallProcesses = {}
     const modulesBasePath = __dirname + '/customAutoLoad/'
@@ -65,10 +65,9 @@ module.exports = async (s,config,lang,app,io) => {
         fs.mkdirSync(downloadPath)
         return new Promise(async (resolve, reject) => {
             fs.mkdir(downloadPath, () => {
-                request(downloadUrl).pipe(fs.createWriteStream(downloadPath + '.zip'))
-                .on('finish',() => {
-                    zip = fs.createReadStream(downloadPath + '.zip')
-                    .pipe(unzipper.Parse())
+                fetchDownloadAndWrite(downloadUrl,downloadPath + '.zip', 1)
+                .then((readStream) => {
+                    readStream.pipe(unzipper.Parse())
                     .on('entry', async (file) => {
                         if(file.type === 'Directory'){
                             try{
@@ -225,10 +224,10 @@ module.exports = async (s,config,lang,app,io) => {
                                                                         var fullPath = thirdLevelName + '/' + filename
                                                                         var blockPrefix = ''
                                                                         switch(true){
-                                                                            case filename.contains('super.'):
+                                                                            case filename.indexOf('super.') > -1:
                                                                                 blockPrefix = 'super'
                                                                             break;
-                                                                            case filename.contains('admin.'):
+                                                                            case filename.indexOf('admin.') > -1:
                                                                                 blockPrefix = 'admin'
                                                                             break;
                                                                         }
@@ -278,22 +277,24 @@ module.exports = async (s,config,lang,app,io) => {
                                 })
                             break;
                             case'definitions':
-                                var definitionsFolder = s.checkCorrectPathEnding(customModulePath) + 'definitions/'
-                                fs.readdir(definitionsFolder,function(err,files){
-                                    if(err)return console.log(err);
-                                    files.forEach(function(filename){
-                                        var fileData = require(definitionsFolder + filename)
-                                        var rule = filename.replace('.json','').replace('.js','')
-                                        if(config.language === rule){
-                                            s.definitions = s.mergeDeep(s.definitions,fileData)
-                                        }
-                                        if(s.loadedDefinitons[rule]){
-                                            s.loadedDefinitons[rule] = s.mergeDeep(s.loadedDefinitons[rule],fileData)
-                                        }else{
-                                            s.loadedDefinitons[rule] = s.mergeDeep(s.copySystemDefaultDefinitions(),fileData)
-                                        }
-                                    })
-                                })
+                                console.error('This Method has been deprecated. Could not load : ', customModulePath + 'defintions/')
+                                console.error('Make your module\'s index.js file make the changes directly.')
+                                // var definitionsFolder = s.checkCorrectPathEnding(customModulePath) + 'definitions/'
+                                // fs.readdir(definitionsFolder,function(err,files){
+                                //     if(err)return console.log(err);
+                                //     files.forEach(function(filename){
+                                //         var fileData = require(definitionsFolder + filename)
+                                //         var rule = filename.replace('.json','').replace('.js','')
+                                //         if(config.language === rule){
+                                //             s.definitions = s.mergeDeep(s.definitions,fileData)
+                                //         }
+                                //         if(s.loadedDefinitons[rule]){
+                                //             s.loadedDefinitons[rule] = s.mergeDeep(s.loadedDefinitons[rule],fileData)
+                                //         }else{
+                                //             s.loadedDefinitons[rule] = s.mergeDeep(s.copySystemDefaultDefinitions(),fileData)
+                                //         }
+                                //     })
+                                // })
                             break;
                         }
                     })

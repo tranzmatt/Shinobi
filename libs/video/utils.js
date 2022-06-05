@@ -187,7 +187,7 @@ module.exports = (s,config,lang) => {
             let fileExt = inputFilePath.split('.')
             fileExt = fileExt[fileExt.length -1]
             const filename = `${s.gid(10)}.${fileExt}`
-            const videoOutPath = `${tempDirectory}`
+            const videoOutPath = `${tempDirectory}${filename}`
             const cuttingProcess = spawn(config.ffmpegDir,['-loglevel','warning','-i', inputFilePath, '-c','copy','-t',`${cutLength}`,videoOutPath])
             cuttingProcess.stderr.on('data',(data) => {
                 const err = data.toString()
@@ -196,6 +196,7 @@ module.exports = (s,config,lang) => {
             cuttingProcess.on('close',(data) => {
                 fs.stat(videoOutPath,(err) => {
                     if(!err){
+                        response.ok = true
                         response.filename = filename
                         response.filePath = videoOutPath
                         setTimeout(() => {

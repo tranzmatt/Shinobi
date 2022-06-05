@@ -1,0 +1,144 @@
+<%
+    menuItems = [
+        {
+            icon: 'home',
+            label: lang.Home,
+            pageOpen: 'initial',
+            addUl: true,
+            ulItems: [
+                {
+                    label: lang['Carousel in Background'],
+                    class: 'cursor-pointer',
+                    attributes: 'shinobi-switch="backgroundCarousel" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
+                    color: 'grey',
+                },
+            ]
+        },
+        {
+            icon: 'th',
+            label: lang['Live Grid'] + ` &nbsp;
+            <span class="badge bg-light text-dark rounded-pill align-text-bottom liveGridOpenCount">0</span>`,
+            pageOpen: 'liveGrid',
+            addUl: true,
+            ulItems: [
+                {
+                    label: lang['Open All Monitors'],
+                    class: 'open-all-monitors cursor-pointer',
+                    color: 'orange',
+                },
+                {
+                    label: lang['Order Streams'],
+                    class: 'cursor-pointer',
+                    attributes: 'shinobi-switch="monitorOrder" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
+                    color: 'grey',
+                },
+                {
+                    label: lang['Mute Audio'],
+                    class: 'cursor-pointer',
+                    attributes: 'shinobi-switch="monitorMuteAudio" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
+                    color: 'grey',
+                },
+                {
+                    label: lang['JPEG Mode'],
+                    class: 'cursor-pointer',
+                    attributes: 'shinobi-switch="jpegMode" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
+                    color: 'grey',
+                },
+                {
+                    label: lang['Stream in Background'],
+                    class: 'cursor-pointer',
+                    attributes: 'shinobi-switch="backgroundStream" ui-change-target=".dot" on-class="dot-grey" off-class="dot-green"',
+                    color: 'grey',
+                },
+            ]
+        },
+        {
+            icon: 'video-camera',
+            label: `${lang.Monitors} &nbsp;
+            <span class="badge bg-light text-dark rounded-pill align-text-bottom cameraCount"><i class="fa fa-spinner fa-pulse"></i></span>`,
+            pageOpen: 'monitorsList',
+        },
+        {
+            icon: 'wrench',
+            label: `${lang['Monitor Settings']}`,
+            pageOpen: 'monitorSettings',
+            addUl: true,
+        },
+        {
+            icon: 'gears',
+            label: `${lang['Account Settings']}`,
+            pageOpen: 'accountSettings',
+            addUl: true,
+        },
+        {
+            icon: 'group',
+            label: `${lang.subAccountManager}`,
+            pageOpen: 'subAccountManager',
+            addUl: true,
+        },
+        {
+            icon: 'compass',
+            label: `${lang['ShinobiHub']}`,
+            pageOpen: 'configFinder',
+            addUl: true,
+        },
+        {
+            icon: 'grav',
+            label: `${lang['Region Editor']}`,
+            pageOpen: 'regionEditor',
+            addUl:true
+        },
+        {
+            icon: 'key',
+            label: `${lang['API Keys']}`,
+            pageOpen: 'apiKeys',
+        },
+        {
+            icon: 'align-right',
+            label: `${lang['Monitor States']}`,
+            pageOpen: 'monitorStates',
+        },
+        {
+            icon: 'clock',
+            label: `${lang['Schedules']}`,
+            pageOpen: 'schedules',
+        },
+        {
+            icon: 'fast-forward',
+            label: `${lang['Time-lapse']}`,
+            pageOpen: 'timelapseViewer',
+        },
+        {
+            icon: 'filter',
+            label: `${lang['Event Filters']}`,
+            pageOpen: 'eventFilters',
+            addUl:true
+        },
+        {
+            icon: 'search',
+            label: `${lang['ONVIF Scanner']}`,
+            pageOpen: 'onvifScanner',
+            addUl:true
+        },
+        {
+            icon: 'eyedropper',
+            label: `${lang['FFprobe']}`,
+            pageOpen: 'cameraProbe',
+        },
+        {
+            icon: 'exclamation-triangle',
+            label: `${lang['Logs']}`,
+            pageOpen: 'logViewer',
+        },
+        {
+            icon: 'exclamation-circle',
+            label: `${lang['Events']}`,
+            pageOpen: 'eventListWithPics',
+        },
+        {
+            icon: 'sign-out',
+            label: `${lang['Logout']}`,
+            class: 'logout',
+        },
+    ]
+ %>

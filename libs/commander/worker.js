@@ -1,5 +1,5 @@
 const { parentPort } = require('worker_threads');
-const request = require('request');
+const fetch = require('node-fetch');
 const socketIOClient = require('socket.io-client');
 const p2pClientConnectionStaticName = 'Commander'
 const p2pClientConnections = {}
@@ -58,15 +58,28 @@ const initialize = (config,lang) => {
         if(method === 'GET' && data){
             requestEndpoint += '?' + createQueryStringFromObject(data)
         }
-        const theRequest = request(requestEndpoint,{
+        const theRequest = fetch(requestEndpoint,{
             method: method,
-            json: method !== 'GET' ? (data ? data : null) : null
-        }, typeof callback === 'function' ? (err,resp,body) => {
-            // var json = parseJSON(body)
-            if(err)console.error(err,data)
-            callback(err,body,resp)
-        } : null)
-        .on('data', onDataReceived);
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            body: method !== 'GET' ? JSON.stringify(data ? data : null) : null
+        })
+        .then(res => {
+            res.body.on('data', onDataReceived);
+            return res
+        });
+        if(typeof callback === 'function'){
+            theRequest.then(res => res.json())
+            .then(json => {
+                callback(null,json);
+            })
+        }
+        theRequest.catch((err) => {
+            console.error(err);
+            if(typeof callback === 'function')callback(err,null);
+        });
         return theRequest
     }
     const createShinobiSocketConnection = (connectionId) => {
@@ -88,12 +101,15 @@ const initialize = (config,lang) => {
     }
     //
     function startBridge(noLog){
-        s.debugLog('p2p',`Connecting to ${selectedHost}...`)
+        console.log('p2p',`Connecting to ${selectedHost}...`)
         if(connectionToP2PServer && connectionToP2PServer.connected){
             connectionToP2PServer.allowDisconnect = true;
             connectionToP2PServer.disconnect()
         }
-        connectionToP2PServer = socketIOClient('ws://' + selectedHost, {transports:['websocket']});
+        connectionToP2PServer = socketIOClient('ws://' + selectedHost, {
+            transports:['websocket'],
+            reconnection: false
+        });
         if(!config.p2pApiKey){
             if(!noLog)s.systemLog('p2p',`Please fill 'p2pApiKey' in your conf.json.`)
         }
@@ -201,12 +217,7 @@ const initialize = (config,lang) => {
             })
 
         });
-        ([
-          'h265',
-          'Base64',
-          'FLV',
-          'MP4',
-        ]).forEach((target) => {
+        config.workerStreamOutHandlers.forEach((target) => {
             connectionToP2PServer.on(target,(initData) => {
                 if(connectedUserWebSockets[initData.auth]){
                     const clientConnectionToMachine = createShinobiSocketConnection(initData.auth + initData.ke + initData.id)
@@ -256,7 +267,9 @@ const initialize = (config,lang) => {
         connectionToP2PServer.on('disconnect',onDisconnect)
     }
     startBridge()
-    setInterval(() => {
-        startBridge(true)
-    },1000 * 60 * 60 * 15)
+    setInterval(function(){
+        if(!connectionToP2PServer || !connectionToP2PServer.connected){
+            connectionToP2PServer.connect()
+        }
+    },1000 * 60 * 15)
 }

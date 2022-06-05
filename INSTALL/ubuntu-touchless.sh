@@ -53,19 +53,14 @@ if ! [ -x "$(command -v ifconfig)" ]; then
     echo "Shinobi - Installing Net-Tools"
     sudo apt install net-tools -y
 fi
-if ! [ -x "$(command -v node)" ]; then
-    echo "============="
-    echo "Shinobi - Installing Node.js"
-    wget https://deb.nodesource.com/setup_12.x
-    chmod +x setup_12.x
-    ./setup_12.x
-    sudo apt install nodejs -y
-    sudo apt install node-pre-gyp -y
-    rm setup_12.x
-else
-    echo "Node.js Found..."
-    echo "Version : $(node -v)"
-fi
+echo "============="
+echo "Shinobi - Installing Node.js"
+wget https://deb.nodesource.com/setup_16.x
+chmod +x setup_16.x
+./setup_16.x
+sudo apt install nodejs -y
+sudo apt install node-pre-gyp -y
+rm setup_16.x
 if ! [ -x "$(command -v npm)" ]; then
     sudo apt install npm -y
 fi
@@ -105,7 +100,7 @@ sudo npm install --unsafe-perm
 # sudo npm audit fix --force
 echo "============="
 echo "Shinobi - Install PM2"
-sudo npm install pm2@3.0.0 -g
+sudo npm install pm2@latest -g
 echo "Shinobi - Finished"
 sudo chmod -R 755 .
 touch INSTALL/installed.txt

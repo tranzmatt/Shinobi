@@ -22,11 +22,11 @@ $(document).ready(function(){
                             <div class="mb-2">
                                 ${!module.isIgnitor ? `
                                     ${module.hasInstaller ? `
-                                        <a href="#" class="btn btn-sm btn-info" calm-action="install">${lang['Run Installer']}</a>
+                                        <a class="btn btn-sm btn-info" calm-action="install">${lang['Run Installer']}</a>
                                     ` : ''}
-                                    <a href="#" class="btn btn-sm btn-default" calm-action="status">${module.properties.disabled ? lang.Enable : lang.Disable}</a>
+                                    <a class="btn btn-sm btn-default" calm-action="status">${module.properties.disabled ? lang.Enable : lang.Disable}</a>
                                 ` : ''}
-                                <a href="#" class="btn btn-sm btn-danger" calm-action="delete">${lang.Delete}</a>
+                                <a class="btn btn-sm btn-danger" calm-action="delete">${lang.Delete}</a>
                             </div>
                             <div class="pl-2 pr-2">
                                 <div class="install-output row">

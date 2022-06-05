@@ -7,6 +7,7 @@ module.exports = function(jsonData,pamDiffResponder,alternatePamDiff){
     const completeMonitorConfig = jsonData.rawMonitorConfig
     const groupKey = completeMonitorConfig.ke
     const monitorId = completeMonitorConfig.mid
+    const monitorName = completeMonitorConfig.name
     const monitorDetails = completeMonitorConfig.details
     const triggerTimer = {}
     let regionJson
@@ -70,13 +71,13 @@ module.exports = function(jsonData,pamDiffResponder,alternatePamDiff){
       var sendDetectedData = function(detectorObject){
         pamDiffResponder(detectorObject)
       }
-    }else{
-      var sendDetectedData = function(detectorObject){
-        pamDiffResponder.write(Buffer.from(JSON.stringify(detectorObject)))
-      }
+  }else{
+        var sendDetectedData = function(detectorObject){
+            pamDiffResponder.write(Buffer.from(JSON.stringify(detectorObject)))
+        }
     }
     function logData(...args){
-        process.logData(JSON.stringify(args))
+        process.logData(args)
     }
     function getRegionsWithMinimumChange(data){
         try{
@@ -256,6 +257,7 @@ module.exports = function(jsonData,pamDiffResponder,alternatePamDiff){
             if(!region)return false;
             region.polygon = [];
             region.points.forEach(function(points){
+                if(!points || isNaN(points[0]) || isNaN(points[1]))return;
                 var x = parseFloat(points[0]);
                 var y = parseFloat(points[1]);
                 if(x < 0)x = 0;
@@ -265,6 +267,7 @@ module.exports = function(jsonData,pamDiffResponder,alternatePamDiff){
                     y: y
                 })
             })
+            if(region.polygon.length < 4)return logData(`Failed to Create Region : ${monitorName} : ${region.name}`,region.points);
             if(region.sensitivity===''){
                 region.sensitivity = globalSensitivity
             }else{
