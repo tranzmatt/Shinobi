@@ -17,13 +17,13 @@ module.exports = function(s,config,lang,getSnapshot){
                 if(mqttEndpoint.indexOf('://') === -1){
                     mqttEndpoint = `mqtt://${mqttEndpoint}`
                 }
-                s.debugLog('Connecting.... mqtt://' + mqttEndpoint)
-                const client  = mqtt.connect('mqtt://' + mqttEndpoint,{
+                s.debugLog('Connecting... ' + mqttEndpoint)
+                const client  = mqtt.connect(mqttEndpoint,{
                     username: username,
                     password: password,
                 })
                 client.on('connect', function () {
-                    s.debugLog('Connected! mqtt://' + mqttEndpoint)
+                    s.debugLog('Connected! ' + mqttEndpoint)
                     client.subscribe(subKey, function (err) {
                         if (err) {
                             s.debugLog(err)
@@ -124,7 +124,11 @@ module.exports = function(s,config,lang,getSnapshot){
             }
             const onUserLog = (logEvent) => {
                 const groupKey = logEvent.ke
-                sendToMqttConnections(groupKey,'onUserLog',[logEvent])
+                if(groupKey.indexOf('$') === -1){
+                    sendToMqttConnections(groupKey,'onUserLog',[logEvent])
+                }else{
+                    s.debugLog(`Failed sendToMqttConnections onUserLog : ${groupKey}`)
+                }
             }
             const onTwoFactorAuthCodeNotification = function(user){
                 const groupKey = user.ke
