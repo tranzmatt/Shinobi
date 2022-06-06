@@ -8,12 +8,20 @@ module.exports = function(s,config,lang,getSnapshot){
         } = require('../events/utils.js')(s,config,lang)
         try{
             function createMqttSubscription(options){
-                const mqttEndpoint = options.host
+                let mqttEndpoint = options.host
+                const username = options.username || ''
+                const password = options.password || ''
                 const subKey = options.subKey
                 const groupKey = options.ke
                 const onData = options.onData || function(){}
+                if(mqttEndpoint.indexOf('://') === -1){
+                    mqttEndpoint = `mqtt://${mqttEndpoint}`
+                }
                 s.debugLog('Connecting.... mqtt://' + mqttEndpoint)
-                const client  = mqtt.connect('mqtt://' + mqttEndpoint)
+                const client  = mqtt.connect('mqtt://' + mqttEndpoint,{
+                    username: username,
+                    password: password,
+                })
                 client.on('connect', function () {
                     s.debugLog('Connected! mqtt://' + mqttEndpoint)
                     client.subscribe(subKey, function (err) {

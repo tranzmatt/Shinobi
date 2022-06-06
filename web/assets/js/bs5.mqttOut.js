@@ -59,6 +59,10 @@ $(document).ready(function(){
                 <input placeholder="${lang.Example} : your/events" class="form-control form-control-sm" mqtt-param="pubKey" value="${row.pubKey || ''}">
             </div>
             <div class="px-1 py-2">
+                <input placeholder="${lang.Username}" class="form-control form-control-sm mb-2" mqtt-param="username" value="${row.username || ''}">
+                <input placeholder="${lang.Password}" class="form-control form-control-sm" mqtt-param="password" value="${row.password || ''}">
+            </div>
+            <div class="px-1 py-2">
                 <select multiple class="form-control form-control-sm" mqtt-param="msgFor">
                     ${selecteEventsHtml}
                 </select>
