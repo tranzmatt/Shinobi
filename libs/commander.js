@@ -79,6 +79,15 @@ module.exports = function(s,config,lang,app){
             });
     }
     if(!config.p2pHostSelected)config.p2pHostSelected = 'paris-1'
+    const p2pServerKeys = Object.keys(config.p2pServerList)
+    const filteredList = {}
+    p2pServerKeys.forEach((keyName) => {
+        const connector = config.p2pServerList[keyName]
+        if(connector.v2 === !!config.useBetterP2P){
+            filteredList[keyName] = connector;
+        }
+    })
+    config.p2pServerList = filteredList;
     const stopWorker = () => {
         if(runningWorker){
             runningWorker.postMessage({
