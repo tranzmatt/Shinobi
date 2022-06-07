@@ -46,5 +46,9 @@ module.exports = function(s,config){
         }
         return file
     }
+    s.reloadLanguages = function(){
+        s.loadedLanguages = {};
+        s.loadedLanguages[config.language] = s.copySystemDefaultLanguage()
+    }
     return lang
 }

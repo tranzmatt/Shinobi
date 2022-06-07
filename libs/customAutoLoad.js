@@ -343,6 +343,8 @@ module.exports = async (s,config,lang,app,io) => {
                         return;
                     }
                     loadModule(shinobiModule)
+                    s.reloadLanguages()
+                    s.reloadDefinitions()
                 })
             }else{
                 fs.mkdir(modulesBasePath,() => {})

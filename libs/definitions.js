@@ -39,5 +39,9 @@ module.exports = function(s,config,lang,app,io){
         }
         return file
     }
+    s.reloadDefinitions = function(){
+        s.loadedDefinitons = {};
+        s.loadedDefinitons[config.language] = s.copySystemDefaultDefinitions()
+    }
     return defaultFramework
 }
