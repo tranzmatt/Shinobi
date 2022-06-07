@@ -14,16 +14,32 @@ module.exports = function(s,config,lang,getSnapshot){
                 const subKey = options.subKey
                 const groupKey = options.ke
                 const onData = options.onData || function(){}
+                function mqttUserLog(type,data){
+                    s.userLog({
+                        ke: groupKey,
+                        mid: '$USER'
+                    },{
+                        type: type,
+                        msg: data
+                    })
+                }
                 if(mqttEndpoint.indexOf('://') === -1){
                     mqttEndpoint = `mqtt://${mqttEndpoint}`
                 }
-                s.debugLog('Connecting... ' + mqttEndpoint)
+                mqttUserLog('Connecting... ' + mqttEndpoint)
                 const client  = mqtt.connect(mqttEndpoint,{
+                    clean: true,
                     username: username,
                     password: password,
-                })
+                    clientId: `shinobi_${Math.random().toString(16).substr(2, 8)}`,
+                    reconnectPeriod: 1000, // 10 seconds
+                });
+                client.on('reconnect', (e) => mqttUserLog(`MQTT Reconnected`))
+                client.on('disconnect', (e) => mqttUserLog(`MQTT Disconnected`))
+                client.on('offline', (e) => mqttUserLog(`MQTT Offline`))
+                client.on('error', (e) => mqttUserLog(`MQTT Error`,e))
                 client.on('connect', function () {
-                    s.debugLog('Connected! ' + mqttEndpoint)
+                    mqttUserLog('Connected! ' + mqttEndpoint)
                     client.subscribe(subKey, function (err) {
                         if (err) {
                             s.debugLog(err)
@@ -119,7 +135,7 @@ module.exports = function(s,config,lang,getSnapshot){
                 sendToMqttConnections(groupKey,'onMonitorDied',[monitorConfig],true)
             }
             const onAccountSave = (activeGroup,userDetails,user) => {
-                const groupKey = monitorConfig.ke
+                const groupKey = user.ke
                 sendToMqttConnections(groupKey,'onAccountSave',[activeGroup,userDetails,user])
             }
             const onUserLog = (logEvent) => {
@@ -139,10 +155,10 @@ module.exports = function(s,config,lang,getSnapshot){
             const loadMqttListBotForUser = function(user){
                 const groupKey = user.ke
                 const userDetails = s.parseJSON(user.details);
-                if(userDetails.mqttout === '1'){
+                if(!s.group[groupKey].mqttOutbounders)s.group[groupKey].mqttOutbounders = {};
+                const mqttSubs = s.group[groupKey].mqttOutbounders
+                if(userDetails.mqttout === '1' && Object.keys(mqttSubs).length === 0){
                     const mqttClientList = userDetails.mqttout_list || []
-                    if(!s.group[groupKey].mqttOutbounders)s.group[groupKey].mqttOutbounders = {};
-                    const mqttSubs = s.group[groupKey].mqttOutbounders
                     mqttClientList.forEach(function(row,n){
                         try{
                             const mqttSubId = `${row.host} ${row.pubKey}`
@@ -153,6 +169,8 @@ module.exports = function(s,config,lang,getSnapshot){
                                 eventHandlers: {}
                             };
                             mqttSubs[mqttSubId].client = createMqttSubscription({
+                                username: row.username,
+                                password: row.password,
                                 host: row.host,
                                 pubKey: row.pubKey,
                                 ke: groupKey,
