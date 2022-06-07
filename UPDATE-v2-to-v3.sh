@@ -22,3 +22,4 @@ npm install
 echo "============="
 echo "Restarting PM2..."
 pm2 update
+pm2 restart camera.js
