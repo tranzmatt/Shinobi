@@ -1,5 +1,7 @@
 {
   "port": 8080,
+  "debugLog": false,
+  "videosDir": "__DIR__/videos",
   "passwordType": "sha256",
   "detectorMergePamRegionTriggers": true,
   "wallClockTimestampAsDefault": true,
