@@ -3,18 +3,23 @@ module.exports = function(s,config){
     if(!config.language){
         config.language='en_CA'
     }
-    try{
-        var lang = {};
-        eval(`lang = ${fs.readFileSync(s.location.languages+'/'+config.language+'.json','utf8')}`)
-    }catch(er){
-        console.error(er)
-        console.log('There was an error loading your language file.')
-        eval(`lang = ${fs.readFileSync(s.location.languages+'/en_CA.json','utf8')}`)
+    var lang = {};
+    function getLanguageData(choice){
+        let gotLang = {}
+        try{
+            eval(`gotLang = ${fs.readFileSync(s.location.languages+'/'+choice+'.json','utf8')}`)
+        }catch(er){
+            console.error(er)
+            console.log('There was an error loading your language file.')
+            eval(`gotLang = ${fs.readFileSync(s.location.languages+'/en_CA.json','utf8')}`)
+        }
+        return gotLang
     }
+    lang = getLanguageData(config.language)
     //load languages dynamically
     s.copySystemDefaultLanguage = function(){
         //en_CA
-        return Object.assign({},lang)
+        return Object.assign({},getLanguageData(config.language))
     }
     s.listOfPossibleLanguages = []
     fs.readdirSync(s.mainDirectory + '/languages').forEach(function(filename){
