@@ -8,7 +8,18 @@ $(document).ready(function() {
     var newDate = new Date();
     newDate.setDate(newDate.getDate());
     var updateDate = function(){
+        // var clockDateFormat = `$DAYNAME $DAY $MONTHNAME $YEAR`
         timeDate.innerHTML = dayNames[newDate.getDay()] + " " + newDate.getDate() + ' ' + monthNames[newDate.getMonth()] + ' ' + newDate.getFullYear();
+    }
+    if($user.details.clock_date_format){
+        updateDate = function(){
+            const newTimeString = $user.details.clock_date_format
+                .replaceAll('$DAYNAME',dayNames[newDate.getDay()])
+                .replaceAll('$DAY',newDate.getDate())
+                .replaceAll('$MONTHNAME',monthNames[newDate.getMonth()])
+                .replaceAll('$YEAR',newDate.getFullYear());
+            timeDate.innerHTML = newTimeString;
+        }
     }
     var second = function(theDate) {
 	   var seconds = theDate.getSeconds();

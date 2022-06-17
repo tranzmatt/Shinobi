@@ -4912,6 +4912,11 @@ module.exports = function(s,config,lang){
                 "name": lang.Preferences,
                 "color": "navy",
                 "info": [
+                    {
+                        "field": lang['Clock Format'],
+                       "name": "detail=clock_date_format",
+                       "placeholder": "$DAYNAME $DAY $MONTHNAME $YEAR",
+                   },
                    {
                        "field": lang.CSS,
                       "name": "detail=css",
@@ -7621,6 +7626,29 @@ module.exports = function(s,config,lang){
                  "noDefaultSectionClasses": true,
                  "section-class": "px-3",
                  "info": [
+                     {
+                         isFormGroupGroup: true,
+                         "noHeader": true,
+                         "noDefaultSectionClasses": true,
+                         "section-class": "card btn-default text-white px-3 py-2 mb-3 border-0",
+                         info: [
+                             {
+                                  "fieldType": "div",
+                                  "id": `clock`,
+                                  "style": `cursor:pointer`,
+                                  "attribute": `data-target="#time-hours"`,
+                                  "divContent": `<div id="time-date" class="text-center"></div>
+                                                    <ul>
+                                                        <li id="time-hours"></li>
+                                                        <li class="point">:</li>
+                                                        <li id="time-min"></li>
+                                                        <li class="point">:</li>
+                                                        <li id="time-sec"></li>
+                                                    </ul>
+                                                    `
+                             },
+                         ]
+                     },
                      {
                          "id": "indicator-bars",
                          isFormGroupGroup: true,
