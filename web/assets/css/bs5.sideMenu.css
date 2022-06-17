@@ -4,11 +4,16 @@ body.hide-side-menu #sidebarMenu{
 }
 body.hide-side-menu #pageTabContainer{
     margin: initial!important;
+    width: 100%!important;
 }
 #floating-hide-button {
     top: 10px;
     right: initial;
     left: 10px;
+    opacity: 0.3;
+}
+#floating-hide-button:hover {
+    opacity: 1;
 }
 .compressed-monitor-icons .monitor-icon {
     padding: 0.25rem;
