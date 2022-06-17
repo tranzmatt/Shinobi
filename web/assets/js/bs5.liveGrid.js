@@ -238,18 +238,15 @@ function drawLiveGridBlock(monitorConfig,subStreamChannel){
         var height = width;
         var isSmallMobile = isMobile && window.innerWidth <= 812;
         var html = buildLiveGridBlock(monitorConfig)
-        if($user.details && $user.details.monitorOrder && $user.details.monitorOrder[monitorConfig.ke+''+monitorId]){
+        var monitorOrderEngaged = dashboardOptions().switches.monitorOrder === 1;
+        if(monitorOrderEngaged && $user.details.monitorOrder && $user.details.monitorOrder[monitorConfig.ke+''+monitorId]){
             var saved = $user.details.monitorOrder[monitorConfig.ke+''+monitorId];
             x = saved.x;
             y = saved.y;
             width = saved.width;
             height = saved.height;
         }
-        var autoPlacement = false
-        if(dashboardOptions().switches.monitorOrder !== 1){
-            autoPlacement = true
-        }
-        liveGrid.data('gridstack').addWidget($(html), x, y, isSmallMobile ? 4 :  height, isSmallMobile ? 4 :  height, autoPlacement);
+        liveGrid.data('gridstack').addWidget($(html), x, y, isSmallMobile ? 4 :  height, isSmallMobile ? 4 :  height, !monitorOrderEngaged);
         var theBlock = $('#monitor_live_' + monitorId);
         var streamElement = theBlock.find('.stream-element')
         liveGridElements[monitorId] = {
