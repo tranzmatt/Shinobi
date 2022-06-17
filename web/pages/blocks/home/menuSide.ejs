@@ -12,10 +12,15 @@
                 <h1 class="h6 mb-0 lh-1 text-ellipsis" style="overflow: hidden;"><%- $user.mail %></h1>
                 <small><%- lang.Monitors %> : <span class="cameraCount"></span></small>
             </div>
-            <% if(showMonitors){ %>
-            <div class="align-items-center mr-3 py-3 pr-3 btn-default rounded shadow-sm cursor-pointer">
+            <div class="align-items-center mr-3 py-3 pr-3 cursor-pointer">
                 <div class="lh-1">
-                    <a class_toggle="compressed-monitor-icons" data-target="#monitorSideList" icon-toggle="fa-th fa-bars" icon-child="i"><i class="fa fa-th"></i></a>
+                    <a class="hide-side-menu-toggle text-white"><i class="fa fa-sign-in fa-rotate-180"></i></a>
+                </div>
+            </div>
+            <% if(showMonitors){ %>
+            <div class="align-items-center mr-3 py-3 pr-3 cursor-pointer">
+                <div class="lh-1">
+                    <a class_toggle="compressed-monitor-icons" data-target="#monitorSideList" icon-toggle="fa-th fa-bars" icon-child="i"><i class="fa fa-bars"></i></a>
                 </div>
             </div>
             <% } %>
@@ -77,3 +82,4 @@
           <% window.additionalJsScripts.push('assets/js/bs5.sideMenu.js') %>
       </div>
   </nav>
+  <a id="floating-hide-button" style="display:none;" class="sticky-button hide-side-menu-toggle btn-primary text-white"><i class="fa fa-sign-in"></i></a>

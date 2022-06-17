@@ -4,6 +4,8 @@ var pageTabContainer = $('#pageTabContainer')
 var topMenu = $('#topMenu')
 var monitorSideList = $('#monitorSideList')
 var sideMenuCollapsePoint = $('#side-menu-collapse-point')
+var floatingHideButton = $('#floating-hide-button')
+var floatingBackButton = $('#floating-back-button')
 function buildTabHtml(tabName,tabLabel,tabIcon){
     return `<li class="nav-item">
         <a class="nav-link side-menu-link" page-open="${tabName}">
@@ -118,6 +120,22 @@ function loadSideMenuCollapseStatus(){
 function isSideBarMenuCollapsed(){
     return dashboardOptions().sideMenuCollapsed === 1
 }
+function isSideBarMenuHidden(){
+    return dashboardOptions().sideMenuHidden === 1
+}
+function toggleSideBarMenuHide(){
+    var theBody = $('body')
+    theBody.toggleClass('hide-side-menu')
+    var isHidden = theBody.hasClass('hide-side-menu')
+    dashboardOptions('sideMenuHidden',isHidden ? 1 : '0')
+    if(isHidden){
+        floatingHideButton.show()
+        floatingBackButton.hide()
+    }else{
+        floatingHideButton.hide()
+        if(tabTree.back)floatingBackButton.show()
+    }
+}
 function makeMonitorListSortable(){
     var monitorSideList = $('#monitorSideList')
     var options = {
@@ -189,6 +207,12 @@ onDashboardReady(function(){
     $('.toggle-menu-collapse').click(function(){
         toggleSideMenuCollapse()
     })
+    $('body').on('click','.hide-side-menu-toggle',function(){
+        toggleSideBarMenuHide()
+    })
+    if(isSideBarMenuHidden()){
+        toggleSideBarMenuHide()
+    }
 })
 onWebSocketEvent(function(d){
     switch(d.f){

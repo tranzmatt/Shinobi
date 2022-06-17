@@ -7637,7 +7637,7 @@ module.exports = function(s,config,lang){
                                   "id": `clock`,
                                   "style": `cursor:pointer`,
                                   "attribute": `data-target="#time-hours"`,
-                                  "divContent": `<div id="time-date" class="text-center"></div>
+                                  "divContent": `<div id="time-date"></div>
                                                     <ul>
                                                         <li id="time-hours"></li>
                                                         <li class="point">:</li>

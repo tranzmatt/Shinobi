@@ -1,3 +1,15 @@
+body.hide-side-menu #sidebarMenu{
+    width: 0px!important;
+    overflow: none!important;
+}
+body.hide-side-menu #pageTabContainer{
+    margin: initial!important;
+}
+#floating-hide-button {
+    top: 10px;
+    right: initial;
+    left: 10px;
+}
 .compressed-monitor-icons .monitor-icon {
     padding: 0.25rem;
     position: relative;
