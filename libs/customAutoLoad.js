@@ -18,7 +18,7 @@ module.exports = async (s,config,lang,app,io) => {
     }
     const getModule = (moduleName) => {
         s.debugLog(`+++++++++++++++++++++++`)
-        s.debugLog(`Loading : ${moduleName}`)
+        s.debugLog(`Getting Module : ${moduleName}`)
         const modulePath = modulesBasePath + moduleName
         const stats = fs.lstatSync(modulePath)
         const isDirectory = stats.isDirectory()
@@ -175,6 +175,8 @@ module.exports = async (s,config,lang,app,io) => {
         }
     }
     const loadModule = (shinobiModule) => {
+        s.debugLog(`+++++++++++++++++++++++`)
+        s.debugLog(`Loading Module : ${moduleName}`)
         const moduleName = shinobiModule.name
         s.customAutoLoadModules[moduleName] = {}
         var customModulePath = modulesBasePath + '/' + moduleName
