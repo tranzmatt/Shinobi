@@ -197,6 +197,7 @@ function startConnection(p2pServerAddress,subscriptionId){
         }
     })
     onIncomingMessage('disconnect',function(data,requestId){
+        console.log(`FAILED LICENSE CHECK ON P2P`)
         stayDisconnected = true
     })
 }
