@@ -7494,7 +7494,7 @@ module.exports = function(s,config,lang){
                               {
                                   label: lang[`Don't Stretch Monitors`],
                                   class: 'cursor-pointer',
-                                  attribute: 'shinobi-switch="dontMonStretch" ui-change-target="body" on-class="dont-stretch-monitors"',
+                                  attributes: 'shinobi-switch="dontMonStretch" ui-change-target="body" on-class="dont-stretch-monitors"',
                                   color: 'grey',
                               },
                           ]
