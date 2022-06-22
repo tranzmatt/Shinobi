@@ -22,7 +22,6 @@ $(document).ready(function(e){
     var canPlay = false;
     var downloaderIsChecking = false
     var allowKeepChecking = true
-    var selectedFps = 15
     var currentPlaylistArray = []
 
     var openTimelapseWindow = function(monitorId,startDate,endDate){
@@ -151,7 +150,7 @@ $(document).ready(function(e){
     var pauseTimelapse = function(){
         var playPauseText = timelapseWindow.find('.playPauseText')
         canPlay = false
-        playPauseText.text(lang.Pause)
+        playPauseText.text(lang.Play)
         clearTimeout(playIntervalTimer)
         playIntervalTimer = null
     }
@@ -268,10 +267,6 @@ $(document).ready(function(e){
             }
             runDownloader()
         }
-    })
-    fpsSelector.change(function(ev){
-        playInterval = 1000 / ev.value
-        selectedFps = ev.value + 0
     })
     function isElementVisible (el) {
       const holder = frameIcons[0]
