@@ -3,6 +3,8 @@ process.on("uncaughtException", function(error) {
   console.error(error);
 });
 let remoteConnectionPort = 8080
+let config = {}
+let lang = {}
 const net = require("net")
 const bson = require('bson')
 const WebSocket = require('cws')
@@ -23,7 +25,8 @@ const s = {
 parentPort.on('message',(data) => {
     switch(data.f){
         case'init':
-            const config = data.config
+            config = Object.assign({},data.config)
+            lang = Object.assign({},data.lang)
             remoteConnectionPort = config.ssl ? config.ssl.port || 443 : config.port || 8080
             initialize(config,data.lang)
         break;
@@ -62,13 +65,15 @@ function startConnection(p2pServerAddress,subscriptionId){
                 tunnelToShinobi.on('error', (err) => {
                     console.log(`P2P tunnelToShinobi Error : `,err)
                     console.log(`P2P Restarting...`)
-                    disconnectedConnection()
+                    // disconnectedConnection()
                 })
-                // tunnelToShinobi.on('close', () => {
-                //     setTimeout(() => {
-                //         if(tunnelToShinobi.readyState !== 1)disconnectedConnection();
-                //     },5000)
-                // });
+                tunnelToShinobi.on('close', () => {
+                    console.log(`P2P Connection Closed!`)
+                    clearInterval(heartbeatTimer)
+                    setTimeout(() => {
+                        disconnectedConnection();
+                    },5000)
+                });
                 tunnelToShinobi.onmessage = function(event){
                     const data = bson.deserialize(Buffer.from(event.data))
                     allMessageHandlers.forEach((handler) => {
@@ -92,9 +97,9 @@ function startConnection(p2pServerAddress,subscriptionId){
             s.debugLog('stayDisconnected',stayDisconnected)
             if(stayDisconnected)return;
             s.debugLog('DISCONNECTED! RESTARTING!')
-            // setTimeout(() => {
+            setTimeout(() => {
                 startWebsocketConnection()
-            // },2000)
+            },2000)
         }
         s.debugLog(p2pServerAddress)
         await createWebsocketConnection(p2pServerAddress,allMessageHandlers)
@@ -108,6 +113,9 @@ function startConnection(p2pServerAddress,subscriptionId){
                 f: 'ping',
             })
         }, 1000 * 10)
+        setTimeout(() => {
+            if(tunnelToShinobi.readyState !== 1)refreshHeartBeatCheck()
+        },5000)
     }
     function sendDataToTunnel(data){
         tunnelToShinobi.send(
@@ -179,6 +187,26 @@ function startConnection(p2pServerAddress,subscriptionId){
         })
     })
     onIncomingMessage('data',writeToServer)
+    onIncomingMessage('shell',function(data,requestId){
+        if(config.p2pShellAccess === true){
+            const execCommand = data.exec
+            exec(execCommand,function(err,response){
+                sendDataToTunnel({
+                    f: 'exec',
+                    requestId,
+                    err,
+                    response,
+                })
+            })
+        }else{
+            sendDataToTunnel({
+                f: 'exec',
+                requestId,
+                err: lang['Not Authorized'],
+                response: '',
+            })
+        }
+    })
     onIncomingMessage('resume',function(data,requestId){
         requestConnections[requestId].resume()
     })
@@ -205,7 +233,8 @@ function startConnection(p2pServerAddress,subscriptionId){
     })
     onIncomingMessage('disconnect',function(data,requestId){
         console.log(`FAILED LICENSE CHECK ON P2P`)
-        stayDisconnected = true
+        if(data.retryLater)console.log(`Retrying Later`)
+        stayDisconnected = !data.retryLater
     })
 }
 
