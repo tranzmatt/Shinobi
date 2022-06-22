@@ -943,7 +943,7 @@ $(document).ready(function(){
     $('.logout').click(function(e){
         $.get(getApiPrefix() + '/logout/' + $user.ke + '/' + $user.uid,function(data){
             localStorage.removeItem('ShinobiLogin_'+location.host);
-            location.href = location.href;
+            location.href = location.href.split('#')[0];
         })
     })
     // only binded on load
