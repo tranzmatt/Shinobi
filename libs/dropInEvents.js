@@ -84,7 +84,6 @@ module.exports = function(s,config,lang,app,io){
                             plug: "dropInEvent",
                             reason: reason
                         },
-                        doObjectDetection: (s.isAtleatOneDetectorPluginConnected && s.group[ke].rawMonitorConfigurations[mid].details.detector_use_detect_object === '1')
                     },config.dropInEventForceSaveEvent)
                 }
                 if(search(filename,'.txt')){
@@ -189,10 +188,21 @@ module.exports = function(s,config,lang,app,io){
             createDropInEventsDirectory()
             if(!config.ftpServerPort)config.ftpServerPort = 21
             if(!config.ftpServerUrl)config.ftpServerUrl = `ftp://0.0.0.0:${config.ftpServerPort}`
+            if(!config.ftpServerPasvUrl)config.ftpServerPasvUrl = config.ftpServerUrl.replace(/.*:\/\//, '').replace(/:.*/, '');
+            if(!config.ftpServerPasvMinPort)config.ftpServerPasvMinPort = 10050;
+            if(!config.ftpServerPasvMaxPort)config.ftpServerPasvMaxPort = 10100;
             config.ftpServerUrl = config.ftpServerUrl.replace('{{PORT}}',config.ftpServerPort)
             const FtpSrv = require('ftp-srv')
+
             const ftpServer = new FtpSrv({
                 url: config.ftpServerUrl,
+                // pasv_url must be set to enable PASV; ftp-srv uses its known IP if given 127.0.0.1,
+                // and smart clients will ignore the IP anyway. Some Dahua IP cams require PASV mode.
+                // ftp-srv just wants an IP only (no protocol or port)
+                pasv_url: config.ftpServerPasvUrl,
+                pasv_min: config.ftpServerPasvMinPort,
+                pasv_max: config.ftpServerPasvMaxPort,
+                greeting: "Shinobi FTP dropInEvent Server says hello!",
                 log: require('bunyan').createLogger({
                   name: 'ftp-srv',
                   level: 100
@@ -306,7 +316,6 @@ module.exports = function(s,config,lang,app,io){
                                 plug: "dropInEvent",
                                 reason: reasonTag
                             },
-                            doObjectDetection: (s.isAtleatOneDetectorPluginConnected && details.detector_use_detect_object === '1')
                         },config.dropInEventForceSaveEvent)
                         callback()
                     })
@@ -329,4 +338,5 @@ module.exports = function(s,config,lang,app,io){
             s.systemLog(`SMTP Server running on port ${config.smtpServerPort}...`)
         })
     }
+    require('./dropInEvents/mqtt.js')(s,config,lang,app,io)
 }

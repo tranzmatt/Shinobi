@@ -2,6 +2,10 @@ var os = require('os');
 var exec = require('child_process').exec;
 const onvif = require("shinobi-onvif");
 module.exports = function(s,config,lang,app,io){
+    const {
+        createSnapshot,
+        addCredentialsToStreamLink,
+    } = require('../monitor/utils.js')(s,config,lang)
     const createOnvifDevice = async (onvifAuth) => {
         var response = {ok: false}
         const monitorConfig = s.group[onvifAuth.ke].rawMonitorConfigurations[onvifAuth.id]
@@ -29,7 +33,7 @@ module.exports = function(s,config,lang,app,io){
         Object.keys(options).forEach((key) => {
             const value = options[key]
             if(typeof value === 'string'){
-                newOptions[key] = value.replace(/__CURRENT_TOKEN/g,Camera.current_profile.token)
+                newOptions[key] = value.replace(/__CURRENT_TOKEN/g,Camera.current_profile ? Camera.current_profile.token : 'NOTOKEN')
             }else if(value !== undefined && value !== null){
                 newOptions[key] = value
             }
@@ -118,6 +122,27 @@ module.exports = function(s,config,lang,app,io){
             doAction(s.group[onvifAuth.ke].activeMonitors[onvifAuth.id].onvifConnection)
         }
     }
+    async function getSnapshotFromOnvif(onvifOptions){
+        let theUrl;
+        if(onvifOptions.mid && onvifOptions.ke){
+            const groupKey = onvifOptions.ke
+            const monitorId = onvifOptions.mid
+            const theDevice = s.group[groupKey].activeMonitors[monitorId].onvifConnection
+            theUrl = (await theDevice.services.media.getSnapshotUri({
+                ProfileToken : theDevice.current_profile.token,
+            })).GetSnapshotUriResponse.MediaUri.Uri;
+        }else{
+            theUrl = addCredentialsToStreamLink({
+                username: onvifOptions.username,
+                password: onvifOptions.password,
+                url: onvifOptions.uri
+            })
+        }
+        return await createSnapshot({
+            output: ['-s 400x400'],
+            url: theUrl,
+        })
+    }
     /**
     * API : ONVIF Method Controller
      */
@@ -140,6 +165,7 @@ module.exports = function(s,config,lang,app,io){
             })
         },res,req);
     })
+    s.getSnapshotFromOnvif = getSnapshotFromOnvif
     s.createOnvifDevice = createOnvifDevice
     s.runOnvifMethod = runOnvifMethod
 }

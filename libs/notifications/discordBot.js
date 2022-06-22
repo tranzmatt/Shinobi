@@ -1,6 +1,9 @@
 var fs = require("fs")
 var Discord = require("discord.js")
-module.exports = function(s,config,lang){
+module.exports = function(s,config,lang,getSnapshot){
+    const {
+        getEventBasedRecordingUponCompletion,
+    } = require('../events/utils.js')(s,config,lang)
     //discord bot
     if(config.discordBot === true){
         try{
@@ -45,13 +48,14 @@ module.exports = function(s,config,lang){
                 }
             }
             const onEventTriggerBeforeFilterForDiscord = function(d,filter){
-                filter.discord = true
+                filter.discord = false
             }
             const onEventTriggerForDiscord = async (d,filter) => {
                 const monitorConfig = s.group[d.ke].rawMonitorConfigurations[d.id]
                 // d = event object
                 //discord bot
-                if(filter.discord && s.group[d.ke].discordBot && monitorConfig.details.detector_discordbot === '1' && !s.group[d.ke].activeMonitors[d.id].detector_discordbot){
+                const isEnabled = filter.discord || monitorConfig.details.detector_discordbot === '1' || monitorConfig.details.notify_discord === '1'
+                if(s.group[d.ke].discordBot && isEnabled && !s.group[d.ke].activeMonitors[d.id].detector_discordbot){
                     var detector_discordbot_timeout
                     if(!monitorConfig.details.detector_discordbot_timeout||monitorConfig.details.detector_discordbot_timeout===''){
                         detector_discordbot_timeout = 1000 * 60 * 10;
@@ -63,14 +67,27 @@ module.exports = function(s,config,lang){
                         s.group[d.ke].activeMonitors[d.id].detector_discordbot = null
                     },detector_discordbot_timeout)
                     if(monitorConfig.details.detector_discordbot_send_video === '1'){
-                        // change to function that captures on going video capture, waits, grabs new video file, slices portion (max for transmission) and prepares for delivery
-                        s.mergeDetectorBufferChunks(d,function(mergedFilepath,filename){
+                        let videoPath = null
+                        let videoName = null
+                        const eventBasedRecording = await getEventBasedRecordingUponCompletion({
+                            ke: d.ke,
+                            mid: d.mid
+                        })
+                        if(eventBasedRecording.filePath){
+                            videoPath = eventBasedRecording.filePath
+                            videoName = eventBasedRecording.filename
+                        }else{
+                            const siftedVideoFileFromRam = await s.mergeDetectorBufferChunks(d)
+                            videoPath = siftedVideoFileFromRam.filePath
+                            videoName = siftedVideoFileFromRam.filename
+                        }
+                        if(videoPath){
                             sendMessage({
                                 author: {
                                   name: s.group[d.ke].rawMonitorConfigurations[d.id].name,
                                   icon_url: config.iconURL
                                 },
-                                title: filename,
+                                title: videoName,
                                 fields: [],
                                 timestamp: d.currentTime,
                                 footer: {
@@ -79,17 +96,14 @@ module.exports = function(s,config,lang){
                                 }
                             },[
                                 {
-                                    attachment: mergedFilepath,
-                                    name: filename
+                                    attachment: videoPath,
+                                    name: videoName
                                 }
                             ],d.ke)
-                        })
+                        }
                     }
-                    const {screenShot, isStaticFile} = await s.getRawSnapshotFromMonitor(monitorConfig,{
-                        secondsInward: monitorConfig.details.snap_seconds_inward
-                    })
-                    if(screenShot){
-                        d.screenshotBuffer = screenShot
+                    await getSnapshot(d,monitorConfig)
+                    if(d.screenshotBuffer){
                         sendMessage({
                             author: {
                               name: s.group[d.ke].rawMonitorConfigurations[d.id].name,
@@ -105,7 +119,7 @@ module.exports = function(s,config,lang){
                             }
                         },[
                             {
-                                attachment: screenShot,
+                                attachment: d.screenshotBuffer,
                                 name: d.screenshotName+'.jpg'
                             }
                         ],d.ke)
@@ -139,6 +153,8 @@ module.exports = function(s,config,lang){
                    userDetails.discordbot === '1' &&
                    userDetails.discordbot_token !== ''
                   ){
+                    s.debugLog(`!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`)
+                    s.debugLog(`Discord Connecting ${userDetails.discordbot_token}`)
                     s.group[user.ke].discordBot = new Discord.Client()
                     s.group[user.ke].discordBot.on('ready', () => {
                         s.userLog({
@@ -183,7 +199,8 @@ module.exports = function(s,config,lang){
                 }
             }
             const onMonitorUnexpectedExitForDiscord = (monitorConfig) => {
-                if(monitorConfig.details.notify_discord === '1' && monitorConfig.details.notify_onUnexpectedExit === '1'){
+                const isEnabled = monitorConfig.details.detector_discordbot === '1' || monitorConfig.details.notify_discord === '1'
+                if(isEnabled && monitorConfig.details.notify_onUnexpectedExit === '1'){
                     const ffmpegCommand = s.group[monitorConfig.ke].activeMonitors[monitorConfig.mid].ffmpeg
                     const description = lang['Process Crashed for Monitor'] + '\n' + ffmpegCommand
                     const currentTime = new Date()
@@ -210,6 +227,164 @@ module.exports = function(s,config,lang){
             s.onEventTriggerBeforeFilter(onEventTriggerBeforeFilterForDiscord)
             s.onDetectorNoTriggerTimeout(onDetectorNoTriggerTimeoutForDiscord)
             s.onMonitorUnexpectedExit(onMonitorUnexpectedExitForDiscord)
+            s.definitions["Monitor Settings"].blocks["Notifications"].info[0].info.push(
+                {
+                   "name": "detail=notify_discord",
+                   "field": "Discord",
+                   "description": "",
+                   "default": "0",
+                   "example": "",
+                   "selector": "h_det_discord",
+                   "fieldType": "select",
+                   "possible": [
+                      {
+                         "name": lang.No,
+                         "value": "0"
+                      },
+                      {
+                         "name": lang.Yes,
+                         "value": "1"
+                      }
+                   ]
+                }
+            )
+            s.definitions["Monitor Settings"].blocks["Notifications"].info.push({
+               "evaluation": "$user.details.use_discordbot !== '0'",
+               isFormGroupGroup: true,
+               "name": "Discord",
+               "color": "purple",
+               "section-class": "h_det_discord_input h_det_discord_1",
+               "info": [
+                   {
+                      "name": "detail=detector_discordbot_send_video",
+                      "field": lang["Attach Video Clip"] + ` (${lang['on Event']})`,
+                      "description": "",
+                      "default": "0",
+                      "example": "",
+                      "fieldType": "select",
+                      "possible": [
+                         {
+                            "name": lang.No,
+                            "value": "0"
+                         },
+                         {
+                            "name": lang.Yes,
+                            "value": "1"
+                         }
+                      ]
+                   },
+                   {
+                      "name": "detail=detector_discordbot_timeout",
+                      "field": lang['Allow Next Alert'] + ` (${lang['on Event']})`,
+                      "description": "",
+                      "default": "10",
+                      "example": "",
+                      "possible": ""
+                   },
+                   {
+                      "name": "detail=detector_notrigger_discord",
+                      "field": lang['No Trigger'],
+                      "description": lang.noTriggerText,
+                      "default": "0",
+                      "example": "",
+                      "fieldType": "select",
+                      "possible": [
+                         {
+                            "name": lang.No,
+                            "value": "0"
+                         },
+                         {
+                            "name": lang.Yes,
+                            "value": "1"
+                         }
+                      ]
+                   },
+               ]
+            })
+            s.definitions["Account Settings"].blocks["2-Factor Authentication"].info.push({
+                "name": "detail=factor_discord",
+                "field": 'Discord',
+                "default": "1",
+                "example": "",
+                "fieldType": "select",
+                "possible": [
+                   {
+                      "name": lang.No,
+                      "value": "0"
+                   },
+                   {
+                      "name": lang.Yes,
+                      "value": "1"
+                   }
+                ]
+            })
+            s.definitions["Account Settings"].blocks["Discord"] = {
+               "evaluation": "$user.details.use_discordbot !== '0'",
+               "name": "Discord",
+               "color": "purple",
+               "info": [
+                   {
+                      "name": "detail=discordbot",
+                      "selector":"u_discord_bot",
+                      "field": lang.Enabled,
+                      "default": "0",
+                      "example": "",
+                      "fieldType": "select",
+                      "possible": [
+                          {
+                             "name": lang.No,
+                             "value": "0"
+                          },
+                          {
+                             "name": lang.Yes,
+                             "value": "1"
+                          }
+                      ]
+                   },
+                   {
+                       hidden: true,
+                      "name": "detail=discordbot_token",
+                      "fieldType": "password",
+                      "placeholder": "XXXXXXXXXXXXXXXXXXXXXXXX.XXXXXXXXXXXXXXX_XXXXXXXXXXXXXXXXXX",
+                      "field": lang.Token,
+                      "form-group-class":"u_discord_bot_input u_discord_bot_1",
+                      "description": "",
+                      "default": "",
+                      "example": "",
+                      "possible": ""
+                  },
+                   {
+                       hidden: true,
+                      "name": "detail=discordbot_channel",
+                      "placeholder": "xxxxxxxxxxxxxxxxxx",
+                      "field": lang["Recipient ID"],
+                      "form-group-class":"u_discord_bot_input u_discord_bot_1",
+                      "description": "",
+                      "default": "",
+                      "example": "",
+                      "possible": ""
+                   }
+               ]
+            }
+            s.definitions["Event Filters"].blocks["Action for Selected"].info.push({
+                 "name": "actions=discord",
+                 "field": lang['Discord'],
+                 "fieldType": "select",
+                 "form-group-class": "actions-row",
+                 "default": "",
+                 "example": "1",
+                 "possible": [
+                    {
+                       "name": lang['Original Choice'],
+                       "value": "",
+                       "selected": true
+                    },
+                    {
+                       "name": lang.Yes,
+                       "value": "1",
+                    }
+                 ]
+            })
         }catch(err){
             console.log(err)
             console.log('Could not start Discord bot, please run "npm install discord.js" inside the Shinobi folder.')

@@ -86,7 +86,7 @@
     </div>
 </div>
 <script>
-    var adminApiPrefix = location.search === '?p2p=1' ? location.pathname + '/' : "<%=originalURL%><%=config.webPaths.adminApiPrefix%>"
+    var adminApiPrefix = location.search === '?p2p=1' ? location.pathname : "<%=originalURL%><%=config.webPaths.adminApiPrefix%>"
 </script>
 <% include blocks/confirm.ejs %>
 <% include blocks/subpermissions.ejs %>
@@ -95,7 +95,7 @@
 <% }) %>
 </body>
 <script><% include ../libs/js/basic.js %></script>
-<script><% include ../libs/js/socket.io.js %></script>
+<script><% include ../libs/js/socket.io.min.js %></script>
 <script><% include ../libs/js/pnotify.custom.min.js %></script>
 <script><% include ../libs/js/moment.js %></script>
 <script><% include ../libs/js/livestamp.min.js %></script>

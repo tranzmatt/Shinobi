@@ -140,7 +140,7 @@ module.exports = function(s,config){
             if(options.groupBy){
                 dbQuery.groupBy(options.groupBy)
             }
-            if(options.limit){
+            if(options.limit && options.limit !== '0'){
                 if(`${options.limit}`.indexOf(',') === -1){
                     dbQuery.limit(options.limit)
                 }else{
@@ -177,6 +177,7 @@ module.exports = function(s,config){
        ]
        const monitorRestrictions = options.monitorRestrictions
        var frameLimit = options.limit
+       const noLimit = options.noLimit === '1'
        const endIsStartTo = options.endIsStartTo
        const chosenDate = options.date
        const startDate = options.startDate ? stringToSqlTime(options.startDate) : null
@@ -217,6 +218,7 @@ module.exports = function(s,config){
            whereQuery.push(['filename','=',options.filename])
            frameLimit = "1";
        }
+       if(noLimit)frameLimit = '0';
        options.orderBy = options.orderBy ? options.orderBy : ['time','desc']
        if(options.count)options.groupBy = options.groupBy ? options.groupBy : options.orderBy[0]
        knexQuery({
@@ -337,7 +339,7 @@ module.exports = function(s,config){
             endDate: endTime,
             startOperator: startTimeOperator,
             endOperator: endTimeOperator,
-            limit: options.limit,
+            limit: options.noLimit === '1' ? '0' : options.limit,
             archived: archived,
             rowType: rowName,
             endIsStartTo: endIsStartTo
@@ -355,7 +357,7 @@ module.exports = function(s,config){
             }
             if(options.parseRowDetails){
                 r.forEach((row) => {
-                    row.details = JSON.parse(row.details)
+                    row.details = s.parseJSON(row.details,{})
                 })
             }
             if(options.noCount){

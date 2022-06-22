@@ -3,6 +3,25 @@ const spawn = require('child_process').spawn;
 module.exports = (config) => {
     var currentlyUpdating = false
     return {
+        getSystemInfo: (s) => {
+            const response = {
+                "Time Started": s.timeStarted,
+                "Time Ready": s.timeReady,
+                Versions: {
+                    "Shinobi": s.currentVersion,
+                    "Node.js": process.version,
+                    "FFmpeg": s.ffmpegVersion,
+                    "isActivated": config.userHasSubscribed
+                },
+                Machine: {
+                    "CPU Core Count": s.coreCount,
+                    "Total RAM": s.totalmem,
+                    "Operating System Platform": s.platform,
+                },
+            }
+            if(s.expiryDate)response.Versions["License Expires On"] = s.expiryDate
+            return response
+        },
         getConfiguration: () => {
             return new Promise((resolve,reject) => {
                 fs.readFile(s.location.config,'utf8',function(err,data){
@@ -15,11 +34,7 @@ module.exports = (config) => {
                 try{
                     if(config.thisIsDocker){
                         const dockerConfigFile = '/config/conf.json'
-                        fs.stat(dockerConfigFile,(err) => {
-                            if(!err){
-                                fs.writeFile(dockerConfigFile,JSON.stringify(postBody,null,3),function(){})
-                            }
-                        })
+                        fs.writeFileSync(dockerConfigFile,JSON.stringify(postBody,null,3))
                     }
                 }catch(err){
                     console.log(err)

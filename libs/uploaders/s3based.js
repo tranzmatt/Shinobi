@@ -19,7 +19,7 @@ module.exports = function(s,config,lang){
     }
     var loadWasabiHotCloudStorageForUser = function(e){
         // e = user
-        var userDetails = JSON.parse(e.details)
+        var userDetails = s.parseJSON(e.details)
         if(userDetails.whcs_use_global === '1' && config.cloudUploaders && config.cloudUploaders.WasabiHotCloudStorage){
             // {
             //     whcs_accessKeyId: "",
@@ -106,7 +106,7 @@ module.exports = function(s,config,lang){
             })
             var bucketName = s.group[e.ke].init.whcs_bucket
             var saveLocation = s.group[e.ke].init.whcs_dir+e.ke+'/'+e.mid+'/'+k.filename
-            // gcp does not support multipart.  Set queueSize to 1 and a big enough partSize 
+            // gcp does not support multipart.  Set queueSize to 1 and a big enough partSize
             var options = s.group[e.ke].whcs.endpoint.href.includes("https://storage.googleapis.com") ? {
                 queueSize: 1,
                 partSize: 300 * 1024 * 1024
@@ -177,6 +177,7 @@ module.exports = function(s,config,lang){
                             mid: queryInfo.mid,
                             ke: queryInfo.ke,
                             time: queryInfo.time,
+			    filename: queryInfo.filename,
                             details: s.s({
                                 type : 'whcs',
                                 location : saveLocation

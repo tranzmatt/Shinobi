@@ -451,6 +451,61 @@ module.exports = (s,config,lang) => {
             callback()
         }
     }
+    function resetAllStorageCounters(groupKey){
+        var storageIndexes = Object.keys(s.group[groupKey].addStorageUse)
+        storageIndexes.forEach((storageIndex) => {
+            s.setDiskUsedForGroupAddStorage(groupKey,{
+                size: 0,
+                storageIndex: storageIndex
+            })
+        })
+        s.setDiskUsedForGroup(groupKey,0)
+    }
+    function createAdminUser(user){
+        return new Promise((resolve,reject) => {
+            const detailsColumn = Object.assign({
+                "factorAuth":"0",
+                "size": user.diskLimit || user.size || '',
+                "days":"",
+                "event_days":"",
+                "log_days":"",
+                "max_camera": user.cameraLimit || user.max_camera || '',
+                "permissions":"all",
+                "edit_size":"1",
+                "edit_days":"1",
+                "edit_event_days":"1",
+                "edit_log_days":"1",
+                "use_admin":"1",
+                "use_aws_s3":"1",
+                "use_whcs":"1",
+                "use_sftp":"1",
+                "use_webdav":"1",
+                "use_discordbot":"1",
+                "use_ldap":"1",
+                "aws_use_global":"0",
+                "b2_use_global":"0",
+                "webdav_use_global":"0"
+            },s.parseJSON(user.details) || {});
+            const insertQuery = {
+                ke: user.ke || s.gid(7),
+                uid: user.uid || s.gid(6),
+                mail: user.mail,
+                pass: s.createHash(user.initialPassword || user.pass || s.gid()),
+                details: JSON.stringify(detailsColumn)
+            }
+            s.knexQuery({
+                action: "insert",
+                table: "Users",
+                insert: insertQuery
+            },function(err,users) {
+                resolve({
+                    ok: !err,
+                    inserted: !err ? insertQuery : undefined,
+                    err: err
+                })
+            })
+        })
+    }
     return {
         deleteSetOfVideos: deleteSetOfVideos,
         deleteSetOfTimelapseFrames: deleteSetOfTimelapseFrames,
@@ -461,5 +516,7 @@ module.exports = (s,config,lang) => {
         deleteFileBinFiles: deleteFileBinFiles,
         deleteCloudVideos: deleteCloudVideos,
         deleteCloudTimelapseFrames: deleteCloudTimelapseFrames,
+        resetAllStorageCounters: resetAllStorageCounters,
+        createAdminUser: createAdminUser,
     }
 }

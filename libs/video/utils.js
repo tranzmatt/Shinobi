@@ -59,7 +59,7 @@ module.exports = (s,config,lang) => {
                 // const findCmd = [videosDirectory].concat(options.flags || ['-maxdepth','1'])
                 fs.writeFileSync(
                     tempDirectory + 'orphanCheck.sh',
-                    `find "${videosDirectory}" -maxdepth 1 -type f -exec stat -c "%y %n" {} + | sort -r | head -n ${options.checkMax}`
+                    `find "${videosDirectory}" -maxdepth 1 -type f -exec stat -c "%n" {} + | sort -r | head -n ${options.checkMax}`
                 );
                 let listing = spawn('sh',[tempDirectory + 'orphanCheck.sh'])
                 // const onData = options.onData ? options.onData : () => {}
@@ -176,8 +176,43 @@ module.exports = (s,config,lang) => {
             finish()
         }
     }
+    function cutVideoLength(options){
+        return new Promise((resolve,reject) => {
+            const response = {ok: false}
+            const inputFilePath = options.filePath
+            const monitorId = options.mid
+            const groupKey = options.ke
+            const cutLength = options.cutLength || 10
+            const tempDirectory = s.getStreamsDirectory(options)
+            let fileExt = inputFilePath.split('.')
+            fileExt = fileExt[fileExt.length -1]
+            const filename = `${s.gid(10)}.${fileExt}`
+            const videoOutPath = `${tempDirectory}${filename}`
+            const cuttingProcess = spawn(config.ffmpegDir,['-loglevel','warning','-i', inputFilePath, '-c','copy','-t',`${cutLength}`,videoOutPath])
+            cuttingProcess.stderr.on('data',(data) => {
+                const err = data.toString()
+                s.debugLog('cutVideoLength',options,err)
+            })
+            cuttingProcess.on('close',(data) => {
+                fs.stat(videoOutPath,(err) => {
+                    if(!err){
+                        response.ok = true
+                        response.filename = filename
+                        response.filePath = videoOutPath
+                        setTimeout(() => {
+                            s.file('delete',videoOutPath)
+                        },1000 * 60 * 3)
+                    }else{
+                        s.debugLog('cutVideoLength:readFile',options,err)
+                    }
+                    resolve(response)
+                })
+            })
+        })
+    }
     return {
         orphanedVideoCheck: orphanedVideoCheck,
         scanForOrphanedVideos: scanForOrphanedVideos,
+        cutVideoLength: cutVideoLength,
     }
 }

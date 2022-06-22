@@ -1,4 +1,4 @@
-FROM node:12.18.3-buster-slim
+FROM node:16.13-buster-slim
 
 ENV DB_USER=majesticflame \
     DB_PASSWORD='' \
@@ -88,23 +88,24 @@ COPY . .
 COPY ./plugins  /home/Shinobi/plugins
 RUN chmod -R 777 /home/Shinobi/plugins
 RUN npm i npm@latest -g && \
-    npm install pm2 -g && \
     npm install --unsafe-perm && \
-    npm audit fix --force
+    npm install pm2 -g
 COPY ./Docker/pm2.yml ./
 
 # Copy default configuration files
 # COPY ./config/conf.json ./config/super.json /home/Shinobi/
 RUN chmod -f +x /home/Shinobi/Docker/init.sh
+RUN sed -i -e 's/\r//g' /home/Shinobi/Docker/init.sh
+# RUN chmod -f +x /home/Shinobi/shinobi
 
 VOLUME ["/home/Shinobi/videos"]
 VOLUME ["/home/Shinobi/plugins"]
+VOLUME ["/home/Shinobi/libs/customAutoLoad"]
 VOLUME ["/config"]
-VOLUME ["/customAutoLoad"]
 VOLUME ["/var/lib/mysql"]
 
-EXPOSE 8080
+EXPOSE 8080 443 21 25
 
-ENTRYPOINT ["/home/Shinobi/Docker/init.sh"]
+ENTRYPOINT ["sh","/home/Shinobi/Docker/init.sh"]
 
-CMD [ "pm2-docker", "pm2.yml" ]
+CMD [ "pm2-docker", "/home/Shinobi/Docker/pm2.yml" ]

@@ -8,7 +8,7 @@ sed -i "s/$OLD_SQL_USER_TAG/$NEW_SQL_USER_TAG/g" sql/framework1.sql
 if [ "$SSL_ENABLED" = "true" ]; then
     if [ -d /config/ssl ]; then
         echo "Using provided SSL Key"
-        cp -R /config/ssl ssl
+        cp -R /config/ssl ./
         SSL_CONFIG='{"key":"./ssl/server.key","cert":"./ssl/server.cert"}'
     else
         echo "Making new SSL Key"
@@ -62,14 +62,14 @@ if [ "$DB_DISABLE_INCLUDED" = "false" ]; then
     echo "Setting up MySQL database if it does not exists ..."
 
     echo "Create database schema if it does not exists ..."
-    mysql -e "source /home/Shinobi/sql/framework.sql" || true
+    mysql -e "source /home/Shinobi/sql/framework1.sql" || true
 
     echo "Create database user if it does not exists ..."
     mysql -e "source /home/Shinobi/sql/user.sql" || true
 
 else
     echo "Create database schema if it does not exists ..."
-    mysql -u "$DB_USER" -h "$DB_HOST" -p"$DB_PASSWORD" --port="$DB_PORT" -e "source /home/Shinobi/sql/framework.sql" || true
+    mysql -u "$DB_USER" -h "$DB_HOST" -p"$DB_PASSWORD" --port="$DB_PORT" --database="$DB_DATABASE" -e "source /home/Shinobi/sql/framework1.sql" || true
 fi
 
 DATABASE_CONFIG='{"host": "'$DB_HOST'","user": "'$DB_USER'","password": "'$DB_PASSWORD'","database": "'$DB_DATABASE'","port":'$DB_PORT'}'
@@ -80,13 +80,11 @@ cd /home/Shinobi
 mkdir -p libs/customAutoLoad
 if [ -e "/config/conf.json" ]; then
     cp /config/conf.json conf.json
-fi
-if [ ! -e "./conf.json" ]; then
-    sudo cp conf.sample.json conf.json
+elif [ ! -e "./conf.json" ]; then
+    cp conf.sample.json conf.json
 fi
 sudo sed -i -e 's/change_this_to_something_very_random__just_anything_other_than_this/'"$cronKey"'/g' conf.json
-node tools/modifyConfiguration.js cpuUsageMarker=CPU subscriptionId=$SUBSCRIPTION_ID thisIsDocker=true pluginKeys="$PLUGIN_KEYS" db="$DATABASE_CONFIG" ssl="$SSL_CONFIG"
-sudo cp conf.json /config/conf.json
+# node tools/modifyConfiguration.js cpuUsageMarker=CPU subscriptionId=$SUBSCRIPTION_ID thisIsDocker=true pluginKeys="$PLUGIN_KEYS" db="$DATABASE_CONFIG" ssl="$SSL_CONFIG"
 
 
 echo "============="
@@ -95,15 +93,13 @@ echo "Default Password : admin"
 echo "Log in at http://HOST_IP:SHINOBI_PORT/super"
 if [ -e "/config/super.json" ]; then
     cp /config/super.json super.json
-fi
-if [ ! -e "./super.json" ]; then
-    sudo cp super.sample.json super.json
-    sudo cp super.sample.json /config/super.json
+elif [ ! -e "./super.json" ]; then
+    cp super.sample.json super.json
 fi
 
 if [ -e "/config/init.extension.sh" ]; then
     echo "Running extension init file ..."
-    ( sh /config/init.extension.sh ) 
+    ( sh /config/init.extension.sh )
 fi
 
 # Execute Command

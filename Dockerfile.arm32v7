@@ -66,6 +66,8 @@ RUN apt install -y software-properties-common \
         tar \
         x264
 
+RUN apt install -y zip
+
 RUN apt install -y \
                 ffmpeg \
                 git \
@@ -87,8 +89,7 @@ COPY ./plugins  /home/Shinobi/plugins
 RUN chmod -R 777 /home/Shinobi/plugins
 RUN npm i npm@latest -g && \
     npm install pm2 -g && \
-    npm install --unsafe-perm && \
-    npm audit fix --force
+    npm install --unsafe-perm
 COPY ./Docker/pm2.yml ./
 
 # Copy default configuration files
@@ -97,8 +98,8 @@ RUN chmod -f +x /home/Shinobi/Docker/init.sh
 
 VOLUME ["/home/Shinobi/videos"]
 VOLUME ["/home/Shinobi/plugins"]
+VOLUME ["/home/Shinobi/libs/customAutoLoad"]
 VOLUME ["/config"]
-VOLUME ["/customAutoLoad"]
 VOLUME ["/var/lib/mysql"]
 
 EXPOSE 8080

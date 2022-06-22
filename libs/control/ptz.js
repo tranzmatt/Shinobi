@@ -1,7 +1,7 @@
 var os = require('os');
 var exec = require('child_process').exec;
-var request = require('request')
 module.exports = function(s,config,lang){
+    const { fetchWithAuthentication } = require('../basic/utils.js')(process.cwd(),config)
     const moveLock = {}
     const ptzTimeoutsUntilResetToHome = {}
     const sliceUrlAuth = (url) => {
@@ -219,70 +219,50 @@ module.exports = function(s,config,lang){
             var stopCamera = function(){
                 let stopURL = controlBaseUrl + monitorConfig.details[`control_url_${options.direction}_stop`]
                 let controlOptions = s.cameraControlOptionsFromUrl(stopURL,monitorConfig)
-                let requestOptions = {
-                    url : controlBaseUrl + controlOptions.path,
-                    method : controlOptions.method
+                const hasDigestAuthEnabled = monitorConfig.details.control_digest_auth === '1'
+                const requestUrl = controlBaseUrl + controlOptions.path
+                const response =  {
+                    ok: true,
+                    type:'Control Trigger Ended'
                 }
-                if(controlOptions.username && controlOptions.password){
-                    requestOptions.auth = {
-                        user: controlOptions.username,
-                        pass: controlOptions.password
-                    }
-                }
-                if(controlOptions.postData){
-                    requestOptions.form = controlOptions.postData
-                }
-                if(monitorConfig.details.control_digest_auth === '1'){
-                    requestOptions.uri =  sliceUrlAuth(requestOptions.url);
-                    delete requestOptions.url;
-                    requestOptions.auth.sendImmediately = false;
-                }
-                request(requestOptions,function(err,data){
-                    const msg =  {
-                        ok: true,
-                        type:'Control Trigger Ended'
-                    }
-                    if(err){
-                        msg.ok = false
-                        msg.type = 'Control Error'
-                        msg.msg = err
-                    }
+                const theRequest = fetchWithAuthentication(requestUrl,{
+                    method: controlOptions.method,
+                    digestAuth: hasDigestAuthEnabled,
+                    body: controlOptions.postData || null
+                });
+                theRequest.then(res => res.text())
+                .then((data) => {
                     moveLock[options.ke + options.id] = false
-                    callback(msg)
-                    s.userLog(monitorConfig,msg);
+                    s.userLog(monitorConfig,response);
+                });
+                theRequest.catch((err) => {
+                    response.ok = false
+                    response.type = 'Control Error'
+                    response.msg = err
+                    callback(response)
                 })
             }
             if(options.direction === 'stopMove'){
                 stopCamera()
             }else{
+                moveLock[options.ke + options.id] = true
                 let controlURL = controlBaseUrl + monitorConfig.details[`control_url_${options.direction}`]
                 let controlOptions = s.cameraControlOptionsFromUrl(controlURL,monitorConfig)
-                let requestOptions = {
-                    url: controlBaseUrl + controlOptions.path,
-                    method: controlOptions.method
+                const hasDigestAuthEnabled = monitorConfig.details.control_digest_auth === '1'
+                const requestUrl = controlBaseUrl + controlOptions.path
+                const response =  {
+                    ok: true,
+                    type: lang['Control Triggered']
                 }
-                if(controlOptions.username && controlOptions.password){
-                    requestOptions.auth = {
-                        user: controlOptions.username,
-                        pass: controlOptions.password
-                    }
-                }
-                if(controlOptions.postData){
-                    requestOptions.form = controlOptions.postData
-                }
-                if(monitorConfig.details.control_digest_auth === '1'){
-                    requestOptions.uri =  sliceUrlAuth(requestOptions.url);
-                    delete requestOptions.url;
-                    requestOptions.auth.sendImmediately = false;
-                }
-                moveLock[options.ke + options.id] = true
-                request(requestOptions,function(err,data){
-                    if(err){
-                        callback({ok:false,type:'Control Error',msg:err})
-                        return
-                    }
+                const theRequest = fetchWithAuthentication(requestUrl,{
+                    method: controlOptions.method,
+                    digestAuth: hasDigestAuthEnabled,
+                    body: controlOptions.postData || null
+                });
+                theRequest.then(res => res.text())
+                .then((data) => {
                     if(monitorConfig.details.control_stop == '1' && options.direction !== 'center' ){
-                        s.userLog(monitorConfig,{type:'Control Triggered Started'});
+                        s.userLog(monitorConfig,{type: lang['Control Trigger Started']});
                         if(controlUrlStopTimeout > 0){
                             setTimeout(function(){
                                 stopCamera()
@@ -290,8 +270,14 @@ module.exports = function(s,config,lang){
                         }
                     }else{
                         moveLock[options.ke + options.id] = false
-                        callback({ok:true,type:'Control Triggered'})
+                        callback(response)
                     }
+                });
+                theRequest.catch((err) => {
+                    response.ok = false
+                    response.type = lang['Control Error']
+                    response.msg = err
+                    callback(response)
                 })
             }
         }
@@ -371,6 +357,7 @@ module.exports = function(s,config,lang){
     }
     const moveCameraPtzToMatrix = function(event,trackingTarget){
         if(moveLock[event.ke + event.id])return;
+        trackingTarget = trackingTarget || 'person'
         const imgHeight = event.details.imgHeight
         const imgWidth = event.details.imgWidth
         const thresholdX = imgWidth * 0.125
@@ -378,7 +365,7 @@ module.exports = function(s,config,lang){
         const imageCenterX = imgWidth / 2
         const imageCenterY = imgHeight / 2
         const matrices = event.details.matrices || []
-        const largestMatrix = getLargestMatrix(matrices.filter(matrix => matrix.tag === (trackingTarget || 'person')))
+        const largestMatrix = getLargestMatrix(matrices.filter(matrix => trackingTarget.indexOf(matrix.tag) > -1))
         // console.log(matrices.find(matrix => matrix.tag === 'person'))
         if(!largestMatrix)return;
         const monitorConfig = s.group[event.ke].rawMonitorConfigurations[event.id]

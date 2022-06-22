@@ -149,6 +149,7 @@ const getDeviceInformation = async (onvifDevice,options) => {
         response.ok = false
         response.error = err.stack.toString().toString()
         s.debugLog(err)
+        s.debugLog(onvifDevice)
     }
     return response
 }

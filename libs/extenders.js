@@ -5,6 +5,11 @@ module.exports = function(s,config){
         s.onSocketAuthenticationExtensions.push(callback)
     }
     //
+    s.onUserLogExtensions = []
+    s.onUserLog = function(callback){
+        s.onUserLogExtensions.push(callback)
+    }
+    //
     s.loadGroupExtensions = []
     s.loadGroupExtender = function(callback){
         s.loadGroupExtensions.push(callback)
@@ -98,6 +103,16 @@ module.exports = function(s,config){
         s.onFfmpegCameraStringCreationExtensions.push(callback)
     }
     //
+    s.onFfmpegBuildMainStreamExtensions = []
+    s.onFfmpegBuildMainStream = function(callback){
+        s.onFfmpegBuildMainStreamExtensions.push(callback)
+    }
+    //
+    s.onFfmpegBuildStreamChannelExtensions = []
+    s.onFfmpegBuildStreamChannel = function(callback){
+        s.onFfmpegBuildStreamChannelExtensions.push(callback)
+    }
+    //
     s.onMonitorPingFailedExtensions = []
     s.onMonitorPingFailed = function(callback){
         s.onMonitorPingFailedExtensions.push(callback)
@@ -106,6 +121,11 @@ module.exports = function(s,config){
     s.onMonitorDiedExtensions = []
     s.onMonitorDied = function(callback){
         s.onMonitorDiedExtensions.push(callback)
+    }
+    //
+    s.onMonitorCreateStreamPipeExtensions = []
+    s.onMonitorCreateStreamPipe = function(callback){
+        s.onMonitorCreateStreamPipeExtensions.push(callback)
     }
 
     ///////// SYSTEM ////////
@@ -157,6 +177,21 @@ module.exports = function(s,config){
     s.onGetRamUsageExtensions = []
     s.onGetRamUsage = function(callback){
         s.onGetRamUsageExtensions.push(callback)
+    }
+    //
+    s.onSubscriptionCheckExtensions = []
+    s.onSubscriptionCheck = function(callback){
+        s.onSubscriptionCheckExtensions.push(callback)
+    }
+    //
+    s.onDataPortMessageExtensions = []
+    s.onDataPortMessage = function(callback){
+        s.onDataPortMessageExtensions.push(callback)
+    }
+    //
+    s.onHttpRequestUpgradeExtensions = {}
+    s.onHttpRequestUpgrade = function(nameOfCallback,callback){
+        s.onHttpRequestUpgradeExtensions[nameOfCallback] = callback
     }
     //
     /////// VIDEOS ////////

@@ -1,8 +1,6 @@
 var fs = require('fs');
 var os = require('os');
 var moment = require('moment')
-var request = require('request')
-var jsonfile = require("jsonfile")
 var exec = require('child_process').exec;
 var spawn = require('child_process').spawn;
 var execSync = require('child_process').execSync;
@@ -10,31 +8,34 @@ module.exports = function(s,config,lang,app){
     const {
         modifyConfiguration,
         updateSystem,
+        getSystemInfo,
      } = require('./system/utils.js')(config)
+     const {
+         checkSubscription
+     } = require('./basic/utils.js')(process.cwd(),config)
     /**
     * API : Superuser : Get Logs
     */
     app.all([config.webPaths.superApiPrefix+':auth/logs'], function (req,res){
         req.ret={ok:false};
         s.superAuth(req.params,function(resp){
-            const monitorRestrictions = s.getMonitorRestrictions(user.details,req.params.id)
             s.getDatabaseRows({
-                monitorRestrictions: monitorRestrictions,
                 table: 'Logs',
-                groupKey: req.params.ke,
+                groupKey: '$',
                 date: req.query.date,
                 startDate: req.query.start,
                 endDate: req.query.end,
                 startOperator: req.query.startOperator,
                 endOperator: req.query.endOperator,
-                limit: req.query.limit,
-                archived: req.query.archived,
-                endIsStartTo: true
+                limit: req.query.limit || 30,
             },(response) => {
                 response.rows.forEach(function(v,n){
-                    r[n].info = JSON.parse(v.info)
+                    response.rows[n].info = JSON.parse(v.info)
                 })
-                s.closeJsonResponse(res,r)
+                s.closeJsonResponse(res,{
+                    ok: response.ok,
+                    logs: response.rows
+                })
             })
         },res,req)
     })
@@ -102,9 +103,21 @@ module.exports = function(s,config,lang,app){
         },res,req)
     })
     /**
+    * API : Superuser : Get Configuration (conf.json)
+    */
+    app.get(config.webPaths.superApiPrefix+':auth/system/configure', function (req,res){
+        s.superAuth(req.params,async (resp) => {
+            var endData = {
+                ok: true,
+                config: JSON.parse(fs.readFileSync(s.location.config)),
+            }
+            s.closeJsonResponse(res,endData)
+        },res,req)
+    })
+    /**
     * API : Superuser : Modify Configuration (conf.json)
     */
-    app.all(config.webPaths.superApiPrefix+':auth/system/configure', function (req,res){
+    app.post(config.webPaths.superApiPrefix+':auth/system/configure', function (req,res){
         s.superAuth(req.params,async (resp) => {
             var endData = {
                 ok : true
@@ -117,13 +130,45 @@ module.exports = function(s,config,lang,app){
                 s.systemLog('conf.json Modified',{
                     by: resp.$user.mail,
                     ip: resp.ip,
-                    old:jsonfile.readFileSync(s.location.config)
+                    old: s.parseJSON(fs.readFileSync(s.location.config),{})
                 })
                 const configError = await modifyConfiguration(postBody)
                 if(configError)s.systemLog(configError)
                 s.tx({f:'save_configuration'},'$')
             }
             s.closeJsonResponse(res,endData)
+        },res,req)
+    })
+    /**
+    * API : Superuser : Activate Key
+    */
+    app.post(config.webPaths.superApiPrefix+':auth/system/activate', function (req,res){
+        s.superAuth(req.params,async (resp) => {
+            var endData = {
+                ok : true
+            }
+            const currentConfig = JSON.parse(fs.readFileSync(s.location.config))
+            const subscriptionId = s.getPostData(req,'subscriptionId')
+            if(!subscriptionId){
+                endData.ok = false
+                endData.msg = lang.postDataBroken
+            }else{
+                s.systemLog('conf.json Modified',{
+                    by: resp.$user.mail,
+                    ip: resp.ip,
+                    old: currentConfig
+                })
+                const configError = await modifyConfiguration(Object.assign(currentConfig,{
+                    subscriptionId: subscriptionId,
+                }))
+                if(configError)s.systemLog(configError)
+                s.tx({f:'save_configuration'},'$')
+            }
+            checkSubscription(subscriptionId,function(hasSubcribed){
+                endData.ok = hasSubcribed
+                config.userHasSubscribed = hasSubcribed
+                s.closeJsonResponse(res,endData)
+            })
         },res,req)
     })
     /**
@@ -208,11 +253,7 @@ module.exports = function(s,config,lang,app){
                 try{
                     if(config.thisIsDocker){
                         const dockerSuperFile = '/config/super.json'
-                        fs.stat(dockerSuperFile,(err) => {
-                            if(!err){
-                                fs.writeFile(dockerSuperFile,JSON.stringify(currentSuperUserList,null,3),function(){})
-                            }
-                        })
+                        fs.writeFileSync(dockerSuperFile,JSON.stringify(currentSuperUserList,null,3))
                     }
                 }catch(err){
                     console.log(err)
@@ -713,6 +754,17 @@ module.exports = function(s,config,lang,app){
                 childNodes: childNodesJson,
             }
             s.closeJsonResponse(res,endData)
+        },res,req)
+    })
+    /**
+    * API : Superuser : Get System Info
+    */
+    app.get(config.webPaths.superApiPrefix+':auth/system/info', function (req,res){
+        s.superAuth(req.params,async (resp) => {
+            s.closeJsonResponse(res,{
+                ok: true,
+                info: getSystemInfo(s)
+            })
         },res,req)
     })
 }

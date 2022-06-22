@@ -43,10 +43,10 @@ echo "============="
 echo "Shinobi - Install NPM Libraries"
 npm i npm -g
 npm install --unsafe-perm
-sudo npm audit fix --force
+# sudo npm audit fix --force
 echo "============="
 echo "Shinobi - Install PM2"
-npm install pm2@3.0.0 -g
+npm install pm2@latest -g
 if (! -e "./conf.json" ) then
     cp conf.sample.json conf.json
 endif

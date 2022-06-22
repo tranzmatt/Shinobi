@@ -45,6 +45,7 @@ module.exports = function(s){
     if(config.orphanedVideoCheckMax === undefined){config.orphanedVideoCheckMax = 2}
     if(config.detectorMergePamRegionTriggers === undefined){config.detectorMergePamRegionTriggers = false}
     if(config.probeMonitorOnStart === undefined){config.probeMonitorOnStart = true}
+    if(config.showLoginTypeSelector === undefined){config.showLoginTypeSelector = true}
     //Child Nodes
     if(config.childNodes === undefined)config.childNodes = {};
         //enabled

@@ -1,8 +1,6 @@
 var fs = require('fs');
 var os = require('os');
 var moment = require('moment')
-var request = require('request')
-var jsonfile = require("jsonfile")
 var exec = require('child_process').exec;
 var spawn = require('child_process').spawn;
 var execSync = require('child_process').execSync;
@@ -51,6 +49,8 @@ module.exports = function(s,config,lang,app){
                             s.closeJsonResponse(res,endData)
                             return
                         }
+                    }else{
+                        updateQuery.mail = form.mail
                     }
                 }
                 await s.knexQueryPromise({
@@ -96,6 +96,7 @@ module.exports = function(s,config,lang,app){
     */
     app.all(config.webPaths.adminApiPrefix+':auth/accounts/:ke/delete', function (req,res){
         s.auth(req.params,function(user){
+            const groupKey = req.params.ke;
             var endData = {
                 ok : false
             }
@@ -106,47 +107,60 @@ module.exports = function(s,config,lang,app){
             }
             var form = s.getPostData(req) || {}
             var uid = form.uid || s.getPostData(req,'uid',false)
-            var mail = form.mail || s.getPostData(req,'mail',false)
-            s.knexQuery({
-                action: "delete",
-                table: "Users",
-                where: {
-                    ke: req.params.ke,
-                    uid: uid,
-                    mail: mail,
-                }
-            })
             s.knexQuery({
                 action: "select",
                 columns: "*",
-                table: "API",
+                table: "Users",
                 where: [
-                    ['ke','=',req.params.ke],
+                    ['ke','=',groupKey],
                     ['uid','=',uid],
                 ]
-            },function(err,rows){
-                if(rows && rows[0]){
-                    rows.forEach(function(row){
-                        delete(s.api[row.code])
-                    })
+            },function(err,usersFound){
+                const theUserUpForDeletion = usersFound[0]
+                if(theUserUpForDeletion){
                     s.knexQuery({
                         action: "delete",
-                        table: "API",
+                        table: "Users",
                         where: {
-                            ke: req.params.ke,
+                            ke: groupKey,
                             uid: uid,
                         }
                     })
+                    s.knexQuery({
+                        action: "select",
+                        columns: "*",
+                        table: "API",
+                        where: [
+                            ['ke','=',groupKey],
+                            ['uid','=',uid],
+                        ]
+                    },function(err,rows){
+                        if(rows && rows[0]){
+                            rows.forEach(function(row){
+                                delete(s.api[row.code])
+                            })
+                            s.knexQuery({
+                                action: "delete",
+                                table: "API",
+                                where: {
+                                    ke: groupKey,
+                                    uid: uid,
+                                }
+                            })
+                        }
+                    })
+                    s.tx({
+                        f: 'delete_sub_account',
+                        ke: groupKey,
+                        uid: uid,
+                        mail: theUserUpForDeletion.mail
+                    },'ADM_'+groupKey)
+                    endData.ok = true
+                }else{
+                    endData.msg = user.lang['User Not Found']
                 }
+                s.closeJsonResponse(res,endData)
             })
-            s.tx({
-                f: 'delete_sub_account',
-                ke: req.params.ke,
-                uid: uid,
-                mail: mail
-            },'ADM_'+req.params.ke)
-            endData.ok = true
-            s.closeJsonResponse(res,endData)
         },res,req)
     })
     /**
@@ -218,7 +232,7 @@ module.exports = function(s,config,lang,app){
                             var newId = s.gid()
                             var details = s.s(Object.assign({
                                 allmonitors: "1"
-                            },s.parseJSON(form.details) || {
+                            },s.parseJSON(form.details) || {}, {
                                 sub: "1",
                             }))
                             s.knexQuery({
@@ -302,7 +316,13 @@ module.exports = function(s,config,lang,app){
                 }
             }else{
                 if(!user.details.sub || user.details.allmonitors === '1' || user.details.monitor_edit.indexOf(req.params.id) > -1 || hasRestrictions && user.details.monitor_create === '1'){
-                    s.userLog(s.group[req.params.ke].rawMonitorConfigurations[req.params.id],{type:'Monitor Deleted',msg:'by user : '+user.uid});
+                    s.userLog({
+                        ke: req.params.ke,
+                        mid: req.params.id
+                    },{
+                        type: 'Monitor Deleted',
+                        msg: 'by user : '+user.uid
+                    });
                     req.params.delete=1;s.camera('stop',req.params);
                     s.tx({f:'monitor_delete',uid:user.uid,mid:req.params.id,ke:req.params.ke},'GRP_'+req.params.ke);
                     s.knexQuery({
