@@ -45,19 +45,31 @@ function startConnection(p2pServerAddress,subscriptionId){
     stayDisconnected = false
     const allMessageHandlers = []
     async function startWebsocketConnection(key,callback){
+        s.debugLog(`startWebsocketConnection EXECUTE`,new Error())
         function createWebsocketConnection(){
             return new Promise((resolve,reject) => {
-                const newTunnel = new WebSocket(p2pServerAddress || 'ws://172.16.101.218:81');
-                newTunnel.on('open', function(){
-                    resolve(newTunnel)
+                try{
+                    stayDisconnected = true
+                    if(tunnelToShinobi)tunnelToShinobi.close()
+                }catch(err){
+                    console.log(err)
+                }
+                tunnelToShinobi = new WebSocket(p2pServerAddress || 'ws://172.16.101.218:81');
+                stayDisconnected = false;
+                tunnelToShinobi.on('open', function(){
+                    resolve(tunnelToShinobi)
                 })
-                newTunnel.on('error', (err) => {
-                    console.log(`P2P newTunnel Error : `,err)
+                tunnelToShinobi.on('error', (err) => {
+                    console.log(`P2P tunnelToShinobi Error : `,err)
                     console.log(`P2P Restarting...`)
                     disconnectedConnection()
                 })
-                newTunnel.on('close', disconnectedConnection);
-                newTunnel.onmessage = function(event){
+                tunnelToShinobi.on('close', () => {
+                    setTimeout(() => {
+                        if(tunnelToShinobi.readyState !== 1)disconnectedConnection();
+                    },5000)
+                });
+                tunnelToShinobi.onmessage = function(event){
                     const data = bson.deserialize(Buffer.from(event.data))
                     allMessageHandlers.forEach((handler) => {
                         if(data.f === handler.key){
@@ -68,8 +80,8 @@ function startConnection(p2pServerAddress,subscriptionId){
 
                 clearInterval(socketCheckTimer)
                 socketCheckTimer = setInterval(() => {
-                    s.debugLog('Tunnel Ready State :',newTunnel.readyState)
-                    if(newTunnel.readyState !== 1){
+                    s.debugLog('Tunnel Ready State :',tunnelToShinobi.readyState)
+                    if(tunnelToShinobi.readyState !== 1){
                         s.debugLog('Tunnel NOT Ready! Reconnecting...')
                         disconnectedConnection()
                     }
@@ -80,17 +92,12 @@ function startConnection(p2pServerAddress,subscriptionId){
             s.debugLog('stayDisconnected',stayDisconnected)
             if(stayDisconnected)return;
             s.debugLog('DISCONNECTED! RESTARTING!')
-            setTimeout(() => {
+            // setTimeout(() => {
                 startWebsocketConnection()
-            },2000)
-        }
-        try{
-            if(tunnelToShinobi)tunnelToShinobi.close()
-        }catch(err){
-            console.log(err)
+            // },2000)
         }
         s.debugLog(p2pServerAddress)
-        tunnelToShinobi = await createWebsocketConnection(p2pServerAddress,allMessageHandlers)
+        await createWebsocketConnection(p2pServerAddress,allMessageHandlers)
         console.log('P2P : Connected! Authenticating...')
         sendDataToTunnel({
             subscriptionId: subscriptionId
