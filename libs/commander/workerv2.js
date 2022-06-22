@@ -64,11 +64,11 @@ function startConnection(p2pServerAddress,subscriptionId){
                     console.log(`P2P Restarting...`)
                     disconnectedConnection()
                 })
-                tunnelToShinobi.on('close', () => {
-                    setTimeout(() => {
-                        if(tunnelToShinobi.readyState !== 1)disconnectedConnection();
-                    },5000)
-                });
+                // tunnelToShinobi.on('close', () => {
+                //     setTimeout(() => {
+                //         if(tunnelToShinobi.readyState !== 1)disconnectedConnection();
+                //     },5000)
+                // });
                 tunnelToShinobi.onmessage = function(event){
                     const data = bson.deserialize(Buffer.from(event.data))
                     allMessageHandlers.forEach((handler) => {
