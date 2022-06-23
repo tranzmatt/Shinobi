@@ -7,6 +7,7 @@ module.exports = function(s,config,lang,app){
     config.machineId = config.p2pApiKey + '' + config.p2pGroupId
     config.p2pTargetAuth = config.p2pTargetAuth || s.gid(30)
     config.p2pShellAccess = config.p2pShellAccess || false
+    config.useBetterP2P = config.useBetterP2P === undefined ? true : config.useBetterP2P
     if(!config.workerStreamOutHandlers){
         config.workerStreamOutHandlers = [
           'Base64',
