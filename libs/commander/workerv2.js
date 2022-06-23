@@ -54,12 +54,12 @@ function clearAllTimeouts(){
     clearTimeout(onClosedTimeout)
 }
 function startConnection(p2pServerAddress,subscriptionId){
-    console.log('P2P : Connecting to Konekta P2P Server...')
     let tunnelToP2P
     stayDisconnected = false
     const allMessageHandlers = []
     async function startWebsocketConnection(key,callback){
         s.debugLog(`startWebsocketConnection EXECUTE`,new Error())
+        console.log('P2P : Connecting to Konekta P2P Server...')
         function createWebsocketConnection(){
             clearAllTimeouts()
             return new Promise((resolve,reject) => {
@@ -82,9 +82,9 @@ function startConnection(p2pServerAddress,subscriptionId){
                 tunnelToP2P.on('close', () => {
                     console.log(`P2P Connection Closed!`)
                     clearAllTimeouts()
-                    onClosedTimeout = setTimeout(() => {
-                        disconnectedConnection();
-                    },5000)
+                    // onClosedTimeout = setTimeout(() => {
+                    //     disconnectedConnection();
+                    // },5000)
                 });
                 tunnelToP2P.onmessage = function(event){
                     const data = bson.deserialize(Buffer.from(event.data))
