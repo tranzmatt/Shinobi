@@ -39,9 +39,15 @@ parentPort.on('message',(data) => {
 var socketCheckTimer = null
 var heartbeatTimer = null
 var heartBeatCheckTimout = null
+var onClosedTimeout = null
 let stayDisconnected = false
 const requestConnections = {}
 const requestConnectionsData = {}
+function clearAllTimeouts(){
+    clearInterval(heartbeatTimer)
+    clearTimeout(heartBeatCheckTimout)
+    clearTimeout(onClosedTimeout)
+}
 function startConnection(p2pServerAddress,subscriptionId){
     console.log('P2P : Connecting to Konekta P2P Server...')
     let tunnelToShinobi
@@ -50,6 +56,7 @@ function startConnection(p2pServerAddress,subscriptionId){
     async function startWebsocketConnection(key,callback){
         s.debugLog(`startWebsocketConnection EXECUTE`,new Error())
         function createWebsocketConnection(){
+            clearAllTimeouts()
             return new Promise((resolve,reject) => {
                 try{
                     stayDisconnected = true
@@ -69,8 +76,8 @@ function startConnection(p2pServerAddress,subscriptionId){
                 })
                 tunnelToShinobi.on('close', () => {
                     console.log(`P2P Connection Closed!`)
-                    clearInterval(heartbeatTimer)
-                    setTimeout(() => {
+                    clearAllTimeouts()
+                    onClosedTimeout = setTimeout(() => {
                         disconnectedConnection();
                     },5000)
                 });
@@ -95,10 +102,12 @@ function startConnection(p2pServerAddress,subscriptionId){
         }
         function disconnectedConnection(code,reason){
             s.debugLog('stayDisconnected',stayDisconnected)
+            clearAllTimeouts()
+            s.debugLog('DISCONNECTED!')
             if(stayDisconnected)return;
-            s.debugLog('DISCONNECTED! RESTARTING!')
+            s.debugLog('RESTARTING!')
             setTimeout(() => {
-                startWebsocketConnection()
+                if(tunnelToShinobi && tunnelToShinobi.readyState !== 1)startWebsocketConnection()
             },2000)
         }
         s.debugLog(p2pServerAddress)
@@ -234,7 +243,7 @@ function startConnection(p2pServerAddress,subscriptionId){
     onIncomingMessage('disconnect',function(data,requestId){
         console.log(`FAILED LICENSE CHECK ON P2P`)
         if(data.retryLater)console.log(`Retrying Later`)
-        stayDisconnected = !data.retryLater
+        stayDisconnected = data && !data.retryLater
     })
 }
 
