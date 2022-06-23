@@ -162,6 +162,9 @@ function startConnection(p2pServerAddress,subscriptionId){
         remotesocket.on('ready',() => {
             remotesocket.write(initData.buffer)
         })
+        remotesocket.on('error',(err) => {
+            s.debugLog('createRemoteSocket ERROR',err)
+        })
         remotesocket.on('data', function(data) {
             requestConnectionsData[requestId] = data.toString()
             responseTunnel.send('data',data)
@@ -285,6 +288,9 @@ function createResponseTunnel(originalRequestId){
                 rid: originalRequestId
             })
         }
+        responseTunnel.on('error', (err) => {
+            s.debugLog('responseTunnel ERROR',err)
+        })
         responseTunnel.on('open', function(){
             sendToResponseTunnel({
                 responseTunnel: originalRequestId,
