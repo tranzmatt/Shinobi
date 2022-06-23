@@ -176,8 +176,8 @@ module.exports = async (s,config,lang,app,io) => {
     }
     const loadModule = (shinobiModule) => {
         s.debugLog(`+++++++++++++++++++++++`)
-        s.debugLog(`Loading Module : ${moduleName}`)
         const moduleName = shinobiModule.name
+        s.debugLog(`Loading Module : ${moduleName}`)
         s.customAutoLoadModules[moduleName] = {}
         var customModulePath = modulesBasePath + '/' + moduleName
         s.debugLog(customModulePath)
