@@ -72,7 +72,10 @@ function base64ArrayBuffer(arrayBuffer) {
       return base64
 }
 function getLocationPathName(){
-    return location.pathname.endsWith('/') ? location.pathname : location.pathname
+    return location.pathname.endsWith('/') ? location.pathname : location.pathname + '/'
+}
+function getFullOrigin(){
+    return location.origin + getLocationPathName()
 }
 function debugLog(...args){
     console.log(...args)

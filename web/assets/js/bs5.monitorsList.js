@@ -214,7 +214,7 @@ $(document).ready(function(){
     .on('click','.copy-stream-url',function(e){
         e.preventDefault()
         var el = $(this)
-        var href = el.attr('href')
+        var href = getFullOrigin() + el.attr('href')
         copyToClipboard(href)
         new PNotify({
             title: lang['Copied'],
