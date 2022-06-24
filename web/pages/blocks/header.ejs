@@ -65,7 +65,7 @@
         if(!details.sub){ %>
             <script>
                 window.getAdminApiPrefix = function(piece){
-                    return location.search === '?p2p=1' ? (location.pathname.endsWith('/') ? location.pathname : location.pathname) : "<%=originalURL%><%=config.webPaths.adminApiPrefix%><%- $user.auth_token %>/"
+                    return "<%=originalURL%><%=config.webPaths.adminApiPrefix%><%- $user.auth_token %>/"
                 }
             </script>
         <% }

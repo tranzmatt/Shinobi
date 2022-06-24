@@ -1,5 +1,5 @@
 $(document).ready(function(){
-    var apiPrefix = getAdminApiPrefix()
+    var apiPrefix = getFullOrigin(true) + getAdminApiPrefix()
     var theWindow = $('#subAccountManager');
     var accountTable = $('#subAccountsList tbody');
     var theWindowForm = $('#monSectionAccountInformation');
