@@ -1081,6 +1081,14 @@ $(document).ready(function(e){
             $('.monitor_item').attr('data-gs-auto-position','no')
         }
     }
+    dashboardSwitchCallbacks.dontMonStretch = function(toggleState){
+        var theBody = $('body')
+        if(toggleState !== 1){
+            theBody.addClass('dont-stretch-monitors')
+        }else{
+            theBody.removeClass('dont-stretch-monitors')
+        }
+    }
     dashboardSwitchCallbacks.monitorMuteAudio = function(toggleState){
         var monitorMutes = dashboardOptions().monitorMutes || {}
         $('.monitor_item video').each(function(n,vidEl){

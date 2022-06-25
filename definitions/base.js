@@ -7502,7 +7502,7 @@ module.exports = function(s,config,lang){
                               {
                                   label: lang[`Don't Stretch Monitors`],
                                   class: 'cursor-pointer',
-                                  attributes: 'shinobi-switch="dontMonStretch" ui-change-target="body" on-class="dont-stretch-monitors"',
+                                  attributes: 'shinobi-switch="dontMonStretch" ui-change-target=".dot" on-class="dot-grey" off-class="dot-green"',
                                   color: 'grey',
                               },
                           ]
@@ -7984,7 +7984,7 @@ module.exports = function(s,config,lang){
                "info": [
                    {
                        "fieldType": "div",
-                       "id": "calendar_draw_area",
+                       "id": "fileBin_draw_area",
                        "divContent": ""
                    }
                ]

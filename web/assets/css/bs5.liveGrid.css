@@ -210,5 +210,5 @@ img.circle-img,div.circle-img{border-radius:50%;height:50px;width:50px}
     right: 10px;
 }
 .dont-stretch-monitors .monitor_item .stream-element {
-    object-fit: initial!important;
+    object-fit: contain!important;
 }
