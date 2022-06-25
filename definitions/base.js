@@ -4786,6 +4786,14 @@ module.exports = function(s,config,lang){
                       "evaluation": "details.edit_event_days !== '0'"
                    },
                    {
+                      "name": "detail=timelapseFrames_days",
+                      "field": lang["Number of Days to keep"] + ' ' + lang['Timelapse'],
+                      "description": lang["fieldTextEventDays"],
+                      "default": "60",
+                      "notForSubAccount": true,
+                      "evaluation": "details.edit_timelapseFrames_days !== '0'"
+                   },
+                   {
                       "name": "detail=log_days",
                       "field": lang["Number of Days to keep"] + ' ' + lang['Logs'],
                       "description": lang["fieldTextLogDays"],
@@ -7521,6 +7529,11 @@ module.exports = function(s,config,lang){
                           pageOpen: 'timelapseViewer',
                       },
                       {
+                          icon: 'file-o',
+                          label: `${lang['FileBin']}`,
+                          pageOpen: 'fileBinView',
+                      },
+                      {
                           divider: true,
                       },
                       {
@@ -7933,6 +7946,39 @@ module.exports = function(s,config,lang){
                 ]
             },
             "Calendar": {
+                noHeader: true,
+               "section-pre-class": "col-md-8",
+               "info": [
+                   {
+                       "fieldType": "div",
+                       "id": "calendar_draw_area",
+                       "divContent": ""
+                   }
+               ]
+           },
+         }
+      },
+      "FileBin": {
+          "section": "FileBin",
+          "blocks": {
+              "Search Settings": {
+                 "name": lang["Search Settings"],
+                 "color": "green",
+                 "section-pre-class": "col-md-4",
+                 "info": [
+                     {
+                         "field": lang["Monitor"],
+                         "fieldType": "select",
+                         "class": "monitors_list",
+                         "possible": []
+                     },
+                     {
+                         "class": "date_selector",
+                         "field": lang.Date,
+                     }
+                ]
+            },
+            "FileBin": {
                 noHeader: true,
                "section-pre-class": "col-md-8",
                "info": [
