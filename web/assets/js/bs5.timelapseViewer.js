@@ -205,68 +205,30 @@ $(document).ready(function(e){
         })
     })
     timelapseWindow.on('click','.download_mp4',function(){
-        if(downloaderIsChecking){
-            allowKeepChecking = false
-            setDownloadButtonLabel(lang['Build Video'], 'database')
-        }else{
-            allowKeepChecking = true
-            var _this = $(this)
-            var fps = fpsSelector.val()
-            var dateRange = getSelectedTime(false)
-            var startDate = dateRange.startDate
-            var endDate = dateRange.endDate
-            var selectedMonitor = monitorsList.val()
-            var parsedFrames = JSON.stringify(currentPlaylistArray.map(function(frame){
-                return {
-                    mid: frame.mid,
-                    ke: frame.ke,
-                    filename: frame.filename,
-                }
-            }))
-            var postBody = {
-                fps: fps,
-                frames: parsedFrames,
+        var fps = fpsSelector.val()
+        var dateRange = getSelectedTime(false)
+        var startDate = dateRange.startDate
+        var endDate = dateRange.endDate
+        var selectedMonitor = monitorsList.val()
+        var parsedFrames = JSON.stringify(currentPlaylistArray.map(function(frame){
+            return {
+                mid: frame.mid,
+                ke: frame.ke,
+                filename: frame.filename,
             }
-            var timerId = JSON.stringify(parsedFrames)
-            var generatorUrl = apiBaseUrl + '/timelapseBuildVideo/' + $user.ke + '/' + selectedMonitor
-            var runDownloader = function(){
-                if(!allowKeepChecking){
-                    setDownloadButtonLabel(lang['Automatic Checking Cancelled'])
-                    downloadRecheckTimers[timerId] = setTimeout(function(){
-                        setDownloadButtonLabel(lang['Build Video'], 'database')
-                    },30000)
-                    downloaderIsChecking = false
-                    allowKeepChecking = true
-                    return
-                }
-                downloaderIsChecking = true
-                setDownloadButtonLabel(lang['Please Wait or Click to Stop Checking'], 'spinner fa-pulse')
-                $.post(generatorUrl,postBody,function(response){
-                    if(response.fileExists){
-                        setDownloadButtonLabel(lang['Downloading...'], 'spinner fa-pulse')
-                        var downloadUrl = apiBaseUrl + '/fileBin/' + $user.ke + '/' + selectedMonitor + '/' + response.filename
-                        var downloadName = startDate + '_' + endDate + '_' + selectedMonitor + '.mp4'
-                        var a = document.createElement('a')
-                        a.href = downloadUrl
-                        a.download = downloadName
-                        a.click()
-                        setTimeout(function(){
-                            setDownloadButtonLabel(lang['Download'], 'download')
-                        },2000)
-                        downloaderIsChecking = false
-                        allowKeepChecking = true
-                    }else{
-                        setDownloadButtonLabel(lang['Please Wait or Click to Stop Checking'], 'spinner fa-pulse')
-                        clearTimeout(downloadRecheckTimers[timerId])
-                        downloadRecheckTimers[timerId] = setTimeout(function(){
-                            setDownloadButtonLabel(lang['Please Wait or Click to Stop Checking'], 'spinner fa-pulse')
-                            runDownloader()
-                        },30000)
-                    }
-                })
-            }
-            runDownloader()
-        }
+        }));
+        $.post(apiBaseUrl + '/timelapseBuildVideo/' + $user.ke + '/' + selectedMonitor,{
+            fps: fps,
+            frames: parsedFrames,
+        },function(response){
+            setDownloadButtonLabel(response.msg, '')
+            new PNotify({
+                title: lang['Timelapse Frames Video'],
+                text: response.msg,
+                type: response.fileExists ? 'success' : 'info'
+            })
+            if(response.fileExists)downloadTimelapseVideo(response);
+        })
     })
     function isElementVisible (el) {
       const holder = frameIcons[0]
@@ -286,6 +248,26 @@ $(document).ready(function(e){
             }
         })
     }
+    function downloadTimelapseVideo(data){
+        var downloadUrl = apiBaseUrl + '/fileBin/' + data.ke + '/' + data.mid + '/' + data.name
+        var a = document.createElement('a')
+        a.href = downloadUrl
+        a.download = data.name
+        a.click()
+    }
+    onWebSocketEvent(function(data){
+        switch(data.f){
+            case'fileBin_item_added':
+                var saveBuiltVideo = dashboardOptions().switches.timelapseSaveBuiltVideo
+                if(data.timelapseVideo && saveBuiltVideo === 1){
+                    downloadTimelapseVideo(data)
+                }
+            break;
+            case'timelapse_build_percent':
+                console.log(data)
+            break;
+        }
+    })
     frameIcons.on('scroll',loadVisibleTimelapseFrames)
     $('body').on('click','.open-timelapse-viewer',function(){
         var el = $(this).parents('[data-mid]')

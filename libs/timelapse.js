@@ -1,10 +1,22 @@
-var fs = require('fs')
-var moment = require('moment')
-var express = require('express')
+const fs = require('fs')
+const moment = require('moment')
+const express = require('express')
+const exec = require('child_process').exec;
+const spawn = require('child_process').spawn;
+const events = require('events');
 module.exports = function(s,config,lang,app,io){
     const {
         sendTimelapseFrameToMasterNode,
     } = require('./childNode/childUtils.js')(s,config,lang)
+    const {
+        splitForFFPMEG,
+    } = require('./ffmpeg/utils.js')(s,config,lang)
+    const {
+        asyncSetTimeout,
+    } = require('./basic/utils.js')(process.cwd(),config)
+    const {
+        processKill,
+    } = require('./monitor/utils.js')(s,config,lang)
     const timelapseFramesCache = {}
     const timelapseFramesCacheTimeouts = {}
     s.getTimelapseFrameDirectory = function(e){
@@ -142,6 +154,134 @@ module.exports = function(s,config,lang,app,io){
             }
         })
     }
+    function createVideoFromTimelapse(timelapseFrames,framesPerSecond){
+        s.debugLog("Building Timelapse Frames Video",timelapseFrames.length)
+
+        framesPerSecond = !isNaN(framesPerSecond) ? framesPerSecond : parseInt(framesPerSecond) || 2
+        const frames = timelapseFrames.reverse()
+        const numberOfFrames = timelapseFrames.length
+        const ke = frames[0].ke
+        const mid = frames[0].mid
+        const activeMonitor = s.group[ke].activeMonitors[mid]
+        const finalFileName = `${s.md5(JSON.stringify(frames))}-${framesPerSecond}fps.mp4`
+        const finalMp4OutputLocation = `${s.dir.fileBin}${ke}/${mid}/${finalFileName}`
+        const finalFileAlreadyExist = fs.existsSync(finalMp4OutputLocation)
+        const concatListFile = `${s.dir.streams}${ke}/${mid}/mergeJpegs_${finalFileName}.txt`
+        const concatFiles = []
+        const response = {
+            ok: false,
+            ke: ke,
+            mid: mid,
+            name: finalFileName,
+            fileLocation: finalMp4OutputLocation,
+        }
+        s.debugLog("activeMonitor.buildingTimelapseVideo",!!activeMonitor.buildingTimelapseVideo)
+        if(activeMonitor.buildingTimelapseVideo){
+            s.debugLog("Timelapse Frames Video Building Already",finalMp4OutputLocation)
+            return activeMonitor.buildingTimelapseVideo
+        }
+        s.debugLog("finalFileAlreadyExist",finalFileAlreadyExist)
+        if(finalFileAlreadyExist){
+            s.debugLog("Timelapse Frames Video finalFileAlreadyExist",finalMp4OutputLocation)
+            response.fileExists = true
+            response.msg = lang['Already exists']
+            return response
+        }
+        var createLocation
+        frames.forEach(function(frame,frameNumber){
+            var selectedDate = frame.filename.split('T')[0]
+            var fileLocationMid = `${frame.ke}/${frame.mid}_timelapse/${selectedDate}/`
+            frame.details = s.parseJSON(frame.details)
+            var fileLocation
+            if(frame.details.dir){
+                fileLocation = `${s.checkCorrectPathEnding(frame.details.dir)}`
+            }else{
+                fileLocation = `${s.dir.videos}`
+            }
+            fileLocation = `${fileLocation}${fileLocationMid}${frame.filename}`
+            concatFiles.push(`file '${fileLocation}'`)
+            if(frameNumber === 0){
+                createLocation = fileLocationMid
+            }
+        })
+        if(concatFiles.length < framesPerSecond){
+            response.msg = lang.notEnoughFramesText1
+            return response
+        }
+        fs.writeFileSync(concatListFile,concatFiles.join('\n'))
+        activeMonitor.buildingTimelapseVideo = response
+        var currentFile = 0
+        var completionTimeout
+        const commandString = `-y -f concat -safe 0 -r ${framesPerSecond} -i "${concatListFile}" -q:v 1 -c:v libx264 -r ${framesPerSecond} "${finalMp4OutputLocation}"`
+        s.debugLog("ffmpeg",commandString)
+        const videoBuildProcess = spawn(config.ffmpegDir,splitForFFPMEG(commandString))
+        videoBuildProcess.stdout.on('data',function(data){
+            s.debugLog('stdout',finalMp4OutputLocation,data.toString())
+        })
+        videoBuildProcess.stderr.on('data',function(data){
+            const text = data.toString()
+            if(text.startsWith('frame=')){
+                const currentFrame = parseInt(text.split(/(\s+)/)[2])
+                const percent = (currentFrame / numberOfFrames * 100).toFixed(1)
+                s.tx({
+                    f: 'timelapse_build_percent',
+                    ke: ke,
+                    mid: mid,
+                    name: finalFileName,
+                    percent: percent,
+                },'GRP_'+ke);
+                if(percent === 100){
+                    s.debugLog('videoBuildProcess 100%',finalMp4OutputLocation)
+                    clearTimeout(completionTimeout)
+                }
+                s.debugLog('Completion',`${currentFrame} / ${numberOfFrames}`,`${percent}%`)
+            }
+            clearTimeout(completionTimeout)
+            completionTimeout = setTimeout(function(){
+                s.debugLog('videoBuildProcess completionTimeout',finalMp4OutputLocation)
+                processKill(videoBuildProcess)
+            },60000)
+        })
+        videoBuildProcess.on('exit',function(data){
+            s.debugLog('videoBuildProcess exit',finalMp4OutputLocation)
+            const timeNow = new Date()
+            setTimeout(async () => {
+                const fileStats = await fs.promises.stat(finalMp4OutputLocation)
+                const details = {
+                    video: true,
+                }
+                s.knexQuery({
+                    action: "insert",
+                    table: "Files",
+                    insert: {
+                        ke: ke,
+                        mid: mid,
+                        details: s.s(details),
+                        name: finalFileName,
+                        size: fileStats.size,
+                        time: timeNow,
+                    }
+                })
+                s.setDiskUsedForGroup(ke,fileStats.size / 1048576,'fileBin')
+                s.purgeDiskForGroup(ke)
+                s.tx({
+                    f: 'fileBin_item_added',
+                    ke: ke,
+                    mid: mid,
+                    details: details,
+                    name: finalFileName,
+                    size: fileStats.size,
+                    time: timeNow,
+                    timelapseVideo: true,
+                },'GRP_'+ke);
+                delete(activeMonitor.buildingTimelapseVideo)
+                s.debugLog("Timelapse Frames Video Done!",finalMp4OutputLocation)
+            },25000)
+        })
+        response.ok = true
+        response.msg = lang.Building
+        return response
+    }
     // Web Paths
     // // // // //
     /**
@@ -253,20 +393,18 @@ module.exports = function(s,config,lang,app,io){
                 table: "Timelapse Frames",
                 where: frames
             },(err,r) => {
-                s.debugLog("Timelapse Frames Building Video",r.length)
                 if(r.length === 0){
                     s.closeJsonResponse(res,{
                         ok: false
                     })
                     return
                 }
-                s.createVideoFromTimelapse(r.reverse(),s.getPostData(req, 'fps'),function(response){
-                    s.closeJsonResponse(res,{
-                        ok : response.ok,
-                        filename : response.filename,
-                        fileExists : response.fileExists,
-                        msg : response.msg,
-                    })
+                const buildResponse = createVideoFromTimelapse(r.reverse(),s.getPostData(req, 'fps'))
+                s.closeJsonResponse(res,{
+                    ok : buildResponse.ok,
+                    filename : buildResponse.filename,
+                    fileExists : !!buildResponse.fileExists,
+                    msg : buildResponse.msg,
                 })
             })
         },res,req);
@@ -394,11 +532,7 @@ module.exports = function(s,config,lang,app,io){
                 Object.keys(groups).forEach(function(groupKey){
                     Object.keys(groups[groupKey]).forEach(function(monitorId){
                         var frameSet = groups[groupKey][monitorId]
-                        s.createVideoFromTimelapse(frameSet,30,function(response){
-                            if(response.ok){
-
-                            }
-                        })
+                        createVideoFromTimelapse(frameSet,30)
                     })
                 })
             })
