@@ -1017,7 +1017,7 @@ $(document).ready(function(e){
             case'detector_trigger':
                 var monitorId = d.id
                 var liveGridElement = liveGridElements[monitorId]
-                if(liveGridElement){
+                if(!window.dontShowDetection && liveGridElement){
                     var monitorElement = liveGridElement.monitorItem
                     var livePlayerElement = loadedLiveGrids[monitorId]
                     if(d.doObjectDetection === true){
@@ -1087,6 +1087,13 @@ $(document).ready(function(e){
             theBody.addClass('dont-stretch-monitors')
         }else{
             theBody.removeClass('dont-stretch-monitors')
+        }
+    }
+    dashboardSwitchCallbacks.dontShowDetection = function(toggleState){
+        if(toggleState !== 1){
+            window.dontShowDetection = true
+        }else{
+            window.dontShowDetection = false
         }
     }
     dashboardSwitchCallbacks.monitorMuteAudio = function(toggleState){

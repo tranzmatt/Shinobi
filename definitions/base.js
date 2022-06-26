@@ -7476,7 +7476,7 @@ module.exports = function(s,config,lang){
                                   color: 'red',
                               },
                               {
-                                  label: lang['Order Streams'],
+                                  label: lang['Remember Positions'],
                                   class: 'cursor-pointer',
                                   attributes: 'shinobi-switch="monitorOrder" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
                                   color: 'grey',
@@ -7496,13 +7496,19 @@ module.exports = function(s,config,lang){
                               {
                                   label: lang['Stream in Background'],
                                   class: 'cursor-pointer',
-                                  attributes: 'shinobi-switch="backgroundStream" ui-change-target=".dot" on-class="dot-grey" off-class="dot-green"',
+                                  attributes: 'shinobi-switch="backgroundStream" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
                                   color: 'grey',
                               },
                               {
-                                  label: lang[`Don't Stretch Monitors`],
+                                  label: lang[`Original Aspect Ratio`],
                                   class: 'cursor-pointer',
-                                  attributes: 'shinobi-switch="dontMonStretch" ui-change-target=".dot" on-class="dot-grey" off-class="dot-green"',
+                                  attributes: 'shinobi-switch="dontMonStretch" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
+                                  color: 'grey',
+                              },
+                              {
+                                  label: lang[`Hide Detection on Stream`],
+                                  class: 'cursor-pointer',
+                                  attributes: 'shinobi-switch="dontShowDetection" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
                                   color: 'grey',
                               },
                           ]
@@ -7527,6 +7533,15 @@ module.exports = function(s,config,lang){
                           icon: 'fast-forward',
                           label: `${lang['Time-lapse']}`,
                           pageOpen: 'timelapseViewer',
+                          addUl: true,
+                          ulItems: [
+                              {
+                                  label: lang[`Save Built Video on Completion`],
+                                  class: 'cursor-pointer',
+                                  attributes: 'shinobi-switch="timelapseSaveBuiltVideo" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
+                                  color: 'grey',
+                              },
+                          ]
                       },
                       {
                           icon: 'file-o',
@@ -7983,7 +7998,7 @@ module.exports = function(s,config,lang){
                "section-pre-class": "col-md-8",
                "info": [
                    {
-                       "fieldType": "div",
+                       "fieldType": "table",
                        "id": "fileBin_draw_area",
                        "divContent": ""
                    }
