@@ -196,7 +196,7 @@ module.exports = function(s,config,lang,app,io){
             },(response) => {
                 response.forEach(function(v){
                     v.details = s.parseJSON(v.details)
-                    v.href = '/'+req.params.auth+'/fileBin/'+req.params.ke+'/'+req.params.id+'/'+v.details.year+'/'+v.details.month+'/'+v.details.day+'/'+v.name;
+                    v.href = '/'+req.params.auth+'/fileBin/'+req.params.ke+'/'+req.params.id+'/'+v.name;
                 })
                 s.closeJsonResponse(res,{
                     ok: true,
@@ -208,55 +208,48 @@ module.exports = function(s,config,lang,app,io){
     /**
     * API : Get fileBin file
      */
-    app.get([
-        config.webPaths.apiPrefix+':auth/fileBin/:ke/:id/:file',
-        config.webPaths.apiPrefix+':auth/fileBin/:ke/:id/:year/:month/:day/:file',
-    ], async (req,res) => {
+    app.get(config.webPaths.apiPrefix+':auth/fileBin/:ke/:id/:file', async (req,res) => {
         s.auth(req.params,function(user){
             var failed = function(){
                 res.end(user.lang['File Not Found'])
             }
-            if (!s.group[req.params.ke].fileBin[req.params.id+'/'+req.params.file]){
-                const groupKey = req.params.ke
-                const monitorId = req.params.id
-                const monitorRestrictions = s.getMonitorRestrictions(user.details,monitorId)
-                if(user.details.sub && user.details.allmonitors === '0' && (user.permissions.get_monitors === "0" || monitorRestrictions.length === 0)){
-                    s.closeJsonResponse(res,{
-                        ok: false,
-                        msg: lang['Not Permitted']
-                    })
-                    return
-                }
-                s.knexQuery({
-                    action: "select",
-                    columns: "*",
-                    table: "Files",
-                    where: [
-                        ['ke','=',groupKey],
-                        ['mid','=',req.params.id],
-                        ['name','=',req.params.file],
-                        monitorRestrictions
-                    ]
-                },(err,r) => {
-                    if(r && r[0]){
-                        r = r[0]
-                        r.details = JSON.parse(r.details)
-                        const filePath = s.dir.fileBin + req.params.ke + '/' + req.params.id + (r.details.year && r.details.month && r.details.day ? '/' + r.details.year + '/' + r.details.month + '/' + r.details.day : '') + '/' + req.params.file;
-                        fs.stat(filePath,function(err,stats){
-                            if(!err){
-                                res.on('finish',function(){res.end()})
-                                fs.createReadStream(filePath).pipe(res)
-                            }else{
-                                failed()
-                            }
-                        })
-                    }else{
-                        failed()
-                    }
+            const groupKey = req.params.ke
+            const monitorId = req.params.id
+            const monitorRestrictions = s.getMonitorRestrictions(user.details,monitorId)
+            if(user.details.sub && user.details.allmonitors === '0' && (user.permissions.get_monitors === "0" || monitorRestrictions.length === 0)){
+                s.closeJsonResponse(res,{
+                    ok: false,
+                    msg: lang['Not Permitted']
                 })
-            }else{
-                res.end(user.lang['Please Wait for Completion'])
+                return
             }
+            s.knexQuery({
+                action: "select",
+                columns: "*",
+                table: "Files",
+                where: [
+                    ['ke','=',groupKey],
+                    ['mid','=',req.params.id],
+                    ['name','=',req.params.file],
+                    monitorRestrictions
+                ]
+            },(err,r) => {
+                if(r && r[0]){
+                    r = r[0]
+                    r.details = JSON.parse(r.details)
+                    const filePath = s.dir.fileBin + req.params.ke + '/' + req.params.id + (r.details.year && r.details.month && r.details.day ? '/' + r.details.year + '/' + r.details.month + '/' + r.details.day : '') + '/' + req.params.file;
+                    fs.stat(filePath,function(err,stats){
+                        if(!err){
+                            res.on('finish',function(){res.end()})
+                            fs.createReadStream(filePath).pipe(res)
+                        }else{
+                            failed()
+                        }
+                    })
+                }else{
+                    failed()
+                }
+            })
         },res,req);
     });
 }

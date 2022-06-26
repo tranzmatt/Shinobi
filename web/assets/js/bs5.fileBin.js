@@ -53,17 +53,25 @@ $(document).ready(function(e){
                 search: true,
                 columns: [
                       {
-                        field: 'filename',
+                        field: 'name',
                         title: lang['Filename']
-                      }, {
+                      },
+                      {
                         field: 'time',
                         title: lang['Time Created']
-                      }, {
+                      },
+                      {
                         field: 'href',
                         title: 'Download'
                       }
                 ],
-                data: data.files
+                data: data.files.map((file) => {
+                    return {
+                        name: file.name,
+                        time: file.time,
+                        href: `<a class="btn btn-sm btn-primary" href="${file.href}" download title="${lang.Download}"><i class="fa fa-download"></i></a>`,
+                    }
+                })
             })
         })
     }
