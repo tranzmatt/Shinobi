@@ -329,7 +329,6 @@ module.exports = function(s,config,lang,app,io){
             ke: ke,
             mid: mid,
             name: finalFileName,
-            fileLocation: finalMp4OutputLocation,
         }
         s.debugLog("activeMonitor.buildingTimelapseVideo",!!activeMonitor.buildingTimelapseVideo)
         if(activeMonitor.buildingTimelapseVideo){
@@ -353,20 +352,7 @@ module.exports = function(s,config,lang,app,io){
             listFile: concatListFile,
             fps: framesPerSecond,
             output: finalMp4OutputLocation,
-            finalFileName: finalFileName,
-            onPercentChange: (percent,currentFrame) => {
-                s.tx({
-                    f: 'timelapse_build_percent',
-                    ke: ke,
-                    mid: mid,
-                    name: finalFileName,
-                    percent: percent,
-                },'GRP_'+ke);
-                if(percent == 100){
-                    s.debugLog('videoBuildProcess 100%',finalMp4OutputLocation)
-                }
-                s.debugLog('Completion',`${currentFrame} / ${numberOfFrames}`,`${percent}%`)
-            },
+            finalFileName: finalFileName
         }).then(async () => {
             // videoBuildProcess exit
             s.debugLog('videoBuildProcess exit',finalMp4OutputLocation)
@@ -502,12 +488,7 @@ module.exports = function(s,config,lang,app,io){
                     return
                 }
                 const buildResponse = await createVideoFromTimelapse(r.reverse(),s.getPostData(req, 'fps'))
-                s.closeJsonResponse(res,{
-                    ok : buildResponse.ok,
-                    filename : buildResponse.filename,
-                    fileExists : !!buildResponse.fileExists,
-                    msg : buildResponse.msg,
-                })
+                s.closeJsonResponse(res,buildResponse)
             })
         },res,req);
     });
