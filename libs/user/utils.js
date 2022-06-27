@@ -142,7 +142,6 @@ module.exports = (s,config,lang) => {
         const groupKey = options.groupKey
         const err = options.err
         const files = options.files
-        const storageIndex = options.storageIndex
         var whereGroup = []
         var whereQuery = [
             ['ke','=',groupKey],
@@ -151,7 +150,9 @@ module.exports = (s,config,lang) => {
         var completedCheck = 0
         if(files){
             files.forEach(function(file){
+
                 var dir = s.getFileBinDirectory(file)
+                s.debugLog(`deleting FileBin File`,`${file}`,dir)
                 var fileLocationMid = `${dir}` + file.name
                 const queryGroup = {
                     mid: file.mid,
@@ -180,14 +181,7 @@ module.exports = (s,config,lang) => {
                         })
                     }
                 })
-                if(storageIndex){
-                    s.setDiskUsedForGroupAddStorage(groupKey,{
-                        size: -(file.size/1048576),
-                        storageIndex: storageIndex
-                    },'fileBin')
-                }else{
-                    s.setDiskUsedForGroup(groupKey,-(file.size/1048576),'fileBin')
-                }
+                s.setDiskUsedForGroup(groupKey,-(file.size/1048576),'fileBin')
             })
         }else{
             console.log(err)
@@ -319,8 +313,10 @@ module.exports = (s,config,lang) => {
     }
     const deleteFileBinFiles = function(groupKey,callback){
         if(config.deleteFileBinsOverMax === true){
-            //run purge command
-            if(s.group[groupKey].usedSpaceFileBin > (s.group[groupKey].sizeLimit * (s.group[groupKey].sizeLimitFileBinPercent / 100) * config.cron.deleteOverMaxOffset)){
+            const maxSize = (s.group[groupKey].sizeLimit * (s.group[groupKey].sizeLimitFileBinPercent / 100) * config.cron.deleteOverMaxOffset);
+            const currentlyUsedSize = s.group[groupKey].usedSpaceFilebin
+            s.debugLog(`deleteFileBinFiles`,`${currentlyUsedSize}/${maxSize}`)
+            if(currentlyUsedSize > maxSize){
                 s.knexQuery({
                     action: "select",
                     columns: "*",
@@ -335,7 +331,6 @@ module.exports = (s,config,lang) => {
                         groupKey: groupKey,
                         err: err,
                         files: files,
-                        storageIndex: null
                     },callback)
                 })
             }else{
