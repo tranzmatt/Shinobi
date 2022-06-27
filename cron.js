@@ -423,7 +423,7 @@ const deleteOldTimelapseFrames = async function(v){
                 const folderPath = foldersDeletedFrom[i];
                 const folderIsEmpty = (await fs.promises.readdir(folderPath)).filter(file => file.indexOf('.jpg') > -1).length === 0;
                 if(folderIsEmpty){
-                    await fs.rmdir(folderPath, { recursive: true })
+                    await fs.promises.rmdir(folderPath, { recursive: true })
                 }
             }
             const deleteResponse = await knexQueryPromise({
