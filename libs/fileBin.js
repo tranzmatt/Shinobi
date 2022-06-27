@@ -237,11 +237,16 @@ module.exports = function(s,config,lang,app,io){
                 if(r && r[0]){
                     r = r[0]
                     r.details = JSON.parse(r.details)
-                    const filePath = s.dir.fileBin + req.params.ke + '/' + req.params.id + (r.details.year && r.details.month && r.details.day ? '/' + r.details.year + '/' + r.details.month + '/' + r.details.day : '') + '/' + req.params.file;
+                    const filename = req.params.file
+                    const filePath = s.dir.fileBin + req.params.ke + '/' + req.params.id + (r.details.year && r.details.month && r.details.day ? '/' + r.details.year + '/' + r.details.month + '/' + r.details.day : '') + '/' + filename;
                     fs.stat(filePath,function(err,stats){
                         if(!err){
-                            res.on('finish',function(){res.end()})
-                            fs.createReadStream(filePath).pipe(res)
+                            if(filename.endsWith('.mp4')){
+                                s.streamMp4FileOverHttp(filePath,req,res,!!req.query.pureStream)
+                            }else{
+                                res.on('finish',function(){res.end()})
+                                fs.createReadStream(filePath).pipe(res)
+                            }
                         }else{
                             failed()
                         }
