@@ -30,6 +30,11 @@ module.exports = (processCwd,config) => {
         if(toLowerCase)newString = newString.toLowerCase()
         return newString.indexOf(find) > -1
     }
+    function getFileDirectory(filePath){
+        const fileParts = filePath.split('/')
+        fileParts.pop();
+        return fileParts.join('/') + '/';
+    }
     const checkCorrectPathEnding = (x) => {
         var length=x.length
         if(x.charAt(length-1)!=='/'){
@@ -185,6 +190,7 @@ module.exports = (processCwd,config) => {
         parseJSON: parseJSON,
         stringJSON: stringJSON,
         stringContains: stringContains,
+        getFileDirectory: getFileDirectory,
         checkCorrectPathEnding: checkCorrectPathEnding,
         nameToTime: nameToTime,
         mergeDeep: mergeDeep,
