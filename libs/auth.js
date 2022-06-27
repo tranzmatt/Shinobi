@@ -190,39 +190,37 @@ module.exports = function(s,config,lang){
                 activeSession.lang = s.copySystemDefaultLanguage()
             }
             onSuccessComplete(activeSession)
-        }else{
-            if(s.api[params.auth] && s.api[params.auth].details){
-                var activeSession = s.api[params.auth]
-                onSuccess(activeSession)
-                if(activeSession.timeout){
-                   resetActiveSessionTimer(activeSession)
-                }
-            }else{
-                if(params.username && params.username !== '' && params.password && params.password !== ''){
-                    loginWithUsernameAndPassword(params,'*',function(err,user){
-                        if(user){
-                            params.auth = user.auth
-                            createSession(user)
-                            resetActiveSessionTimer(s.api[params.auth])
-                            onSuccess(user)
-                        }else{
-                            onFail()
-                        }
-                    })
-                }else{
-                    loginWithApiKey(params,function(err,user,isSessionKey){
-                        if(isSessionKey)resetActiveSessionTimer(s.api[params.auth])
-                        if(user){
-                            createSession(user,{
-                                auth: params.auth
-                            })
-                            onSuccess(s.api[params.auth])
-                        }else{
-                            onFail()
-                        }
-                    })
-                }
+        }else if(s.api[params.auth] && s.api[params.auth].details){
+            var activeSession = s.api[params.auth]
+            onSuccess(activeSession)
+            if(activeSession.timeout){
+               resetActiveSessionTimer(activeSession)
             }
+        }else if(params.username && params.username !== '' && params.password && params.password !== ''){
+            loginWithUsernameAndPassword(params,'*',function(err,user){
+                if(user){
+                    params.auth = user.auth
+                    createSession(user)
+                    resetActiveSessionTimer(s.api[params.auth])
+                    onSuccess(user)
+                }else{
+                    onFail()
+                }
+            })
+        }else if(params.auth && params.ke){
+            loginWithApiKey(params,function(err,user,isSessionKey){
+                if(isSessionKey)resetActiveSessionTimer(s.api[params.auth])
+                if(user){
+                    createSession(user,{
+                        auth: params.auth
+                    })
+                    onSuccess(s.api[params.auth])
+                }else{
+                    onFail()
+                }
+            })
+        } else {
+            onFail()
         }
     }
     //super user authentication handler
