@@ -55,6 +55,10 @@ $(document).ready(function(e){
                 search: true,
                 columns: [
                       {
+                        field: 'monitorName',
+                        title: lang['Monitor']
+                      },
+                      {
                         field: 'name',
                         title: lang['Filename']
                       },
@@ -63,14 +67,24 @@ $(document).ready(function(e){
                         title: lang['Time Created']
                       },
                       {
+                        field: 'size',
+                        title: ''
+                      },
+                      {
                         field: 'buttons',
-                        title: 'Download'
+                        title: ''
                       }
                 ],
                 data: data.files.map((file) => {
                     return {
+                        monitorName: `<b>${loadedMonitors[file.mid]?.name || file.mid}</b>`,
                         name: file.name,
-                        time: file.time,
+                        time: `
+                            <div><b>${lang.Created}</b> ${formattedTime(file.time, 'DD-MM-YYYY hh:mm:ss AA')}</div>
+                            ${file.details.start ? `<div><b>${lang.Started}</b> ${formattedTime(file.details.start, 'DD-MM-YYYY hh:mm:ss AA')}</div>` : ''}
+                            ${file.details.end ? `<div><b>${lang.Ended}</b> ${formattedTime(file.details.end, 'DD-MM-YYYY hh:mm:ss AA')}</div>` : ''}
+                        `,
+                        size: convertKbToHumanSize(file.size),
                         buttons: `
                             <a class="btn btn-sm btn-primary" href="${file.href}" download title="${lang.Download}"><i class="fa fa-download"></i></a>
                             ${file.details.video ? `<a class="btn btn-sm btn-primary preview-video" href="${file.href}" title="${lang.Play}"><i class="fa fa-play"></i></a>` : ``}

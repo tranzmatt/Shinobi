@@ -804,7 +804,12 @@ function downloadJSON(jsonData,filename){
         .attr('download',filename)
         [0].click()
 }
-
+function convertKbToHumanSize(theNumber){
+    var amount = theNumber / 1048576
+    var unit = amount / 1000 >= 1000 ? 'TB' : amount >= 1000 ? 'GB' : 'MB'
+    var number = (amount / 1000 >= 1000 ? amount / 1000000  : amount >= 1000 ? amount / 1000 : amount).toFixed(2)
+    return `${number} ${unit}`
+}
 function drawIndicatorBar(item){
     var html = `<div id="indicator-${item.name}" class="mb-2">
         <div class="d-flex flex-row text-white mb-1">
