@@ -80,19 +80,22 @@ $(document).ready(function(e){
             })
         })
     }
-
+    function drawPreviewVideo(href){
+        fileBinPreviewArea.html(`<video class="video_video" style="width:100%" autoplay controls preload loop src="${href}"></video>`)
+    }
     $('body')
-    .on('click','.open-fileBin-viewer',function(){
-        var el = $(this).parents('[data-mid]')
-        var monitorId = el.attr('data-mid')
+    .on('click','.open-fileBin-video',function(e){
+        e.preventDefault()
+        var href = $(this).attr('href')
         openTab(`fileBinView`,{},null)
-        monitorsList.val(monitorId).change()
+        drawPreviewVideo(href)
+        return false;
     });
     theEnclosure
     .on('click','.preview-video',function(e){
         e.preventDefault()
         var href = $(this).attr('href')
-        fileBinPreviewArea.html(`<video class="video_video" style="width:100%" autoplay controls preload loop src="${href}"></video>`)
+        drawPreviewVideo(href)
         return false;
     })
     addOnTabOpen('fileBinView', function () {

@@ -397,7 +397,7 @@ module.exports = function(s,config,lang,app,io){
             s.debugLog("Timelapse Frames Video Done!",finalMp4OutputLocation)
         })
         response.ok = true
-        response.msg = lang.Building
+        response.msg = `${lang.Building}... ${lang['Please Wait...']}`
         return response
     }
     // Web Paths

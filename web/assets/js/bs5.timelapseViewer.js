@@ -267,19 +267,19 @@ $(document).ready(function(e){
                 text: lang.yourFileDownloadedShortly,
                 type: 'success',
             })
-        }else{
+        }else if(tabTree.name !== 'timelapseViewer'){
             new PNotify({
-                title: lang['File Download Ready'],
-                text: `<a class="btn btn-sm btn-success" href="${buildFileBinUrl(data)}">${lang.Download}</a>`,
+                title: lang['Timelapse Video Build Complete'],
+                text: `${lang['File Download Ready']}.<br><br><a class="btn btn-sm btn-success" href="${buildFileBinUrl(data)}">${lang.Download}</a>`,
                 type: 'success',
-                hide: false,
             })
         }
     }
     function drawTimelapseVideoProgressBar(data){
+        var fileBinUrl = buildFileBinUrl(data)
         var html = `<li data-mid="${data.mid}" data-ke="${data.mid}" data-name="${data.name}">
             <div class="text-white cursor-pointer d-flex flex-row" style="align-items: center;justify-content: center;">
-                <span class="dot shadow mr-2 dot-green"></span>
+                <span class="dot shadow mr-2 dot-orange"></span>
                 <div class="row-status">
                     ${lang.Building}...
                 </div>
@@ -289,7 +289,10 @@ $(document).ready(function(e){
                     </div>
                 </div>
                 <div style="display:none;" class="download-button pr-2">
-                    <a class="badge badge-sm badge-success" download href="${buildFileBinUrl(data)}"><i class="fa fa-download"></i></a>
+                    <a class="badge badge-sm badge-success" download href="${fileBinUrl}"><i class="fa fa-download"></i></a>
+                </div>
+                <div style="display:none;" class="download-button pr-2">
+                    <a class="badge badge-sm badge-primary open-fileBin-video" href="${fileBinUrl}"><i class="fa fa-play"></i></a>
                 </div>
                 <div style="display:none;" class="download-button">
                     <a class="badge badge-sm badge-dark remove-row"><i class="fa fa-times"></i></a>
@@ -306,11 +309,12 @@ $(document).ready(function(e){
                 onTimelapseVideoBuildComplete(data)
                 if(data.timelapseVideo && saveBuiltVideo === 1){
                     downloadTimelapseVideo(data)
-                    statusText = lang['Downloading...']
+                    statusText = lang['Downloaded!']
                 }
                 setDownloadButtonLabel(statusText, '')
                 var progressItem = sideLinkListBox.find(`[data-mid="${data.mid}"][data-ke="${data.mid}"][data-name="${data.name}"]`)
                 progressItem.find('.row-status').text(statusText)
+                progressItem.find('.dot').removeClass('dot-orange').addClass('dot-green')
                 progressItem.find('.download-button').show()
             break;
             case'timelapse_build_percent':
