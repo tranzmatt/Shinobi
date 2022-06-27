@@ -20,6 +20,7 @@ if(config.cron.deleteNoVideo===undefined)config.cron.deleteNoVideo=true;
 if(config.cron.deleteNoVideoRecursion===undefined)config.cron.deleteNoVideoRecursion=false;
 if(config.cron.deleteOverMax===undefined)config.cron.deleteOverMax=true;
 if(config.cron.deleteLogs===undefined)config.cron.deleteLogs=true;
+if(config.cron.deleteTimelpaseFrames===undefined)config.cron.deleteTimelpaseFrames=true;
 if(config.cron.deleteEvents===undefined)config.cron.deleteEvents=true;
 if(config.cron.deleteFileBins===undefined)config.cron.deleteFileBins=true;
 if(config.cron.interval===undefined)config.cron.interval=1;
@@ -104,6 +105,17 @@ const getVideoDirectory = function(e){
         return checkCorrectPathEnding(e.details.dir)+e.ke+'/'+e.id+'/'
     }else{
         return videoDirectory + e.ke + '/' + e.id + '/'
+    }
+}
+const getTimelapseFrameDirectory = function(e){
+    if(e.mid&&!e.id){e.id=e.mid}
+    if(e.details&&(e.details instanceof Object)===false){
+        try{e.details=JSON.parse(e.details)}catch(err){}
+    }
+    if(e.details&&e.details.dir&&e.details.dir!==''){
+        return s.checkCorrectPathEnding(e.details.dir)+e.ke+'/'+e.id+'_timelapse/'
+    }else{
+        return videoDirectory + e.ke + '/' + e.id + '_timelapse/'
     }
 }
 const getFileBinDirectory = function(e){
@@ -362,6 +374,74 @@ const deleteOldLogs = function(v){
         }
     })
 }
+//still images saved
+const deleteOldTimelapseFrames = async function(v){
+    const daysOldForDeletion = v.d.timelapseFrames_days && !isNaN(v.d.timelapseFrames_days) ? parseFloat(v.d.timelapseFrames_days) : 60
+    if(config.cron.deleteTimelpaseFrames === true && daysOldForDeletion !== 0){
+        const groupKey = v.ke;
+        const whereQuery = [
+            ['ke','=',v.ke],
+            ['time','<', sqlDate(daysOldForDeletion+' DAY')],
+        ]
+        const selectResponse = await knexQueryPromise({
+            action: "select",
+            columns: "*",
+            table: "Timelapse Frames",
+            where: whereQuery
+        })
+        const videoRows = selectResponse.rows
+        let affectedRows = 0
+        if(videoRows.length > 0){
+            const foldersDeletedFrom = [];
+            let clearSize = 0;
+            var i;
+            for (i = 0; i < videoRows.length; i++) {
+                const row = videoRows[i];
+                const dir = getTimelapseFrameDirectory(row)
+                const filename = row.filename
+                const theDate = filename.split('T')[0]
+                const enclosingFolder = `${dir}/${theDate}/`
+                try{
+                    const fileSizeMB = row.size / 1048576;
+                    setDiskUsedForGroup(groupKey,-fileSizeMB,null,row)
+                    sendToWebSocket({
+                        f: 'timelapse_frame_delete',
+                        filename: filename,
+                        mid: row.mid,
+                        ke: groupKey,
+                        time: row.time,
+                        details: row.details,
+                    },'GRP_' + groupKey)
+                    await fs.promises.unlink(`${enclosingFolder}${filename}`)
+                    if(foldersDeletedFrom.indexOf(enclosingFolder) === -1)foldersDeletedFrom.push(enclosingFolder);
+                }catch(err){
+                    console.log('Timelapse Frame Delete Error',row)
+                    console.log(err)
+                }
+            }
+            for (i = 0; i < foldersDeletedFrom.length; i++) {
+                const folderPath = foldersDeletedFrom[i];
+                const folderIsEmpty = (await fs.promises.readdir(folderPath)).filter(file => file.indexOf('.jpg') > -1).length === 0;
+                if(folderIsEmpty){
+                    await fs.rmdir(folderPath, { recursive: true })
+                }
+            }
+            const deleteResponse = await knexQueryPromise({
+                action: "delete",
+                table: "Timelapse Frames",
+                where: whereQuery
+            })
+            affectedRows = deleteResponse.rows || 0
+        }
+        return {
+            ok: true,
+            affectedRows: affectedRows,
+        }
+    }
+    return {
+        ok: false
+    }
+}
 //events - motion, object, etc. detections
 const deleteOldEvents = function(v){
     return new Promise((resolve,reject) => {
@@ -461,6 +541,8 @@ const processUser = async (v) => {
         try{
             await deleteOldVideos(v)
             s.debugLog('--- deleteOldVideos Complete')
+            await deleteOldTimelapseFrames(v)
+            s.debugLog('--- deleteOldTimelapseFrames Complete')
             await deleteOldLogs(v)
             s.debugLog('--- deleteOldLogs Complete')
             await deleteOldFileBins(v)
