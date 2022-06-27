@@ -12,7 +12,7 @@ module.exports = function(s,config,lang,app,io){
         splitForFFPMEG,
     } = require('./ffmpeg/utils.js')(s,config,lang)
     const {
-        asyncSetTimeout,
+        getFileDirectory,
     } = require('./basic/utils.js')(process.cwd(),config)
     const {
         processKill,
@@ -145,8 +145,14 @@ module.exports = function(s,config,lang,app,io){
                     table: "Timelapse Frames",
                     where: frameSelector,
                     limit: 1
-                },function(){
+                },async function(){
+                    s.setDiskUsedForGroup(e.ke,-(r.size / 1048576),'timelapeFrames')
                     s.file('delete',e.fileLocation)
+                    const fileDirectory = getFileDirectory(folderPath);
+                    const folderIsEmpty = (await fs.promises.readdir(folderPath)).filter(file => file.indexOf('.jpg') > -1).length === 0;
+                    if(folderIsEmpty){
+                        await fs.rmdir(folderPath, { recursive: true })
+                    }
                 })
             }else{
 //                    console.log('Delete Failed',e)
