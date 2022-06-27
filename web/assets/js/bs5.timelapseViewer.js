@@ -1,6 +1,7 @@
 $(document).ready(function(e){
     //Timelapse JPEG Window
     var timelapseWindow = $('#tab-timelapseViewer')
+    var sideLinkListBox = $('#side-menu-link-timelapseViewer ul')
     var dateSelector = $('#timelapsejpeg_date')
     var fpsSelector = $('#timelapseJpegFps')
     var framesContainer = timelapseWindow.find('.frames')
@@ -248,12 +249,51 @@ $(document).ready(function(e){
             }
         })
     }
+    function buildFileBinUrl(data){
+        return apiBaseUrl + '/fileBin/' + data.ke + '/' + data.mid + '/' + data.name
+    }
     function downloadTimelapseVideo(data){
-        var downloadUrl = apiBaseUrl + '/fileBin/' + data.ke + '/' + data.mid + '/' + data.name
+        var downloadUrl = buildFileBinUrl(data)
         var a = document.createElement('a')
         a.href = downloadUrl
         a.download = data.name
         a.click()
+    }
+    function onTimelapseVideoBuildComplete(data){
+        var saveBuiltVideo = dashboardOptions().switches.timelapseSaveBuiltVideo
+        if(saveBuiltVideo === 1){
+            new PNotify({
+                title: lang['Timelapse Video Build Complete'],
+                text: lang.yourFileDownloadedShortly,
+                type: 'success',
+            })
+        }else{
+            new PNotify({
+                title: lang['File Download Ready'],
+                text: `<a class="btn btn-sm btn-success" href="${buildFileBinUrl(data)}">${lang.Download}</a>`,
+                type: 'success',
+                sticky: true,
+            })
+        }
+    }
+    function drawTimelapseVideoProgressBar(data){
+        var html = `<li data-mid="${data.mid}" data-ke="${data.mid}" data-name="${data.name}">
+            <div class="text-white cursor-pointer d-flex flex-row" style="align-items: center;justify-content: center;">
+                <span class="dot shadow mr-2 dot-green"></span>
+                <div>
+                    ${lang.Building}...
+                </div>
+                <div class="flex-grow-1 px-2 pt-1">
+                    <div class="progress" style="height:18px">
+                        <div class="progress-bar progress-bar-warning" role="progressbar" style="width: ${data.percent}%;">${data.percent}%</div>
+                    </div>
+                </div>
+                <div style="display:none;" class="download-button">
+                    <a class="badge badge-sm badge-success" download href="${buildFileBinUrl(data)}"><i class="fa fa-download"></i></a>
+                </div>
+            </div>
+        </li>`
+        sideLinkListBox.append(html)
     }
     onWebSocketEvent(function(data){
         switch(data.f){
@@ -261,9 +301,22 @@ $(document).ready(function(e){
                 var saveBuiltVideo = dashboardOptions().switches.timelapseSaveBuiltVideo
                 if(data.timelapseVideo && saveBuiltVideo === 1){
                     downloadTimelapseVideo(data)
+                    var progressItem = sideLinkListBox.find(`[data-mid="${data.mid}"][data-ke="${data.mid}"][data-name="${data.name}"]`)
+                    progressItem.find('.download-button').show()
                 }
             break;
             case'timelapse_build_percent':
+                var progressItem = sideLinkListBox.find(`[data-mid="${data.mid}"][data-ke="${data.mid}"][data-name="${data.name}"]`)
+                if(data.percent === '100.0'){
+                    onTimelapseVideoBuildComplete(data)
+                }
+                if(progressItem.length === 0){
+                    drawTimelapseVideoProgressBar(data)
+                }else{
+                    progressItem = sideLinkListBox.find(`[data-mid="${data.mid}"][data-ke="${data.mid}"][data-name="${data.name}"]`)
+                    progressItem.find('.progress-bar').css('width',`${data.percent}%`).text(`${data.percent}%`)
+                    progressItem.find('.percent').text(data.percent)
+                }
                 console.log(data)
             break;
         }
