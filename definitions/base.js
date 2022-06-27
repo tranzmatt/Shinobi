@@ -7521,6 +7521,11 @@ module.exports = function(s,config,lang){
                           pageOpen: 'monitorsList',
                       },
                       {
+                          icon: 'film',
+                          label: `${lang['Videos']}`,
+                          pageOpen: 'videosTableView',
+                      },
+                      {
                           icon: 'map-marker',
                           label: `${lang['Power Viewer']}`,
                           pageOpen: 'powerVideo',
@@ -8007,6 +8012,45 @@ module.exports = function(s,config,lang){
                        "fieldType": "table",
                        "attribute": `data-classes="table table-striped"`,
                        "id": "fileBin_draw_area",
+                       "divContent": ""
+                   }
+               ]
+           },
+         }
+      },
+      "Videos Table": {
+          "section": "Videos Table",
+          "blocks": {
+              "Search Settings": {
+                 "name": lang["Search Settings"],
+                 "color": "green",
+                 "section-pre-class": "col-md-4",
+                 "info": [
+                     {
+                         "field": lang["Monitor"],
+                         "fieldType": "select",
+                         "class": "monitors_list",
+                         "possible": []
+                     },
+                     {
+                         "class": "date_selector",
+                         "field": lang.Date,
+                     },
+                     {
+                         "fieldType": "div",
+                         "id": "videosTable_preview_area",
+                         "divContent": ""
+                     }
+                ]
+            },
+            "theTable": {
+                noHeader: true,
+               "section-pre-class": "col-md-8",
+               "info": [
+                   {
+                       "fieldType": "table",
+                       "attribute": `data-classes="table table-striped"`,
+                       "id": "videosTable_draw_area",
                        "divContent": ""
                    }
                ]
