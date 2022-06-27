@@ -6213,6 +6213,7 @@ module.exports = function(s,config,lang){
            "Watch": {
                noHeader: true,
               "color": "blue",
+              style: 'padding:0!important',
               "section-pre-class": "col-md-8",
               "info": [
                   {

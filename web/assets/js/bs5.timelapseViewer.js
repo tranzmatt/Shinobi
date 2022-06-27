@@ -205,7 +205,7 @@ $(document).ready(function(e){
             }
         })
     })
-    timelapseWindow.on('click','.download_mp4',function(){
+    downloadButton.click(function(){
         var fps = fpsSelector.val()
         var dateRange = getSelectedTime(false)
         var startDate = dateRange.startDate
@@ -272,7 +272,7 @@ $(document).ready(function(e){
                 title: lang['File Download Ready'],
                 text: `<a class="btn btn-sm btn-success" href="${buildFileBinUrl(data)}">${lang.Download}</a>`,
                 type: 'success',
-                sticky: true,
+                hide: false,
             })
         }
     }
@@ -280,7 +280,7 @@ $(document).ready(function(e){
         var html = `<li data-mid="${data.mid}" data-ke="${data.mid}" data-name="${data.name}">
             <div class="text-white cursor-pointer d-flex flex-row" style="align-items: center;justify-content: center;">
                 <span class="dot shadow mr-2 dot-green"></span>
-                <div>
+                <div class="row-status">
                     ${lang.Building}...
                 </div>
                 <div class="flex-grow-1 px-2 pt-1">
@@ -302,17 +302,19 @@ $(document).ready(function(e){
         switch(data.f){
             case'fileBin_item_added':
                 var saveBuiltVideo = dashboardOptions().switches.timelapseSaveBuiltVideo
+                let statusText = `${lang['Done!']}`
+                onTimelapseVideoBuildComplete(data)
                 if(data.timelapseVideo && saveBuiltVideo === 1){
                     downloadTimelapseVideo(data)
-                    var progressItem = sideLinkListBox.find(`[data-mid="${data.mid}"][data-ke="${data.mid}"][data-name="${data.name}"]`)
-                    progressItem.find('.download-button').show()
+                    statusText = lang['Downloading...']
                 }
+                setDownloadButtonLabel(statusText, '')
+                var progressItem = sideLinkListBox.find(`[data-mid="${data.mid}"][data-ke="${data.mid}"][data-name="${data.name}"]`)
+                progressItem.find('.row-status').text(statusText)
+                progressItem.find('.download-button').show()
             break;
             case'timelapse_build_percent':
                 var progressItem = sideLinkListBox.find(`[data-mid="${data.mid}"][data-ke="${data.mid}"][data-name="${data.name}"]`)
-                if(data.percent === '100.0'){
-                    onTimelapseVideoBuildComplete(data)
-                }
                 if(progressItem.length === 0){
                     drawTimelapseVideoProgressBar(data)
                 }else{
