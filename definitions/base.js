@@ -6211,7 +6211,7 @@ module.exports = function(s,config,lang){
                ]
            },
            "Watch": {
-              "name": lang['Watch'],
+               noHeader: true,
               "color": "blue",
               "section-pre-class": "col-md-8",
               "info": [
@@ -7990,6 +7990,11 @@ module.exports = function(s,config,lang){
                      {
                          "class": "date_selector",
                          "field": lang.Date,
+                     },
+                     {
+                         "fieldType": "div",
+                         "id": "fileBin_preview_area",
+                         "divContent": ""
                      }
                 ]
             },
@@ -7999,6 +8004,7 @@ module.exports = function(s,config,lang){
                "info": [
                    {
                        "fieldType": "table",
+                       "attribute": `data-classes="table table-striped"`,
                        "id": "fileBin_draw_area",
                        "divContent": ""
                    }

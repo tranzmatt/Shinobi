@@ -4,6 +4,7 @@ $(document).ready(function(e){
     var monitorsList = theEnclosure.find('.monitors_list')
     var dateSelector = theEnclosure.find('.date_selector')
     var fileBinDrawArea = $('#fileBin_draw_area')
+    var fileBinPreviewArea = $('#fileBin_preview_area')
     var loadedVideosInMemory = {};
     function openFileBinView(monitorId,startDate,endDate){
         drawFileBinViewElements(monitorId,startDate,endDate)
@@ -48,6 +49,7 @@ $(document).ready(function(e){
         var fileBinData = []
         loadedVideosInMemory = {}
         $.getJSON(apiURL + '?' + queryString.join('&'),function(data){
+            fileBinDrawArea.bootstrapTable('destroy')
             fileBinDrawArea.bootstrapTable({
                 pagination: true,
                 search: true,
@@ -61,7 +63,7 @@ $(document).ready(function(e){
                         title: lang['Time Created']
                       },
                       {
-                        field: 'href',
+                        field: 'buttons',
                         title: 'Download'
                       }
                 ],
@@ -69,18 +71,29 @@ $(document).ready(function(e){
                     return {
                         name: file.name,
                         time: file.time,
-                        href: `<a class="btn btn-sm btn-primary" href="${file.href}" download title="${lang.Download}"><i class="fa fa-download"></i></a>`,
+                        buttons: `
+                            <a class="btn btn-sm btn-primary" href="${file.href}" download title="${lang.Download}"><i class="fa fa-download"></i></a>
+                            ${file.details.video ? `<a class="btn btn-sm btn-primary preview-video" href="${file.href}" title="${lang.Play}"><i class="fa fa-play"></i></a>` : ``}
+                        `,
                     }
                 })
             })
         })
     }
 
-    $('body').on('click','.open-fileBin-viewer',function(){
+    $('body')
+    .on('click','.open-fileBin-viewer',function(){
         var el = $(this).parents('[data-mid]')
         var monitorId = el.attr('data-mid')
         openTab(`fileBinView`,{},null)
         monitorsList.val(monitorId).change()
+    });
+    theEnclosure
+    .on('click','.preview-video',function(e){
+        e.preventDefault()
+        var href = $(this).attr('href')
+        fileBinPreviewArea.html(`<video class="video_video" style="width:100%" autoplay controls preload loop src="${href}"></video>`)
+        return false;
     })
     addOnTabOpen('fileBinView', function () {
         drawMonitorListToSelector(monitorsList)
@@ -90,5 +103,8 @@ $(document).ready(function(e){
         var theSelected = `${monitorsList.val()}`
         drawMonitorListToSelector(monitorsList)
         monitorsList.val(theSelected)
+    })
+    addOnTabAway('fileBinView', function () {
+        fileBinPreviewArea.find('video')[0].pause()
     })
 })
