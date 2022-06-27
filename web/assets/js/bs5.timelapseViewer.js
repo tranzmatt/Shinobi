@@ -288,8 +288,11 @@ $(document).ready(function(e){
                         <div class="progress-bar progress-bar-warning" role="progressbar" style="width: ${data.percent}%;">${data.percent}%</div>
                     </div>
                 </div>
-                <div style="display:none;" class="download-button">
+                <div style="display:none;" class="download-button pr-2">
                     <a class="badge badge-sm badge-success" download href="${buildFileBinUrl(data)}"><i class="fa fa-download"></i></a>
+                </div>
+                <div style="display:none;" class="download-button">
+                    <a class="badge badge-sm badge-dark remove-row"><i class="fa fa-times"></i></a>
                 </div>
             </div>
         </li>`
@@ -322,11 +325,17 @@ $(document).ready(function(e){
         }
     })
     frameIcons.on('scroll',loadVisibleTimelapseFrames)
-    $('body').on('click','.open-timelapse-viewer',function(){
+    $('body')
+    .on('click','.open-timelapse-viewer',function(){
         var el = $(this).parents('[data-mid]')
         var monitorId = el.attr('data-mid')
         openTab(`timelapseViewer`,{},null)
         monitorsList.val(monitorId).change()
+    });
+    sideLinkListBox
+    .on('click','.remove-row',function(){
+        var el = $(this).parents('[data-mid]')
+        el.remove()
     })
     setDownloadButtonLabel(lang['Build Video'], 'database')
     addOnTabOpen('timelapseViewer', function () {
