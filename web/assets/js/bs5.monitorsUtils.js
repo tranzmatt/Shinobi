@@ -578,7 +578,7 @@ function buildDefaultMonitorMenuItems(){
     <li><a class="dropdown-item run-live-grid-monitor-pop cursor-pointer">${lang['Pop']}</a></li>
     <li><a class="dropdown-item toggle-substream cursor-pointer">${lang['Toggle Substream']}</a></li>
     <li><hr class="dropdown-divider"></li>
-    <li><a class="dropdown-item open-videos cursor-pointer">${lang['Videos List']}</a></li>
+    <li><a class="dropdown-item open-videosTable cursor-pointer">${lang['Videos List']}</a></li>
     <!-- <li><a class="dropdown-item cursor-pointer" monitor-action="pvv">${lang['Power Viewer']}</a></li> -->
     <li><a class="dropdown-item open-timelapse-viewer cursor-pointer">${lang['Time-lapse']}</a></li>
     <li><hr class="dropdown-divider"></li>
@@ -854,7 +854,7 @@ function buildMiniMonitorCardBody(monitorAlreadyAdded,monitorConfigPartial,addit
                 <div>${infoHtml}</div>
             </div>
             <div class="card-footer text-center">
-                <a class="btn btn-sm btn-block btn-${monitorAlreadyAdded ? doOpenVideosInsteadOfDelete ? 'primary open-videos' : 'danger delete-monitor' : 'success add-monitor'}">${monitorAlreadyAdded ? doOpenVideosInsteadOfDelete ? lang['Videos'] : lang['Delete Camera'] : lang['Add Camera']}</a>
+                <a class="btn btn-sm btn-block btn-${monitorAlreadyAdded ? doOpenVideosInsteadOfDelete ? 'primary open-videosTable' : 'danger delete-monitor' : 'success add-monitor'}">${monitorAlreadyAdded ? doOpenVideosInsteadOfDelete ? lang['Videos'] : lang['Delete Camera'] : lang['Add Camera']}</a>
             </div>
         </div>
         ${monitorSettingsHtml}
@@ -871,6 +871,11 @@ function buildMonitorsListSelectFieldHtml(arrayOfSelected){
         }
     });
     return createOptionListHtml(monitorList)
+}
+function getRowsMonitorId(rowEl){
+    var el = $(rowEl).parents('[data-mid]')
+    var monitorId = el.attr('data-mid')
+    return monitorId
 }
 $(document).ready(function(){
     $('body')

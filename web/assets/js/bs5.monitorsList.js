@@ -4,11 +4,6 @@ $(document).ready(function(){
     var theList = $('#monitorsListRows')
     var apiKeySelector = $('#multi_mon_api_key_selector')
     var multiMonitorSelect = $('#multimon_select_all')
-    function getRowsMonitorId(rowEl){
-        var el = $(rowEl).parents('[data-mid]')
-        var monitorId = el.attr('data-mid')
-        return monitorId
-    }
     function drawRowToList(row){
         var streamUrl = libURL + buildStreamUrl(row.mid).replace($user.auth_token,selectedApiKey)
         theList.append(`

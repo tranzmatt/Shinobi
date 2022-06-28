@@ -7340,7 +7340,7 @@ module.exports = function(s,config,lang){
                        <a title="${lang['Edit']}" class="btn btn-sm badge btn-primary open-monitor-settings"><i class="fa fa-wrench"></i></a>
                        <a title="${lang['Toggle Substream']}" class="btn btn-sm badge btn-secondary toggle-monitor-substream"><i class="fa fa-eye"></i></a>
                        <a title="${lang['Snapshot']}" class="btn btn-sm badge btn-warning snapshot-live-grid-monitor"><i class="fa fa-camera"></i></a>
-                       <a title="${lang['Videos List']}" class="btn btn-sm badge btn-secondary open-videos"><i class="fa fa-film"></i></a>
+                       <a title="${lang['Videos List']}" class="btn btn-sm badge btn-secondary open-videosTable"><i class="fa fa-film"></i></a>
                        <a title="${lang['Show Logs']}" class="btn btn-sm badge btn-warning toggle-live-grid-monitor-logs"><i class="fa fa-exclamation-triangle"></i></a>
                        <a title="${lang['Close']}" class="btn btn-sm badge btn-danger close-live-grid-monitor"><i class="fa fa-times"></i></a>
                   </div>
@@ -7422,7 +7422,7 @@ module.exports = function(s,config,lang){
               // },
               "Videos List": {
                  "label": lang['Videos List'],
-                 "class": "default open-videos",
+                 "class": "default open-videosTable",
                  "icon": "film"
               },
               "Monitor Settings": {

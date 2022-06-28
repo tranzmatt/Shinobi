@@ -267,7 +267,7 @@ function blipTo(xPageValue,yPageValue){
     setTimeout(() => document.documentElement.style.scrollBehavior = 'smooth', 5);
 }
 
-function openTab(theTab,loadData,backAction,haltTrigger,type){
+function openTab(theTab,loadData,backAction,haltTrigger,type,overrideOnTabOpen){
     loadData = loadData ? loadData : {}
     if(tabTree && tabTree.back && tabTree.back.name === theTab){
         goBackOneTab()
@@ -309,9 +309,9 @@ function openTab(theTab,loadData,backAction,haltTrigger,type){
             loadData: loadData,
             type: type || 'other'
         }
-        onTabOpen(activeTabName)
+        overrideOnTabOpen ? overrideOnTabOpen(activeTabName) : onTabOpen(activeTabName)
     }else{
-        onTabReopen(activeTabName)
+        overrideOnTabOpen ? overrideOnTabOpen(activeTabName) : onTabReopen(activeTabName)
     }
     // mobile-only, close menu on page change
     $('#sidebarMenu').removeClass('show');
@@ -390,7 +390,11 @@ function onTabAway(tabId){
     }
     if(addedOnTabAway[tabId]){
         addedOnTabAway[tabId].forEach(function(theAction){
-            theAction(loadedTab)
+            try{
+                theAction(loadedTab)
+            }catch(err){
+                console.log(err)
+            }
         })
     }
 }
@@ -416,7 +420,11 @@ function onTabReopen(tabId){
     }
     if(addedOnTabReopen[tabId]){
         addedOnTabReopen[tabId].forEach(function(theAction){
-            theAction(loadedTab)
+            try{
+                theAction(loadedTab)
+            }catch(err){
+                console.log(err)
+            }
         })
     }
 }

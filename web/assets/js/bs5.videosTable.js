@@ -91,11 +91,15 @@ $(document).ready(function(e){
         videosTablePreviewArea.html(`<video class="video_video" style="width:100%" autoplay controls preload loop src="${href}"></video>`)
     }
     $('body')
-    .on('click','.open-videosTable-video',function(e){
+    .on('click','.open-videosTable',function(e){
         e.preventDefault()
-        var href = $(this).attr('href')
-        openTab(`videosTableView`,{},null)
-        drawPreviewVideo(href)
+        var monitorId = getRowsMonitorId(this)
+        openTab(`videosTableView`,{},null,null,null,() => {
+            console.log(monitorId)
+            drawMonitorListToSelector(monitorsList)
+            monitorsList.val(monitorId)
+            drawVideosTableViewElements()
+        })
         return false;
     });
     theEnclosure
