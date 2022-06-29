@@ -81,10 +81,8 @@ module.exports = function(s,config,lang,app,io){
     }
     [
         [config.webPaths.home,'libs','/web/libs'],
-        [config.webPaths.admin,'libs','/web/libs'],
         [config.webPaths.super,'libs','/web/libs'],
         [config.webPaths.home,'assets','/web/assets'],
-        [config.webPaths.admin,'assets','/web/assets'],
         [config.webPaths.super,'assets','/web/assets'],
     ].forEach((piece) => {
         app.use(s.checkCorrectPathEnding(piece[0])+piece[1],express.static(s.mainDirectory + piece[2]))
@@ -131,12 +129,6 @@ module.exports = function(s,config,lang,app,io){
         s.renderPage(req,res,config.renderPaths.index,{lang:lang,config: s.getConfigWithBranding(req.hostname),screen:'dashboard'})
     });
     /**
-    * Page : Administrator Login Screen
-    */
-    app.get(config.webPaths.admin, function (req,res){
-        s.renderPage(req,res,config.renderPaths.index,{lang:lang,config: s.getConfigWithBranding(req.hostname),screen:'admin'})
-    });
-    /**
     * Page : Superuser Login Screen
     */
     app.get(config.webPaths.super, function (req,res){
@@ -166,14 +158,18 @@ module.exports = function(s,config,lang,app,io){
         }
     }
     /**
+    * Page : Admin page redirect to regular page now
+    */
+    app.get(config.webPaths.admin, function (req,res){
+        s.renderPage(req,res,config.renderPaths.index,{lang:lang,config: s.getConfigWithBranding(req.hostname),screen:'dashboard'})
+    });
+    /**
     * API : Login handler. Dashboard, Streamer, Dashcam Administrator, Superuser
     */
     app.post([
         config.webPaths.home,
-        config.webPaths.admin,
         config.webPaths.super,
         s.checkCorrectPathEnding(config.webPaths.home)+':screen',
-        s.checkCorrectPathEnding(config.webPaths.admin)+':screen',
         s.checkCorrectPathEnding(config.webPaths.super)+':screen',
     ],async function (req,res){
         var response = {ok: false};
@@ -1366,7 +1362,7 @@ module.exports = function(s,config,lang,app,io){
              const groupKey = req.params.ke
              const monitorId = req.params.id
              const monitorRestrictions = s.getMonitorRestrictions(user.details,monitorId)
-             
+
              if(user.details.sub && user.details.allmonitors === '0' && monitorRestrictions.length === 0){
                  s.closeJsonResponse(res,{
                      ok: false,
@@ -1374,7 +1370,7 @@ module.exports = function(s,config,lang,app,io){
                  })
                  return
              }
-             
+
             const d = {
                 id: req.params.id,
                 ke: req.params.ke
