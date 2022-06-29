@@ -8,9 +8,6 @@ const {
 } = require('./common.js')
 module.exports = function(s,config,lang,io){
     const {
-        legacyFilterEvents
-    } = require('./events/utils.js')(s,config,lang)
-    const {
         ptzControl
     } = require('./control/ptz.js')(s,config,lang)
     s.clientSocketConnection = {}
@@ -937,63 +934,6 @@ module.exports = function(s,config,lang,io){
             }
         })
          //functions for retrieving cron announcements
-         cn.on('cron',function(d){
-             if(d.f==='init'){
-                 if(config.cron.key){
-                     if(config.cron.key===d.cronKey){
-                        s.cron={started:moment(),last_run:moment(),id:cn.id};
-                     }else{
-                         cn.disconnect()
-                     }
-                 }else{
-                     s.cron={started:moment(),last_run:moment(),id:cn.id};
-                 }
-             }else{
-                 if(s.cron&&cn.id===s.cron.id){
-                     delete(d.cronKey)
-                     switch(d.f){
-                         case'filters':
-                             legacyFilterEvents(d.ff,d)
-                         break;
-                         case's.tx':
-                             s.tx(d.data,d.to)
-                         break;
-                         case's.deleteVideo':
-                             s.deleteVideo(d.file)
-                         break;
-                         case's.deleteFileBinEntry':
-                             s.deleteFileBinEntry(d.file)
-                         break;
-                         case's.setDiskUsedForGroup':
-                            function doOnMain(){
-                                s.setDiskUsedForGroup(d.ke,d.size,d.target || undefined)
-                            }
-                            if(d.videoRow){
-                                let storageIndex = s.getVideoStorageIndex(d.videoRow);
-                                if(storageIndex){
-                                    s.setDiskUsedForGroupAddStorage(d.ke,{
-                                        size: d.size,
-                                        storageIndex: storageIndex
-                                    })
-                                }else{
-                                    doOnMain()
-                                }
-                            }else{
-                                doOnMain()
-                            }
-                         break;
-                         case'start':case'end':
-                             d.mid='_cron';s.userLog(d,{type:'cron',msg:d.msg})
-                         break;
-                         default:
-                             s.systemLog('CRON : ',d)
-                         break;
-                     }
-                 }else{
-                     cn.disconnect()
-                 }
-             }
-         })
         cn.on('disconnect', function () {
             if(cn.socketVideoStream){
                 cn.closeSocketVideoStream()
