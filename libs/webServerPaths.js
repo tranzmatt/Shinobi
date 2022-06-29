@@ -161,7 +161,7 @@ module.exports = function(s,config,lang,app,io){
     * Page : Admin page redirect to regular page now
     */
     app.get(config.webPaths.admin, function (req,res){
-        s.renderPage(req,res,config.renderPaths.index,{lang:lang,config: s.getConfigWithBranding(req.hostname),screen:'dashboard'})
+        res.redirect('/');
     });
     /**
     * API : Login handler. Dashboard, Streamer, Dashcam Administrator, Superuser
