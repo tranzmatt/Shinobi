@@ -113,7 +113,7 @@ const getTimelapseFrameDirectory = function(e){
         try{e.details=JSON.parse(e.details)}catch(err){}
     }
     if(e.details&&e.details.dir&&e.details.dir!==''){
-        return s.checkCorrectPathEnding(e.details.dir)+e.ke+'/'+e.id+'_timelapse/'
+        return checkCorrectPathEnding(e.details.dir)+e.ke+'/'+e.id+'_timelapse/'
     }else{
         return videoDirectory + e.ke + '/' + e.id + '_timelapse/'
     }
@@ -423,7 +423,7 @@ const deleteOldTimelapseFrames = async function(v){
                 const folderPath = foldersDeletedFrom[i];
                 const folderIsEmpty = (await fs.promises.readdir(folderPath)).filter(file => file.indexOf('.jpg') > -1).length === 0;
                 if(folderIsEmpty){
-                    await fs.promises.rmdir(folderPath, { recursive: true })
+                    await fs.promises.rmdir(folderPath, { recursive: true, force: true })
                 }
             }
             const deleteResponse = await knexQueryPromise({

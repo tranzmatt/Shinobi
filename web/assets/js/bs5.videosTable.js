@@ -74,8 +74,8 @@ $(document).ready(function(e){
                     return {
                         monitorName: `<b>${loadedMonitors[file.mid]?.name || file.mid}</b>`,
                         time: `
-                            ${file.start ? `<div><b>${lang.Started}</b> ${formattedTime(file.details.start, 'DD-MM-YYYY hh:mm:ss AA')}</div>` : ''}
-                            ${file.end ? `<div><b>${lang.Ended}</b> ${formattedTime(file.details.end, 'DD-MM-YYYY hh:mm:ss AA')}</div>` : ''}
+                            <div><b>${lang.Started}</b> ${formattedTime(file.start, 'DD-MM-YYYY hh:mm:ss AA')}</div>
+                            <div><b>${lang.Ended}</b> ${formattedTime(file.end, 'DD-MM-YYYY hh:mm:ss AA')}</div>
                         `,
                         size: convertKbToHumanSize(file.size),
                         buttons: `
@@ -95,7 +95,6 @@ $(document).ready(function(e){
         e.preventDefault()
         var monitorId = getRowsMonitorId(this)
         openTab(`videosTableView`,{},null,null,null,() => {
-            console.log(monitorId)
             drawMonitorListToSelector(monitorsList)
             monitorsList.val(monitorId)
             drawVideosTableViewElements()
