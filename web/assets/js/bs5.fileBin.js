@@ -1,5 +1,4 @@
 $(document).ready(function(e){
-    //Timelapse JPEG Window
     var theEnclosure = $('#tab-fileBinView')
     var monitorsList = theEnclosure.find('.monitors_list')
     var dateSelector = theEnclosure.find('.date_selector')
