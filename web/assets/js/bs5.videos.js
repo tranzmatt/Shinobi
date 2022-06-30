@@ -527,6 +527,7 @@ $(document).ready(function(){
         var video = loadedVideosInMemory[`${monitorId}${videoTime}`]
         var ext = video.filename.split('.')
         ext = ext[ext.length - 1]
+        var videoEndpoint = getApiPrefix(`videos`) + '/' + video.mid + '/' + video.filename
         $.confirm.create({
             title: lang["Delete Video"] + ' : ' + video.filename,
             body: `${lang.DeleteVideoMsg}<br><br><div class="row"><video class="video_video" autoplay loop controls><source src="${videoEndpoint}" type="video/${ext}"></video></div>`,
@@ -535,7 +536,6 @@ $(document).ready(function(){
                 class: 'btn-danger btn-sm'
             },
             clickCallback: function(){
-                var videoEndpoint = getApiPrefix(`videos`) + '/' + video.mid + '/' + video.filename
                 $.getJSON(videoEndpoint + '/delete',function(data){
                     if(data.ok){
                         console.log('Video Deleted')

@@ -144,6 +144,7 @@ $(document).ready(function(e){
     .on('click','.delete-selected-videos',function(e){
         e.preventDefault()
         var videos = getSelectedRows()
+        if(videos.length === 0)return;
         $.confirm.create({
             title: lang["Delete Videos"],
             body: `${lang.DeleteTheseMsg}`,
@@ -162,7 +163,7 @@ $(document).ready(function(e){
     .on('click','.download-selected-videos',function(e){
         e.preventDefault()
         var videos = getSelectedRows()
-        console.log(videos)
+        if(videos.length === 0)return;
         $.confirm.create({
             title: lang["Batch Download"],
             body: `${lang.batchDownloadText}`,
