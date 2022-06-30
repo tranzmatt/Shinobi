@@ -143,6 +143,9 @@ $('body')
     }
     _this.attr('type',type)
 })
+function parseDiskUsePercent(diskUsed,diskLimit){
+    return parseFloat((diskUsed/diskLimit)*100).toFixed(1)+'%'
+}
 onWebSocketEvent(function (d){
     switch(d.f){
         case'init_success':
@@ -173,10 +176,10 @@ onWebSocketEvent(function (d){
         case'diskUsed':
             var diskLimit = d.limit || 10000
             var diskUsed = d.size
-            var percent = parseInt((diskUsed/diskLimit)*100)+'%';
-            var videosPercent = parseFloat((d.usedSpaceVideos/diskLimit)*100)+'%';
-            var fileBinPercent = parseFloat((d.usedSpaceFilebin/diskLimit)*100)+'%';
-            var timelapsePercent = parseFloat((d.usedSpaceTimelapseFrames/diskLimit)*100)+'%';
+            var percent = parseDiskUsePercent(diskUsed,diskLimit);
+            var videosPercent = parseDiskUsePercent(d.usedSpaceVideos,diskLimit);
+            var timelapsePercent = parseDiskUsePercent(d.usedSpaceTimelapseFrames,diskLimit);
+            var fileBinPercent = parseDiskUsePercent(d.usedSpaceFilebin,diskLimit);
             var humanText = parseFloat(diskUsed)
             if(humanText > 1000){
                 humanText = (humanText / 1000).toFixed(2) + ' GB'
@@ -186,8 +189,11 @@ onWebSocketEvent(function (d){
             diskIndicatorBarUsed.html(humanText)
             diskIndicatorPercentText.html(percent)
             diskIndicatorBar[0].style.width = videosPercent
+            diskIndicatorBar[0].title = `${lang['Video Share']} : ${videosPercent}`
             diskIndicatorBar[1].style.width = timelapsePercent
+            diskIndicatorBar[1].title = `${lang['Timelapse Frames Share']} : ${timelapsePercent}`
             diskIndicatorBar[2].style.width = fileBinPercent
+            diskIndicatorBar[2].title = `${lang['FileBin Share']} : ${fileBinPercent}`
             if(d.addStorage){
                 $.each(d.addStorage,function(n,storage){
                     var percent = parseInt((storage.usedSpace/storage.sizeLimit)*100)+'%'
