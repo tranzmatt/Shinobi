@@ -7503,7 +7503,7 @@ module.exports = function(s,config,lang){
                               {
                                   label: lang[`Original Aspect Ratio`],
                                   class: 'cursor-pointer',
-                                  attributes: 'shinobi-switch="dontMonStretch" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
+                                  attributes: 'shinobi-switch="dontMonStretch" ui-change-target=".dot" on-class="dot-grey" off-class="dot-green"',
                                   color: 'grey',
                               },
                               {
