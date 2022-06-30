@@ -812,6 +812,12 @@ function downloadJSON(jsonData,filename){
         .attr('download',filename)
         [0].click()
 }
+function downloadFile(downloadUrl,fileName){
+    var a = document.createElement('a')
+    a.href = downloadUrl
+    a.download = fileName
+    a.click()
+}
 function convertKbToHumanSize(theNumber){
     var amount = theNumber / 1048576
     var unit = amount / 1000 >= 1000 ? 'TB' : amount >= 1000 ? 'GB' : 'MB'

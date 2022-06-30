@@ -254,10 +254,7 @@ $(document).ready(function(e){
     }
     function downloadTimelapseVideo(data){
         var downloadUrl = buildFileBinUrl(data)
-        var a = document.createElement('a')
-        a.href = downloadUrl
-        a.download = data.name
-        a.click()
+        downloadFile(downloadUrl,data.name)
     }
     function onTimelapseVideoBuildComplete(data){
         var saveBuiltVideo = dashboardOptions().switches.timelapseSaveBuiltVideo

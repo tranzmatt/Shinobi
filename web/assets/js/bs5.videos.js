@@ -398,32 +398,35 @@ function loadVideoData(video){
     loadedVideosInMemory[`${video.mid}${video.time}`] = video
 }
 function getVideos(options,callback){
-    options = options ? options : {}
-    var requestQueries = []
-    var monitorId = options.monitorId
-    var limit = options.limit || 300
-    var eventStartTime
-    var eventEndTime
-    // var startDate = options.startDate
-    // var endDate = options.endDate
-    if(options.startDate){
-        eventStartTime = formattedTimeForFilename(options.startDate,false)
-        requestQueries.push(`start=${eventStartTime}`)
-    }
-    if(options.endDate){
-        eventEndTime = formattedTimeForFilename(options.endDate,false)
-        requestQueries.push(`end=${eventEndTime}`)
-    }
-    $.getJSON(`${getApiPrefix(`videos`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`noLimit=1`]).join('&')}`,function(data){
-        var videos = data.videos
-        $.getJSON(`${getApiPrefix(`timelapse`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`noLimit=1`]).join('&')}`,function(timelapseFrames){
-            $.getJSON(`${getApiPrefix(`events`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`limit=${limit}`]).join('&')}`,function(eventData){
-                var newVideos = applyDataListToVideos(videos,eventData)
-                newVideos = applyTimelapseFramesListToVideos(newVideos,timelapseFrames,'timelapseFrames',true)
-                $.each(newVideos,function(n,video){
-                    loadVideoData(video)
+    return new Promise((resolve,reject) => {
+        options = options ? options : {}
+        var requestQueries = []
+        var monitorId = options.monitorId
+        var limit = options.limit || 300
+        var eventStartTime
+        var eventEndTime
+        // var startDate = options.startDate
+        // var endDate = options.endDate
+        if(options.startDate){
+            eventStartTime = formattedTimeForFilename(options.startDate,false)
+            requestQueries.push(`start=${eventStartTime}`)
+        }
+        if(options.endDate){
+            eventEndTime = formattedTimeForFilename(options.endDate,false)
+            requestQueries.push(`end=${eventEndTime}`)
+        }
+        $.getJSON(`${getApiPrefix(`videos`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`noLimit=1`]).join('&')}`,function(data){
+            var videos = data.videos
+            $.getJSON(`${getApiPrefix(`timelapse`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`noLimit=1`]).join('&')}`,function(timelapseFrames){
+                $.getJSON(`${getApiPrefix(`events`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`limit=${limit}`]).join('&')}`,function(eventData){
+                    var newVideos = applyDataListToVideos(videos,eventData)
+                    newVideos = applyTimelapseFramesListToVideos(newVideos,timelapseFrames,'timelapseFrames',true)
+                    $.each(newVideos,function(n,video){
+                        loadVideoData(video)
+                    })
+                    if(callback)callback({videos: newVideos, frames: timelapseFrames});
+                    resolve({videos: newVideos, frames: timelapseFrames})
                 })
-                callback({videos: newVideos, frames: timelapseFrames})
             })
         })
     })
@@ -451,6 +454,32 @@ function getEvents(options,callback){
     $.getJSON(`${getApiPrefix(`events`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.join('&')}`,function(eventData){
         callback(eventData)
     })
+}
+function deleteVideo(video,callback){
+    return new Promise((resolve,reject) => {
+        var videoEndpoint = getApiPrefix(`videos`) + '/' + video.mid + '/' + video.filename
+        console.log(videoEndpoint)
+        $.getJSON(videoEndpoint + '/delete',function(data){
+            if(callback)callback(data)
+            resolve(data)
+        })
+    })
+}
+async function deleteVideos(videos){
+    for (let i = 0; i < videos.length; i++) {
+        var video = videos[i];
+        await deleteVideo(video)
+    }
+}
+function downloadVideo(video){
+    var videoEndpoint = getApiPrefix(`videos`) + '/' + video.mid + '/' + video.filename
+    downloadFile(videoEndpoint,video.filename)
+}
+async function downloadVideos(videos){
+    for (let i = 0; i < videos.length; i++) {
+        var video = videos[i];
+        await downloadVideo(video)
+    }
 }
 onWebSocketEvent(function(d){
     switch(d.f){
@@ -490,14 +519,14 @@ $(document).ready(function(){
         timeInward = timeInward < 0 ? 0 : timeInward
         createVideoPlayerTab(video,timeInward)
     })
-    .on('click','.delete-video',function(){
+    .on('click','.delete-video',function(e){
+        e.preventDefault()
         var el = $(this).parents('[data-mid]')
         var monitorId = el.attr('data-mid')
         var videoTime = el.attr('data-time')
         var video = loadedVideosInMemory[`${monitorId}${videoTime}`]
         var ext = video.filename.split('.')
         ext = ext[ext.length - 1]
-        var videoEndpoint = getApiPrefix(`videos`) + '/' + video.mid + '/' + video.filename
         $.confirm.create({
             title: lang["Delete Video"] + ' : ' + video.filename,
             body: `${lang.DeleteVideoMsg}<br><br><div class="row"><video class="video_video" autoplay loop controls><source src="${videoEndpoint}" type="video/${ext}"></video></div>`,
@@ -506,6 +535,7 @@ $(document).ready(function(){
                 class: 'btn-danger btn-sm'
             },
             clickCallback: function(){
+                var videoEndpoint = getApiPrefix(`videos`) + '/' + video.mid + '/' + video.filename
                 $.getJSON(videoEndpoint + '/delete',function(data){
                     if(data.ok){
                         console.log('Video Deleted')
@@ -514,6 +544,7 @@ $(document).ready(function(){
                     }
                 })
             }
-        })
+        });
+        return false;
     })
 })
