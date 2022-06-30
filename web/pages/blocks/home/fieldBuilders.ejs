@@ -206,6 +206,7 @@ drawBlock = function(monitorSettings){
                        </div>`
              break;
              case'indicatorBar':
+                    const numberOfBars = field.bars || 1
                    fieldElement = `<div ${attributes.join(' ')} id="indicator-${field.name}" class="mb-2 ${fieldClass.join(' ')}">
                        <div class="d-flex flex-row text-white mb-1">
                            <div class="pr-2">
@@ -219,9 +220,11 @@ drawBlock = function(monitorSettings){
                            </div>
                        </div>
                        <div>
-                           <div class="progress">
-                               <div class="progress-bar progress-bar-${field.color || 'warning'}" role="progressbar" style="width: ${field.percent || '0'}%;"></div>
-                           </div>
+                           <div class="progress">`
+                                for (let i = 0; i < numberOfBars; i++) {
+                                    fieldElement += `<div title="${field[`title${i}`] || ''}" class="progress-bar progress-bar-${field[`color${i}`] || field.color || 'warning'}" role="progressbar" style="width: ${field[`percent${i}`] || field.percent || '0'}%;"></div>`
+                                }
+                          fieldElement += `</div>
                        </div>
                    </div>`
              break;

@@ -7713,6 +7713,13 @@ module.exports = function(s,config,lang){
                                          "fieldType": "indicatorBar",
                                          "icon": "hdd",
                                          "name": "disk",
+                                         "bars": 3,
+                                         "color0": "info",
+                                         "title0": lang["Video Share"],
+                                         "color1": "success",
+                                         "title1": lang["Timelapse Frames Share"],
+                                         "color2": "warning",
+                                         "title2": lang["FileBin Share"],
                                          "label": `<span class="diskUsed" style="letter-spacing:2px;font-weight:100"></span>`,
                                      },
                                  ]

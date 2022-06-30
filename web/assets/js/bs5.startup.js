@@ -174,6 +174,9 @@ onWebSocketEvent(function (d){
             var diskLimit = d.limit || 10000
             var diskUsed = d.size
             var percent = parseInt((diskUsed/diskLimit)*100)+'%';
+            var videosPercent = parseFloat((d.usedSpaceVideos/diskLimit)*100)+'%';
+            var fileBinPercent = parseFloat((d.usedSpaceFilebin/diskLimit)*100)+'%';
+            var timelapsePercent = parseFloat((d.usedSpaceTimelapseFrames/diskLimit)*100)+'%';
             var humanText = parseFloat(diskUsed)
             if(humanText > 1000){
                 humanText = (humanText / 1000).toFixed(2) + ' GB'
@@ -182,7 +185,9 @@ onWebSocketEvent(function (d){
             }
             diskIndicatorBarUsed.html(humanText)
             diskIndicatorPercentText.html(percent)
-            diskIndicatorBar.css('width',percent)
+            diskIndicatorBar[0].style.width = videosPercent
+            diskIndicatorBar[1].style.width = timelapsePercent
+            diskIndicatorBar[2].style.width = fileBinPercent
             if(d.addStorage){
                 $.each(d.addStorage,function(n,storage){
                     var percent = parseInt((storage.usedSpace/storage.sizeLimit)*100)+'%'
