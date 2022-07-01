@@ -1401,6 +1401,8 @@
    "MQTT Inbound": "MQTT Inbound",
    "MQTT Outbound": "MQTT Outbound",
    "MQTT Client": "MQTT Client",
+   "Buffer Time from Event": "Buffer Time from Event",
+   "fieldTextBufferTimeFromEvent": "The amount of seconds to record before the trigger happened. If this is consistently inaccutrate you will need to look at the <a target='_blank' href='https://hub.shinobi.video/articles/view/DmWIID78VtvEfnf'>optimization guide</a> or force encoding on the server.",
    "fieldTextMode": "This is the primary task of the monitor.",
    "fieldTextModeDisabled": "Inactive monitor, no process will be created in this mode.",
    "fieldTextModeWatchOnly": "Monitor will only stream, no recording will occur unless otherwise ordered by API or Detector.",

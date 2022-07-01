@@ -3689,6 +3689,12 @@ module.exports = function(s,config,lang){
                       "section-class": "h_det_input h_det_1",
                       "info": [
                           {
+                             "name": "detail=detector_buffer_seconds_before",
+                             "field": lang['Buffer Time from Event'],
+                             "description": lang["fieldTextBuffetTimeFromEvent"],
+                             "default": "5",
+                          },
+                          {
                              "name": "detail=detector_buffer_vcodec",
                              "field": lang['HLS Video Encoder'],
                              "description": "",
@@ -3793,14 +3799,6 @@ module.exports = function(s,config,lang){
                              "possible": ""
                           },
                           {
-                             "name": "detail=detector_buffer_hls_list_size",
-                             "field": lang['HLS List Size'],
-                             "description": lang["fieldTextDetectorBufferHlsListSize"],
-                             "default": "10",
-                             "example": "",
-                             "possible": ""
-                          },
-                          {
                              "name": "detail=detector_buffer_start_number",
                              "field": lang['HLS Start Number'],
                              "description": "",
@@ -3820,9 +3818,9 @@ module.exports = function(s,config,lang){
                           },
                           {
                              "field": lang['Buffer Preview'],
-                             id: "monEditBufferPreview",
                              "fieldType": "div",
-                             "style": "width:100%;height:300px;background:#eceaea;border-radius:5px;color:#333;font-family:monospace"
+                             // style: `width:100%;background:#eceaea;border-radius:5px;color:#333;font-family:monospace`,
+                             divContent: `<pre><code id="monEditBufferPreview"></code></pre>`
                           },
                       ]
                    },
@@ -7716,7 +7714,7 @@ module.exports = function(s,config,lang){
                                          "bars": 3,
                                          "color0": "info",
                                          "title0": lang["Video Share"],
-                                         "color1": "success",
+                                         "color1": "danger",
                                          "title1": lang["Timelapse Frames Share"],
                                          "color2": "warning",
                                          "title2": lang["FileBin Share"],

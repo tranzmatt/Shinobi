@@ -534,7 +534,7 @@ module.exports = (s,config,lang,app,io) => {
                 //-t 00:'+s.timeObject(new Date(detector_timeout * 1000 * 60)).format('mm:ss')+'
                 activeMonitor.eventBasedRecording.process = spawn(
                     config.ffmpegDir,
-                    splitForFFPMEG(('-loglevel warning -analyzeduration 1000000 -probesize 1000000 -re -i "'+s.dir.streams+d.ke+'/'+d.id+'/detectorStream.m3u8" -movflags faststart+frag_keyframe+empty_moov -fflags +igndts -c:v copy -strftime 1 "'+s.getVideoDirectory(monitorConfig) + filename + '"'))
+                    splitForFFPMEG(('-loglevel warning -live_start_index -99999 -analyzeduration 1000 -probesize 32 -re -i "'+s.dir.streams+d.ke+'/'+d.id+'/detectorStream.m3u8" -movflags faststart+frag_keyframe+empty_moov -fflags +igndts -c:v copy -strftime 1 "'+s.getVideoDirectory(monitorConfig) + filename + '"'))
                 )
                 activeMonitor.eventBasedRecording.process.stderr.on('data',function(data){
                     s.userLog(d,{
