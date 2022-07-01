@@ -134,7 +134,6 @@ function generateDefaultMonitorSettings(){
            "detector_scale_y": "480",
            "detector_record_method": "sip",
            "detector_trigger": "1",
-           "detector_trigger_record_fps": "",
            "detector_timeout": "0.5",
            "detector_send_video_length": "",
            "watchdog_reset": "1",

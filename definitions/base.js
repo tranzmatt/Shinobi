@@ -2649,7 +2649,7 @@ module.exports = function(s,config,lang){
                    {
                        hidden: true,
                       "name": "detail=cust_sip_record",
-                      "field": lang['Traditional Recording Flags'],
+                      "field": lang['Event-Based Recording Flags'],
                       "description": lang["fieldTextCustSipRecord"],
                       "default": "",
                       "example": "",
@@ -2671,7 +2671,6 @@ module.exports = function(s,config,lang){
                 "name": lang['Global Detector Settings'],
                 "headerTitle": `${lang['Global Detector Settings']} <small>${lang['Primary Engine']} : <b class="h_det_pam_input h_det_pam_1">Pixel Array</b><span class="h_det_pam_input h_det_pam_0"><b class="shinobi-detector_name"></b> <b class="shinobi-detector-invert">${lang['Not Connected']}</b><b class="shinobi-detector" style="display:none">${lang['Connected']}</b></span></small></h4>`,
                 "color": "orange",
-                isAdvanced: true,
                 "isSection": true,
                 "input-mapping":"detector",
                 "id": "monSectionDetector",
@@ -2679,6 +2678,17 @@ module.exports = function(s,config,lang){
                 "attribute": `triggerChange="#add_monitor [detail=detector_record_method]"`,
                 "blockquote": `${lang.DetectorText}\n<p class="shinobi-detector-msg"></p>`,
                 "info": [
+                    {
+                       "fieldType": "btn",
+                       "class": `btn-primary open-region-editor`,
+                       "btnContent": `<i class="fa fa-grav"></i> &nbsp; ${lang['Region Editor']}`,
+                       "description": "",
+                       "default": "",
+                       "example": "",
+                       "form-group-class-pre-pre-layer": "h_det_input h_det_1",
+                       "form-group-class-pre-layer": "form-group",
+                       "possible": ""
+                    },
                    {
                       "name": "detail=detector",
                       "field": lang.Enabled,
@@ -2697,93 +2707,6 @@ module.exports = function(s,config,lang){
                             "value": "1"
                          }
                       ]
-                   },
-                   {
-                      "name": "detail=detector_http_api",
-                      "field": lang["Allow API Trigger"],
-                      "description": lang["fieldTextDetectorHttpApi"],
-                      "default": "1",
-                      "example": "",
-                      "fieldType": "select",
-                      "possible": [
-                         {
-                            "name": `${lang.Always} (${lang.Default})`,
-                            "value": "1"
-                         },
-                         {
-                            "name": lang[`When Detector is On`],
-                            "value": "2"
-                         },
-                         {
-                            "name": lang[`When Detector is Off`],
-                            "value": "3"
-                         },
-                         {
-                            "name": lang.Never,
-                            "value": "0"
-                         }
-                      ]
-                   },
-                   {
-                       hidden: true,
-                      "name": "detail=detector_send_frames",
-                      "field": lang["Send Frames"],
-                      "description": lang["fieldTextDetectorSendFrames"],
-                      "default": "0",
-                      "example": "",
-                      "selector": "h_det_fra",
-                      "form-group-class": "h_det_input h_det_1",
-                      "fieldType": "select",
-                      "possible": [
-                         {
-                            "name": lang.No,
-                            "value": "0"
-                         },
-                         {
-                            "name": lang.Yes,
-                            "value": "1"
-                         }
-                      ]
-                   },
-                   {
-                       hidden: true,
-                       "form-group-class": "h_det_input h_det_1",
-                      "name": "detail=detector_fps",
-                      "field": lang["Detector Rate"],
-                      "description": lang["fieldTextDetectorFps"],
-                      "default": "2",
-                      "example": "",
-                      "possible": ""
-                   },
-                   {
-                       hidden: true,
-                       "form-group-class": "h_det_input h_det_1",
-                      "name": "detail=detector_scale_x",
-                      "field": lang["Feed-in Image Width"],
-                      "description": lang["fieldTextDetectorScaleX"],
-                      "default": "",
-                      "example": "640",
-                      "possible": ""
-                   },
-                   {
-                       hidden: true,
-                       "form-group-class": "h_det_input h_det_1",
-                      "name": "detail=detector_scale_y",
-                      "field": lang["Feed-in Image Height"],
-                      "description": lang["fieldTextDetectorScaleY"],
-                      "default": "",
-                      "example": "480",
-                      "possible": ""
-                   },
-                   {
-                       hidden: true,
-                      "name": "detail=detector_lock_timeout",
-                      "field": lang['Allow Next Trigger'],
-                      "description": lang["fieldTextDetectorLockTimeout"],
-                      "default": "2000",
-                      "example": "",
-                      "form-group-class": "h_det_input h_det_1",
-                      "possible": ""
                    },
                    {
                        hidden: true,
@@ -2806,6 +2729,49 @@ module.exports = function(s,config,lang){
                       ]
                    },
                    {
+                       isAdvanced: true,
+                      "name": "detail=use_detector_filters",
+                      "field": lang['Event Filters'],
+                      "description": lang.fieldTextEventFilters,
+                      "default": "0",
+                      "example": "",
+                      "selector": "h_det_fil",
+                      "fieldType": "select",
+                      "form-group-class-pre-layer": "h_det_input h_det_1",
+                      "possible": [
+                         {
+                            "name": lang.No,
+                            "value": "0"
+                         },
+                         {
+                            "name": lang.Yes,
+                            "value": "1"
+                         }
+                      ]
+                   },
+                   {
+                       isAdvanced: true,
+                      "name": "detail=use_detector_filters_object",
+                      "field": lang['Filter for Objects only'],
+                      "description": "",
+                      "default": "0",
+                      "example": "",
+                      "fieldType": "select",
+                      "form-group-class": "h_det_fil_input h_det_fil_1",
+                      "form-group-class-pre-layer": "h_det_input h_det_1",
+                      "possible": [
+                         {
+                            "name": lang.No,
+                            "value": "0"
+                         },
+                         {
+                            "name": lang.Yes,
+                            "value": "1"
+                         }
+                      ]
+                   },
+                   {
+                       isAdvanced: true,
                        hidden: true,
                       "name": "detail=detector_record_method",
                       "field": lang['How to Record'],
@@ -2817,11 +2783,11 @@ module.exports = function(s,config,lang){
                       "fieldType": "select",
                       "possible": [
                            {
-                              "name": lang['Traditional (Watch-Only, Includes Buffer)'],
+                              "name": lang['Event-Based Recording (For Watch-Only Mode)'],
                               "value": "sip"
                            },
                            {
-                              "name": lang['Delete Motionless Videos (Record)'],
+                              "name": lang['Delete Motionless Videos (For Record Mode)'],
                               "value": "del"
                            }
                         ]
@@ -2848,16 +2814,12 @@ module.exports = function(s,config,lang){
                       ]
                    },
                    {
-                       hidden: true,
-                      "name": "detail=detector_trigger_record_fps",
-                      "field": lang['Recording FPS Change on Start'],
-                      "description": "",
-                      "placeholder": lang['Blank for No Change'],
-                      "default": "",
-                      "example": "",
+                      "name": "detail=detector_buffer_seconds_before",
+                      "field": lang['Buffer Time from Event'],
+                      "description": lang["fieldTextBufferTimeFromEvent"],
+                      "default": "5",
                       "form-group-class": "h_det_input h_det_1",
-                      "form-group-class-pre-layer": "h_rec_mtd_input h_rec_mtd_hot h_rec_mtd_sip",
-                      "possible": ""
+                      "form-group-class-pre-layer": "h_rec_mtd_input h_rec_mtd_sip",
                    },
                    {
                        hidden: true,
@@ -2891,6 +2853,7 @@ module.exports = function(s,config,lang){
                       ]
                    },
                    {
+                       isAdvanced: true,
                        hidden: true,
                       "name": "detail=detector_delete_motionless_videos",
                       "field": lang['Delete Motionless Video'],
@@ -2910,6 +2873,122 @@ module.exports = function(s,config,lang){
                       ]
                    },
                    {
+                       isAdvanced: true,
+                      "name": "detail=detector_http_api",
+                      "field": lang["Allow API Trigger"],
+                      "description": lang["fieldTextDetectorHttpApi"],
+                      "default": "1",
+                      "example": "",
+                      "fieldType": "select",
+                      "possible": [
+                         {
+                            "name": `${lang.Always} (${lang.Default})`,
+                            "value": "1"
+                         },
+                         {
+                            "name": lang[`When Detector is On`],
+                            "value": "2"
+                         },
+                         {
+                            "name": lang[`When Detector is Off`],
+                            "value": "3"
+                         },
+                         {
+                            "name": lang.Never,
+                            "value": "0"
+                         }
+                      ]
+                   },
+                   {
+                       isAdvanced: true,
+                       hidden: true,
+                      "name": "detail=detector_send_frames",
+                      "field": lang["Send Frames"],
+                      "description": lang["fieldTextDetectorSendFrames"],
+                      "default": "0",
+                      "example": "",
+                      "selector": "h_det_fra",
+                      "form-group-class": "h_det_input h_det_1",
+                      "fieldType": "select",
+                      "possible": [
+                         {
+                            "name": lang.No,
+                            "value": "0"
+                         },
+                         {
+                            "name": lang.Yes,
+                            "value": "1"
+                         }
+                      ]
+                   },
+                   {
+                       isAdvanced: true,
+                       hidden: true,
+                       "form-group-class": "h_det_input h_det_1",
+                      "name": "detail=detector_fps",
+                      "field": lang["Detector Rate"],
+                      "description": lang["fieldTextDetectorFps"],
+                      "default": "2",
+                      "example": "",
+                      "possible": ""
+                   },
+                   {
+                       isAdvanced: true,
+                       hidden: true,
+                       "form-group-class": "h_det_input h_det_1",
+                      "name": "detail=detector_scale_x",
+                      "field": lang["Feed-in Image Width"],
+                      "description": lang["fieldTextDetectorScaleX"],
+                      "default": "",
+                      "example": "640",
+                      "possible": ""
+                   },
+                   {
+                       isAdvanced: true,
+                       hidden: true,
+                       "form-group-class": "h_det_input h_det_1",
+                      "name": "detail=detector_scale_y",
+                      "field": lang["Feed-in Image Height"],
+                      "description": lang["fieldTextDetectorScaleY"],
+                      "default": "",
+                      "example": "480",
+                      "possible": ""
+                   },
+                   {
+                       isAdvanced: true,
+                       hidden: true,
+                      "name": "detail=detector_lock_timeout",
+                      "field": lang['Allow Next Trigger'],
+                      "description": lang["fieldTextDetectorLockTimeout"],
+                      "default": "2000",
+                      "example": "",
+                      "form-group-class": "h_det_input h_det_1",
+                      "possible": ""
+                   },
+                   {
+                       isAdvanced: true,
+                      "name": "detail=detector_send_video_length",
+                      "field": lang["Notification Video Length"],
+                      "description": lang["fieldTextDetectorSendVideoLength"],
+                      "default": "10"
+                   },
+                   {
+                       isAdvanced: true,
+                      "name": "detail=snap_seconds_inward",
+                      "field": lang['Delay for Snapshot'],
+                      "description": lang[lang["fieldTextSnapSecondsInward"]],
+                      "default": "0"
+                   },
+                   {
+                       hidden: true,
+                      "name": "detail=cords",
+                   },
+                   {
+                       hidden: true,
+                      "name": "detail=detector_filters",
+                   },
+                   {
+                       isAdvanced: true,
                        hidden: true,
                       "name": "detail=det_multi_trig",
                       "field": lang['Trigger Camera Groups'],
@@ -2931,6 +3010,7 @@ module.exports = function(s,config,lang){
                       ]
                    },
                    {
+                       isAdvanced: true,
                        hidden: true,
                        id: "monSectionDetectorGroupMulti",
                       "name": lang['Trigger Camera Groups'],
@@ -2955,6 +3035,455 @@ module.exports = function(s,config,lang){
                           },
                       ],
                    },
+                   {
+                       hidden: true,
+                       "name": lang['Motion Detection'],
+                       "headerTitle": `${lang['Motion Detection']} <small>${lang['Primary Engine']} : <b class="h_det_pam_input h_det_pam_1">Pixel Array</b><span class="h_det_pam_input h_det_pam_0"><b class="shinobi-detector_name"></b> <b class="shinobi-detector-invert">${lang['Not Connected']}</b><b class="shinobi-detector" style="display:none">${lang['Connected']}</b></span></small>`,
+                       "color": "orange",
+                       id: "monSectionDetectorMotion",
+                       isSection: true,
+                       isAdvanced: true,
+                       isFormGroupGroup: true,
+                       "section-class": "h_det_input h_det_1",
+                       "info": [
+                           {
+                              "name": "detail=detector_pam",
+                              "field": lang["Use Built-In"],
+                              "description": lang["fieldTextDetectorPam"],
+                              "selector": "h_det_pam",
+                              "default": "0",
+                              "example": "",
+                              "fieldType": "select",
+                              "possible": [
+                                 {
+                                    "name": lang.No,
+                                    "value": "0"
+                                 },
+                                 {
+                                    "name": lang.Yes,
+                                    "value": "1"
+                                 }
+                              ]
+                           },
+                           // {
+                           //    "name": "detail=detector_show_matrix",
+                           //    "field": lang["Show Matrices"],
+                           //    "description": "Outline which pixels are detected as changed in one matrix.",
+                           //    "default": "0",
+                           //    "example": "",
+                           //    "fieldType": "select",
+                           //    "form-group-class": "h_det_pam_input h_det_pam_1",
+                           //    "possible": [
+                           //       {
+                           //          "name": lang.No,
+                           //          "value": "0"
+                           //       },
+                           //       {
+                           //          "name": lang.Yes,
+                           //          "value": "1"
+                           //       }
+                           //    ]
+                           // },
+                           {
+                              "name": "detail=detector_sensitivity",
+                              "field": lang['Minimum Change'],
+                              "description": "The motion confidence rating must exceed this value to be seen as a trigger. This number correlates directly to the confidence rating returned by the motion detector. This option was previously named \"Indifference\".",
+                              "default": "10",
+                              "example": "10",
+                              "possible": ""
+                           },
+                           {
+                              "name": "detail=detector_max_sensitivity",
+                              "field": lang["Maximum Change"],
+                              "description": "The motion confidence rating must be lower than this value to be seen as a trigger. Leave blank for no maximum. This option was previously named \"Max Indifference\".",
+                              "default": "",
+                              "example": "75",
+                              "possible": ""
+                           },
+                           {
+                               isAdvanced: true,
+                              "name": "detail=detector_threshold",
+                              "field": lang["Trigger Threshold"],
+                              "description": lang["fieldTextDetectorThreshold"],
+                              "default": "1",
+                              "example": "3",
+                              "possible": "Any non-negative integer."
+                           },
+                           {
+                               isAdvanced: true,
+                              "name": "detail=detector_color_threshold",
+                              "field": lang["Color Threshold"],
+                              "description": lang["fieldTextDetectorColorThreshold"],
+                              "default": "9",
+                              "example": "9",
+                              "possible": "Any non-negative integer."
+                           },
+                           {
+                               isAdvanced: true,
+                              "name": "detail=inverse_trigger",
+                              "field": lang["Inverse Trigger"],
+                              "description": lang["fieldTextInverseTrigger"],
+                              "default": "0",
+                              "example": "",
+                              "fieldType": "select",
+                              "possible": [
+                                 {
+                                    "name": lang.No,
+                                    "value": "0"
+                                 },
+                                 {
+                                    "name": lang.Yes,
+                                    "value": "1"
+                                 }
+                              ]
+                           },
+                           {
+                              "name": "detail=detector_frame",
+                              "field": lang["Full Frame Detection"],
+                              "description": lang["fieldTextDetectorFrame"],
+                              "default": "1",
+                              "example": "",
+                              "fieldType": "select",
+                              "possible": [
+                                 {
+                                    "name": lang.No,
+                                    "value": "0"
+                                 },
+                                 {
+                                    "name": lang.Yes,
+                                    "value": "1"
+                                 }
+                              ]
+                           },
+                           {
+                               isAdvanced: true,
+                              "name": "detail=detector_noise_filter",
+                              "field": lang['Noise Filter'],
+                              "description": lang["fieldTextDetectorNoiseFilter"],
+                              "default": "1",
+                              "example": "",
+                              "fieldType": "select",
+                              "possible": [
+                                 {
+                                    "name": lang.No,
+                                    "value": "0"
+                                 },
+                                 {
+                                    "name": lang.Yes,
+                                    "value": "1"
+                                 }
+                              ]
+                           },
+                           {
+                               isAdvanced: true,
+                              "name": "detail=detector_noise_filter_range",
+                              "field": lang["Noise Filter Range"],
+                              "description": lang["fieldTextDetectorNoiseFilterRange"],
+                              "default": "6",
+                              "example": "9",
+                              "possible": "Any non-negative integer."
+                           },
+                       ]
+                   },
+                   {
+                       isAdvanced: true,
+                      "name": lang['Object Detection'],
+                      "color": "orange",
+                      id: "monSectionDetectorObject",
+                      headerTitle: `${lang['Object Detection']} <small><b class="shinobi-detector_name"></b> <b class="shinobi-detector-invert">${lang['Not Connected']}</b><b class="shinobi-detector" style="display:none">${lang['Connected']}</b></small>`,
+                      isFormGroupGroup: true,
+                      isSection: true,
+                      "input-mapping": "detector_object",
+                      "section-class": "h_det_input h_det_1",
+                      "info": [
+                          {
+                             "name": "detail=detector_use_detect_object",
+                             "field": lang.Enabled,
+                             "description": lang["fieldTextDetectorUseDetectObject"],
+                             "default": "0",
+                             "example": "",
+                             "selector": "h_casc",
+                             "fieldType": "select",
+                             "possible": [
+                                {
+                                   "name": lang.No,
+                                   "value": "0"
+                                },
+                                {
+                                   "name": lang.Yes,
+                                   "value": "1"
+                                }
+                             ]
+                         },
+                         {
+                            "name": "detail=detector_send_frames_object",
+                            "field": lang["Send Frames"],
+                            "description": lang["fieldTextDetectorSendFramesObject"],
+                            "default": "0",
+                            "example": "",
+                            "fieldType": "select",
+                            "possible": [
+                               {
+                                  "name": lang.No,
+                                  "value": "0"
+                               },
+                               {
+                                  "name": lang.Yes,
+                                  "value": "1"
+                               }
+                            ]
+                         },
+                         {
+                             hidden: true,
+                            "name": "detail=detector_obj_count_in_region",
+                            "field": lang["Count Objects only inside Regions"],
+                            "description": lang["fieldTextDetectorObjCountInRegion"],
+                            "default": "0",
+                            "example": "",
+                            "form-group-class": "h_det_count_input h_det_count_1",
+                            "fieldType": "select",
+                            "possible": [
+                               {
+                                  "name": lang.No,
+                                  "value": "0"
+                               },
+                               {
+                                  "name": lang.Yes,
+                                  "value": "1"
+                               }
+                            ]
+                         },
+                         {
+                            "name": "detail=detector_obj_region",
+                            "field": lang['Require Object to be in Region'],
+                            "description": "",
+                            "default": "0",
+                            "example": "",
+                            "fieldType": "select",
+                            "possible": [
+                               {
+                                  "name": lang.No,
+                                  "value": "0"
+                               },
+                               {
+                                  "name": lang.Yes,
+                                  "value": "1"
+                               }
+                            ]
+                         },
+                         {
+                            "name": "detail=detector_use_motion",
+                            "field": lang['Check for Motion First'],
+                            "description": "",
+                            "default": "0",
+                            "example": "",
+                            "selector": "h_det_mot_fir",
+                            "fieldType": "select",
+                            "possible": [
+                               {
+                                  "name": lang.No,
+                                  "value": "0"
+                               },
+                               {
+                                  "name": lang.Yes,
+                                  "value": "1"
+                               }
+                            ]
+                        },
+                        {
+                            hidden: true,
+                           "name": "detail=detector_fps_object",
+                           "field": lang['Frame Rate'],
+                           "description": "",
+                           "default": "2",
+                           "example": "",
+                           "form-group-class": "h_casc_input h_casc_1",
+                           "possible": ""
+                        },
+                        {
+                            hidden: true,
+                           "name": "detail=detector_scale_x_object",
+                           "field": lang['Image Width'],
+                           "description": "",
+                           "default": "",
+                           "example": "",
+                           "form-group-class": "h_casc_input h_casc_1",
+                           "fieldType": "number",
+                           "numberMin": "1",
+                           "possible": ""
+                        },
+                        {
+                            hidden: true,
+                           "name": "detail=detector_scale_y_object",
+                           "field": lang['Image Height'],
+                           "description": "",
+                           "default": "",
+                           "example": "",
+                           "form-group-class": "h_casc_input h_casc_1",
+                           "fieldType": "number",
+                           "numberMin": "1",
+                           "possible": ""
+                        },
+                      ]
+                  },
+                   {
+                       hidden: true,
+                      "name": lang['Event-Based Recording'],
+                      "input-mapping": "detector_sip_buffer",
+                      "color": "orange",
+                      id: "monSectionDetectorTraditionalRecording",
+                      isSection: true,
+                      isFormGroupGroup: true,
+                      "section-class": "h_det_input h_det_1",
+                      "info": [
+                          {
+                             "name": "detail=detector_buffer_vcodec",
+                             "field": lang['HLS Video Encoder'],
+                             "description": "",
+                             "default": "0",
+                             "example": "",
+                             "selector": "h_buff",
+                             "fieldType": "select",
+                             "possible": [
+                                 {
+                                    "name": "Auto",
+                                    "value": "auto"
+                                 },
+                                 {
+                                    "name": "libx264",
+                                    "value": "libx264"
+                                 },
+                                 {
+                                    "name": "H.264 VA-API (Intel HW Accel)",
+                                    "value": "h264_vaapi"
+                                 },
+                                 {
+                                    "name": "H.265 VA-API (Intel HW Accel)",
+                                    "value": "hevc_vaapi"
+                                 },
+                                 {
+                                    "name": lang.copy,
+                                    "value": "copy"
+                                 }
+                              ]
+                          },
+                          {
+                             "name": "detail=detector_buffer_acodec",
+                             "field": lang['HLS Audio Encoder'],
+                             "description": "",
+                             "default": "0",
+                             "example": "",
+                             "fieldType": "select",
+                             "possible": [
+                                 {
+                                    "name": lang['No Audio'],
+                                    "value": "no"
+                                 },
+                                 {
+                                    "name": "Auto",
+                                    "value": "auto"
+                                 },
+                                 {
+                                    "name": "aac",
+                                    "value": "aac"
+                                 },
+                                 {
+                                    "name": "ac3",
+                                    "value": "ac3"
+                                 },
+                                 {
+                                    "name": "libmp3lame",
+                                    "value": "libmp3lame"
+                                 },
+                                 {
+                                    "name": lang.copy,
+                                    "value": "copy"
+                                 }
+                              ]
+                          },
+                          {
+                             "name": "detail=detector_buffer_fps",
+                             "field": lang['Frame Rate'],
+                             "description": "",
+                             "default": "30",
+                             "example": "",
+                             "form-group-class": "h_buff_input h_buff_libx264 h_buff_h264_vaapi h_buff_hevc_vaapi",
+                             "possible": ""
+                          },
+                          {
+                             "name": "detail=event_record_scale_x",
+                             "field": lang.Width,
+                             "description": lang["fieldTextEventRecordScaleX"],
+                             "default": "",
+                             "fieldType": "number",
+                             "numberMin": "1",
+                             "example": "640",
+                             "form-group-class": "h_buff_input h_buff_libx264 h_buff_h264_vaapi h_buff_hevc_vaapi",
+                             "possible": ""
+                          },
+                          {
+                             "name": "detail=event_record_scale_y",
+                             "field": lang.Height,
+                             "description": lang["fieldTextEventRecordScaleY"],
+                             "default": "",
+                             "fieldType": "number",
+                             "numberMin": "1",
+                             "example": "480",
+                             "form-group-class": "h_buff_input h_buff_libx264 h_buff_h264_vaapi h_buff_hevc_vaapi",
+                             "possible": ""
+                          },
+                          {
+                             "fieldType": "div",
+                             // style: `width:100%;background:#eceaea;border-radius:5px;color:#333;font-family:monospace`,
+                             divContent: `<pre><code id="monEditBufferPreview"></code></pre>`
+                          },
+                      ]
+                   },
+                   {
+                       hidden: true,
+                      "name": lang['Audio Detector'],
+                      "color": "orange",
+                      id: "monSectionAudioDetector",
+                      isSection: true,
+                      isFormGroupGroup: true,
+                      "section-class": "h_det_input h_det_1",
+                      "info": [
+                          {
+                             "name": "detail=detector_audio",
+                             "field": lang.Enabled,
+                             "description": lang["fieldTextDetectorAudio"],
+                             "default": "0",
+                             "example": "",
+                             "fieldType": "select",
+                             "possible": [
+                                {
+                                   "name": lang.No,
+                                   "value": "0"
+                                },
+                                {
+                                   "name": lang.Yes,
+                                   "value": "1"
+                                }
+                             ]
+                         },
+                         {
+                             "name": "detail=detector_audio_min_db",
+                             "field": lang['Minimum dB'],
+                             "description": "",
+                             "default": "5",
+                             "example": "",
+                             "possible": ""
+                          },
+                          {
+                             "name": "detail=detector_audio_max_db",
+                             "field": lang['Maximum dB'],
+                             "description": "",
+                             "default": "",
+                             "example": "",
+                             "possible": ""
+                          }
+                      ]
+                  },
                    {
                        hidden: true,
                        "name": lang['Webhook'],
@@ -3081,217 +3610,6 @@ module.exports = function(s,config,lang){
                               "form-group-class": "h_det_com_input h_det_com_1",
                               "form-group-class-pre-layer": "h_det_input h_det_1",
                               "possible": ""
-                           },
-                       ]
-                   },
-                   {
-                      "name": "detail=snap_seconds_inward",
-                      "field": lang['Delay for Snapshot'],
-                      "description": lang[lang["fieldTextSnapSecondsInward"]],
-                      "form-group-class": "h_det_input h_det_1",
-                      "default": "0",
-                   },
-                   {
-                      "name": "detail=use_detector_filters",
-                      "field": lang['Event Filters'],
-                      "description": "",
-                      "default": "0",
-                      "example": "",
-                      "selector": "h_det_fil",
-                      "fieldType": "select",
-                      "form-group-class-pre-layer": "h_det_input h_det_1",
-                      "possible": [
-                         {
-                            "name": lang.No,
-                            "value": "0"
-                         },
-                         {
-                            "name": lang.Yes,
-                            "value": "1"
-                         }
-                      ]
-                   },
-                   {
-                      "name": "detail=use_detector_filters_object",
-                      "field": lang['Filter for Objects only'],
-                      "description": "",
-                      "default": "0",
-                      "example": "",
-                      "fieldType": "select",
-                      "form-group-class": "h_det_fil_input h_det_fil_1",
-                      "form-group-class-pre-layer": "h_det_input h_det_1",
-                      "possible": [
-                         {
-                            "name": lang.No,
-                            "value": "0"
-                         },
-                         {
-                            "name": lang.Yes,
-                            "value": "1"
-                         }
-                      ]
-                   },
-                   {
-                       hidden: true,
-                      "name": "detail=cords",
-                   },
-                   {
-                       hidden: true,
-                      "name": "detail=detector_filters",
-                   },
-                   {
-                      "fieldType": "btn",
-                      "class": `btn-danger open-region-editor`,
-                      "btnContent": `<i class="fa fa-grav"></i> &nbsp; ${lang['Region Editor']}`,
-                      "description": "",
-                      "default": "",
-                      "example": "",
-                      "form-group-class-pre-pre-layer": "h_det_input h_det_1",
-                      "form-group-class-pre-layer": "form-group",
-                      "possible": ""
-                   },
-                   {
-                       hidden: true,
-                       "name": lang['Motion Detection'],
-                       "headerTitle": `${lang['Motion Detection']} <small>${lang['Primary Engine']} : <b class="h_det_pam_input h_det_pam_1">Pixel Array</b><span class="h_det_pam_input h_det_pam_0"><b class="shinobi-detector_name"></b> <b class="shinobi-detector-invert">${lang['Not Connected']}</b><b class="shinobi-detector" style="display:none">${lang['Connected']}</b></span></small>`,
-                       "color": "orange",
-                       id: "monSectionDetectorMotion",
-                       isSection: true,
-                       isAdvanced: true,
-                       isFormGroupGroup: true,
-                       "section-class": "h_det_input h_det_1",
-                       "info": [
-                           {
-                              "name": "detail=detector_pam",
-                              "field": lang["Use Built-In"],
-                              "description": lang["fieldTextDetectorPam"],
-                              "selector": "h_det_pam",
-                              "default": "0",
-                              "example": "",
-                              "fieldType": "select",
-                              "possible": [
-                                 {
-                                    "name": lang.No,
-                                    "value": "0"
-                                 },
-                                 {
-                                    "name": lang.Yes,
-                                    "value": "1"
-                                 }
-                              ]
-                           },
-                           // {
-                           //    "name": "detail=detector_show_matrix",
-                           //    "field": lang["Show Matrices"],
-                           //    "description": "Outline which pixels are detected as changed in one matrix.",
-                           //    "default": "0",
-                           //    "example": "",
-                           //    "fieldType": "select",
-                           //    "form-group-class": "h_det_pam_input h_det_pam_1",
-                           //    "possible": [
-                           //       {
-                           //          "name": lang.No,
-                           //          "value": "0"
-                           //       },
-                           //       {
-                           //          "name": lang.Yes,
-                           //          "value": "1"
-                           //       }
-                           //    ]
-                           // },
-                           {
-                              "name": "detail=detector_sensitivity",
-                              "field": lang['Minimum Change'],
-                              "description": "The motion confidence rating must exceed this value to be seen as a trigger. This number correlates directly to the confidence rating returned by the motion detector. This option was previously named \"Indifference\".",
-                              "default": "10",
-                              "example": "10",
-                              "possible": ""
-                           },
-                           {
-                              "name": "detail=detector_max_sensitivity",
-                              "field": lang["Maximum Change"],
-                              "description": "The motion confidence rating must be lower than this value to be seen as a trigger. Leave blank for no maximum. This option was previously named \"Max Indifference\".",
-                              "default": "",
-                              "example": "75",
-                              "possible": ""
-                           },
-                           {
-                              "name": "detail=detector_threshold",
-                              "field": lang["Trigger Threshold"],
-                              "description": lang["fieldTextDetectorThreshold"],
-                              "default": "1",
-                              "example": "3",
-                              "possible": "Any non-negative integer."
-                           },
-                           {
-                              "name": "detail=detector_color_threshold",
-                              "field": lang["Color Threshold"],
-                              "description": lang["fieldTextDetectorColorThreshold"],
-                              "default": "9",
-                              "example": "9",
-                              "possible": "Any non-negative integer."
-                           },
-                           {
-                              "name": "detail=inverse_trigger",
-                              "field": lang["Inverse Trigger"],
-                              "description": lang["fieldTextInverseTrigger"],
-                              "default": "0",
-                              "example": "",
-                              "fieldType": "select",
-                              "possible": [
-                                 {
-                                    "name": lang.No,
-                                    "value": "0"
-                                 },
-                                 {
-                                    "name": lang.Yes,
-                                    "value": "1"
-                                 }
-                              ]
-                           },
-                           {
-                              "name": "detail=detector_frame",
-                              "field": lang["Full Frame Detection"],
-                              "description": lang["fieldTextDetectorFrame"],
-                              "default": "1",
-                              "example": "",
-                              "fieldType": "select",
-                              "possible": [
-                                 {
-                                    "name": lang.No,
-                                    "value": "0"
-                                 },
-                                 {
-                                    "name": lang.Yes,
-                                    "value": "1"
-                                 }
-                              ]
-                           },
-                           {
-                              "name": "detail=detector_noise_filter",
-                              "field": lang['Noise Filter'],
-                              "description": lang["fieldTextDetectorNoiseFilter"],
-                              "default": "1",
-                              "example": "",
-                              "fieldType": "select",
-                              "possible": [
-                                 {
-                                    "name": lang.No,
-                                    "value": "0"
-                                 },
-                                 {
-                                    "name": lang.Yes,
-                                    "value": "1"
-                                 }
-                              ]
-                           },
-                           {
-                              "name": "detail=detector_noise_filter_range",
-                              "field": lang["Noise Filter Range"],
-                              "description": lang["fieldTextDetectorNoiseFilterRange"],
-                              "default": "6",
-                              "example": "9",
-                              "possible": "Any non-negative integer."
                            },
                        ]
                    },
@@ -3438,390 +3756,6 @@ module.exports = function(s,config,lang){
                            "form-group-class": "h_det_com_notrig_input h_det_com_notrig_1",
                            "possible": ""
                         },
-                      ]
-                   },
-                   {
-                       hidden: true,
-                      "name": lang['Audio Detector'],
-                      "color": "orange",
-                      id: "monSectionAudioDetector",
-                      isSection: true,
-                      isAdvanced: true,
-                      isFormGroupGroup: true,
-                      "section-class": "h_det_input h_det_1",
-                      "info": [
-                          {
-                             "name": "detail=detector_audio",
-                             "field": lang.Enabled,
-                             "description": lang["fieldTextDetectorAudio"],
-                             "default": "0",
-                             "example": "",
-                             "fieldType": "select",
-                             "possible": [
-                                {
-                                   "name": lang.No,
-                                   "value": "0"
-                                },
-                                {
-                                   "name": lang.Yes,
-                                   "value": "1"
-                                }
-                             ]
-                         },
-                         {
-                             "name": "detail=detector_audio_min_db",
-                             "field": lang['Minimum dB'],
-                             "description": "",
-                             "default": "5",
-                             "example": "",
-                             "possible": ""
-                          },
-                          {
-                             "name": "detail=detector_audio_max_db",
-                             "field": lang['Maximum dB'],
-                             "description": "",
-                             "default": "",
-                             "example": "",
-                             "possible": ""
-                          }
-                      ]
-                  },
-                   {
-                      "name": lang['Object Detection'],
-                      "color": "orange",
-                      id: "monSectionDetectorObject",
-                      headerTitle: `${lang['Object Detection']} <small><b class="shinobi-detector_name"></b> <b class="shinobi-detector-invert">${lang['Not Connected']}</b><b class="shinobi-detector" style="display:none">${lang['Connected']}</b></small>`,
-                      isFormGroupGroup: true,
-                      isSection: true,
-                      "input-mapping": "detector_object",
-                      "section-class": "h_det_input h_det_1",
-                      "info": [
-                          {
-                             "name": "detail=detector_use_detect_object",
-                             "field": lang.Enabled,
-                             "description": lang["fieldTextDetectorUseDetectObject"],
-                             "default": "0",
-                             "example": "",
-                             "selector": "h_casc",
-                             "fieldType": "select",
-                             "possible": [
-                                {
-                                   "name": lang.No,
-                                   "value": "0"
-                                },
-                                {
-                                   "name": lang.Yes,
-                                   "value": "1"
-                                }
-                             ]
-                         },
-                         {
-                            "name": "detail=detector_send_frames_object",
-                            "field": lang["Send Frames"],
-                            "description": lang["fieldTextDetectorSendFramesObject"],
-                            "default": "0",
-                            "example": "",
-                            "fieldType": "select",
-                            "possible": [
-                               {
-                                  "name": lang.No,
-                                  "value": "0"
-                               },
-                               {
-                                  "name": lang.Yes,
-                                  "value": "1"
-                               }
-                            ]
-                         },
-                         {
-                             hidden: true,
-                            "name": "detail=detector_obj_count_in_region",
-                            "field": lang["Count Objects only inside Regions"],
-                            "description": lang["fieldTextDetectorObjCountInRegion"],
-                            "default": "0",
-                            "example": "",
-                            "form-group-class": "h_det_count_input h_det_count_1",
-                            "fieldType": "select",
-                            "possible": [
-                               {
-                                  "name": lang.No,
-                                  "value": "0"
-                               },
-                               {
-                                  "name": lang.Yes,
-                                  "value": "1"
-                               }
-                            ]
-                         },
-                         {
-                            "name": "detail=detector_obj_region",
-                            "field": lang['Require Object to be in Region'],
-                            "description": "",
-                            "default": "0",
-                            "example": "",
-                            "fieldType": "select",
-                            "possible": [
-                               {
-                                  "name": lang.No,
-                                  "value": "0"
-                               },
-                               {
-                                  "name": lang.Yes,
-                                  "value": "1"
-                               }
-                            ]
-                         },
-                         {
-                            "name": "detail=detector_use_motion",
-                            "field": lang['Check for Motion First'],
-                            "description": "",
-                            "default": "0",
-                            "example": "",
-                            "selector": "h_det_mot_fir",
-                            "fieldType": "select",
-                            "possible": [
-                               {
-                                  "name": lang.No,
-                                  "value": "0"
-                               },
-                               {
-                                  "name": lang.Yes,
-                                  "value": "1"
-                               }
-                            ]
-                        },
-                        {
-                            hidden: true,
-                           "name": "detail=detector_fps_object",
-                           "field": lang['Frame Rate'],
-                           "description": "",
-                           "default": "2",
-                           "example": "",
-                           "form-group-class": "h_casc_input h_casc_1",
-                           "possible": ""
-                        },
-                        {
-                            hidden: true,
-                           "name": "detail=detector_scale_x_object",
-                           "field": lang['Image Width'],
-                           "description": "",
-                           "default": "",
-                           "example": "",
-                           "form-group-class": "h_casc_input h_casc_1",
-                           "fieldType": "number",
-                           "numberMin": "1",
-                           "possible": ""
-                        },
-                        {
-                            hidden: true,
-                           "name": "detail=detector_scale_y_object",
-                           "field": lang['Image Height'],
-                           "description": "",
-                           "default": "",
-                           "example": "",
-                           "form-group-class": "h_casc_input h_casc_1",
-                           "fieldType": "number",
-                           "numberMin": "1",
-                           "possible": ""
-                        },
-                      ]
-                  },
-                   {
-                      hidden: true,
-                     "name": lang['License Plate Detector'],
-                     "color": "orange",
-                     id: "monSectionLisencePlateDetector",
-                     headerTitle: `${lang['Object Detection']} <small>${lang['Plugin']} : <b class="shinobi-detector_name"></b> <b class="shinobi-detector-invert">${lang['Not Connected']}</b><b class="shinobi-detector" style="display:none">${lang['Connected']}</b></small>`,
-                     isSection: true,
-                     isAdvanced: true,
-                     isFormGroupGroup: true,
-                     "section-pre-pre-class": "h_det_input h_det_1",
-                     "section-pre-class": "h_casc_input h_casc_1",
-                     "section-class": "shinobi-detector-opencv shinobi-detector-openalpr shinobi-detector_plug",
-                     "info": [
-                         {
-                            "name": "detail=detector_lisence_plate",
-                            "field": lang.Enabled,
-                            "description": lang["fieldTextDetectorLisencePlate"],
-                            "default": "0",
-                            "example": "",
-                            "fieldType": "select",
-                            "possible": [
-                               {
-                                  "name": lang.No,
-                                  "value": "0"
-                               },
-                               {
-                                  "name": lang.Yes,
-                                  "value": "1"
-                               }
-                            ]
-                         },
-                         {
-                            "name": "detail=detector_lisence_plate_country",
-                            "field": lang['Country of Plates'],
-                            "description": lang["fieldTextDetectorLisencePlateCountry"],
-                            "default": "0",
-                            "example": "",
-                            "fieldType": "select",
-                            "possible": [
-                                 {
-                                    "name": "US",
-                                    "value": "us"
-                                 },
-                                 {
-                                    "name": "EU",
-                                    "value": "eu"
-                                 }
-                              ]
-                          },
-                      ]
-                   },
-                   {
-                       hidden: true,
-                      "name": lang['Traditional Recording'],
-                      "input-mapping": "detector_sip_buffer",
-                      "color": "orange",
-                      id: "monSectionDetectorTraditionalRecording",
-                      isSection: true,
-                      isAdvanced: true,
-                      isFormGroupGroup: true,
-                      "section-class": "h_det_input h_det_1",
-                      "info": [
-                          {
-                             "name": "detail=detector_buffer_seconds_before",
-                             "field": lang['Buffer Time from Event'],
-                             "description": lang["fieldTextBufferTimeFromEvent"],
-                             "default": "5",
-                          },
-                          {
-                             "name": "detail=detector_buffer_vcodec",
-                             "field": lang['HLS Video Encoder'],
-                             "description": "",
-                             "default": "0",
-                             "example": "",
-                             "selector": "h_buff",
-                             "fieldType": "select",
-                             "possible": [
-                                 {
-                                    "name": "Auto",
-                                    "value": "auto"
-                                 },
-                                 {
-                                    "name": "libx264",
-                                    "value": "libx264"
-                                 },
-                                 {
-                                    "name": "H.264 VA-API (Intel HW Accel)",
-                                    "value": "h264_vaapi"
-                                 },
-                                 {
-                                    "name": "H.265 VA-API (Intel HW Accel)",
-                                    "value": "hevc_vaapi"
-                                 },
-                                 {
-                                    "name": lang.copy,
-                                    "value": "copy"
-                                 }
-                              ]
-                          },
-                          {
-                             "name": "detail=detector_buffer_acodec",
-                             "field": lang['HLS Audio Encoder'],
-                             "description": "",
-                             "default": "0",
-                             "example": "",
-                             "fieldType": "select",
-                             "possible": [
-                                 {
-                                    "name": lang['No Audio'],
-                                    "value": "no"
-                                 },
-                                 {
-                                    "name": "Auto",
-                                    "value": "auto"
-                                 },
-                                 {
-                                    "name": "aac",
-                                    "value": "aac"
-                                 },
-                                 {
-                                    "name": "ac3",
-                                    "value": "ac3"
-                                 },
-                                 {
-                                    "name": "libmp3lame",
-                                    "value": "libmp3lame"
-                                 },
-                                 {
-                                    "name": lang.copy,
-                                    "value": "copy"
-                                 }
-                              ]
-                          },
-                          {
-                             "name": "detail=detector_buffer_fps",
-                             "field": lang['Frame Rate'],
-                             "description": "",
-                             "default": "30",
-                             "example": "",
-                             "form-group-class": "h_buff_input h_buff_libx264 h_buff_h264_vaapi h_buff_hevc_vaapi",
-                             "possible": ""
-                          },
-                          {
-                             "name": "detail=event_record_scale_x",
-                             "field": lang.Width,
-                             "description": lang["fieldTextEventRecordScaleX"],
-                             "default": "",
-                             "fieldType": "number",
-                             "numberMin": "1",
-                             "example": "640",
-                             "form-group-class": "h_buff_input h_buff_libx264 h_buff_h264_vaapi h_buff_hevc_vaapi",
-                             "possible": ""
-                          },
-                          {
-                             "name": "detail=event_record_scale_y",
-                             "field": lang.Height,
-                             "description": lang["fieldTextEventRecordScaleY"],
-                             "default": "",
-                             "fieldType": "number",
-                             "numberMin": "1",
-                             "example": "480",
-                             "form-group-class": "h_buff_input h_buff_libx264 h_buff_h264_vaapi h_buff_hevc_vaapi",
-                             "possible": ""
-                          },
-                          {
-                             "name": "detail=detector_buffer_hls_time",
-                             "field": lang['HLS Segment Length'],
-                             "description": lang["fieldTextDetectorBufferHlsTime"],
-                             "default": "2",
-                             "example": "",
-                             "possible": ""
-                          },
-                          {
-                             "name": "detail=detector_buffer_start_number",
-                             "field": lang['HLS Start Number'],
-                             "description": "",
-                             "default": "0",
-                             "example": "",
-                             "form-group-class": "h_buff_input h_buff_libx264 h_buff_h264_vaapi h_buff_hevc_vaapi",
-                             "possible": ""
-                          },
-                          {
-                             "name": "detail=detector_buffer_live_start_index",
-                             "field": lang['HLS Live Start Index'],
-                             "description": "",
-                             "default": "-3",
-                             "example": "",
-                             "form-group-class": "h_buff_input h_buff_libx264 h_buff_h264_vaapi h_buff_hevc_vaapi",
-                             "possible": ""
-                          },
-                          {
-                             "field": lang['Buffer Preview'],
-                             "fieldType": "div",
-                             // style: `width:100%;background:#eceaea;border-radius:5px;color:#333;font-family:monospace`,
-                             divContent: `<pre><code id="monEditBufferPreview"></code></pre>`
-                          },
                       ]
                    },
                 ]
@@ -4494,16 +4428,7 @@ module.exports = function(s,config,lang){
                             "value": "1"
                          }
                       ]
-                   },
-                   {
-                       hidden: true,
-                      "name": "detail=detector_send_video_length",
-                      "field": lang["Notification Video Length"],
-                      "description": lang["fieldTextDetectorSendVideoLength"],
-                      "default": "10",
-                      "example": "",
-                      "possible": ""
-                   },
+                   }
                ]
              },
              "Logging": {

@@ -1149,10 +1149,6 @@ module.exports = function(s,config,lang,app,io){
                             }
                             r.mode=req.params.f;
                             try{r.details=JSON.parse(r.details);}catch(er){}
-                            if(req.query.fps){
-                                r.fps=parseFloat(r.details.detector_trigger_record_fps)
-                                s.group[r.ke].activeMonitors[r.mid].currentState.detector_trigger_record_fps=r.fps
-                            }
                             r.id=r.mid;
                             s.knexQuery({
                                 action: "update",

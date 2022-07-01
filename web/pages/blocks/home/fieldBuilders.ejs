@@ -263,10 +263,13 @@ drawBlock = function(monitorSettings){
          }
           if(field['form-group-class-pre-pre-layer']){ %>
          <div class="<%- field['form-group-class-pre-pre-layer'] %>">
-         <% }
+         <% };
           if(field['form-group-class-pre-layer']){ %>
          <div class="<%- field['form-group-class-pre-layer'] %>">
-         <% }
+         <% };
+          if(field['isAdvanced']){ %>
+              <div class="h_us_input h_us_advanced" style="display:none">
+         <% };
          if(
            fieldType === 'ul' ||
            fieldType ===  'div' ||
@@ -305,13 +308,16 @@ drawBlock = function(monitorSettings){
                  <div><%- fieldElement %></div>
              </div>
          <% }
-           }
-           if(field['form-group-class-pre-layer']){ %>
-          </div>
-          <% }
-           if(field['form-group-class-pre-pre-layer']){ %>
-          </div>
-          <% }
+         if(field['isAdvanced']){ %>
+        </div>
+        <% };
+         if(field['form-group-class-pre-layer']){ %>
+        </div>
+        <% };
+         if(field['form-group-class-pre-pre-layer']){ %>
+        </div>
+        <% };
+     };
        }
         monitorSettings.info.forEach(drawInfoItem)
     }
