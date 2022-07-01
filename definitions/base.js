@@ -772,6 +772,7 @@ module.exports = function(s,config,lang){
                         ]
                    },
                    {
+                       isAdvanced: true,
                        hidden:true,
                        "name": "detail=stream_flv_type",
                        "field": lang["Connection Type"],
@@ -792,6 +793,7 @@ module.exports = function(s,config,lang){
                        ]
                    },
                    {
+                       isAdvanced: true,
                        hidden:true,
                       "name": "detail=stream_flv_maxLatency",
                       "field": lang["Max Latency"],
@@ -803,6 +805,7 @@ module.exports = function(s,config,lang){
                       "possible": ""
                    },
                    {
+                       isAdvanced: true,
                        hidden:true,
                       "name": "detail=stream_mjpeg_clients",
                       "field": lang["# of Allow MJPEG Clients"],
@@ -945,31 +948,28 @@ module.exports = function(s,config,lang){
                       ]
                    },
                    {
+                       isAdvanced: true,
                       "name": "detail=hls_time",
                       "field": "HLS Segment Length",
                       "description": lang["fieldTextHlsTime"],
                       "default": "2",
-                      "example": "",
                       "form-group-class": "h_st_input h_st_hls",
-                      "possible": ""
                    },
                    {
+                       isAdvanced: true,
                       "name": "detail=hls_list_size",
                       "field": "HLS List Size",
                       "description": lang["fieldTextHlsListSize"],
                       "default": "2",
-                      "example": "",
                       "form-group-class": "h_st_input h_st_hls",
-                      "possible": ""
                    },
                    {
+                       isAdvanced: true,
                       "name": "detail=preset_stream",
                       "field": "HLS Preset",
                       "description": lang["fieldTextPresetStream"],
-                      "default": "",
                       "example": "ultrafast",
                       "form-group-class": "h_st_input h_st_hls h_st_flv h_st_mp4",
-                      "possible": ""
                    },
                    {
                       "name": "detail=stream_quality",
@@ -1047,6 +1047,7 @@ module.exports = function(s,config,lang){
                         ]
                    },
                    {
+                       isAdvanced: true,
                       "name": "detail=signal_check",
                       "field": lang["Check Signal Interval"],
                       "description": lang["fieldTextSignalCheck"],
@@ -1055,6 +1056,7 @@ module.exports = function(s,config,lang){
                       "possible": ""
                    },
                    {
+                       isAdvanced: true,
                       "name": "detail=signal_check_log",
                       "field": lang["Log Signal Event"],
                       "description": lang["fieldTextSignalCheckLog"],
@@ -1073,6 +1075,7 @@ module.exports = function(s,config,lang){
                       ]
                    },
                    {
+                       isAdvanced: true,
                       "name": "detail=stream_vf",
                       "field": lang["Video Filter"],
                       "description": lang["fieldTextStreamVf"],
@@ -1082,6 +1085,7 @@ module.exports = function(s,config,lang){
                       "possible": ""
                    },
                    {
+                       isAdvanced: true,
                       "name": "detail=tv_channel",
                       "field": lang["TV Channel"],
                       "description": lang["fieldTextTvChannel"],
@@ -1101,6 +1105,7 @@ module.exports = function(s,config,lang){
                       ]
                    },
                    {
+                       isAdvanced: true,
                       "name": "detail=tv_channel_id",
                       "field": lang["TV Channel ID"],
                       "description": lang["fieldTextTvChannelId"],
@@ -1110,6 +1115,7 @@ module.exports = function(s,config,lang){
                       "possible": ""
                    },
                    {
+                       isAdvanced: true,
                       "name": "detail=tv_channel_group_title",
                       "field": lang["TV Channel Group"],
                       "description": lang["fieldTextTvChannelGroupTitle"],
@@ -2070,6 +2076,7 @@ module.exports = function(s,config,lang){
                       "possible": "1-23"
                    },
                    {
+                       isAdvanced: true,
                       "name": "detail=preset_record",
                       "field": lang.Preset,
                       "description": lang["fieldTextPresetRecord"],
@@ -2207,6 +2214,7 @@ module.exports = function(s,config,lang){
                         ]
                    },
                    {
+                       isAdvanced: true,
                       "name": "detail=vf",
                       "field": lang['Record Video Filter'],
                       "description": lang["fieldTextVf"],
@@ -2570,101 +2578,6 @@ module.exports = function(s,config,lang){
                            }
                         ]
                    },
-                ]
-             },
-             "Custom": {
-                "name": lang.Custom,
-                "color": "navy",
-                "isSection": true,
-                isAdvanced: true,
-                "id": "monSectionCustom",
-                "info": [
-                   {
-                      "name": "detail=cust_input",
-                      "field": lang['Input Flags'],
-                      "description": lang["fieldTextCustInput"],
-                      "default": "",
-                      "example": "",
-                      "possible": ""
-                   },
-                   // {
-                   //     hidden: true,
-                   //    "name": "detail=cust_rtmp",
-                   //    "field": lang['RTMP Stream Flags'],
-                   //    "description": "Custom Flags that bind to the RTMP stream.",
-                   //    "default": "",
-                   //    "example": "",
-                   //    "form-group-class": "h_rtmp_input h_rtmp_1",
-                   //    "possible": ""
-                   // },
-                   {
-                      "name": "detail=cust_stream",
-                      "field": lang["Stream Flags"],
-                      "description": lang["fieldTextCustStream"],
-                      "default": "",
-                      "example": "",
-                      "form-group-class": "",
-                      "possible": ""
-                   },
-                   {
-                       hidden: true,
-                      "name": "detail=cust_snap",
-                      "field": "Snapshot Flags",
-                      "description": lang["fieldTextCustSnap"],
-                      "default": "",
-                      "example": "",
-                      "form-group-class": "h_sn_input h_sn_1",
-                      "possible": ""
-                   },
-                   {
-                       hidden: true,
-                      "name": "detail=cust_record",
-                      "field": lang["Recording Flags"],
-                      "description": lang["fieldTextCustRecord"],
-                      "default": "",
-                      "example": "",
-                      "form-group-class": "h_m_input h_m_record",
-                      "possible": ""
-                   },
-                   {
-                       hidden: true,
-                      "name": "detail=cust_detect",
-                      "field": lang["Detector Flags"],
-                      "description": lang["fieldTextCustDetect"],
-                      "default": "",
-                      "example": "",
-                      "form-group-class": "shinobi-detector",
-                      "possible": ""
-                   },
-                   {
-                       hidden: true,
-                      "name": "detail=cust_detect_object",
-                      "field": lang["Object Detector Flags"],
-                      "description": lang["fieldTextCustDetectObject"],
-                      "default": "",
-                      "example": "",
-                      "form-group-class": "shinobi-detector",
-                      "possible": ""
-                   },
-                   {
-                       hidden: true,
-                      "name": "detail=cust_sip_record",
-                      "field": lang['Event-Based Recording Flags'],
-                      "description": lang["fieldTextCustSipRecord"],
-                      "default": "",
-                      "example": "",
-                      "form-group-class": "h_rec_mtd_input h_rec_mtd_sip",
-                      "possible": ""
-                   },
-                   {
-                      "name": "detail=custom_output",
-                      "field": "Output Method",
-                      "description": lang["fieldTextCustomOutput"],
-                      "default": "",
-                      "example": "",
-                      "form-group-class": "",
-                      "possible": ""
-                   }
                 ]
              },
              "Detector": {
@@ -3042,7 +2955,6 @@ module.exports = function(s,config,lang){
                        "color": "orange",
                        id: "monSectionDetectorMotion",
                        isSection: true,
-                       isAdvanced: true,
                        isFormGroupGroup: true,
                        "section-class": "h_det_input h_det_1",
                        "info": [
@@ -3327,6 +3239,7 @@ module.exports = function(s,config,lang){
                       ]
                   },
                    {
+                       isAdvanced: true,
                        hidden: true,
                       "name": lang['Event-Based Recording'],
                       "input-mapping": "detector_sip_buffer",
@@ -3786,6 +3699,7 @@ module.exports = function(s,config,lang){
                        ]
                     },
                     {
+                        isAdvanced: true,
                        "name": "detail=control_base_url",
                        "field": lang['Custom Base URL'],
                        "description": "",
@@ -3822,6 +3736,7 @@ module.exports = function(s,config,lang){
                         ]
                     },
                     {
+                        isAdvanced: true,
                        "name": "detail=control_digest_auth",
                        "field": lang['Digest Authentication'],
                        "description": "",
@@ -3898,6 +3813,7 @@ module.exports = function(s,config,lang){
                        ]
                     },
                     {
+                        isAdvanced: true,
                        "name": "detail=detector_ptz_follow_target",
                        "field": lang['PTZ Tracking Target'],
                        "description": "",
@@ -3906,25 +3822,25 @@ module.exports = function(s,config,lang){
                        "form-group-class": "h_det_tracking_input h_det_tracking_1",
                        "possible": ""
                     },
-                    {
-                       "name": "detail=detector_obj_count",
-                       "field": lang["Count Objects"],
-                       "description": lang["fieldTextDetectorObjCount"],
-                       "default": "0",
-                       "example": "",
-                       "selector": "h_det_count",
-                       "fieldType": "select",
-                       "possible": [
-                          {
-                             "name": lang.No,
-                             "value": "0"
-                          },
-                          {
-                             "name": lang.Yes,
-                             "value": "1"
-                          }
-                       ]
-                    },
+                    // {
+                    //    "name": "detail=detector_obj_count",
+                    //    "field": lang["Count Objects"],
+                    //    "description": lang["fieldTextDetectorObjCount"],
+                    //    "default": "0",
+                    //    "example": "",
+                    //    "selector": "h_det_count",
+                    //    "fieldType": "select",
+                    //    "possible": [
+                    //       {
+                    //          "name": lang.No,
+                    //          "value": "0"
+                    //       },
+                    //       {
+                    //          "name": lang.Yes,
+                    //          "value": "1"
+                    //       }
+                    //    ]
+                    // },
                     {
                        "name": "detail=control_url_center",
                        "field": lang['Center'],
@@ -4067,6 +3983,7 @@ module.exports = function(s,config,lang){
                        "possible": ""
                     },
                     {
+                        isAdvanced: true,
                        "name": "detail=control_invert_y",
                        "field": lang["Invert Y-Axis"],
                        "description": lang["fieldTextControlInvertY"],
@@ -4431,11 +4348,105 @@ module.exports = function(s,config,lang){
                    }
                ]
              },
+             "Custom": {
+                "name": lang.Custom,
+                "color": "navy",
+                "isSection": true,
+                isAdvanced: true,
+                "id": "monSectionCustom",
+                "info": [
+                   {
+                      "name": "detail=cust_input",
+                      "field": lang['Input Flags'],
+                      "description": lang["fieldTextCustInput"],
+                      "default": "",
+                      "example": "",
+                      "possible": ""
+                   },
+                   // {
+                   //     hidden: true,
+                   //    "name": "detail=cust_rtmp",
+                   //    "field": lang['RTMP Stream Flags'],
+                   //    "description": "Custom Flags that bind to the RTMP stream.",
+                   //    "default": "",
+                   //    "example": "",
+                   //    "form-group-class": "h_rtmp_input h_rtmp_1",
+                   //    "possible": ""
+                   // },
+                   {
+                      "name": "detail=cust_stream",
+                      "field": lang["Stream Flags"],
+                      "description": lang["fieldTextCustStream"],
+                      "default": "",
+                      "example": "",
+                      "form-group-class": "",
+                      "possible": ""
+                   },
+                   {
+                       hidden: true,
+                      "name": "detail=cust_snap",
+                      "field": "Snapshot Flags",
+                      "description": lang["fieldTextCustSnap"],
+                      "default": "",
+                      "example": "",
+                      "form-group-class": "h_sn_input h_sn_1",
+                      "possible": ""
+                   },
+                   {
+                       hidden: true,
+                      "name": "detail=cust_record",
+                      "field": lang["Recording Flags"],
+                      "description": lang["fieldTextCustRecord"],
+                      "default": "",
+                      "example": "",
+                      "form-group-class": "h_m_input h_m_record",
+                      "possible": ""
+                   },
+                   {
+                       hidden: true,
+                      "name": "detail=cust_detect",
+                      "field": lang["Detector Flags"],
+                      "description": lang["fieldTextCustDetect"],
+                      "default": "",
+                      "example": "",
+                      "form-group-class": "shinobi-detector",
+                      "possible": ""
+                   },
+                   {
+                       hidden: true,
+                      "name": "detail=cust_detect_object",
+                      "field": lang["Object Detector Flags"],
+                      "description": lang["fieldTextCustDetectObject"],
+                      "default": "",
+                      "example": "",
+                      "form-group-class": "shinobi-detector",
+                      "possible": ""
+                   },
+                   {
+                       hidden: true,
+                      "name": "detail=cust_sip_record",
+                      "field": lang['Event-Based Recording Flags'],
+                      "description": lang["fieldTextCustSipRecord"],
+                      "default": "",
+                      "example": "",
+                      "form-group-class": "h_rec_mtd_input h_rec_mtd_sip",
+                      "possible": ""
+                   },
+                   {
+                      "name": "detail=custom_output",
+                      "field": "Output Method",
+                      "description": lang["fieldTextCustomOutput"],
+                      "default": "",
+                      "example": "",
+                      "form-group-class": "",
+                      "possible": ""
+                   }
+                ]
+             },
              "Logging": {
                 "name": lang.Logging,
                 "color": "green",
                 id: "monSectionLogging",
-                isAdvanced: true,
                 isSection: true,
                 "info": [
                    {
