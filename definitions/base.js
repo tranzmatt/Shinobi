@@ -3691,7 +3691,7 @@ module.exports = function(s,config,lang){
                           {
                              "name": "detail=detector_buffer_seconds_before",
                              "field": lang['Buffer Time from Event'],
-                             "description": lang["fieldTextBuffetTimeFromEvent"],
+                             "description": lang["fieldTextBufferTimeFromEvent"],
                              "default": "5",
                           },
                           {
