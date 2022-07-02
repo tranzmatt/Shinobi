@@ -503,12 +503,14 @@ onWebSocketEvent(function(d){
 })
 $(document).ready(function(){
     $('body')
-    .on('click','.open-video',function(){
+    .on('click','.open-video',function(e){
+        e.preventDefault()
         var el = $(this).parents('[data-mid]')
         var monitorId = el.attr('data-mid')
         var videoTime = el.attr('data-time')
         var video = loadedVideosInMemory[`${monitorId}${videoTime}`]
         createVideoPlayerTab(video)
+        return false;
     })
     .on('click','[video-time-seeked-video-position]',function(){
         var el = $(this)

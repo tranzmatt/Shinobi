@@ -98,6 +98,7 @@ $(document).ready(function(e){
                     <div class="row-info" data-mid="${file.mid}" data-ke="${file.ke}" data-time="${file.time}" data-filename="${file.filename}">
                         <a class="btn btn-sm btn-primary" href="${file.href}" download title="${lang.Download}"><i class="fa fa-download"></i></a>
                         <a class="btn btn-sm btn-primary preview-video" href="${file.href}" title="${lang.Play}"><i class="fa fa-play"></i></a>
+                        <a class="btn btn-sm btn-default open-video" href="${file.href}" title="${lang.Play}"><i class="fa fa-play"></i></a>
                         <a class="btn btn-sm btn-danger delete-video" href="${file.href}" title="${lang.Delete}"><i class="fa fa-trash-o"></i></a>
                     </div>
                     `,
