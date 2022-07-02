@@ -1833,6 +1833,7 @@ module.exports = function(s,config,lang){
                                 ]
                            },
                            {
+                               isAdvanced: true,
                               "name": "detail-substream-output=svf",
                               "field": lang["Video Filter"],
                               "description": lang["fieldTextDetailSubstreamOutputSvf"],
@@ -1905,6 +1906,7 @@ module.exports = function(s,config,lang){
                       "possible": ""
                    },
                    {
+                       isAdvanced: true,
                        hidden: true,
                       "name": "detail=snap_vf",
                       "field": lang['Video Filter'],
@@ -2432,9 +2434,7 @@ module.exports = function(s,config,lang){
                        hidden: true,
                       "name": "detail=record_timelapse_fps",
                       "field": lang['Creation Interval'],
-                      "description": "",
                       "default": "900",
-                      "example": "",
                       "form-group-class": "h_rec_ti_input h_rec_ti_1",
                       "fieldType": "select",
                       "possible": [
@@ -2484,31 +2484,20 @@ module.exports = function(s,config,lang){
                        hidden: true,
                       "name": "detail=record_timelapse_scale_x",
                       "field": lang['Image Width'],
-                      "description": "",
-                      "default": "",
-                      "example": "",
                       "form-group-class": "h_rec_ti_input h_rec_ti_1",
-                      "possible": ""
                    },
                    {
                        hidden: true,
                       "name": "detail=record_timelapse_scale_y",
                       "field": lang['Image Height'],
-                      "description": "",
-                      "default": "",
-                      "example": "",
                       "form-group-class": "h_rec_ti_input h_rec_ti_1",
-                      "possible": ""
                    },
                    {
+                       isAdvanced: true,
                        hidden: true,
                       "name": "detail=record_timelapse_vf",
                       "field": lang['Video Filter'],
-                      "description": "",
-                      "default": "",
-                      "example": "",
                       "form-group-class": "h_rec_ti_input h_rec_ti_1",
-                      "possible": ""
                    },
                 ]
              },
@@ -2581,8 +2570,8 @@ module.exports = function(s,config,lang){
                 ]
              },
              "Detector": {
-                "name": lang['Global Detector Settings'],
-                "headerTitle": `${lang['Global Detector Settings']} <small>${lang['Primary Engine']} : <b class="h_det_pam_input h_det_pam_1">Pixel Array</b><span class="h_det_pam_input h_det_pam_0"><b class="shinobi-detector_name"></b> <b class="shinobi-detector-invert">${lang['Not Connected']}</b><b class="shinobi-detector" style="display:none">${lang['Connected']}</b></span></small></h4>`,
+                "name": lang['Detector Settings'],
+                "headerTitle": `${lang['Detector Settings']} <small>${lang['Primary Engine']} : <b class="h_det_pam_input h_det_pam_1">Pixel Array</b><span class="h_det_pam_input h_det_pam_0"><b class="shinobi-detector_name"></b> <b class="shinobi-detector-invert">${lang['Not Connected']}</b><b class="shinobi-detector" style="display:none">${lang['Connected']}</b></span></small></h4>`,
                 "color": "orange",
                 "isSection": true,
                 "input-mapping":"detector",
@@ -4027,10 +4016,11 @@ module.exports = function(s,config,lang){
                "name": lang['Copy Settings'],
                "color": "orange",
                 isSection: true,
+                "box-wrapper-class": "row",
                "info": [
                    {
                       "id": "copy_settings",
-                      "field": lang['Copy to Settings'],
+                      "field": lang['Copy to Selected Monitor(s)'],
                       "description": "",
                       "default": "0",
                       "example": "",
@@ -4055,6 +4045,7 @@ module.exports = function(s,config,lang){
                       "fieldType": "select",
                       "attribute": `copy="field=mode"`,
                       "form-group-class": "h_copy_settings_input h_copy_settings_1",
+                      "form-group-class-pre-layer": "col-md-6",
                       "possible": [
                          {
                             "name": lang.No,
@@ -4067,13 +4058,14 @@ module.exports = function(s,config,lang){
                       ]
                    },
                    {
-                      "field": lang['Copy Stream Channels'],
+                      "field": lang['Stream Channels'],
                       "description": "",
                       "default": "0",
                       "example": "",
                       "fieldType": "select",
                       "attribute": `copy="field=detail=stream_channels"`,
                       "form-group-class": "h_copy_settings_input h_copy_settings_1",
+                      "form-group-class-pre-layer": "col-md-6",
                       "possible": [
                          {
                             "name": lang.No,
@@ -4086,13 +4078,14 @@ module.exports = function(s,config,lang){
                       ]
                    },
                    {
-                      "field": lang['Copy Connection Settings'],
+                      "field": lang['Connection'],
                       "description": "",
                       "default": "0",
                       "example": "",
                       "fieldType": "select",
                       "attribute": `copy="#monSectionConnection"`,
                       "form-group-class": "h_copy_settings_input h_copy_settings_1",
+                      "form-group-class-pre-layer": "col-md-6",
                       "possible": [
                          {
                             "name": lang.No,
@@ -4105,13 +4098,14 @@ module.exports = function(s,config,lang){
                       ]
                    },
                    {
-                      "field": lang['Copy Input Settings'],
+                      "field": lang['Input'],
                       "description": "",
                       "default": "0",
                       "example": "",
                       "fieldType": "select",
                       "attribute": `copy="#monSectionInput"`,
                       "form-group-class": "h_copy_settings_input h_copy_settings_1",
+                      "form-group-class-pre-layer": "col-md-6",
                       "possible": [
                          {
                             "name": lang.No,
@@ -4124,13 +4118,14 @@ module.exports = function(s,config,lang){
                       ]
                    },
                    {
-                      "field": lang['Copy Timelapse Settings'],
+                      "field": lang['Timelapse'],
                       "description": "",
                       "default": "0",
                       "example": "",
                       "fieldType": "select",
                       "attribute": `copy="#monSectionTimelapse"`,
                       "form-group-class": "h_copy_settings_input h_copy_settings_1",
+                      "form-group-class-pre-layer": "col-md-6",
                       "possible": [
                          {
                             "name": lang.No,
@@ -4143,13 +4138,14 @@ module.exports = function(s,config,lang){
                       ]
                    },
                    {
-                      "field": lang['Copy Stream Settings'],
+                      "field": lang['Stream'],
                       "description": "",
                       "default": "0",
                       "example": "",
                       "fieldType": "select",
                       "attribute": `copy="#monSectionStream,#monSectionStreamTimestamp,#monSectionStreamWatermark"`,
                       "form-group-class": "h_copy_settings_input h_copy_settings_1",
+                      "form-group-class-pre-layer": "col-md-6",
                       "possible": [
                          {
                             "name": lang.No,
@@ -4162,13 +4158,14 @@ module.exports = function(s,config,lang){
                       ]
                    },
                    {
-                      "field": lang['Copy JPEG API Settings'],
+                      "field": lang['JPEG API'],
                       "description": "",
                       "default": "0",
                       "example": "",
                       "fieldType": "select",
                       "attribute": `copy="#monSectionJPEGAPI"`,
                       "form-group-class": "h_copy_settings_input h_copy_settings_1",
+                      "form-group-class-pre-layer": "col-md-6",
                       "possible": [
                          {
                             "name": lang.No,
@@ -4181,13 +4178,14 @@ module.exports = function(s,config,lang){
                       ]
                    },
                    {
-                      "field": lang['Copy Recording Settings'],
+                      "field": lang['Recording'],
                       "description": "",
                       "default": "0",
                       "example": "",
                       "fieldType": "select",
                       "attribute": `copy="#monSectionRecording,#monSectionRecordingTimestamp,#monSectionRecordingWatermark"`,
                       "form-group-class": "h_copy_settings_input h_copy_settings_1",
+                      "form-group-class-pre-layer": "col-md-6",
                       "possible": [
                          {
                             "name": lang.No,
@@ -4200,13 +4198,14 @@ module.exports = function(s,config,lang){
                       ]
                    },
                    {
-                      "field": lang['Copy Detector Settings'],
+                      "field": lang['Detector Settings'],
                       "description": "",
                       "default": "0",
                       "example": "",
                       "fieldType": "select",
                       "attribute": `copy="#monSectionDetector,#monSectionDetectorBuffer,#monSectionLisencePlateDetector,#monSectionNoMotionDetector"`,
                       "form-group-class": "h_copy_settings_input h_copy_settings_1",
+                      "form-group-class-pre-layer": "col-md-6",
                       "possible": [
                          {
                             "name": lang.No,
@@ -4219,13 +4218,34 @@ module.exports = function(s,config,lang){
                       ]
                    },
                    {
-                      "field": lang['Copy Custom Settings'],
+                      "field": lang['Control'],
+                      "description": "",
+                      "default": "0",
+                      "example": "",
+                      "fieldType": "select",
+                      "attribute": `copy="#monSectionControl"`,
+                      "form-group-class": "h_copy_settings_input h_copy_settings_1",
+                      "form-group-class-pre-layer": "col-md-6",
+                      "possible": [
+                         {
+                            "name": lang.No,
+                            "value": "0"
+                         },
+                         {
+                            "name": lang.Yes,
+                            "value": "1"
+                         }
+                      ]
+                   },
+                   {
+                      "field": lang['Custom'],
                       "description": "",
                       "default": "0",
                       "example": "",
                       "fieldType": "select",
                       "attribute": `copy="#monSectionCustom"`,
                       "form-group-class": "h_copy_settings_input h_copy_settings_1",
+                      "form-group-class-pre-layer": "col-md-6",
                       "possible": [
                          {
                             "name": lang.No,
@@ -4238,13 +4258,14 @@ module.exports = function(s,config,lang){
                       ]
                    },
                    {
-                      "field": lang['Copy Group Settings'],
+                      "field": lang['Grouping'],
                       "description": "",
                       "default": "0",
                       "example": "",
                       "fieldType": "select",
                       "attribute": `copy="#monSectionGrouping"`,
                       "form-group-class": "h_copy_settings_input h_copy_settings_1",
+                      "form-group-class-pre-layer": "col-md-6",
                       "possible": [
                          {
                             "name": lang.No,
@@ -4257,13 +4278,14 @@ module.exports = function(s,config,lang){
                       ]
                    },
                    {
-                      "field": lang['Copy Logging Settings'],
+                      "field": lang['Logging'],
                       "description": "",
                       "default": "0",
                       "example": "",
                       "fieldType": "select",
                       "attribute": `copy="#monSectionLogging"`,
                       "form-group-class": "h_copy_settings_input h_copy_settings_1",
+                      "form-group-class-pre-layer": "col-md-6",
                       "possible": [
                          {
                             "name": lang.No,
@@ -7228,6 +7250,7 @@ module.exports = function(s,config,lang){
                           ]
                      },
                      {
+                         isAdvanced: true,
                         "name": "channel-detail=svf",
                         "field": lang["Video Filter"],
                         "description": lang["fieldTextChannelSvf"],
