@@ -20,8 +20,8 @@
       "random-seedable": "^1.0.8",
       "seedrandom": "2.4.3",
       "rimraf": "^3.0.2",
-      "socket.io": "2.0.4",
-      "socket.io-client": "1.7.4",
+      "socket.io": "^4.4.1",
+      "socket.io-client": "^4.4.1",
       "xor128": "^0.1.0"
    },
    "bin": "shinobi-tensorflow.js",
