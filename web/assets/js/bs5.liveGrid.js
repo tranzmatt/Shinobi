@@ -182,15 +182,17 @@ function buildLiveGridBlock(monitor){
 function drawPtzControlsOnLiveGridBlock(monitorId){
     var monitorItem = $('#monitor_live_' + monitorId)
     var ptzControls = monitorItem.find('.PTZ_controls');
+    var loadedMonitor = loadedMonitors[monitorId]
+    var stopCommandOnRelease = loadedMonitor.details.control_stop === '2'
     if(ptzControls.length>0){
         ptzControls.remove()
     }else{
         var html = `<div class="PTZ_controls">
             <div class="pad">
-                <div class="control top run-live-grid-monitor-ptz" data-ptz-control="up"></div>
-                <div class="control left run-live-grid-monitor-ptz" data-ptz-control="left"></div>
-                <div class="control right run-live-grid-monitor-ptz" data-ptz-control="right"></div>
-                <div class="control bottom run-live-grid-monitor-ptz" data-ptz-control="down"></div>
+                <div class="control top run-live-grid-monitor-ptz${stopCommandOnRelease ? `-move` : '' }" data-ptz-control="up"></div>
+                <div class="control left run-live-grid-monitor-ptz${stopCommandOnRelease ? `-move` : '' }" data-ptz-control="left"></div>
+                <div class="control right run-live-grid-monitor-ptz${stopCommandOnRelease ? `-move` : '' }" data-ptz-control="right"></div>
+                <div class="control bottom run-live-grid-monitor-ptz${stopCommandOnRelease ? `-move` : '' }" data-ptz-control="down"></div>
                 <div class="control middle run-live-grid-monitor-ptz" data-ptz-control="center"></div>
             </div>
             <div class="btn-group btn-group-sm btn-group-justified">
@@ -897,6 +899,18 @@ $(document).ready(function(e){
         var monitorId = el.parents('[data-mid]').attr('data-mid')
         var switchChosen = el.attr('data-ptz-control')
         runPtzCommand(monitorId,switchChosen)
+    })
+    .on('mousedown','.run-live-grid-monitor-ptz-move',function(){
+        var el = $(this)
+        var monitorId = el.parents('[data-mid]').attr('data-mid')
+        var switchChosen = el.attr('data-ptz-control')
+        runPtzMove(monitorId,switchChosen,true)
+    })
+    .on('mouseup','.run-live-grid-monitor-ptz-move',function(){
+        var el = $(this)
+        var monitorId = el.parents('[data-mid]').attr('data-mid')
+        var switchChosen = el.attr('data-ptz-control')
+        runPtzMove(monitorId,switchChosen,false)
     })
     .on('click','.run-monitor-detection-trigger-test',function(){
         var el = $(this)

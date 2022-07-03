@@ -164,6 +164,15 @@ function runPtzCommand(monitorId,switchChosen){
         break;
     }
 }
+function runPtzMove(monitorId,switchChosen,doMove){
+    mainSocket.f({
+        f: 'monitor',
+        ff: doMove ? 'startMove' : 'stopMove',
+        direction: switchChosen,
+        id: monitorId,
+        ke: $user.ke
+    })
+}
 function runTestDetectionTrigger(monitorId,callback){
     $.getJSON(getApiPrefix() + '/motion/'+$user.ke+'/'+monitorId+'/?data={"plug":"manual_trigger","name":"Manual Trigger","reason":"Manual","confidence":100}',function(d){
         debugLog(d)

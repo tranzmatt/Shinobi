@@ -1,284 +1,297 @@
 var os = require('os');
 var exec = require('child_process').exec;
 module.exports = function(s,config,lang){
-    const { fetchWithAuthentication } = require('../basic/utils.js')(process.cwd(),config)
+    const { fetchWithAuthentication, asyncSetTimeout } = require('../basic/utils.js')(process.cwd(),config)
     const moveLock = {}
     const ptzTimeoutsUntilResetToHome = {}
     const sliceUrlAuth = (url) => {
         return /^(.+?\/\/)(?:.+?:.+?@)?(.+)$/.exec(url).slice(1).join('')
     }
-    const startMove = async function(options,callback){
-        const device = s.group[options.ke].activeMonitors[options.id].onvifConnection
-        if(!device){
+    function getGenericControlParameters(optionsm,urlType){
+        const monitorConfig = s.group[options.ke].rawMonitorConfigurations[options.id]
+        const controlUrlMethod = monitorConfig.details.control_url_method || 'GET'
+        const controlBaseUrl = monitorConfig.details.control_base_url || s.buildMonitorUrl(monitorConfig, true)
+        let theURL;
+        if(urlType === 'start'){
+            theURL = controlBaseUrl + monitorConfig.details[`control_url_${options.direction}`]
+        }else{
+            theURL = controlBaseUrl + monitorConfig.details[`control_url_${options.direction}_stop`]
+        }
+        let controlOptions = s.cameraControlOptionsFromUrl(theURL,monitorConfig);
+        const hasDigestAuthEnabled = monitorConfig.details.control_digest_auth === '1'
+        const requestUrl = controlBaseUrl + controlOptions.path
+        return {
+            monitorConfig,
+            controlUrlMethod,
+            controlBaseUrl,
+            theURL,
+            controlOptions,
+            hasDigestAuthEnabled,
+            requestUrl,
+        }
+    }
+    function moveGeneric(options,doStart){
+        if(!s.group[options.ke] || !s.group[options.ke].activeMonitors[options.id]){return}
+        return new Promise((resolve,reject) => {
+            if(doStart)moveLock[options.ke + options.id] = true;
+            const {
+                monitorConfig,
+                controlUrlMethod,
+                controlBaseUrl,
+                theURL,
+                controlOptions,
+                hasDigestAuthEnabled,
+                requestUrl,
+            } = getGenericControlParameters(options,'start')
+            const response =  {
+                ok: true,
+                type: lang[doStart ? 'Control Triggered' : 'Control Trigger Ended']
+            }
+            const theRequest = fetchWithAuthentication(requestUrl,{
+                method: controlUrlMethod || controlOptions.method,
+                digestAuth: hasDigestAuthEnabled,
+                body: controlOptions.postData || null
+            });
+            theRequest.then(res => res.text())
+            .then((data) => {
+                if(doStart){
+                    if(monitorConfig.details.control_stop == '1' && options.direction !== 'center' ){
+                        s.userLog(monitorConfig,{type: lang['Control Trigger Started']});
+                    }else{
+                        moveLock[options.ke + options.id] = false
+                        s.userLog(monitorConfig,response);
+                    }
+                }else{
+                    moveLock[options.ke + options.id] = false
+                    s.userLog(monitorConfig,response);
+                }
+                resolve(response)
+            });
+            theRequest.catch((err) => {
+                response.ok = false
+                response.type = lang['Control Error']
+                response.msg = err
+                resolve(response)
+            })
+        })
+    }
+    function getOnvifControlOptions(options){
+        const monitorConfig = s.group[options.ke].rawMonitorConfigurations[options.id]
+        const invertedVerticalAxis = monitorConfig.details.control_invert_y === '1'
+        const turnSpeed = parseFloat(monitorConfig.details.control_turn_speed) || 0.1
+        const controlOptions = {
+            Velocity : {}
+        }
+        if(options.axis){
+            options.axis.forEach((axis) => {
+                controlOptions.Velocity[axis.direction] = axis.amount < 0 ? -turnSpeed : axis.amount > 0 ? turnSpeed : 0
+            })
+        }else{
+            const onvifDirections = {
+                "left": [-turnSpeed,'x'],
+                "right": [turnSpeed,'x'],
+                "down": [invertedVerticalAxis ? turnSpeed : -turnSpeed,'y'],
+                "up": [invertedVerticalAxis ? -turnSpeed : turnSpeed,'y'],
+                "zoom_in": [turnSpeed,'z'],
+                "zoom_out": [-turnSpeed,'z']
+            }
+            const direction = onvifDirections[options.direction]
+            controlOptions.Velocity[direction[1]] = direction[0]
+        }
+        (['x','y','z']).forEach(function(axis){
+            if(!controlOptions.Velocity[axis])
+                controlOptions.Velocity[axis] = 0
+        })
+        return controlOptions
+    }
+    async function startMoveOnvif(options,callback){
+        const controlOptions = getOnvifControlOptions(options);
+        let activeMonitor = s.group[options.ke].activeMonitors[options.id]
+        let device = activeMonitor.onvifConnection
+        if(
+            !device ||
+            !device.current_profile ||
+            !device.current_profile.token
+        ){
             const response = await s.createOnvifDevice({
                 ke: options.ke,
                 id: options.id,
             })
-            const device = s.group[options.ke].activeMonitors[options.id].onvifConnection
+            device = activeMonitor.onvifConnection
         }
-        options.controlOptions.ProfileToken = device.current_profile.token
-        s.runOnvifMethod({
-            auth: {
-                ke: options.ke,
-                id: options.id,
-                action: 'continuousMove',
-                service: 'ptz',
-            },
-            options: options.controlOptions,
-        },callback)
+        function returnResponse(){
+            return new Promise((resolve,reject) => {
+                controlOptions.ProfileToken = device.current_profile.token
+                s.runOnvifMethod({
+                    auth: {
+                        ke: options.ke,
+                        id: options.id,
+                        action: 'continuousMove',
+                        service: 'ptz',
+                    },
+                    options: controlOptions,
+                },resolve)
+            })
+        }
+        return await returnResponse();
     }
-    const stopMove = function(options,callback){
-        const device = s.group[options.ke].activeMonitors[options.id].onvifConnection
-        try{
+    function stopMoveOnvif(options,callback){
+        return new Promise((resolve,reject) => {
+            const device = s.group[options.ke].activeMonitors[options.id].onvifConnection
+            try{
+                s.runOnvifMethod({
+                    auth: {
+                        ke: options.ke,
+                        id: options.id,
+                        action: 'stop',
+                        service: 'ptz',
+                    },
+                    options: {
+                        'PanTilt': true,
+                        'Zoom': true,
+                        ProfileToken: device.current_profile.token
+                    },
+                },resolve)
+            }catch(err){
+                resolve({ok: false})
+            }
+        })
+    }
+    function relativeMoveOnvif(options){
+        return new Promise((resolve,reject) => {
+            const controlOptions = getOnvifControlOptions(options);
+            controlOptions.Speed = {'x': 1, 'y': 1, 'z': 1}
+            controlOptions.Translation = Object.assign(controlOptions.Velocity,{})
+            delete(controlOptions.Velocity)
+            moveLock[options.ke + options.id] = true
             s.runOnvifMethod({
                 auth: {
                     ke: options.ke,
                     id: options.id,
-                    action: 'stop',
+                    action: 'relativeMove',
                     service: 'ptz',
                 },
-                options: {
-                    'PanTilt': true,
-                    'Zoom': true,
-                    ProfileToken: device.current_profile.token
-                },
-            },callback)
-        }catch(err){
-            callback({ok: false})
-        }
-    }
-    const moveOnvifCamera = function(options,callback){
-        const monitorConfig = s.group[options.ke].rawMonitorConfigurations[options.id]
-        const invertedVerticalAxis = monitorConfig.details.control_invert_y === '1'
-        const turnSpeed = parseFloat(monitorConfig.details.control_turn_speed) || 0.1
-        const controlUrlStopTimeout = parseInt(monitorConfig.details.control_url_stop_timeout) || 1000
-        switch(options.direction){
-            case'center':
-                moveLock[options.ke + options.id] = true
-                moveToPresetPosition({
-                    ke: options.ke,
-                    id: options.id,
-                },(endData) => {
-                    moveLock[options.ke + options.id] = false
-                    callback({type:'Moving to Home Preset', response: endData})
-                })
-            break;
-            case'stopMove':
-                callback({type:'Control Trigger Ended'})
-                stopMove({
-                    ke: options.ke,
-                    id: options.id,
-                },(response) => {
-                    moveLock[options.ke + options.id] = false
-                })
-            break;
-            default:
-            try{
-                var controlOptions = {
-                    Velocity : {}
-                }
-                if(options.axis){
-                    options.axis.forEach((axis) => {
-                        controlOptions.Velocity[axis.direction] = axis.amount < 0 ? -turnSpeed : axis.amount > 0 ? turnSpeed : 0
-                    })
+                options: controlOptions,
+            },(response) => {
+                if(response.ok){
+                    resolve({type: 'Control Triggered'})
                 }else{
-                    var onvifDirections = {
-                        "left": [-turnSpeed,'x'],
-                        "right": [turnSpeed,'x'],
-                        "down": [invertedVerticalAxis ? turnSpeed : -turnSpeed,'y'],
-                        "up": [invertedVerticalAxis ? -turnSpeed : turnSpeed,'y'],
-                        "zoom_in": [turnSpeed,'z'],
-                        "zoom_out": [-turnSpeed,'z']
-                    }
-                    var direction = onvifDirections[options.direction]
-                    controlOptions.Velocity[direction[1]] = direction[0]
+                    resolve({type: 'Control Triggered', error: response.error})
                 }
-                (['x','y','z']).forEach(function(axis){
-                    if(!controlOptions.Velocity[axis])
-                        controlOptions.Velocity[axis] = 0
-                })
-                if(monitorConfig.details.control_stop === '1'){
+                moveLock[options.ke + options.id] = false
+            })
+        })
+    }
+    function moveOnvifCamera(options,doMove){
+        return new Promise((resolve,reject) => {
+            const monitorConfig = s.group[options.ke].rawMonitorConfigurations[options.id]
+            const controlUrlStopTimeout = parseInt(monitorConfig.details.control_url_stop_timeout) || 1000
+            options.direction = doMove ? options.direction : 'stopMove';
+            switch(options.direction){
+                case'center':
                     moveLock[options.ke + options.id] = true
-                    startMove({
+                    moveToPresetPosition({
                         ke: options.ke,
                         id: options.id,
-                        controlOptions: controlOptions
-                    },(response) => {
-                        if(response.ok){
-                            if(controlUrlStopTimeout != '0'){
-                                setTimeout(function(){
-                                    stopMove({
-                                        ke: options.ke,
-                                        id: options.id,
-                                    },(response) => {
-                                        if(!response.ok){
-                                            s.systemLog(response)
-                                        }
-                                        moveLock[options.ke + options.id] = false
-                                    })
-                                    callback({type: 'Control Triggered'})
-                                },controlUrlStopTimeout)
-                            }
-                        }else{
-                            s.debugLog(response)
-                        }
+                    },(endData) => {
+                        moveLock[options.ke + options.id] = false
+                        resolve({ type: lang['Moving to Home Preset'], response: endData })
                     })
-                }else{
-                    controlOptions.Speed = {'x': 1, 'y': 1, 'z': 1}
-                    controlOptions.Translation = Object.assign(controlOptions.Velocity,{})
-                    delete(controlOptions.Velocity)
-                    moveLock[options.ke + options.id] = true
-                    s.runOnvifMethod({
-                        auth: {
-                            ke: options.ke,
-                            id: options.id,
-                            action: 'relativeMove',
-                            service: 'ptz',
-                        },
-                        options: controlOptions,
+                break;
+                case'stopMove':
+                    resolve({ type: lang['Control Trigger Ended'] })
+                    stopMoveOnvif({
+                        ke: options.ke,
+                        id: options.id,
                     },(response) => {
-                        if(response.ok){
-                            callback({type: 'Control Triggered'})
-                        }else{
-                            callback({type: 'Control Triggered', error: response.error})
-                        }
                         moveLock[options.ke + options.id] = false
                     })
-                }
-            }catch(err){
-                console.log(err)
-                console.log(new Error())
+                break;
+                default:
+                    try{
+                        moveLock[options.ke + options.id] = true
+                        startMoveOnvif(options).then((moveResponse) => {
+                            if(!moveResponse.ok){
+                                s.debugLog('ONVIF Move Error',moveResponse)
+                            }
+                            resolve(moveResponse)
+                        })
+                    }catch(err){
+                        console.log(err)
+                        console.log(new Error())
+                    }
+                break;
             }
-            break;
+        })
+    }
+    async function startMove(options){
+        const monitorConfig = s.group[options.ke].rawMonitorConfigurations[options.id]
+        const controlUrlMethod = monitorConfig.details.control_url_method || 'GET'
+        if(controlUrlMethod === 'ONVIF'){
+            return await moveOnvifCamera(options,true);
+        }else{
+            return await moveGeneric(options,true);
         }
     }
-    const ptzControl = async function(options,callback){
+    async function stopMove(options){
+        const monitorConfig = s.group[options.ke].rawMonitorConfigurations[options.id]
+        const controlUrlMethod = monitorConfig.details.control_url_method || 'GET'
+        if(controlUrlMethod === 'ONVIF'){
+            return await moveOnvifCamera(options,false);
+        }else{
+            return await moveGeneric(options,false);
+        }
+    }
+    async function ptzControl(options){
         if(!s.group[options.ke] || !s.group[options.ke].activeMonitors[options.id]){return}
         const monitorConfig = s.group[options.ke].rawMonitorConfigurations[options.id]
         const controlUrlMethod = monitorConfig.details.control_url_method || 'GET'
-        const controlBaseUrl = monitorConfig.details.control_base_url || s.buildMonitorUrl(monitorConfig, true)
+        const controlUrlStopTimeout = parseInt(monitorConfig.details.control_url_stop_timeout) || 1000
+        const stopCommandEnabled = monitorConfig.details.control_stop === '1';
         if(monitorConfig.details.control !== "1"){
-            s.userLog(monitorConfig,{type:lang['Control Error'],msg:lang.ControlErrorText1});
-            return
+            s.userLog(monitorConfig,{
+                type: lang['Control Error'],
+                msg: lang.ControlErrorText1
+            });
+            return {
+                ok: false,
+                msg: lang.ControlErrorText1
+            }
         }
-        if(monitorConfig.details.control_url_stop_timeout === '0' && monitorConfig.details.control_stop === '1' && s.group[options.ke].activeMonitors[options.id].ptzMoving === true){
-            options.direction = 'stopMove'
-            s.group[options.ke].activeMonitors[options.id].ptzMoving = false
-        }else{
-            s.group[options.ke].activeMonitors[options.id].ptzMoving = true
+        const response = {
+            direction: options.direction,
         }
         if(controlUrlMethod === 'ONVIF'){
-            try{
-                //create onvif connection
-                if(
-                    !s.group[options.ke].activeMonitors[options.id].onvifConnection ||
-                    !s.group[options.ke].activeMonitors[options.id].onvifConnection.current_profile ||
-                    !s.group[options.ke].activeMonitors[options.id].onvifConnection.current_profile.token
-                ){
-                    const response = await s.createOnvifDevice({
-                        ke: options.ke,
-                        id: options.id,
-                    })
-                    if(response.ok){
-                        moveOnvifCamera({
-                            ke: options.ke,
-                            id: options.id,
-                            direction: options.direction,
-                            axis: options.axis,
-                        },(msg) => {
-                            msg.msg = options.direction
-                            callback(msg)
-                        })
-                    }else{
-                        s.userLog(options,{type:lang['Control Error'],msg:response.error})
-                    }
+            if(options.direction === 'center'){
+                response.moveResponse = await moveOnvifCamera(options,true)
+                return response;
+            }else if(stopCommandEnabled){
+                response.moveResponse = await moveOnvifCamera(options,true)
+                if(stopCommandEnabled && options.direction !== 'stopMove' && options.direction !== 'center'){
+                    await asyncSetTimeout(controlUrlStopTimeout)
+                    response.stopMoveResponse = await moveOnvifCamera(options,false)
+                    response.ok = response.moveResponse.ok && response.stopMoveResponse.ok;
                 }else{
-                    moveOnvifCamera({
-                        ke: options.ke,
-                        id: options.id,
-                        direction: options.direction,
-                        axis: options.axis,
-                    },(msg) => {
-                        if(!msg.msg)msg.msg = {direction: options.direction}
-                        callback(msg)
-                    })
+                    response.ok = response.moveResponse.ok;
                 }
-            }catch(err){
-                s.debugLog(err)
-                callback({
-                    type: lang['Control Error'],
-                    msg: {
-                        msg: lang.ControlErrorText2,
-                        error: err,
-                        direction: options.direction
-                    }
-                })
+                return response;
+            }else{
+                return await relativeMoveOnvif(options);
             }
         }else{
-            const controlUrlStopTimeout = parseInt(monitorConfig.details.control_url_stop_timeout) || 1000
-            var stopCamera = function(){
-                let stopURL = controlBaseUrl + monitorConfig.details[`control_url_${options.direction}_stop`]
-                let controlOptions = s.cameraControlOptionsFromUrl(stopURL,monitorConfig)
-                const hasDigestAuthEnabled = monitorConfig.details.control_digest_auth === '1'
-                const requestUrl = controlBaseUrl + controlOptions.path
-                const response =  {
-                    ok: true,
-                    type:'Control Trigger Ended'
-                }
-                const theRequest = fetchWithAuthentication(requestUrl,{
-                    method: controlOptions.method,
-                    digestAuth: hasDigestAuthEnabled,
-                    body: controlOptions.postData || null
-                });
-                theRequest.then(res => res.text())
-                .then((data) => {
-                    moveLock[options.ke + options.id] = false
-                    s.userLog(monitorConfig,response);
-                });
-                theRequest.catch((err) => {
-                    response.ok = false
-                    response.type = 'Control Error'
-                    response.msg = err
-                    callback(response)
-                })
-            }
             if(options.direction === 'stopMove'){
-                stopCamera()
+                return await moveGeneric(options,false)
             }else{
-                moveLock[options.ke + options.id] = true
-                let controlURL = controlBaseUrl + monitorConfig.details[`control_url_${options.direction}`]
-                let controlOptions = s.cameraControlOptionsFromUrl(controlURL,monitorConfig)
-                const hasDigestAuthEnabled = monitorConfig.details.control_digest_auth === '1'
-                const requestUrl = controlBaseUrl + controlOptions.path
-                const response =  {
-                    ok: true,
-                    type: lang['Control Triggered']
+                // left, right, up, down, center
+                response.moveResponse = await moveGeneric(options,true)
+                if(stopCommandEnabled){
+                    await asyncSetTimeout(controlUrlStopTimeout)
+                    response.stopMoveResponse = await moveGeneric(options,false)
+                    response.ok = response.moveResponse.ok && response.stopMoveResponse.ok;
+                }else{
+                    response.ok = response.moveResponse.ok;
                 }
-                const theRequest = fetchWithAuthentication(requestUrl,{
-                    method: controlOptions.method,
-                    digestAuth: hasDigestAuthEnabled,
-                    body: controlOptions.postData || null
-                });
-                theRequest.then(res => res.text())
-                .then((data) => {
-                    if(monitorConfig.details.control_stop == '1' && options.direction !== 'center' ){
-                        s.userLog(monitorConfig,{type: lang['Control Trigger Started']});
-                        if(controlUrlStopTimeout > 0){
-                            setTimeout(function(){
-                                stopCamera()
-                            },controlUrlStopTimeout)
-                        }
-                    }else{
-                        moveLock[options.ke + options.id] = false
-                        callback(response)
-                    }
-                });
-                theRequest.catch((err) => {
-                    response.ok = false
-                    response.type = lang['Control Error']
-                    response.msg = err
-                    callback(response)
-                })
+                return response;
             }
         }
     }
@@ -299,7 +312,6 @@ module.exports = function(s,config,lang){
     const setPresetForCurrentPosition = (options,callback) => {
         const nonStandardOnvif = s.group[options.ke].rawMonitorConfigurations[options.id].details.onvif_non_standard === '1'
         const profileToken = options.ProfileToken || "__CURRENT_TOKEN"
-        console.log(options.PresetToken)
         s.runOnvifMethod({
             auth: {
                 ke: options.ke,
@@ -366,7 +378,6 @@ module.exports = function(s,config,lang){
         const imageCenterY = imgHeight / 2
         const matrices = event.details.matrices || []
         const largestMatrix = getLargestMatrix(matrices.filter(matrix => trackingTarget.indexOf(matrix.tag) > -1))
-        // console.log(matrices.find(matrix => matrix.tag === 'person'))
         if(!largestMatrix)return;
         const monitorConfig = s.group[event.ke].rawMonitorConfigurations[event.id]
         const invertedVerticalAxis = monitorConfig.details.control_invert_y === '1'
@@ -399,12 +410,12 @@ module.exports = function(s,config,lang){
         }
     }
     return {
-        ptzControl: ptzControl,
-        startMove: startMove,
-        stopMove: stopMove,
-        getPresetPositions: getPresetPositions,
-        setPresetForCurrentPosition: setPresetForCurrentPosition,
-        moveToPresetPosition: moveToPresetPosition,
-        moveCameraPtzToMatrix: moveCameraPtzToMatrix
+        startMove,
+        stopMove,
+        ptzControl,
+        getPresetPositions,
+        setPresetForCurrentPosition,
+        moveToPresetPosition,
+        moveCameraPtzToMatrix,
     }
 }

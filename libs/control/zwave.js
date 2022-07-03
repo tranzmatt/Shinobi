@@ -40,7 +40,6 @@ module.exports = async (s,config,lang,app,io) => {
              const arguments = s.getPostData(req) || []
              try{
                  const groupKey = req.params.ke
-                 console.log(Object.keys(user))
                  endData.response = await s.group[groupKey].zwave[actionFunction](...arguments)
              }catch(err){
                  endData.ok = false

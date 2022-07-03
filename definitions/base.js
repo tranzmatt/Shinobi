@@ -3759,8 +3759,12 @@ module.exports = function(s,config,lang){
                              "value": "0"
                           },
                           {
-                             "name": lang.Yes,
+                             "name": lang.Timed,
                              "value": "1"
+                          },
+                          {
+                             "name": lang['On Release'],
+                             "value": "2"
                           }
                        ]
                     },
@@ -3779,7 +3783,7 @@ module.exports = function(s,config,lang){
                        "description": "",
                        "default": "0.1",
                        "example": "",
-                       "form-group-class": "h_cs_input h_cs_1",
+                       "form-group-class": "h_control_call_input h_control_call_ONVIF",
                        "possible": ""
                     },
                     {
@@ -3854,7 +3858,7 @@ module.exports = function(s,config,lang){
                        "description": "",
                        "default": "/",
                        "example": "",
-                       "form-group-class-pre-layer": "h_cs_input h_cs_1",
+                       "form-group-class-pre-layer": "h_cs_input h_cs_1 h_cs_2",
                        "form-group-class": "h_control_call_input h_control_call_GET h_control_call_PUT h_control_call_POST",
                        "possible": ""
                     },
@@ -3873,7 +3877,7 @@ module.exports = function(s,config,lang){
                        "description": "",
                        "default": "/",
                        "example": "",
-                       "form-group-class-pre-layer": "h_cs_input h_cs_1",
+                       "form-group-class-pre-layer": "h_cs_input h_cs_1 h_cs_2",
                        "form-group-class": "h_control_call_input h_control_call_GET h_control_call_PUT h_control_call_POST",
                        "possible": ""
                     },
@@ -3892,7 +3896,7 @@ module.exports = function(s,config,lang){
                        "description": "",
                        "default": "/",
                        "example": "",
-                       "form-group-class-pre-layer": "h_cs_input h_cs_1",
+                       "form-group-class-pre-layer": "h_cs_input h_cs_1 h_cs_2",
                        "form-group-class": "h_control_call_input h_control_call_GET h_control_call_PUT h_control_call_POST",
                        "possible": ""
                     },
@@ -3911,7 +3915,7 @@ module.exports = function(s,config,lang){
                        "description": "",
                        "default": "/",
                        "example": "",
-                       "form-group-class-pre-layer": "h_cs_input h_cs_1",
+                       "form-group-class-pre-layer": "h_cs_input h_cs_1 h_cs_2",
                        "form-group-class": "h_control_call_input h_control_call_GET h_control_call_PUT h_control_call_POST",
                        "possible": ""
                     },
@@ -3948,7 +3952,7 @@ module.exports = function(s,config,lang){
                        "description": "",
                        "default": "/",
                        "example": "",
-                       "form-group-class-pre-layer": "h_cs_input h_cs_1",
+                       "form-group-class-pre-layer": "h_cs_input h_cs_1 h_cs_2",
                        "form-group-class": "h_control_call_input h_control_call_GET h_control_call_PUT h_control_call_POST",
                        "possible": ""
                     },
@@ -3967,7 +3971,7 @@ module.exports = function(s,config,lang){
                        "description": "",
                        "default": "/",
                        "example": "",
-                       "form-group-class-pre-layer": "h_cs_input h_cs_1",
+                       "form-group-class-pre-layer": "h_cs_input h_cs_1 h_cs_2",
                        "form-group-class": "h_control_call_input h_control_call_GET h_control_call_PUT h_control_call_POST",
                        "possible": ""
                     },

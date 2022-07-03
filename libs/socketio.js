@@ -10,9 +10,6 @@ module.exports = function(s,config,lang,io){
     const {
         legacyFilterEvents
     } = require('./events/utils.js')(s,config,lang)
-    const {
-        ptzControl
-    } = require('./control/ptz.js')(s,config,lang)
     s.clientSocketConnection = {}
     //send data to socket client function
     s.tx = function(z,y,x){
@@ -630,12 +627,6 @@ module.exports = function(s,config,lang,io){
                                     break;
                                 }
                             break;
-                            case'control':
-                                ptzControl(d,function(msg){
-                                    s.userLog(d,msg)
-                                    tx({f:'control',response:msg})
-                                })
-                            break;
                             case'jpeg_off':
                               delete(cn.jpeg_on);
                                 if(cn.monitorsCurrentlyWatching){
@@ -695,6 +686,11 @@ module.exports = function(s,config,lang,io){
                                         r = r[0]
                                         s.camera(d.ff,{type:r.type,url:s.buildMonitorUrl(r),id:d.id,mode:d.ff,ke:cn.ke});
                                     }
+                                })
+                            break;
+                            default:
+                                s.onOtherWebSocketMessagesExtensions.forEach(function(extender){
+                                    extender(d,cn)
                                 })
                             break;
                         }
