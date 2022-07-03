@@ -1,11 +1,18 @@
 module.exports = function(s,config){
     s.cloudDiskUseStartupExtensions = {}
     s.cloudDiskUseOnGetVideoDataExtensions = {}
-    function createExtension(nameOfExtension,nameOfExtensionContainer){
+    function createExtension(nameOfExtension,nameOfExtensionContainer,objective){
         nameOfExtensionContainer = nameOfExtensionContainer || `${nameOfExtension}Extensions`
-        s[nameOfExtensionContainer] = []
-        s[nameOfExtension] = function(callback){
-            s[nameOfExtensionContainer].push(callback)
+        if(objective){
+            s[nameOfExtensionContainer] = []
+            s[nameOfExtension] = function(nameOfCallback,callback){
+                s[nameOfExtensionContainer][nameOfCallback] = callback
+            }
+        }else{
+            s[nameOfExtensionContainer] = []
+            s[nameOfExtension] = function(callback){
+                s[nameOfExtensionContainer].push(callback)
+            }
         }
     }
     ////// USER //////
@@ -50,7 +57,7 @@ module.exports = function(s,config){
     createExtension(`onGetRamUsage`)
     createExtension(`onSubscriptionCheck`)
     createExtension(`onDataPortMessage`)
-    createExtension(`onHttpRequestUpgrade`)
+    createExtension(`onHttpRequestUpgrade`null,true)
     /////// VIDEOS ////////
     createExtension(`insertCompletedVideoExtender`,`insertCompletedVideoExtensions`)
     createExtension(`onBeforeInsertCompletedVideo`)
