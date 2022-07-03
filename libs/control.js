@@ -14,10 +14,14 @@ module.exports = function(s,config,lang,app,io){
             case'monitor':
                 switch(data.ff){
                     case'startMove':
-                        startMove(data)
+                        startMove(data).then((response) => {
+                            s.debugLog(response)
+                        })
                     break;
                     case'stopMove':
-                        stopMove(data)
+                        stopMove(data).then((response) => {
+                            s.debugLog(response)
+                        })
                     break;
                     case'control':
                         ptzControl(data,function(msg){

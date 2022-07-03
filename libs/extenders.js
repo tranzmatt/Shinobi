@@ -57,7 +57,7 @@ module.exports = function(s,config){
     createExtension(`onGetRamUsage`)
     createExtension(`onSubscriptionCheck`)
     createExtension(`onDataPortMessage`)
-    createExtension(`onHttpRequestUpgrade`null,true)
+    createExtension(`onHttpRequestUpgrade`,null,true)
     /////// VIDEOS ////////
     createExtension(`insertCompletedVideoExtender`,`insertCompletedVideoExtensions`)
     createExtension(`onBeforeInsertCompletedVideo`)
