@@ -152,7 +152,6 @@ module.exports = (s,config,lang,app,io) => {
     }
     const addToEventCounter = (eventData) => {
         const eventsCounted = s.group[eventData.ke].activeMonitors[eventData.id].detector_motion_count
-        s.debugLog(`addToEventCounter`,eventData,eventsCounted.length)
         eventsCounted.push(eventData)
     }
     const clearEventCounter = (groupKey,monitorId) => {

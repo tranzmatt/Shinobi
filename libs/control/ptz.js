@@ -55,7 +55,8 @@ module.exports = function(s,config,lang){
             theRequest.then(res => res.text())
             .then((data) => {
                 if(doStart){
-                    if(monitorConfig.details.control_stop == '1' && options.direction !== 'center' ){
+                    const stopCommandEnabled = monitorConfig.details.control_stop === '1' || monitorConfig.details.control_stop === '2';
+                    if(stopCommandEnabled && options.direction !== 'center'){
                         s.userLog(monitorConfig,{type: lang['Control Trigger Started']});
                     }else{
                         moveLock[options.ke + options.id] = false
@@ -135,7 +136,7 @@ module.exports = function(s,config,lang){
         }
         return await returnResponse();
     }
-    function stopMoveOnvif(options,callback){
+    function stopMoveOnvif(options){
         return new Promise((resolve,reject) => {
             const device = s.group[options.ke].activeMonitors[options.id].onvifConnection
             try{
@@ -203,7 +204,7 @@ module.exports = function(s,config,lang){
                     stopMoveOnvif({
                         ke: options.ke,
                         id: options.id,
-                    },(response) => {
+                    }).then((response) => {
                         moveLock[options.ke + options.id] = false
                     })
                 break;
@@ -246,8 +247,8 @@ module.exports = function(s,config,lang){
         if(!s.group[options.ke] || !s.group[options.ke].activeMonitors[options.id]){return}
         const monitorConfig = s.group[options.ke].rawMonitorConfigurations[options.id]
         const controlUrlMethod = monitorConfig.details.control_url_method || 'GET'
-        const controlUrlStopTimeout = parseInt(monitorConfig.details.control_url_stop_timeout) || 1000
-        const stopCommandEnabled = monitorConfig.details.control_stop === '1';
+        const controlUrlStopTimeout = options.moveTimeout || parseInt(monitorConfig.details.control_url_stop_timeout) || 1000
+        const stopCommandEnabled = monitorConfig.details.control_stop === '1' || monitorConfig.details.control_stop === '2';
         if(monitorConfig.details.control !== "1"){
             s.userLog(monitorConfig,{
                 type: lang['Control Error'],
@@ -267,7 +268,7 @@ module.exports = function(s,config,lang){
                 return response;
             }else if(stopCommandEnabled){
                 response.moveResponse = await moveOnvifCamera(options,true)
-                if(stopCommandEnabled && options.direction !== 'stopMove' && options.direction !== 'center'){
+                if(options.direction !== 'stopMove' && options.direction !== 'center'){
                     await asyncSetTimeout(controlUrlStopTimeout)
                     response.stopMoveResponse = await moveOnvifCamera(options,false)
                     response.ok = response.moveResponse.ok && response.stopMoveResponse.ok;
@@ -386,6 +387,10 @@ module.exports = function(s,config,lang){
         const matrixCenterY = largestMatrix.y + (largestMatrix.height / 2)
         const rawDistanceX = (matrixCenterX - imageCenterX)
         const rawDistanceY = (matrixCenterY - imageCenterY)
+        const percentX = parseFloat((rawDistanceX / imgWidth).toFixed(2));
+        const percentY = parseFloat((rawDistanceY / imgHeight).toFixed(2));
+        const turnSpeedX = parseFloat(monitorConfig.details.control_turn_speed) || 0.1
+        const turnSpeedY = parseFloat(monitorConfig.details.control_turn_speed) || 0.1
         const distanceX = imgWidth / rawDistanceX
         const distanceY = imgHeight / rawDistanceY
         const axisX = rawDistanceX > thresholdX || rawDistanceX < -thresholdX ? distanceX : 0
@@ -397,7 +402,7 @@ module.exports = function(s,config,lang){
                     {direction: 'y', amount: axisY === 0 ? 0 : axisY > 0 ? invertedVerticalAxis ? -turnSpeed : turnSpeed : invertedVerticalAxis ? turnSpeed : -turnSpeed},
                     {direction: 'z', amount: 0},
                 ],
-                // axis: [{direction: 'x', amount: 1.0}],
+                moveTimeout: 500,
                 id: event.id,
                 ke: event.ke
             },(msg) => {
