@@ -243,7 +243,7 @@ module.exports = function(s,config,lang){
             return await moveGeneric(options,false);
         }
     }
-    async function ptzControl(options){
+    async function ptzControl(options,callback){
         if(!s.group[options.ke] || !s.group[options.ke].activeMonitors[options.id]){return}
         const monitorConfig = s.group[options.ke].rawMonitorConfigurations[options.id]
         const controlUrlMethod = monitorConfig.details.control_url_method || 'GET'
@@ -259,13 +259,12 @@ module.exports = function(s,config,lang){
                 msg: lang.ControlErrorText1
             }
         }
-        const response = {
+        let response = {
             direction: options.direction,
         }
         if(controlUrlMethod === 'ONVIF'){
             if(options.direction === 'center'){
                 response.moveResponse = await moveOnvifCamera(options,true)
-                return response;
             }else if(stopCommandEnabled){
                 response.moveResponse = await moveOnvifCamera(options,true)
                 if(options.direction !== 'stopMove' && options.direction !== 'center'){
@@ -275,13 +274,12 @@ module.exports = function(s,config,lang){
                 }else{
                     response.ok = response.moveResponse.ok;
                 }
-                return response;
             }else{
-                return await relativeMoveOnvif(options);
+                response = await relativeMoveOnvif(options);
             }
         }else{
             if(options.direction === 'stopMove'){
-                return await moveGeneric(options,false)
+                response = await moveGeneric(options,false)
             }else{
                 // left, right, up, down, center
                 response.moveResponse = await moveGeneric(options,true)
@@ -292,9 +290,10 @@ module.exports = function(s,config,lang){
                 }else{
                     response.ok = response.moveResponse.ok;
                 }
-                return response;
             }
         }
+        if(callback)callback(response);
+        return response;
     }
     const getPresetPositions = (options,callback) => {
         const profileToken = options.ProfileToken || "__CURRENT_TOKEN"
