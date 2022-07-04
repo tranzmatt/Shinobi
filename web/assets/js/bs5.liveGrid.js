@@ -1105,9 +1105,9 @@ $(document).ready(function(e){
     }
     dashboardSwitchCallbacks.dontShowDetection = function(toggleState){
         if(toggleState !== 1){
-            window.dontShowDetection = true
-        }else{
             window.dontShowDetection = false
+        }else{
+            window.dontShowDetection = true
         }
     }
     dashboardSwitchCallbacks.monitorMuteAudio = function(toggleState){
