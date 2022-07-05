@@ -950,7 +950,7 @@ $(document).ready(function(e){
         },700)
     })
     .on('gsresizestop', function(){
-        resetAllLiveGridDimensionsInMemory()
+        // resetAllLiveGridDimensionsInMemory()
         saveLiveGridBlockPositions()
     });
     addOnTabReopen('liveGrid', function () {
