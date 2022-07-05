@@ -300,11 +300,14 @@ $(document).ready(function(){
         submitTheForm()
         return false;
     })
-    onWebSocketEvent(function(d){
-        switch(d.f){
-            case'init_success':
-                drawMonitorListToSelector(monitorsList)
-            break;
-        }
+    addOnTabOpen('onvifDeviceManager', function () {
+        drawMonitorListToSelector(monitorsList)
+        var monitorId = monitorsList.val()
+        openOnvifDeviceManager(monitorId)
+    })
+    addOnTabReopen('onvifDeviceManager', function () {
+        drawMonitorListToSelector(monitorsList)
+        var monitorId = monitorsList.val()
+        openOnvifDeviceManager(monitorId)
     })
 })
