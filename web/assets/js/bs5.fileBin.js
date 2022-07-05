@@ -75,6 +75,7 @@ $(document).ready(function(e){
                       }
                 ],
                 data: data.files.map((file) => {
+                    var href = getApiPrefix('fileBin') + '/' + selectedMonitor + '/' + file.name
                     return {
                         monitorName: `<b>${loadedMonitors[file.mid]?.name || file.mid}</b>`,
                         name: file.name,
@@ -85,8 +86,8 @@ $(document).ready(function(e){
                         `,
                         size: convertKbToHumanSize(file.size),
                         buttons: `
-                            <a class="btn btn-sm btn-primary" href="${file.href}" download title="${lang.Download}"><i class="fa fa-download"></i></a>
-                            ${file.details.video ? `<a class="btn btn-sm btn-primary preview-video" href="${file.href}" title="${lang.Play}"><i class="fa fa-play"></i></a>` : ``}
+                            <a class="btn btn-sm btn-primary" href="${href}" download title="${lang.Download}"><i class="fa fa-download"></i></a>
+                            ${file.details.video ? `<a class="btn btn-sm btn-primary preview-video" href="${href}" title="${lang.Play}"><i class="fa fa-play"></i></a>` : ``}
                         `,
                     }
                 })
