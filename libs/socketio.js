@@ -688,12 +688,12 @@ module.exports = function(s,config,lang,io){
                                     }
                                 })
                             break;
-                            default:
-                                s.onOtherWebSocketMessagesExtensions.forEach(function(extender){
-                                    extender(d,cn)
-                                })
-                            break;
                         }
+                    break;
+                    default:
+                        s.onOtherWebSocketMessagesExtensions.forEach(function(extender){
+                            extender(d,cn)
+                        })
                     break;
                 }
             }catch(er){

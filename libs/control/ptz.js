@@ -397,8 +397,8 @@ module.exports = function(s,config,lang){
         if(axisX !== 0 || axisY !== 0){
             ptzControl({
                 axis: [
-                    {direction: 'x', amount: axisX === 0 ? 0 : axisX > 0 ? turnSpeed : -turnSpeed},
-                    {direction: 'y', amount: axisY === 0 ? 0 : axisY > 0 ? invertedVerticalAxis ? -turnSpeed : turnSpeed : invertedVerticalAxis ? turnSpeed : -turnSpeed},
+                    {direction: 'x', amount: axisX === 0 ? 0 : axisX > 0 ? turnSpeedX : -turnSpeedX},
+                    {direction: 'y', amount: axisY === 0 ? 0 : axisY > 0 ? invertedVerticalAxis ? -turnSpeedY : turnSpeedY : invertedVerticalAxis ? turnSpeedY : -turnSpeedY},
                     {direction: 'z', amount: 0},
                 ],
                 moveTimeout: 500,

@@ -11,28 +11,24 @@ module.exports = function(s,config,lang,app,io){
     // const ptz = require('./control/ptz.js')(s,config,lang,app,io)
     s.onOtherWebSocketMessages((data,connection) => {
         switch(data.f){
-            case'monitor':
-                switch(data.ff){
-                    case'startMove':
-                        startMove(data).then((response) => {
-                            s.debugLog(response)
-                        })
-                    break;
-                    case'stopMove':
-                        stopMove(data).then((response) => {
-                            s.debugLog(response)
-                        })
-                    break;
-                    case'control':
-                        ptzControl(data,function(msg){
-                            s.userLog(data,msg);
-                            connection.emit('f',{
-                                f: 'control',
-                                response: msg
-                            })
-                        })
-                    break;
-                }
+            case'startMove':
+                startMove(data).then((response) => {
+                    s.debugLog(response)
+                })
+            break;
+            case'stopMove':
+                stopMove(data).then((response) => {
+                    s.debugLog(response)
+                })
+            break;
+            case'control':
+                ptzControl(data,function(msg){
+                    s.userLog(data,msg);
+                    connection.emit('f',{
+                        f: 'control',
+                        response: msg
+                    })
+                })
             break;
         }
     })

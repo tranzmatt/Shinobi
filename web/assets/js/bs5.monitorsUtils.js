@@ -155,8 +155,7 @@ function runPtzCommand(monitorId,switchChosen){
         break;
         default:
             mainSocket.f({
-                f: 'monitor',
-                ff: 'control',
+                f: 'control',
                 direction: switchChosen,
                 id: monitorId,
                 ke: $user.ke
@@ -166,8 +165,7 @@ function runPtzCommand(monitorId,switchChosen){
 }
 function runPtzMove(monitorId,switchChosen,doMove){
     mainSocket.f({
-        f: 'monitor',
-        ff: doMove ? 'startMove' : 'stopMove',
+        f: doMove ? 'startMove' : 'stopMove',
         direction: switchChosen,
         id: monitorId,
         ke: $user.ke
