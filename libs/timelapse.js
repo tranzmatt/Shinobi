@@ -400,6 +400,35 @@ module.exports = function(s,config,lang,app,io){
         response.msg = `${lang.Building}... ${lang['Please Wait...']}`
         return response
     }
+    function initiateTimelapseVideoBuild({
+        groupKey,
+        monitorId,
+        framesPerSecond,
+        framesPosted,
+    }){
+        return new Promise((resolve,reject) => {
+            let response = {ok: false}
+            const frames = []
+            var n = 0
+            framesPosted.forEach((frame) => {
+                var firstParam = [['ke','=',groupKey],['mid','=',monitorId],['filename','=',frame.filename]]
+                if(n !== 0)firstParam[0] = (['or']).concat(firstParam[0])
+                frames.push(...firstParam)
+                ++n
+            })
+            s.knexQuery({
+                action: "select",
+                columns: "*",
+                table: "Timelapse Frames",
+                where: frames
+            },async (err,r) => {
+                if(r.length > 0){
+                    response = await createVideoFromTimelapse(r.reverse(),framesPerSecond)
+                }
+                resolve(response)
+            })
+        })
+    }
     // Web Paths
     // // // // //
     /**
@@ -453,6 +482,8 @@ module.exports = function(s,config,lang,app,io){
     ], function (req,res){
         res.setHeader('Content-Type', 'application/json');
         s.auth(req.params,function(user){
+            const groupKey = req.params.ke
+            const monitorId = req.params.id
             var hasRestrictions = user.details.sub && user.details.allmonitors !== '1'
             if(
                 user.permissions.watch_videos==="0" ||
@@ -472,28 +503,14 @@ module.exports = function(s,config,lang,app,io){
                 })
                 return
             }
+            const framesPerSecond = s.getPostData(req, 'fps')
             const framesPosted = s.getPostData(req, 'frames', true) || []
-            const frames = []
-            var n = 0
-            framesPosted.forEach((frame) => {
-                var firstParam = [['ke','=',req.params.ke],['mid','=',req.params.id],['filename','=',frame.filename]]
-                if(n !== 0)firstParam[0] = (['or']).concat(firstParam[0])
-                frames.push(...firstParam)
-                ++n
-            })
-            s.knexQuery({
-                action: "select",
-                columns: "*",
-                table: "Timelapse Frames",
-                where: frames
-            },async (err,r) => {
-                if(r.length === 0){
-                    s.closeJsonResponse(res,{
-                        ok: false
-                    })
-                    return
-                }
-                const buildResponse = await createVideoFromTimelapse(r.reverse(),s.getPostData(req, 'fps'))
+            initiateTimelapseVideoBuild({
+                groupKey,
+                monitorId,
+                framesPosted,
+                framesPerSecond,
+            }).then((buildResponse) => {
                 s.closeJsonResponse(res,buildResponse)
             })
         },res,req);
@@ -597,6 +614,25 @@ module.exports = function(s,config,lang,app,io){
             })
         },res,req);
     });
+    s.onOtherWebSocketMessages((d,connection) => {
+        switch(d.f){
+            case'timelapseVideoBuild':
+                initiateTimelapseVideoBuild({
+                    groupKey: d.ke,
+                    monitorId: d.mid,
+                    framesPosted: d.frames,
+                    framesPerSecond: d.fps,
+                }).then((buildResponse) => {
+                    s.tx({
+                        f: 'timelapse_build_requested',
+                        ke: d.ke,
+                        mid: d.mid,
+                        buildResponse: buildResponse,
+                    },'GRP_'+d.ke);
+                })
+            break;
+        }
+    })
     var buildTimelapseVideos = function(){
         var dateNow = new Date()
         var hoursNow = dateNow.getHours()

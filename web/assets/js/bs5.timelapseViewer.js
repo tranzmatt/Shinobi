@@ -211,24 +211,19 @@ $(document).ready(function(e){
         var startDate = dateRange.startDate
         var endDate = dateRange.endDate
         var selectedMonitor = monitorsList.val()
-        var parsedFrames = JSON.stringify(currentPlaylistArray.map(function(frame){
+        window.askedForTimelapseVideoBuild = true
+        var parsedFrames = currentPlaylistArray.map(function(frame){
             return {
                 mid: frame.mid,
                 ke: frame.ke,
                 filename: frame.filename,
             }
-        }));
-        $.post(apiBaseUrl + '/timelapseBuildVideo/' + $user.ke + '/' + selectedMonitor,{
-            fps: fps,
+        });
+        mainSocket.f({
+            f: 'timelapseVideoBuild',
+            mid: selectedMonitor,
             frames: parsedFrames,
-        },function(response){
-            setDownloadButtonLabel(response.msg, '')
-            new PNotify({
-                title: lang['Timelapse Frames Video'],
-                text: response.msg,
-                type: response.fileExists ? 'success' : 'info'
-            })
-            if(response.fileExists)downloadTimelapseVideo(response);
+            fps: fps,
         })
     })
     function isElementVisible (el) {
@@ -300,6 +295,18 @@ $(document).ready(function(e){
     }
     onWebSocketEvent(function(data){
         switch(data.f){
+            case'timelapse_build_requested':
+                console.log(data)
+                var response = data.buildResponse;
+                setDownloadButtonLabel(response.msg, '')
+                new PNotify({
+                    title: lang['Timelapse Frames Video'],
+                    text: response.msg,
+                    type: response.fileExists ? 'success' : 'info'
+                });
+                if(response.fileExists && window.askedForTimelapseVideoBuild)downloadTimelapseVideo(response);
+                window.askedForTimelapseVideoBuild = false
+            break;
             case'fileBin_item_added':
                 var saveBuiltVideo = dashboardOptions().switches.timelapseSaveBuiltVideo
                 let statusText = `${lang['Done!']}`
