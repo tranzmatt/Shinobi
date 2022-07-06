@@ -89,6 +89,7 @@ $(document).ready(function(e){
                   }
             ],
             data: loadedVideosTable.map((file) => {
+                var href = getFullOrigin(true) + file.href
                 return {
                     mid: file.mid,
                     time: formattedTime(file.time, 'DD-MM-YYYY hh:mm:ss AA'),
@@ -96,10 +97,10 @@ $(document).ready(function(e){
                     size: convertKbToHumanSize(file.size),
                     buttons: `
                     <div class="row-info" data-mid="${file.mid}" data-ke="${file.ke}" data-time="${file.time}" data-filename="${file.filename}">
-                        <a class="btn btn-sm btn-primary" href="${file.href}" download title="${lang.Download}"><i class="fa fa-download"></i></a>
-                        <a class="btn btn-sm btn-primary preview-video" href="${file.href}" title="${lang.Play}"><i class="fa fa-play"></i></a>
-                        <a class="btn btn-sm btn-default open-video" href="${file.href}" title="${lang.Play}"><i class="fa fa-play"></i></a>
-                        <a class="btn btn-sm btn-danger delete-video" href="${file.href}" title="${lang.Delete}"><i class="fa fa-trash-o"></i></a>
+                        <a class="btn btn-sm btn-primary" href="${href}" download title="${lang.Download}"><i class="fa fa-download"></i></a>
+                        <a class="btn btn-sm btn-primary preview-video" href="${href}" title="${lang.Play}"><i class="fa fa-play"></i></a>
+                        <a class="btn btn-sm btn-default open-video" href="${href}" title="${lang.Play}"><i class="fa fa-play"></i></a>
+                        <a class="btn btn-sm btn-danger delete-video" href="${href}" title="${lang.Delete}"><i class="fa fa-trash-o"></i></a>
                     </div>
                     `,
                 }
