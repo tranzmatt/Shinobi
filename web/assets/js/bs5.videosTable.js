@@ -4,6 +4,7 @@ $(document).ready(function(e){
     var dateSelector = theEnclosure.find('.date_selector')
     var videosTableDrawArea = $('#videosTable_draw_area')
     var videosTablePreviewArea = $('#videosTable_preview_area')
+    var objectTagSearchField = $('#videosTable_tag_search')
     var loadedVideosTable = [];
     var redrawTimeout;
     function openVideosTableView(monitorId,startDate,endDate){
@@ -38,19 +39,22 @@ $(document).ready(function(e){
     monitorsList.change(function(){
         drawVideosTableViewElements()
     })
+    objectTagSearchField.change(function(){
+        drawVideosTableViewElements()
+    })
     async function drawVideosTableViewElements(usePreloadedData){
         var dateRange = getSelectedTime(false)
+        var searchQuery = objectTagSearchField.val() || null
         var startDate = dateRange.startDate
         var endDate = dateRange.endDate
         var monitorId = monitorsList.val()
-        var queryString = ['start=' + startDate,'end=' + endDate,'limit=0']
         var frameIconsHtml = ''
-        var apiURL = getApiPrefix('videos') + '/' + monitorId;
         if(!usePreloadedData){
             loadedVideosTable = (await getVideos({
                 monitorId,
                 startDate,
                 endDate,
+                searchQuery,
             })).videos;
             $.each(loadedVideosTable,function(n,v){
                 loadedVideosInMemory[`${monitorId}${v.time}`]
@@ -72,6 +76,10 @@ $(document).ready(function(e){
                     },
                   },
                   {
+                    field: 'Monitor',
+                    title: '',
+                  },
+                  {
                     field: 'time',
                     title: lang['Time Created'],
                   },
@@ -90,7 +98,9 @@ $(document).ready(function(e){
             ],
             data: loadedVideosTable.map((file) => {
                 var href = getFullOrigin(true) + file.href
+                var loadedMonitor = loadedMonitors[file.mid]
                 return {
+                    Monitor: loadedMonitor && loadedMonitor.name ? loadedMonitor.name : file.mid,
                     mid: file.mid,
                     time: formattedTime(file.time, 'DD-MM-YYYY hh:mm:ss AA'),
                     end: formattedTime(file.end, 'DD-MM-YYYY hh:mm:ss AA'),
@@ -130,7 +140,7 @@ $(document).ready(function(e){
         e.preventDefault()
         var monitorId = getRowsMonitorId(this)
         openTab(`videosTableView`,{},null,null,null,() => {
-            drawMonitorListToSelector(monitorsList)
+            drawMonitorListToSelector(monitorsList,null,null,true)
             monitorsList.val(monitorId)
             drawVideosTableViewElements()
         })
@@ -197,12 +207,12 @@ $(document).ready(function(e){
         }
     })
     addOnTabOpen('videosTableView', function () {
-        drawMonitorListToSelector(monitorsList)
+        drawMonitorListToSelector(monitorsList,null,null,true)
         drawVideosTableViewElements()
     })
     addOnTabReopen('videosTableView', function () {
         var theSelected = `${monitorsList.val()}`
-        drawMonitorListToSelector(monitorsList)
+        drawMonitorListToSelector(monitorsList,null,null,true)
         monitorsList.val(theSelected)
     })
     addOnTabAway('videosTableView', function () {

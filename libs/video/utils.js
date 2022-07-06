@@ -210,9 +210,34 @@ module.exports = (s,config,lang) => {
             })
         })
     }
+    async function getVideosBasedOnTagFoundInMatrixOfAssociatedEvent({
+        groupKey,
+        monitorId,
+        startTime,
+        endTime,
+        searchQuery,
+        monitorRestrictions
+    }){
+        const initialEventQuery = [
+            ['ke','=',groupKey],
+            ['objects','LIKE',`%${searchQuery}%`],
+        ]
+        if(monitorId)initialEventQuery.push(['mid','=',monitorId]);
+        if(startTime)initialEventQuery.push(['time','>',startTime]);
+        if(endTime)initialEventQuery.push(['end','<',endTime]);
+        if(monitorRestrictions)initialEventQuery.push(monitorRestrictions);
+        const videoSelectResponse = await s.knexQueryPromise({
+            action: "select",
+            columns: "*",
+            table: "Videos",
+            where: initialEventQuery
+        });
+        return videoSelectResponse
+    }
     return {
         orphanedVideoCheck: orphanedVideoCheck,
         scanForOrphanedVideos: scanForOrphanedVideos,
         cutVideoLength: cutVideoLength,
+        getVideosBasedOnTagFoundInMatrixOfAssociatedEvent: getVideosBasedOnTagFoundInMatrixOfAssociatedEvent,
     }
 }

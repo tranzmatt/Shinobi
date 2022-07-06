@@ -80,6 +80,7 @@ module.exports = function(s,config,lang){
                 ext: e.ext,
                 status: 1,
                 details: s.s(k.details),
+                objects: k.objects || '',
                 size: k.filesize,
                 end: k.endTime,
             }
@@ -116,6 +117,9 @@ module.exports = function(s,config,lang){
         if(k.fileExists===true){
             //close video row
             k.details = k.details && k.details instanceof Object ? k.details : {}
+            var listOEvents = activeMonitor.detector_motion_count || []
+            var listOTags = listOEvents.filter(row => row.details.reason === 'object').map(row => row.details.matrices.map(matrix => matrix.tag).join(',')).join(',').split(',')
+            if(listOTags)k.objects = [...new Set(listOTags)].join(',');
             k.stat = fs.statSync(k.dir+k.file)
             k.filesize = k.stat.size
             k.filesizeMB = parseFloat((k.filesize/1048576).toFixed(2))
@@ -137,6 +141,7 @@ module.exports = function(s,config,lang){
                 ke: e.ke,
                 filename: k.filename,
                 filesize: k.filesize,
+                objects: k.objects,
                 time: s.timeObject(k.startTime).format('YYYY-MM-DD HH:mm:ss'),
                 end: s.timeObject(k.endTime).format('YYYY-MM-DD HH:mm:ss')
             }
@@ -156,6 +161,7 @@ module.exports = function(s,config,lang){
                     time: k.startTime,
                     size: k.filesize,
                     end: k.endTime,
+                    objects: k.objects,
                     events: monitorEventsCounted && monitorEventsCounted.length > 0 ? monitorEventsCounted : null
                 },'GRP_'+e.ke,'video_view')
                 //purge over max

@@ -679,7 +679,7 @@ function permissionCheck(toCheck,monitorId){
     return false
 }
 
-function drawMonitorListToSelector(jqTarget,selectFirst,showId){
+function drawMonitorListToSelector(jqTarget,selectFirst,showId,addAllMonitorsOption){
     var html = ''
     $.each(loadedMonitors,function(n,v){
         html += createOptionHtml({
@@ -687,7 +687,10 @@ function drawMonitorListToSelector(jqTarget,selectFirst,showId){
             label: v.name + (showId ? ` (${v.mid})` : ''),
         })
     })
-    jqTarget.html(html)
+    addAllMonitorsOption ? jqTarget.html(`
+        <option value="">${lang['All Monitors']}</option>
+        <optgroup label="${lang.Monitors}">${html}</optgroup>
+    `) : jqTarget.html(html);
     if(selectFirst){
         jqTarget
         .find('option')

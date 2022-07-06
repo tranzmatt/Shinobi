@@ -30,6 +30,9 @@ module.exports = function(s,config,lang,app,io){
         spawnSubstreamProcess,
         destroySubstreamProcess,
     } = require('./monitor/utils.js')(s,config,lang)
+    const {
+        getVideosBasedOnTagFoundInMatrixOfAssociatedEvent,
+    } = require('./video/utils.js')(s,config,lang)
     s.renderPage = function(req,res,paths,passables,callback){
         passables.window = {}
         passables.data = req.params
@@ -966,6 +969,43 @@ module.exports = function(s,config,lang,app,io){
                     })
                 }
                 res.end(s.prettyPrint(response))
+            })
+        },res,req);
+    });
+    /**
+    * API : Get Videos
+     */
+    app.get([
+        config.webPaths.apiPrefix+':auth/videosByEventTag/:ke',
+        config.webPaths.apiPrefix+':auth/videosByEventTag/:ke/:id'
+    ], function (req,res){
+        res.setHeader('Content-Type', 'application/json');
+        s.auth(req.params,function(user){
+            const searchQuery = s.getPostData(req,'search')
+            const startTime = s.getPostData(req,'start')
+            const endTime = s.getPostData(req,'end')
+            const userDetails = user.details
+            const monitorId = req.params.id
+            const groupKey = req.params.ke
+            const monitorRestrictions = s.getMonitorRestrictions(user.details,monitorId)
+            getVideosBasedOnTagFoundInMatrixOfAssociatedEvent({
+                groupKey,
+                monitorId,
+                startTime,
+                endTime,
+                searchQuery,
+                monitorRestrictions,
+            }).then((response) => {
+                if(response && response.rows){
+                    s.buildVideoLinks(response.rows,{
+                        auth : req.params.auth,
+                        videoParam : 'videos',
+                    })
+                }
+                s.closeJsonResponse(res,{
+                    ok: true,
+                    videos: response.rows,
+                })
             })
         },res,req);
     });

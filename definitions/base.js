@@ -8001,6 +8001,11 @@ module.exports = function(s,config,lang){
                          "possible": []
                      },
                      {
+                        "id": "videosTable_tag_search",
+                        "field": lang["Search Object Tags"],
+                        "example": "person",
+                     },
+                     {
                          "class": "date_selector",
                          "field": lang.Date,
                      },
