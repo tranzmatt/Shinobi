@@ -27,7 +27,7 @@ $(document).ready(function(){
         })
     }
     function loadVideos(options,callback){
-        theList.empty();
+        theList.html(`<div class="text-center ${definitions.Theme.isDark ? 'text-white' : ''} pt-4"><h3><i class="fa fa-spinner fa-pulse"></i></h3></div>`);
         var currentDate = new Date()
         var videoRange = parseInt(videoRangeEl.val()) || 72
         options.videoRange = videoRange
@@ -46,6 +46,7 @@ $(document).ready(function(){
             callback(data)
         }
         getVideos(options,function(data){
+            theList.empty()
             if(data.videos.length === 0){
                 options.limit = 20
                 delete(options.startDate)
