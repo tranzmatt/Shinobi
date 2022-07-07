@@ -693,11 +693,11 @@ module.exports = function(s,config,lang,io){
                     break;
                     default:
                         s.onOtherWebSocketMessagesExtensions.forEach(function(extender){
-                            extender(d,cn)
+                            extender(d,cn,tx)
                         })
                     break;
                 }
-                if(d.callbackId && !d.hasNotResponded){
+                if(d.callbackId && !d.hasResponded){
                     tx({
                         f:'callback',
                         callbackId: d.callbackId,
