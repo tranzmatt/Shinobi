@@ -68,9 +68,12 @@
     top: 0;
 }
 .video-time-needle-event {
-    border-left: 3px solid rgb(249 242 31);
+    border-left: 3px solid #fffb00;
     border-radius: 0;
     z-index: 999;
+}
+.video-time-needle-seeker {
+    border-left: 3px solid #f00;
 }
 .video-day-slice {
     height: 100%;

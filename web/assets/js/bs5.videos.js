@@ -124,13 +124,14 @@ function getFrameOnVideoRow(percentageInward,video){
         timeAdded: timeAdded,
     }
 }
-function getVideoFromDay(percentageInward,videos,startTime,endTime){
+function getVideoFromDay(percentageInward,reversedVideos,startTime,endTime){
     var timeDifference = endTime - startTime
     var timeInward = timeDifference / (100 / percentageInward)
     var timeAdded = new Date(startTime.getTime() + timeInward) // ms
-    var foundVideo = ([]).concat(videos).reverse().find(function(row){
-        return new Date(timeAdded - 1000) >= new Date(row.time)
+    var foundVideoIndex = reversedVideos.findIndex(function(row){
+        return new Date(timeAdded) >= new Date(row.time)
     });
+    var foundVideo = reversedVideos[foundVideoIndex - 1] || reversedVideos[foundVideoIndex] || reversedVideos[0]
     return foundVideo
 }
 // function bindFrameFindingByMouseMove(createdCardCarrier,video){
@@ -209,15 +210,16 @@ function bindFrameFindingByMouseMoveForDay(createdCardCarrier,dayKey,videos,allF
     }
     var videoSlices = createdCardElement.find('.video-day-slice')
     var videoTimeLabel = createdCardElement.find('.video-time-label')
-    var currentlySelected = null
+    var currentlySelected = videos[0]
     var currentlySelectedFrame = null
+    var reversedVideos = ([]).concat(videos).reverse();
     createdCardElement.on('mousemove',function(evt){
         var offest = createdCardElement.offset()
         var elementWidth = createdCardElement.width() + 2
         var amountMoved = evt.pageX - offest.left
         var percentMoved = amountMoved / elementWidth * 100
         percentMoved = percentMoved > 100 ? 100 : percentMoved < 0 ? 0 : percentMoved
-        var videoFound = videos[0] ? getVideoFromDay(percentMoved,videos,dayStart,dayEnd) : null
+        var videoFound = videos[0] ? getVideoFromDay(percentMoved,reversedVideos,dayStart,dayEnd) : null
         createdCardElement.find(`[data-time]`).css('background-color','')
         if(videoFound){
             // var videoSlice = createdCardElement.find(`[data-time="${videoFound.time}"]`).css('background-color','rgba(255,255,255,0.3)')
@@ -375,6 +377,7 @@ function createDayCard(videos,frames,dayKey,monitorId,classOverride){
     var stripTimes = getStripStartAndEnd(videos,frames)
     var startTime = stripTimes.start
     var endTime = stripTimes.end
+    var firstVideoTime = videos[0] ? videos[0].time : null
     var dayParts = formattedTime(startTime).split(' ')[1].split('-')
     var day = dayParts[2]
     var month = dayParts[1]
@@ -414,7 +417,7 @@ function createDayCard(videos,frames,dayKey,monitorId,classOverride){
             </div>
             <div class="video-time-strip card-footer p-0">
                 <div class="flex-row d-flex" style="height:30px">${eventMatrixHtml}</div>
-                <div class="video-time-needle video-time-needle-seeker" data-mid="${monitorId}" style="z-index: 2"></div>
+                <div class="video-time-needle video-time-needle-seeker" ${firstVideoTime ? `video-time-seeked-video-position="${firstVideoTime}"` : ''} data-mid="${monitorId}" style="z-index: 2"></div>
             </div>
         </div>
     </div>`
