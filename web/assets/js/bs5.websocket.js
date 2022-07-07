@@ -65,7 +65,7 @@ $(document).ready(function(){
                 })
             break;
             case'callback':
-                // console.log('Callback from Websocket Request',d)
+                console.log('Callback from Websocket Request',d)
                 queuedCallbacks[d.callbackId](...d.args)
             break;
         }
