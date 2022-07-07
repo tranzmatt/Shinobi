@@ -408,25 +408,30 @@ module.exports = function(s,config,lang,app,io){
     }){
         return new Promise((resolve,reject) => {
             let response = {ok: false}
-            const frames = []
-            var n = 0
-            framesPosted.forEach((frame) => {
-                var firstParam = [['ke','=',groupKey],['mid','=',monitorId],['filename','=',frame.filename]]
-                if(n !== 0)firstParam[0] = (['or']).concat(firstParam[0])
-                frames.push(...firstParam)
-                ++n
-            })
-            s.knexQuery({
-                action: "select",
-                columns: "*",
-                table: "Timelapse Frames",
-                where: frames
-            },async (err,r) => {
-                if(r.length > 0){
-                    response = await createVideoFromTimelapse(r.reverse(),framesPerSecond)
-                }
+            if(!monitorId){
+                response.msg = lang['No Monitor Found, Ignoring Request']
                 resolve(response)
-            })
+            }else{
+                const frames = []
+                var n = 0
+                framesPosted.forEach((frame) => {
+                    var firstParam = [['ke','=',groupKey],['mid','=',monitorId],['filename','=',frame.filename]]
+                    if(n !== 0)firstParam[0] = (['or']).concat(firstParam[0])
+                    frames.push(...firstParam)
+                    ++n
+                })
+                s.knexQuery({
+                    action: "select",
+                    columns: "*",
+                    table: "Timelapse Frames",
+                    where: frames
+                },async (err,r) => {
+                    if(r.length > 0){
+                        response = await createVideoFromTimelapse(r.reverse(),framesPerSecond)
+                    }
+                    resolve(response)
+                })
+            }
         })
     }
     // Web Paths
