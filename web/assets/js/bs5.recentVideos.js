@@ -11,18 +11,18 @@ $(document).ready(function(){
         }
     }
     function drawDaysToList(videos,toBegin,frames){
-        var videosSortedByDays = sortVideosByDays(videos)
-        var framesSortedByDays = sortFramesByDays(frames)
-        $.each(videosSortedByDays,function(monitorId,days){
-            if(!framesSortedByDays[monitorId])framesSortedByDays[monitorId] = {};
-            $.each(days,function(dayKey,videos){
-                var copyOfVideos = ([]).concat(videos).reverse()
+        var listOfDays = getAllDays(videos,frames)
+        var videosSortedByDays = Object.assign({},listOfDays,sortVideosByDays(videos))
+        var framesSortedByDays = Object.assign({},listOfDays,sortFramesByDays(frames))
+        $.each(listOfDays,function(monitorId,days){
+            $.each(days,function(dayKey){
+                var copyOfVideos = ([]).concat(videosSortedByDays[monitorId][dayKey] || []).reverse()
                 var copyOfFrames = ([]).concat(framesSortedByDays[monitorId][dayKey] || []).reverse()
-                theList.append(createDayCard(copyOfVideos,dayKey,monitorId))
+                theList.append(createDayCard(copyOfVideos,copyOfFrames,dayKey,monitorId))
                 var theChildren = theList.children()
                 var createdCardCarrier = toBegin ? theChildren.first() : theChildren.last()
                 bindFrameFindingByMouseMoveForDay(createdCardCarrier,dayKey,copyOfVideos,copyOfFrames)
-                // preloadAllTimelapseFramesToMemoryFromVideoList(framesSortedByDays)
+                // preloadAllTimelapseFramesToMemoryFromVideoList(copyOfFrames)
             })
         })
     }
