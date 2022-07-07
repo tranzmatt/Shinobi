@@ -88,6 +88,10 @@ $(document).ready(function(e){
                     title: lang['Ended']
                   },
                   {
+                    field: 'objects',
+                    title: lang['Objects Found']
+                  },
+                  {
                     field: 'size',
                     title: ''
                   },
@@ -104,6 +108,7 @@ $(document).ready(function(e){
                     mid: file.mid,
                     time: formattedTime(file.time, 'DD-MM-YYYY hh:mm:ss AA'),
                     end: formattedTime(file.end, 'DD-MM-YYYY hh:mm:ss AA'),
+                    objects: file.objects,
                     size: convertKbToHumanSize(file.size),
                     buttons: `
                     <div class="row-info" data-mid="${file.mid}" data-ke="${file.ke}" data-time="${file.time}" data-filename="${file.filename}">
