@@ -8,10 +8,11 @@ module.exports = function(s,config,lang,app,io){
             columns: "*",
             table: "Schedules"
         },(err,rows) => {
-            rows.forEach(function(schedule){
+
+            rows && rows.forEach(function(schedule){
                 s.updateSchedule(schedule)
             })
-            if(callback)callback()
+            if(callback && typeof callback === 'function')callback()
         })
     }
     //update schedule
