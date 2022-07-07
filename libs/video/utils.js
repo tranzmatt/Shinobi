@@ -230,6 +230,7 @@ module.exports = (s,config,lang) => {
             action: "select",
             columns: "*",
             table: "Videos",
+            orderBy: ['time','desc'],
             where: initialEventQuery
         });
         return videoSelectResponse
