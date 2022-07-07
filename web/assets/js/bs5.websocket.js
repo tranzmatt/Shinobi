@@ -14,14 +14,20 @@ var onWebSocketEventFunctions = []
 function onWebSocketEvent(theAction){
     onWebSocketEventFunctions.push(theAction)
 }
+var queuedCallbacks = {}
 $(document).ready(function(){
     mainSocket = io(location.origin,{
         path: websocketPath,
         query: websocketQuery
     })
-    mainSocket.f = function(data){
+    mainSocket.f = function(data,callback){
         if(!data.ke)data.ke = $user.ke;
         if(!data.uid)data.uid = $user.uid;
+        if(callback){
+            var callbackId = generateId();
+            data.callbackId = callbackId
+            queuedCallbacks[callbackId] = callback
+        }
         console.log('Sending Data',data)
         return mainSocket.emit('f',data)
     }
@@ -57,6 +63,10 @@ $(document).ready(function(){
                 $.each(onInitWebsocketFunctions,function(n,theAction){
                     theAction(d)
                 })
+            break;
+            case'callback':
+                // console.log('Callback from Websocket Request',d)
+                queuedCallbacks[d.callbackId](...d.args)
             break;
         }
         $.each(onWebSocketEventFunctions,function(n,theAction){

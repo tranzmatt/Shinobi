@@ -379,7 +379,7 @@ function createDayCard(videos,frames,dayKey,monitorId,classOverride){
         if(row.events && row.events.length > 0){
             $.each(row.events,function(n,theEvent){
                 var leftPercent = getPercentOfTimePositionFromVideo(row,theEvent)
-                eventMatrixHtml += `<div class="video-time-needle video-time-needle-event" style="margin-right:${leftPercent}%"></div>`
+                eventMatrixHtml += `<div class="video-time-needle video-time-needle-event" style="margin-left:${leftPercent}%"></div>`
             })
         }
         eventMatrixHtml += `</div>`
