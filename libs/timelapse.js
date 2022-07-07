@@ -614,8 +614,36 @@ module.exports = function(s,config,lang,app,io){
             })
         },res,req);
     });
-    s.onOtherWebSocketMessages((d,connection) => {
+    s.onOtherWebSocketMessages((d,connection,messageClient) => {
         switch(d.f){
+            case'getTimelapseFrame':
+                d.hasResponded = true
+                let frame = d.frame
+                var fileLocation
+                if(frame.details.dir){
+                    fileLocation = `${s.checkCorrectPathEnding(frame.details.dir)}`
+                }else{
+                    fileLocation = `${s.dir.videos}`
+                }
+                var selectedDate = frame.filename.split('T')[0]
+                fileLocation = `${fileLocation}${frame.ke}/${frame.mid}_timelapse/${selectedDate}/${frame.filename}`
+                fs.readFile(fileLocation,"base64",function(err,base64){
+                    const response = {
+                        ok: true,
+                    }
+                    if(!err){
+                        response.image = base64
+                    }else{
+                        response.err = err
+                        response.ok = false
+                    }
+                    messageClient({
+                        f:'callback',
+                        callbackId: d.callbackId,
+                        args: [response]
+                    })
+                })
+            break;
             case'timelapseVideoBuild':
                 initiateTimelapseVideoBuild({
                     groupKey: d.ke,

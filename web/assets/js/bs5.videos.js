@@ -1,24 +1,24 @@
 var loadedVideosInMemory = {}
 var loadedFramesMemory = {}
 var loadedFramesMemoryTimeout = {}
-function getLocalTimelapseImageLink(imageUrl){
-    if(loadedFramesMemory[imageUrl]){
-        return loadedFramesMemory[imageUrl]
+function getLocalTimelapseImageLink(frame){
+    var frameId = `${frame.mid}${frame.filename}`
+    if(loadedFramesMemory[frameId]){
+        return loadedFramesMemory[frameId]
     }else{
         return new Promise((resolve,reject) => {
-            fetch(imageUrl)
-              .then(res => res.blob()) // Gets the response and returns it as a blob
-              .then(blob => {
-                var objectURL = URL.createObjectURL(blob);
-                loadedFramesMemory[imageUrl] = objectURL
-                clearTimeout(loadedFramesMemoryTimeout[imageUrl])
-                loadedFramesMemoryTimeout[imageUrl] = setTimeout(function(){
-                    URL.revokeObjectURL(objectURL)
-                    delete(loadedFramesMemory[imageUrl])
-                    delete(loadedFramesMemoryTimeout[imageUrl])
+            mainSocket.f({
+                f: 'getTimelapseFrame',
+                frame: frame,
+            },(response) => {
+                loadedFramesMemory[frameId] = `data:image/jpeg;base64,${response.image}`
+                clearTimeout(loadedFramesMemoryTimeout[frameId])
+                loadedFramesMemoryTimeout[frameId] = setTimeout(function(){
+                    delete(loadedFramesMemory[frameId])
+                    delete(loadedFramesMemoryTimeout[frameId])
                 },1000 * 60 * 10)
-                resolve(objectURL)
-            });
+                resolve(loadedFramesMemory[frameId])
+            })
         })
     }
 }
@@ -34,7 +34,7 @@ async function preloadAllTimelapseFramesToMemoryFromVideoList(framesSortedByDays
         var frame = framesSortedByDays[ii]
         console.log ('Loading... ',frame.href)
         await syncWait(50)
-        await getLocalTimelapseImageLink(frame.href)
+        await getLocalTimelapseImageLink(frame)
         console.log ('Loaded! ',frame.href)
     }
 }
@@ -236,7 +236,7 @@ function bindFrameFindingByMouseMoveForDay(createdCardCarrier,dayKey,videos,allF
         if(frameFound){
             currentlySelectedFrame = Object.assign({},frameFound)
             setTimeout(async function(){
-                var frameUrl = await getLocalTimelapseImageLink(frameFound.href)
+                var frameUrl = await getLocalTimelapseImageLink(frameFound)
                 if(currentlySelectedFrame.time === frameFound.time)timeImg.attr('src',frameUrl);
             },1)
         }
