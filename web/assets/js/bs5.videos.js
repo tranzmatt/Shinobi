@@ -583,7 +583,35 @@ $(document).ready(function(){
                     if(data.ok){
                         console.log('Video Deleted')
                     }else{
-                        console.log('Video Not Deleted',data,deleteEndpoint)
+                        console.log('Video Not Deleted',data,videoEndpoint)
+                    }
+                })
+            }
+        });
+        return false;
+    })
+    .on('click','.fix-video',function(e){
+        e.preventDefault()
+        var el = $(this).parents('[data-mid]')
+        var monitorId = el.attr('data-mid')
+        var videoTime = el.attr('data-time')
+        var video = loadedVideosInMemory[`${monitorId}${videoTime}`]
+        var ext = video.filename.split('.')
+        ext = ext[ext.length - 1]
+        var videoEndpoint = getApiPrefix(`videos`) + '/' + video.mid + '/' + video.filename
+        $.confirm.create({
+            title: lang["Fix Video"] + ' : ' + video.filename,
+            body: `${lang.FixVideoMsg}<br><br><div class="row"><video class="video_video" autoplay loop controls><source src="${videoEndpoint}" type="video/${ext}"></video></div>`,
+            clickOptions: {
+                title: '<i class="fa fa-wrench"></i> ' + lang.Fix,
+                class: 'btn-danger btn-sm'
+            },
+            clickCallback: function(){
+                $.getJSON(videoEndpoint + '/fix',function(data){
+                    if(data.ok){
+                        console.log('Video Fixed')
+                    }else{
+                        console.log('Video Not Fixed',data,videoEndpoint)
                     }
                 })
             }

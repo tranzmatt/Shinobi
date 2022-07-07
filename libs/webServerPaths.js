@@ -31,6 +31,7 @@ module.exports = function(s,config,lang,app,io){
         destroySubstreamProcess,
     } = require('./monitor/utils.js')(s,config,lang)
     const {
+        reEncodeVideoAndReplace,
         getVideosBasedOnTagFoundInMatrixOfAssociatedEvent,
     } = require('./video/utils.js')(s,config,lang)
     s.renderPage = function(req,res,paths,passables,callback){
@@ -1651,7 +1652,7 @@ module.exports = function(s,config,lang,app,io){
         config.webPaths.apiPrefix+':auth/cloudVideos/:ke/:id/:file/:mode',
         config.webPaths.apiPrefix+':auth/cloudVideos/:ke/:id/:file/:mode/:f'
     ], function (req,res){
-        var response = {ok:false};
+        let response = { ok: false };
         res.setHeader('Content-Type', 'application/json');
         s.auth(req.params,function(user){
             if(user.permissions.watch_videos==="0"||user.details.sub&&user.details.allmonitors!=='1'&&user.details.video_delete.indexOf(req.params.id)===-1){
@@ -1683,15 +1684,14 @@ module.exports = function(s,config,lang,app,io){
                     ['time','=',time]
                 ],
                 limit: 1
-            },(err,r) => {
+            },async (err,r) => {
                 if(r && r[0]){
                     r=r[0];
                     r.filename=s.formattedTime(r.time)+'.'+r.ext;
                     var details = s.parseJSON(r.details) || {}
                     switch(req.params.mode){
                         case'fix':
-                            response.ok = true;
-                            s.video('fix',r)
+                            response = await reEncodeVideoAndReplace(r)
                         break;
                         case'status':
                             r.f = 'video_edit'

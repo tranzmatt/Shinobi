@@ -17,6 +17,9 @@ module.exports = function(s,config,lang,app,io){
     const {
         processKill,
     } = require('./monitor/utils.js')(s,config,lang)
+    const {
+        stitchMp4Files,
+    } = require('./video/utils.js')(s,config,lang)
     const timelapseFramesCache = {}
     const timelapseFramesCacheTimeouts = {}
     s.getTimelapseFrameDirectory = function(e){
@@ -248,24 +251,6 @@ module.exports = function(s,config,lang,app,io){
             })
         })
     }
-    async function stitchMp4Files(options){
-        return new Promise((resolve,reject) => {
-            const concatListFile = options.listFile
-            const finalMp4OutputLocation = options.output
-            const commandString = `-y -threads 1 -f concat -safe 0 -i "${concatListFile}" -c:v copy -an -preset ultrafast "${finalMp4OutputLocation}"`
-            s.debugLog("stitchMp4Files",commandString)
-            const videoBuildProcess = spawn(config.ffmpegDir,splitForFFPMEG(commandString))
-            videoBuildProcess.stdout.on('data',function(data){
-                s.debugLog('stdout',finalMp4OutputLocation,data.toString())
-            })
-            videoBuildProcess.stderr.on('data',function(data){
-                s.debugLog('stderr',finalMp4OutputLocation,data.toString())
-            })
-            videoBuildProcess.on('exit',async function(data){
-                resolve()
-            })
-        })
-    }
     async function chunkFramesAndBuildMultipleVideosThenSticth(options){
         // a single video with too many frames makes the video unplayable, this is the fix.
         const frames = options.frames
@@ -311,10 +296,10 @@ module.exports = function(s,config,lang,app,io){
             listFile: concatListFile,
             output: finalMp4OutputLocation,
         })
-        await fs.promises.unlink(concatListFile)
-        for (let i = 0; i < filePathsList; i++) {
+        await fs.promises.rm(concatListFile)
+        for (let i = 0; i < filePathsList.length; i++) {
             var segmentFileOutput = filePathsList[i]
-            await fs.promises.unlink(segmentFileOutput)
+            await fs.promises.rm(segmentFileOutput)
         }
         s.debugLog('videoBuildProcess Stitching Complete!',finalMp4OutputLocation)
     }

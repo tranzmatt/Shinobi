@@ -115,6 +115,7 @@ $(document).ready(function(e){
                         <a class="btn btn-sm btn-primary" href="${href}" download title="${lang.Download}"><i class="fa fa-download"></i></a>
                         <a class="btn btn-sm btn-primary preview-video" href="${href}" title="${lang.Play}"><i class="fa fa-play"></i></a>
                         <a class="btn btn-sm btn-default open-video" href="${href}" title="${lang.Play}"><i class="fa fa-play"></i></a>
+                        <a class="btn btn-sm btn-warning fix-video" href="${href}" title="${lang.Fix}"><i class="fa fa-wrench"></i></a>
                         <a class="btn btn-sm btn-danger delete-video" href="${href}" title="${lang.Delete}"><i class="fa fa-trash-o"></i></a>
                     </div>
                     `,
