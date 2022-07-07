@@ -1,10 +1,14 @@
 var loadedVideosInMemory = {}
 var loadedFramesMemory = {}
 var loadedFramesMemoryTimeout = {}
+var loadedFramesLock = {}
 function getLocalTimelapseImageLink(imageUrl){
-    if(loadedFramesMemory[imageUrl]){
+    if(loadedFramesLock[imageUrl]){
+        return null;
+    }else if(loadedFramesMemory[imageUrl]){
         return loadedFramesMemory[imageUrl]
     }else{
+        loadedFramesLock[imageUrl] = true
         return new Promise((resolve,reject) => {
             fetch(imageUrl)
               .then(res => res.blob()) // Gets the response and returns it as a blob
@@ -16,8 +20,11 @@ function getLocalTimelapseImageLink(imageUrl){
                     URL.revokeObjectURL(objectURL)
                     delete(loadedFramesMemory[imageUrl])
                     delete(loadedFramesMemoryTimeout[imageUrl])
-                },1000 * 60 * 10)
-                resolve(objectURL)
+                },1000 * 60 * 10);
+                loadedFramesLock[imageUrl] = false;
+                resolve(objectURL);
+            }).catch((err) => {
+                resolve()
             });
         })
     }
@@ -237,7 +244,7 @@ function bindFrameFindingByMouseMoveForDay(createdCardCarrier,dayKey,videos,allF
             currentlySelectedFrame = Object.assign({},frameFound)
             setTimeout(async function(){
                 var frameUrl = await getLocalTimelapseImageLink(frameFound.href)
-                if(currentlySelectedFrame.time === frameFound.time)timeImg.attr('src',frameUrl);
+                if(frameUrl && currentlySelectedFrame.time === frameFound.time)timeImg.attr('src',frameUrl);
             },1)
         }
         timeNeedleSeeker.attr('video-slice-seeked',result.timeInward).css('left',`${percentMoved}%`)
