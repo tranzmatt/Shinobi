@@ -100,18 +100,29 @@ module.exports = function(s,config,lang,io){
                         k.cmd = "LANG=C free | grep Mem | awk '{print $7/$2 * 100.0}'";
                     break;
                 }
+                let percent = 0
+                let used = 0
                 if(k.cmd){
-                     exec(k.cmd,{encoding:'utf8',detached: true},function(err,d){
-                         if(s.isWin===true){
-                             d=(parseInt(d.split('=')[1])/(s.totalmem/1000))*100
-                         }
-                         resolve(d)
-                         s.onGetRamUsageExtensions.forEach(function(extender){
-                             extender(d)
-                         })
-                     })
+                    exec(k.cmd,{encoding:'utf8',detached: true},function(err,d){
+                        if(s.isWin===true){
+                            const freeMb = parseInt(d.split('=')[1].trim()) / 1024
+                            const totalMemInMb = s.totalmem/1024/1024
+                            used = totalMemInMb - freeMb
+                            percent=(used/totalMemInMb)*100
+                        }
+                        resolve({
+                            used,
+                            percent
+                        })
+                        s.onGetRamUsageExtensions.forEach(function(extender){
+                            extender(percent)
+                        })
+                    })
                 }else{
-                    resolve(0)
+                    resolve({
+                        used,
+                        percent
+                    })
                 }
             })
         }
