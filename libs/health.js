@@ -55,6 +55,9 @@ module.exports = function(s,config,lang,io){
                      exec(k.cmd,{encoding:'utf8',detached: true},function(err,d){
                          if(s.isWin===true){
                              d=d.replace(/(\r\n|\n|\r)/gm,"").replace(/%/g,"")
+                         }else if(s.platform == 'darwin') {
+                             // on macos the cpu% is per core, so a 10 core machine can go up to 1000%
+                             d=parseFloat(d.trim()) / s.coreCount
                          }
                          resolve(d)
                          s.onGetCpuUsageExtensions.forEach(function(extender){
@@ -109,6 +112,8 @@ module.exports = function(s,config,lang,io){
                             const totalMemInMb = s.totalmem/1024/1024
                             used = totalMemInMb - freeMb
                             percent=(used/totalMemInMb)*100
+                        } else {
+                            percent = d.trim()
                         }
                         resolve({
                             used,
