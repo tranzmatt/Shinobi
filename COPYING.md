@@ -126,29 +126,16 @@ Courthouse Vancouver Robson Square
 
 #### List of Included Software
 
-    This list is completed to best of our knowledge.
+    This list is completed to the best of our knowledge.
 
     Node.js - https://nodejs.org/en/
     MariaDB - https://mariadb.org/
     FFmpeg - https://www.ffmpeg.org/
-    request - https://www.npmjs.com/package/request
-    Express (npm) - https://expressjs.com/ https://www.npmjs.com/package/express
-    EJS (npm) - http://ejs.co/ https://www.npmjs.com/package/ejs
-    pam-diff (npm) (Motion Detector) - https://github.com/kevinGodell/pam-diff
-    pipe2pam (npm) (for pam-diff) - https://github.com/kevinGodell/pipe2pam
-    mp4frag (npm) (Poseidon's main engine) - https://github.com/kevinGodell/mp4frag
+    pam-diff (Motion Detector) - https://github.com/kevinGodell/pam-diff
+    pipe2pam (for pam-diff) - https://github.com/kevinGodell/pipe2pam
+    mp4frag (Poseidon's main engine) - https://github.com/kevinGodell/mp4frag
     mse-live-player (for mp4frag) - https://github.com/kevinGodell/mse-live-player
-    pipe2jpeg (npm) - https://github.com/kevinGodell/pipe2jpeg
-    webdav (npm) - https://www.npmjs.com/package/webdav
-    jsonfile (npm) - https://www.npmjs.com/package/jsonfile
-    connectionTester (npm) - https://www.npmjs.com/package/connectionTester
-    node-onvif (npm) - https://www.npmjs.com/package/node-onvif
-    knex (npm) - https://www.npmjs.com/package/knex
-    nodemailer (npm) - https://www.npmjs.com/package/nodemailer
-    mysql (npm) - https://www.npmjs.com/package/mysql
-    sqlite3 (npm) - https://www.npmjs.com/package/sqlite3
-    ldapauth-fork (npm) - https://www.npmjs.com/package/ldapauth-fork
-    http-proxy (npm) - https://www.npmjs.com/package/http-proxy
+    pipe2jpeg - https://github.com/kevinGodell/pipe2jpeg
     hls.js - https://github.com/video-dev/hls.js/
     flv.js - https://github.com/Bilibili/flv.js/
     Material Design Lite - https://getmdl.io/
@@ -166,3 +153,50 @@ Courthouse Vancouver Robson Square
     Moment.js - https://momentjs.com/
     Livestamp.js - https://mattbradley.github.io/livestampjs/
     Lodash - https://lodash.com/
+
+	**npmjs.com packages**
+
+	async - https://www.npmjs.com/package/async
+	aws-sdk - https://www.npmjs.com/package/aws-sdk
+	backblaze-b2 - https://www.npmjs.com/package/backblaze-b2
+	body-parser - https://www.npmjs.com/package/body-parser
+	bson - https://www.npmjs.com/package/bson
+	connection-tester - https://www.npmjs.com/package/connection-tester
+	cws - https://www.npmjs.com/package/cws
+	digest-fetch - https://www.npmjs.com/package/digest-fetch
+	discord.js - https://www.npmjs.com/package/discord.js
+	ejs - https://www.npmjs.com/package/ejs
+	express - https://www.npmjs.com/package/express
+	express-fileupload - https://www.npmjs.com/package/express-fileupload
+	fs-extra - https://www.npmjs.com/package/fs-extra
+	ftp-srv - https://www.npmjs.com/package/ftp-srv
+	googleapis - https://www.npmjs.com/package/googleapis
+	http-proxy - https://www.npmjs.com/package/http-proxy
+	jsonfile - https://www.npmjs.com/package/jsonfile
+	knex - https://www.npmjs.com/package/knex
+	ldapauth-fork - https://www.npmjs.com/package/ldapauth-fork
+	moment - https://www.npmjs.com/package/moment
+	mp4frag - https://www.npmjs.com/package/mp4frag
+	mqtt - https://www.npmjs.com/package/mqtt
+	mysql - https://www.npmjs.com/package/mysql
+	node-abort-controller - https://www.npmjs.com/package/node-abort-controller
+	node-fetch - https://www.npmjs.com/package/node-fetch
+	node-onvif-events - https://www.npmjs.com/package/node-onvif-events
+	node-ssh - https://www.npmjs.com/package/node-ssh
+	node-telegram-bot-api - https://www.npmjs.com/package/node-telegram-bot-api
+	nodemailer - https://www.npmjs.com/package/nodemailer
+	pam-diff - https://www.npmjs.com/package/pam-diff
+	path - https://www.npmjs.com/package/path
+	pipe2pam - https://www.npmjs.com/package/pipe2pam
+	pixel-change - https://www.npmjs.com/package/pixel-change
+	pushover-notifications - https://www.npmjs.com/package/pushover-notifications
+	sat - https://www.npmjs.com/package/sat
+	shinobi-onvif - https://www.npmjs.com/package/shinobi-onvif
+	shinobi-sound-detection - https://www.npmjs.com/package/shinobi-sound-detection
+	shinobi-zwave - https://www.npmjs.com/package/shinobi-zwave
+	smtp-server - https://www.npmjs.com/package/smtp-server
+	socket.io - https://www.npmjs.com/package/socket.io
+	socket.io-client - https://www.npmjs.com/package/socket.io-client
+	tree-kill - https://www.npmjs.com/package/tree-kill
+	unzipper - https://www.npmjs.com/package/unzipper
+	webdav-fs - https://www.npmjs.com/package/webdav-fs
