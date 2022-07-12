@@ -14,7 +14,6 @@ $(document).ready(function(){
         var eventMatrixHtml = ``
         if(hasRows){
             var objectsFound = {}
-            eventMatrixHtml += `<h3>${lang.Events}</h3>`
             $.each(video.events,function(n,theEvent){
                 loadedEvents[new Date(theEvent.time)] = theEvent
                 var objectsFound = {}
