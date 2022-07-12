@@ -362,6 +362,15 @@ $(document).ready(function(e){
             // .off("play").on("play",function(){
             //     console.log(monitorId,'play')
             // })
+            .off("loadedmetadata").on("loadedmetadata",function(){
+                resetWidthForActiveVideoPlayers()
+            })
+            .off("pause").on("pause",function(){
+                resetWidthForActiveVideoPlayers()
+            })
+            .off("play").on("play",function(){
+                resetWidthForActiveVideoPlayers()
+            })
             .off("timeupdate").on("timeupdate",function(){
                 try{
                     var event = eventsLabeledByTime[monitorId][video.time][parseInt(this.currentTime)]
@@ -443,6 +452,14 @@ $(document).ready(function(e){
         streamObjectsContainer.empty()
         motionMeterProgressBar.css('width','0')
         motionMeterProgressBarTextBox.text('0')
+    }
+    function resetWidthForActiveVideoPlayers(){
+        var numberOfMonitors = 0
+        powerVideoMonitorViewsElement.find(`.videoPlayer .videoNow`).each(function(n,videoEl){
+            if(videoEl.currentTime > 0)numberOfMonitors += 1
+        })
+        var widthOfBlock = 100 / numberOfMonitors
+        powerVideoMonitorViewsElement.find('.videoPlayer').css('width',`${widthOfBlock}%`)
     }
     function loadVideoIntoMonitorSlot(video,selectedTime){
         if(!video)return
@@ -534,8 +551,15 @@ $(document).ready(function(e){
         videoNow.setAttribute('preload',true)
         videoNow.muted = true
         videoNow.playbackRate = monitorSlotPlaySpeeds[video.mid] || 1
-        videoNow.currentTime = timeToStartAt / 1000
+        try{
+            videoNow.currentTime = timeToStartAt / 1000
+        }catch(err){
+            console.log(err)
+        }
         videoNow.play()
+        setTimeout(function(){
+            resetWidthForActiveVideoPlayers()
+        },1400)
         extenders.onVideoPlayerCreateExtensions.forEach(function(extender){
             extender(videoElement,watchPoint)
         })
