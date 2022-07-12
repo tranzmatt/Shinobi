@@ -45,7 +45,7 @@ async function preloadAllTimelapseFramesToMemoryFromVideoList(framesSortedByDays
         console.log ('Loaded! ',frame.href)
     }
 }
-function createVideoLinks(video){
+function createVideoLinks(video,options){
     var details = safeJsonParse(video.details)
     var queryString = []
     // if(details.isUTC === true){

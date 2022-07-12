@@ -48,6 +48,11 @@ $(document).ready(function(e){
     });
     // fix utc/localtime translation (use timelapseJpeg as guide, it works as expected) />
     function loadVideosToTimeLineMemory(monitorId,videos,events){
+        videos.forEach((video) => {
+            createVideoLinks(video,{
+                hideRemote: true
+            })
+        })
         powerVideoLoadedVideos[monitorId] = videos
         powerVideoLoadedEvents[monitorId] = events
     }
