@@ -113,25 +113,35 @@ $(document).ready(function(e){
     }
     function initLiveStream(monitorId){
         var monitorId = monitorId || getCurrentlySelectedMonitorId()
-        var apiPoint = 'embed'
         var liveElement = regionEditorLiveView.find('iframe,img')
-        regionEditorLiveView.find('iframe,img').attr('src','').hide()
-        if(useRegionStillImage){
-            apiPoint = 'jpeg'
-        }else{
-            apiPoint = 'embed'
-        }
-        var apiUrl = `${getApiPrefix(apiPoint)}/${monitorId}`
-        if(apiPoint === 'embed'){
-            apiUrl += '/fullscreen|jquery|relative'
-        }else{
-            apiUrl += '/s.jpg'
-        }
-        if(liveElement.attr('src') !== apiUrl){
+        if(loadedMonitors[monitorId].mode === 'stop'){
+            var apiUrl = placeholder.getData(placeholder.plcimg({
+                bgcolor: '#000',
+                text: lang[`Cannot watch a monitor that isn't running.`],
+                size: regionViewerDetails.detector_scale_x+'x'+regionViewerDetails.detector_scale_y
+            }))
             liveElement.attr('src',apiUrl).show()
+        }else{
+            var apiPoint = 'embed'
+            regionEditorLiveView.find('iframe,img').attr('src','').hide()
+            if(useRegionStillImage){
+                apiPoint = 'jpeg'
+            }else{
+                apiPoint = 'embed'
+            }
+            var apiUrl = `${getApiPrefix(apiPoint)}/${monitorId}`
+            if(apiPoint === 'embed'){
+                apiUrl += '/fullscreen|jquery|relative'
+            }else{
+                apiUrl += '/s.jpg'
+            }
+            if(liveElement.attr('src') !== apiUrl){
+                liveElement.attr('src',apiUrl).show()
+            }
+            liveElement.attr('width',regionViewerDetails.detector_scale_x)
+            liveElement.attr('height',regionViewerDetails.detector_scale_y)
         }
-        liveElement.attr('width',regionViewerDetails.detector_scale_x)
-        liveElement.attr('height',regionViewerDetails.detector_scale_y)
+
     }
     var initCanvas = function(dontReloadStream){
         var newArray = [];
