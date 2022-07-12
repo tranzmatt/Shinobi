@@ -529,6 +529,9 @@ onWebSocketEvent(function(d){
             $('[data-file="'+d.filename+'"][data-mid="'+d.mid+'"]:not(.modal)').remove();
             $('[data-time-formed="'+(new Date(d.time))+'"][data-mid="'+d.mid+'"]:not(.modal)').remove();
             var videoPlayerId = getVideoPlayerTabId(d)
+            if(tabTree.name === videoPlayerId){
+                goBackOneTab()
+            }
             deleteTab(videoPlayerId)
             // if($.powerVideoWindow.currentDataObject&&$.powerVideoWindow.currentDataObject[d.filename]){
             //     delete($.timelapse.currentVideos[$.powerVideoWindow.currentDataObject[d.filename].position])
