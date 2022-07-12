@@ -42,17 +42,41 @@ representative at support@shinobi.systems.
 
 #### Commercial Uses
 - Selling usage of the software
+- Selling hardware with the software on it
 - Using the software in locations that engage in the buying and selling of goods and services
 
+As of 2022-07-07 the noted situations below are seen the same as "Commercial Use".
+
+- 25 Active Monitor Rule : Having at least 25 Active Monitors and not a Primary School or Secondary School. Does not apply to Personal Use.
+- 150 Active Monitor Rule : If you have more than 150 Active Monitors please contact support for an Enterprise License. The retail Shinobi Pro license will not be applicable for these installations.
+- Used on a Device that was part of a commercial transaction. This can be, but not limited to, being sold or provided additionally to a sale.
+
 #### Conditions for Free (Unpaid) use.
+If you fall under any conditions for "Commercial Use" none of the following can apply unless otherwise noted.
+
+- Personal use
 - Use in a non commercial area
 - Used for non commercial purposes
 - When used for research or educational purposes
 - Testing Purposes
-- Usage by Educational institutions
-- Use for Emergency Services and facilties associated like Search and Rescue Services or
-Ambulance Services
-- Use in Health Care facility like a hospital or walk-in clinic
+- Usage by Primary Education or Secondary Education Schools
+- Use for Emergency Services and facilities associated like Search and Rescue Services or
+Ambulance Services with less than 50 cameras
+- Use in Health Care facility like a hospital or walk-in clinic with less than 100 cameras
+- Schools and Organizations that have been given exemption
+
+As of 2021-11-29 If you are an organization that falls under one or more of these conditions for free use then you must display that you are using Shinobi Systems software as "shinobi.video". This can be physically on premise or on your organization's public web page.
+
+Falling under the conditions for Free use does not guarantee you a License Key. It simply means you are allowed to use it without paying or trading for that use.
+
+#### Unsure if your use is commercial or non-commercial
+
+Please contact us through the Live Chat of our website and we can negotiate or make exceptions based on the circumstances of your use case.
+
+#### Registration
+
+Schools and Resellers must register with Shinobi Systems at https://licenses.shinobi.video.
+In your account please fill out the "Apply for a School License" form or "Apply to be a Reseller" form.
 
 #### Support Services.
 The Maintenance and Support Service shall be contracted and provided as per selected plan
@@ -68,7 +92,7 @@ This software is property of Shinobi Systems. LICENSEE must keep all copyright n
 unchanged.
 
 #### Modification of this Software Product.
-LICENSEE may modify code for but must provide these changes upon request from 
+LICENSEE may modify code for but must provide these changes upon request from
 Shinobi Systems or an authorized Shinobi representative. LICENSEE may not alter or change
 copyright notices. All code changes by LICENSEE shall fall under the copyright of Shinobi
 Systems in the case code modified by LICENSEE is integrated into the official Shinobi code base.
