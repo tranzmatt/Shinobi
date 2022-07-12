@@ -45,7 +45,7 @@ representative at support@shinobi.systems.
 - Selling hardware with the software on it
 - Using the software in locations that engage in the buying and selling of goods and services
 
-As of 2022-07-07 the noted situations below are seen the same as "Commercial Use".
+As of 2022-07-12 the noted situations below are seen the same as "Commercial Use".
 
 - 25 Active Monitor Rule : Having at least 25 Active Monitors and not a Primary School or Secondary School. Does not apply to Personal Use.
 - 150 Active Monitor Rule : If you have more than 150 Active Monitors please contact support for an Enterprise License. The retail Shinobi Pro license will not be applicable for these installations.
@@ -65,7 +65,7 @@ Ambulance Services with less than 50 cameras
 - Use in Health Care facility like a hospital or walk-in clinic with less than 100 cameras
 - Schools and Organizations that have been given exemption
 
-As of 2021-11-29 If you are an organization that falls under one or more of these conditions for free use then you must display that you are using Shinobi Systems software as "shinobi.video". This can be physically on premise or on your organization's public web page.
+As of 2022-07-12 If you are an organization that falls under one or more of these conditions for free use then you must display that you are using Shinobi Systems software as "shinobi.video". This can be physically on premise or on your organization's public web page.
 
 Falling under the conditions for Free use does not guarantee you a License Key. It simply means you are allowed to use it without paying or trading for that use.
 
