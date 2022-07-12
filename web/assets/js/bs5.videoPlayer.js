@@ -40,7 +40,7 @@ $(document).ready(function(){
                 <div class="p-3">
                     <h6 class="video-title border-bottom-dotted border-bottom-dark pb-2 mb-0">${tabLabel}</h6>
                   </div>
-                  <div style="position: relative">
+                  <div class="tab-videoPlayer-view-container" style="position: relative">
                       <div class="tab-videoPlayer-event-objects" style="position: absolute;width: 100%; height: 100%; z-index: 10"></div>
                       <video class="tab-videoPlayer-video-element" controls autoplay src="${videoUrl}"></video>
                   </div>
