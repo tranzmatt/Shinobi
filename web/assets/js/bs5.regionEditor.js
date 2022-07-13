@@ -312,5 +312,8 @@ $(document).ready(function(e){
         drawMonitorListToSelector(regionEditorMonitorsList)
         regionEditorMonitorsList.val(theSelected)
     })
+    addOnTabAway('regionEditor', function () {
+        regionEditorLiveView.find('iframe,img').remove()
+    })
     drawSubMenuItems('regionEditor',definitions['Region Editor'])
 })
