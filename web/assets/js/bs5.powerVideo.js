@@ -16,6 +16,7 @@ $(document).ready(function(e){
     var monitorSlotPlaySpeeds = {}
     var currentlyPlayingVideos = {}
     var powerVideoMute = true
+    var powerVideoCanAutoPlay = true
     var lastPowerVideoSelectedMonitors = []
     var extenders = {
         onVideoPlayerTimeUpdateExtensions: [],
@@ -707,9 +708,11 @@ $(document).ready(function(e){
                     toggleZoomAllSlots()
                 break;
                 case'playAll':
+                    powerVideoCanAutoPlay = true
                     playAllSlots()
                 break;
                 case'pauseAll':
+                    powerVideoCanAutoPlay = false
                     pauseAllSlots()
                 break;
                 case'playSpeedAll':
@@ -729,6 +732,27 @@ $(document).ready(function(e){
 
     addOnTabOpen('powerVideo', function () {
         drawMonitorsList()
+    })
+    addOnTabReopen('powerVideo', function () {
+        if(powerVideoCanAutoPlay){
+            powerVideoWindow.find('video').each(function(n,video){
+                try{
+                    video.play()
+                }catch(err){
+                    console.log(err)
+                }
+            })
+        }
+    })
+    addOnTabAway('powerVideo', function () {
+        powerVideoWindow.find('video').each(function(n,video){
+            console.log(video)
+            try{
+                video.pause()
+            }catch(err){
+                console.log(err)
+            }
+        })
     })
     // addOnTabReopen('powerVideo', function () {
     //     drawMonitorsList()
