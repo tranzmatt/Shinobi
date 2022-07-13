@@ -5887,6 +5887,7 @@ module.exports = function(s,config,lang){
                "name": lang["Points"],
                "color": "orange",
                "section-pre-class": "col-md-6",
+               "style": "overflow:auto",
                "blockquoteClass": "global_tip",
                "blockquote": lang.RegionNote,
                "info": [
