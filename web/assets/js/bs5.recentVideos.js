@@ -50,7 +50,7 @@ $(document).ready(function(){
         }
         getVideos(options,function(data){
             theList.empty()
-            if(data.videos.length === 0){
+            if(data.videos.length === 0 && data.frames.length === 0){
                 drawListFiller(lang['No Data'])
             }else{
                 drawVideoData(data)
