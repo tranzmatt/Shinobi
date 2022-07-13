@@ -5830,17 +5830,20 @@ module.exports = function(s,config,lang){
                 "color": "orange",
                 "section-pre-class": "col-md-6",
                 "section-class": "where",
+                "box-wrapper-class": "row",
                 "info": [
                     {
                        "field": lang["Monitor"],
                        "id": "region_editor_monitors",
                        "fieldType": "select",
+                       "form-group-class": "col-md-6",
                     },
                     {
                        "id": "regions_list",
                        "field": lang["Regions"],
                        "fieldType": "select",
-                       "possible": []
+                       "possible": [],
+                       "form-group-class": "col-md-6",
                    },
                     {
                        "name": "name",
@@ -5849,18 +5852,22 @@ module.exports = function(s,config,lang){
                     {
                        "name": "sensitivity",
                        "field": lang['Minimum Change'],
+                       "form-group-class": "col-md-6",
                     },
                     {
                        "name": "max_sensitivity",
                        "field": lang['Maximum Change'],
+                       "form-group-class": "col-md-6",
                     },
                     {
                        "name": "threshold",
                        "field": lang['Trigger Threshold'],
+                       "form-group-class": "col-md-6",
                     },
                     {
                        "name": "color_threshold",
                        "field": lang['Color Threshold'],
+                       "form-group-class": "col-md-6",
                     },
                     {
                         hidden: true,
@@ -5869,17 +5876,23 @@ module.exports = function(s,config,lang){
                         "class": 'table table-striped',
                     },
                     {
-                       "fieldType": "btn",
-                       attribute: "href=#",
-                       "class": `btn-info toggle-region-still-image`,
-                       "btnContent": `<i class="fa fa-retweet"></i> &nbsp; ${lang['Live Stream Toggle']}`,
-                    },
-                    {
-                       "fieldType": "btn",
-                       forForm: true,
-                       attribute: "href=#",
-                       "class": `btn-success`,
-                       "btnContent": `<i class="fa fa-check"></i> &nbsp; ${lang['Save']}`,
+                        "class": 'col-md-12',
+                        "fieldType": 'div',
+                        info: [
+                            {
+                               "fieldType": "btn",
+                               attribute: "href=#",
+                               "class": `btn-info toggle-region-still-image`,
+                               "btnContent": `<i class="fa fa-retweet"></i> &nbsp; ${lang['Live Stream Toggle']}`,
+                            },
+                            {
+                               "fieldType": "btn",
+                               forForm: true,
+                               attribute: "href=#",
+                               "class": `btn-success`,
+                               "btnContent": `<i class="fa fa-check"></i> &nbsp; ${lang['Save']}`,
+                            },
+                        ]
                     },
                 ]
             },
