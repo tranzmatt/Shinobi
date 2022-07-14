@@ -6800,7 +6800,7 @@ module.exports = function(s,config,lang){
                      {
                          name:'map-detail=stream_loop',
                          field:lang['Loop Stream'],
-                         class:'h_i_$[TEMP_ID]_input h_i_$[TEMP_ID]_mp4 h_i_$[TEMP_ID]_raw',
+                         "form-group-class":'h_i_$[TEMP_ID]_input h_i_$[TEMP_ID]_mp4 h_i_$[TEMP_ID]_raw',
                          hidden:true,
                          default:'0',
                          "fieldType": "select",
@@ -6819,7 +6819,7 @@ module.exports = function(s,config,lang){
                      {
                          name:'map-detail=rtsp_transport',
                          field:lang['RTSP Transport'],
-                         class:'h_i_$[TEMP_ID]_input h_i_$[TEMP_ID]_h264',
+                         "form-group-class":'h_i_$[TEMP_ID]_input h_i_$[TEMP_ID]_h264',
                          default:'',
                          "fieldType": "select",
                          type:'selector',
@@ -6844,7 +6844,7 @@ module.exports = function(s,config,lang){
                      {
                          name:'map-detail=accelerator',
                          field:lang['Accelerator'],
-                         attribute:'selector="h_accel_$[TEMP_ID]"',
+                         selector:'h_accel_$[TEMP_ID]',
                          default:'0',
                          "fieldType": "select",
                          type:'selector',
@@ -6862,7 +6862,7 @@ module.exports = function(s,config,lang){
                      {
                          name:'map-detail=hwaccel',
                          field:lang['hwaccel'],
-                         class:'h_accel_$[TEMP_ID]_input h_accel_$[TEMP_ID]_1',
+                         "form-group-class":'h_accel_$[TEMP_ID]_input h_accel_$[TEMP_ID]_1',
                          hidden:true,
                          default:'',
                          "fieldType": "select",
@@ -6872,7 +6872,7 @@ module.exports = function(s,config,lang){
                      {
                          name:'map-detail=hwaccel_vcodec',
                          field:lang['hwaccel_vcodec'],
-                         class:'h_accel_$[TEMP_ID]_input h_accel_$[TEMP_ID]_1',
+                         "form-group-class":'h_accel_$[TEMP_ID]_input h_accel_$[TEMP_ID]_1',
                          hidden:true,
                          default:'auto',
                          "fieldType": "select",
@@ -6942,7 +6942,7 @@ module.exports = function(s,config,lang){
                      {
                          name:'map-detail=hwaccel_device',
                          field:lang['hwaccel_device'],
-                         class:'h_accel_$[TEMP_ID]_input h_accel_$[TEMP_ID]_1',
+                         "form-group-class":'h_accel_$[TEMP_ID]_input h_accel_$[TEMP_ID]_1',
                          hidden:true,
                          placeholder:'Example : /dev/dri/video0',
                          type:'text',
