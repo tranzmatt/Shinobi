@@ -353,8 +353,8 @@ function getAllDays(videos,frames){
 function getStripStartAndEnd(videos,frames){
     var stripStartTimeByVideos = videos[0] ? new Date(videos[0].time) : null
     var stripEndTimeByVideos = videos[0] ? new Date(videos[videos.length - 1].end) : null
-    var stripStartTimeByFrames = new Date(frames[0].time) || stripStartTimeByVideos
-    var stripEndTimeByFrames = new Date(frames[frames.length - 1].time) || stripEndTimeByVideos
+    var stripStartTimeByFrames = frames[0] ? new Date(frames[0].time) : stripStartTimeByVideos
+    var stripEndTimeByFrames = frames[0] ? new Date(frames[frames.length - 1].time) : stripEndTimeByVideos
     var stripStartTime = stripStartTimeByVideos && stripStartTimeByVideos < stripStartTimeByFrames ? stripStartTimeByVideos : stripStartTimeByFrames
     var stripEndTime = stripEndTimeByVideos && stripEndTimeByVideos > stripEndTimeByFrames ? stripEndTimeByVideos : stripEndTimeByFrames
     return {
