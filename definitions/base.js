@@ -977,7 +977,8 @@ module.exports = function(s,config,lang){
                       "description": lang["fieldTextStreamQuality"],
                       "default": "15",
                       "example": "1",
-                      "form-group-class": "h_st_input h_st_mjpeg h_st_b64 h_st_hls h_st_gif h_st_flv h_st_mp4 h_hls_v_input h_hls_v_libx264 h_hls_v_libx265 h_hls_v_h264_nvenc h_hls_v_hevc_nvenc h_hls_v_no",
+                      "form-group-class-pre-layer": "h_hls_v_input h_hls_v_libx264 h_hls_v_libx265 h_hls_v_h264_nvenc h_hls_v_hevc_nvenc h_hls_v_no",
+                      "form-group-class": "h_st_input h_st_mjpeg h_st_b64 h_st_hls h_st_gif h_st_flv h_st_mp4",
                       "possible": "1-23"
                    },
                    {
@@ -986,7 +987,8 @@ module.exports = function(s,config,lang){
                       "description": lang["fieldTextStreamFps"],
                       "default": "",
                       "example": "1",
-                      "form-group-class": "h_st_input h_st_mjpeg h_st_b64 h_st_hls h_st_gif h_st_flv h_st_mp4 h_hls_v_input h_hls_v_libx264 h_hls_v_libx265 h_hls_v_h264_nvenc h_hls_v_hevc_nvenc h_hls_v_no",
+                      "form-group-class-pre-layer": "h_hls_v_input h_hls_v_libx264 h_hls_v_libx265 h_hls_v_h264_nvenc h_hls_v_hevc_nvenc h_hls_v_no",
+                      "form-group-class": "h_st_input h_st_mjpeg h_st_b64 h_st_hls h_st_gif h_st_flv h_st_mp4",
                       "possible": ""
                    },
                    {
@@ -997,7 +999,8 @@ module.exports = function(s,config,lang){
                       "fieldType": "number",
                       "numberMin": "1",
                       "example": "640",
-                      "form-group-class": "h_st_input h_st_mjpeg h_st_b64 h_st_hls h_st_gif h_st_flv h_st_mp4 h_hls_v_input h_hls_v_libx264 h_hls_v_libx265 h_hls_v_h264_nvenc h_hls_v_hevc_nvenc h_hls_v_no",
+                      "form-group-class-pre-layer": "h_hls_v_input h_hls_v_libx264 h_hls_v_libx265 h_hls_v_h264_nvenc h_hls_v_hevc_nvenc h_hls_v_no",
+                      "form-group-class": "h_st_input h_st_mjpeg h_st_b64 h_st_hls h_st_gif h_st_flv h_st_mp4",
                       "possible": ""
                    },
                    {
@@ -1008,7 +1011,8 @@ module.exports = function(s,config,lang){
                       "fieldType": "number",
                       "numberMin": "1",
                       "example": "480",
-                      "form-group-class": "h_st_input h_st_mjpeg h_st_b64 h_st_hls h_st_gif h_st_flv h_st_mp4 h_hls_v_input h_hls_v_libx264 h_hls_v_libx265 h_hls_v_h264_nvenc h_hls_v_hevc_nvenc h_hls_v_no",
+                      "form-group-class-pre-layer": "h_hls_v_input h_hls_v_libx264 h_hls_v_libx265 h_hls_v_h264_nvenc h_hls_v_hevc_nvenc h_hls_v_no",
+                      "form-group-class": "h_st_input h_st_mjpeg h_st_b64 h_st_hls h_st_gif h_st_flv h_st_mp4",
                       "possible": ""
                    },
                    {
@@ -1018,7 +1022,8 @@ module.exports = function(s,config,lang){
                       "default": "",
                       "example": "",
                       "fieldType": "select",
-                      "form-group-class": "h_st_input h_st_mjpeg h_st_b64 h_st_hls h_st_gif h_st_flv h_st_mp4 h_hls_v_input h_hls_v_libx264 h_hls_v_libx265 h_hls_v_h264_nvenc h_hls_v_hevc_nvenc h_hls_v_no",
+                      "form-group-class-pre-layer": "h_hls_v_input h_hls_v_libx264 h_hls_v_libx265 h_hls_v_h264_nvenc h_hls_v_hevc_nvenc h_hls_v_no",
+                      "form-group-class": "h_st_input h_st_mjpeg h_st_b64 h_st_hls h_st_gif h_st_flv h_st_mp4",
                       "possible": [
                            {
                               "name": lang["No Rotation"],
@@ -1081,7 +1086,8 @@ module.exports = function(s,config,lang){
                       "description": lang["fieldTextStreamVf"],
                       "default": "",
                       "example": "",
-                      "form-group-class": "h_st_input h_st_mjpeg h_st_b64 h_st_hls h_st_gif h_st_flv h_st_mp4 h_hls_v_input h_hls_v_libx264 h_hls_v_libx265 h_hls_v_h264_nvenc h_hls_v_hevc_nvenc h_hls_v_no",
+                      "form-group-class-pre-layer": "h_hls_v_input h_hls_v_libx264 h_hls_v_libx265 h_hls_v_h264_nvenc h_hls_v_hevc_nvenc h_hls_v_no",
+                      "form-group-class": "h_st_input h_st_mjpeg h_st_b64 h_st_hls h_st_gif h_st_flv h_st_mp4",
                       "possible": ""
                    },
                    {
