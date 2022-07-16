@@ -6,6 +6,8 @@
 
 > This method uses `docker-compose` and has the ability to quick install the TensorFlow Object Detection plugin. This will build your container from the images hosted on Gitlab.
 
+> **We no longer use Docker Hub** and will not in the foreseeable future.
+
 Docker Image Used : `registry.gitlab.com/shinobi-systems/shinobi:dev`
 
 ```
