@@ -3063,6 +3063,31 @@ module.exports = function(s,config,lang){
                               ]
                            },
                            {
+                              "name": "detail=detector_motion_tile_mode",
+                              "field": lang['Accuracy Mode'],
+                              "selector": "h_det_tile_mode",
+                              "default": "1",
+                              "example": "",
+                              "fieldType": "select",
+                              "possible": [
+                                 {
+                                    "name": lang.No,
+                                    "value": "0"
+                                 },
+                                 {
+                                    "name": lang.Yes,
+                                    "value": "1"
+                                 }
+                              ]
+                           },
+                           {
+                               "form-group-class": "h_det_tile_mode_input h_det_tile_mode_1",
+                              "name": "detail=detector_tile_size",
+                              "field": lang["Tile Size"],
+                              "description": lang.fieldTextTileSize,
+                              "default": "20",
+                           },
+                           {
                                isAdvanced: true,
                               "name": "detail=detector_noise_filter",
                               "field": lang['Noise Filter'],
@@ -5914,7 +5939,7 @@ module.exports = function(s,config,lang){
                        "fieldType": "div",
                        class: "canvas_holder",
                        divContent: `<div id="region_editor_live"><iframe></iframe><img></div>
-                       <textarea id="regions_canvas" rows=3 class="hidden canvas-area input-xxlarge" disabled></textarea>`,
+                       <div class="grid"></div><textarea id="regions_canvas" rows=3 class="hidden canvas-area input-xxlarge" disabled></textarea>`,
                    }
                ]
             }
