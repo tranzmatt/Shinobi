@@ -1,6 +1,9 @@
 var os = require('os');
 var exec = require('child_process').exec;
 const onvif = require("shinobi-onvif");
+const {
+    addCredentialsToUrl,
+} = require('../common.js')
 module.exports = function(s,config,lang,app,io){
     const {
         createSnapshot,
@@ -128,9 +131,13 @@ module.exports = function(s,config,lang,app,io){
             const groupKey = onvifOptions.ke
             const monitorId = onvifOptions.mid
             const theDevice = s.group[groupKey].activeMonitors[monitorId].onvifConnection
-            theUrl = (await theDevice.services.media.getSnapshotUri({
-                ProfileToken : theDevice.current_profile.token,
-            })).GetSnapshotUriResponse.MediaUri.Uri;
+            theUrl = addCredentialsToUrl({
+                username: onvifOptions.username,
+                password: onvifOptions.password,
+                url: (await theDevice.services.media.getSnapshotUri({
+                    ProfileToken : theDevice.current_profile.token,
+                })).GetSnapshotUriResponse.MediaUri.Uri
+            });
         }else{
             theUrl = addCredentialsToStreamLink({
                 username: onvifOptions.username,

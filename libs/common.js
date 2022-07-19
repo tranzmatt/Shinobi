@@ -26,13 +26,20 @@ const getBuffer = async (url) => {
   try {
     const response = await fetch(url);
     const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    return buffer;
+    return Buffer.from(arrayBuffer);
   } catch (error) {
     return { error };
   }
 };
+function addCredentialsToUrl(options){
+    const streamUrl = options.url
+    const username = options.username
+    const password = options.password
+    const urlParts = streamUrl.split('://')
+    return [urlParts[0],'://',`${username}:${password}@`,urlParts[1]].join('')
+}
 module.exports = {
+    addCredentialsToUrl,
     getBuffer: getBuffer,
     mergeDeep: mergeDeep,
     validateIntValue: (value) => {
