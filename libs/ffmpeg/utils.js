@@ -130,7 +130,11 @@ module.exports = (s,config,lang) => {
             }else{
                 const details = s.parseJSON(configPartial.details)
                 Object.keys(details).forEach((key) => {
-                    activeMonitor.details[key] = details[key]
+                    try{
+                        activeMonitor.details[key] = details[key]
+                    }catch(err){
+                        console.log(err)
+                    }
                 })
             }
         })
