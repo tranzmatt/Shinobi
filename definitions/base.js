@@ -3304,8 +3304,7 @@ module.exports = function(s,config,lang){
                              "name": "detail=detector_buffer_acodec",
                              "field": lang['HLS Audio Encoder'],
                              "description": "",
-                             "default": "0",
-                             "example": "",
+                             "default": "no",
                              "fieldType": "select",
                              "possible": [
                                  {
