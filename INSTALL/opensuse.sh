@@ -34,7 +34,7 @@ echo "(y)es or (N)o"
 NODEJSINSTALL=0
 read -r nodejsinstall
 if [ "$nodejsinstall" = "y" ] || [ "$nodejsinstall" = "Y" ]; then
-    sudo zypper install -y nodejs11
+    sudo zypper install -y nodejs16
     NODEJSINSTALL=1
 fi
 echo "============="
