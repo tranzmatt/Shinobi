@@ -58,7 +58,7 @@
             <div class="collapse navbar-collapse justify-content-end" id="navigation" data-nav-image="<%-window.libURL%>libs/img/blurred-image-1.jpg">
                 <ul class="nav navbar-nav navbar-right">
                     <li class="nav-item">
-                        <a href="javascript:location.href=location.pathname" class="nav-link" class="logout">
+                        <a class="nav-link logout">
                             <i class="fa fa-sign-out"></i>
                             <p class="d-lg-none d-xl-none"><%-lang.Logout%></p>
                         </a>
@@ -340,7 +340,8 @@ $.logs={e:$('#logs')}
 ////
 $('body')
 .on('click','.logout',function(e){
-    localStorage.removeItem('ShinobiLogin_'+location.host);location.href='/';
+    localStorage.removeItem('ShinobiLogin_'+location.host);
+    location.href = location.href.split('/super')[0];
 })
 </script>
 <% include blocks/mainpermissions.ejs %>
