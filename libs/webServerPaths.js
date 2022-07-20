@@ -1302,16 +1302,18 @@ module.exports = function(s,config,lang,app,io){
             },(err,r) => {
                 if(r&&r[0]){
                     r = r[0]
-                    if(JSON.parse(r.details).type === 'googd' && s.cloudDiskUseOnGetVideoDataExtensions['googd']){
-                        s.cloudDiskUseOnGetVideoDataExtensions['googd'](r).then((dataPipe) => {
+                    const videoDetails = JSON.parse(r.details)
+                    const storageType = videoDetails.type
+                    const onGetVideoData = s.cloudDiskUseOnGetVideoDataExtensions[storageType]
+                    if(onGetVideoData){
+                        onGetVideoData(r).then((dataPipe) => {
                             dataPipe.pipe(res)
                         }).catch((err) => {
                             console.log(err)
                             res.end(user.lang['File Not Found in Database'])
                         })
                     }else{
-                        // req.pipe(request(r.href)).pipe(res)
-                        fetch(actualUrl).then(actual => {
+                        fetch(r.href).then(actual => {
                             actual.headers.forEach((v, n) => res.setHeader(n, v));
                             actual.body.pipe(res);
                         })
