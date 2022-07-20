@@ -526,14 +526,24 @@ module.exports = (s,config,lang,app,io) => {
                 var ffmpegError = ''
                 var error
                 var filename = fileTime + '.mp4'
+                let outputMap = `-map 0:0 `
                 s.userLog(d,{
                     type: logTitleText,
                     msg: lang["Started"]
                 })
                 //-t 00:'+s.timeObject(new Date(detector_timeout * 1000 * 60)).format('mm:ss')+'
+                if(
+                    monitorDetails.detector_buffer_acodec &&
+                    monitorDetails.detector_buffer_acodec !== 'no' &&
+                    monitorDetails.detector_buffer_acodec !== 'auto'
+                ){
+                    outputMap += `-map 0:1 `
+                }
+                const ffmpegCommand = `-loglevel warning -live_start_index -99999 -analyzeduration 1000 -probesize 32 -re -i "${s.dir.streams+d.ke+'/'+d.id}/detectorStream.m3u8" ${outputMap}-movflags faststart+frag_keyframe+empty_moov -fflags +igndts -c:v copy -c:a aac -strict -2 -strftime 1 -y "${s.getVideoDirectory(monitorConfig) + filename}"`
+                s.debugLog(ffmpegCommand)
                 activeMonitor.eventBasedRecording.process = spawn(
                     config.ffmpegDir,
-                    splitForFFPMEG(('-loglevel warning -live_start_index -99999 -analyzeduration 1000 -probesize 32 -re -i "'+s.dir.streams+d.ke+'/'+d.id+'/detectorStream.m3u8" -movflags faststart+frag_keyframe+empty_moov -fflags +igndts -c:v copy -strftime 1 "'+s.getVideoDirectory(monitorConfig) + filename + '"'))
+                    splitForFFPMEG(ffmpegCommand)
                 )
                 activeMonitor.eventBasedRecording.process.stderr.on('data',function(data){
                     s.userLog(d,{
