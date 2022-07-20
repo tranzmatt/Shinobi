@@ -7,6 +7,7 @@ module.exports = function(s,config,lang,app,io){
         backblazeB2: require('./uploaders/backblazeB2.js'),
         amazonS3: require('./uploaders/amazonS3.js'),
         webdav: require('./uploaders/webdav.js'),
+        dropbox: require('./uploaders/dropbox.js'),
         //oauth
         googleDrive: require('./uploaders/googleDrive.js'),
         //simple storage

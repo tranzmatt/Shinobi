@@ -23,6 +23,7 @@
     "cws": "^2.0.0",
     "digest-fetch": "^1.2.1",
     "discord.js": "^13.6.0",
+    "dropbox-v2-api": "^2.5.4",
     "ejs": "^2.5.5",
     "express": "^4.16.4",
     "express-fileupload": "^1.1.6-alpha.6",
