@@ -25,8 +25,9 @@ module.exports = function(s,config,lang,app,io){
     s.getTimelapseFrameDirectory = function(e){
         if(e.mid&&!e.id){e.id=e.mid}
         s.checkDetails(e)
-        if(e.details&&e.details.dir&&e.details.dir!==''){
-            return s.checkCorrectPathEnding(e.details.dir)+e.ke+'/'+e.id+'_timelapse/'
+        const directory = e.details && e.details.dir && e.details.dir !== '' ? e.details.dir : e.dir
+        if(directory){
+            return `${s.checkCorrectPathEnding(directory)}${e.ke}/${e.id}_timelapse/`
         }else{
             return s.dir.videos+e.ke+'/'+e.id+'_timelapse/';
         }
