@@ -242,7 +242,7 @@ module.exports = function(s,config,lang){
            },
            {
                "hidden": true,
-              "field": lang.dropbox_token,
+              "field": lang['Token'],
               "name": "detail=dropbox_token",
               "form-group-class": "autosave_dropbox_input autosave_dropbox_1",
               "description": "",
