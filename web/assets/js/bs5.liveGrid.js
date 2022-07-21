@@ -971,7 +971,10 @@ $(document).ready(function(e){
             case'video_build_success':
                 d.status = 1
                 d.mid = d.id || d.mid
-                if(liveGridElements[d.mid] && liveGridElements[d.mid].streamElement)drawVideoCardToMiniList(d.mid,createVideoLinks(d),false)
+                var monitorId = d.mid
+                var videoTime = d.time
+                loadedVideosInMemory[`${monitorId}${videoTime}`] = d
+                if(liveGridElements[monitorId] && liveGridElements[monitorId].streamElement)drawVideoCardToMiniList(monitorId,createVideoLinks(d),false)
             break;
             case'monitor_watch_off':case'monitor_stopping':
                 var monitorId = d.mid || d.id
