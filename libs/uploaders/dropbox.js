@@ -185,7 +185,7 @@ module.exports = function(s,config,lang){
             callback(err, result);
         });
     }
-    function onGetVideoData = (video) => {
+    function onGetVideoData(video){
         return new Promise((resolve,reject) => {
             const videoDetails = JSON.parse(r.details)
             const saveLocation = videoDetails.location
