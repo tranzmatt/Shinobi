@@ -3112,7 +3112,6 @@ module.exports = function(s,config,lang){
                        ]
                    },
                    {
-                       isAdvanced: true,
                       "name": lang['Object Detection'],
                       "color": "orange",
                       id: "monSectionDetectorObject",
@@ -3142,11 +3141,11 @@ module.exports = function(s,config,lang){
                              ]
                          },
                          {
+                             isAdvanced: true,
                             "name": "detail=detector_send_frames_object",
                             "field": lang["Send Frames"],
                             "description": lang["fieldTextDetectorSendFramesObject"],
-                            "default": "0",
-                            "example": "",
+                            "default": "1",
                             "fieldType": "select",
                             "possible": [
                                {
@@ -3160,6 +3159,7 @@ module.exports = function(s,config,lang){
                             ]
                          },
                          {
+                             isAdvanced: true,
                              hidden: true,
                             "name": "detail=detector_obj_count_in_region",
                             "field": lang["Count Objects only inside Regions"],
@@ -3183,7 +3183,7 @@ module.exports = function(s,config,lang){
                             "name": "detail=detector_obj_region",
                             "field": lang['Require Object to be in Region'],
                             "description": "",
-                            "default": "0",
+                            "default": "1",
                             "example": "",
                             "fieldType": "select",
                             "possible": [
@@ -3198,10 +3198,11 @@ module.exports = function(s,config,lang){
                             ]
                          },
                          {
+                             isAdvanced: true,
                             "name": "detail=detector_use_motion",
                             "field": lang['Check for Motion First'],
                             "description": "",
-                            "default": "0",
+                            "default": "1",
                             "example": "",
                             "selector": "h_det_mot_fir",
                             "fieldType": "select",
@@ -3227,24 +3228,24 @@ module.exports = function(s,config,lang){
                            "possible": ""
                         },
                         {
+                            isAdvanced: true,
                             hidden: true,
                            "name": "detail=detector_scale_x_object",
                            "field": lang['Image Width'],
                            "description": "",
-                           "default": "",
-                           "example": "",
+                           "default": "1280",
                            "form-group-class": "h_casc_input h_casc_1",
                            "fieldType": "number",
                            "numberMin": "1",
                            "possible": ""
                         },
                         {
+                            isAdvanced: true,
                             hidden: true,
                            "name": "detail=detector_scale_y_object",
                            "field": lang['Image Height'],
                            "description": "",
-                           "default": "",
-                           "example": "",
+                           "default": "720",
                            "form-group-class": "h_casc_input h_casc_1",
                            "fieldType": "number",
                            "numberMin": "1",
