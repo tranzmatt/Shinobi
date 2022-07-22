@@ -3360,6 +3360,16 @@ module.exports = function(s,config,lang){
                              "possible": ""
                           },
                           {
+                              name: 'detail=event_record_aduration',
+                              field: lang['Analyzation Duration'],
+                              default: '1000',
+                          },
+                          {
+                              name: 'detail=event_record_probesize',
+                              field: lang['Probe Size'],
+                              default: '32',
+                          },
+                          {
                              "fieldType": "div",
                              // style: `width:100%;background:#eceaea;border-radius:5px;color:#333;font-family:monospace`,
                              divContent: `<pre><code id="monEditBufferPreview"></code></pre>`

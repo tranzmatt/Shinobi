@@ -528,6 +528,8 @@ module.exports = (s,config,lang,app,io) => {
                 var error
                 var filename = fileTime + '.mp4'
                 let outputMap = `-map 0:0 `
+                const analyzeDuration = parseInt(monitorDetails.event_record_aduration) || 1000
+                const probeSize = parseInt(monitorDetails.event_record_probesize) || 32
                 s.userLog(d,{
                     type: logTitleText,
                     msg: lang["Started"]
@@ -540,7 +542,7 @@ module.exports = (s,config,lang,app,io) => {
                 ){
                     outputMap += `-map 0:1 `
                 }
-                const ffmpegCommand = `-loglevel warning -live_start_index -99999 -analyzeduration 1000 -probesize 32 -re -i "${s.dir.streams+d.ke+'/'+d.id}/detectorStream.m3u8" ${outputMap}-movflags faststart+frag_keyframe+empty_moov -fflags +igndts -c:v copy -c:a aac -strict -2 -strftime 1 -y "${s.getVideoDirectory(monitorConfig) + filename}"`
+                const ffmpegCommand = `-loglevel warning -live_start_index -99999 -analyzeduration ${analyzeDuration} -probesize ${probeSize} -re -i "${s.dir.streams+d.ke+'/'+d.id}/detectorStream.m3u8" ${outputMap}-movflags faststart+frag_keyframe+empty_moov -fflags +igndts -c:v copy -c:a aac -strict -2 -strftime 1 -y "${s.getVideoDirectory(monitorConfig) + filename}"`
                 s.debugLog(ffmpegCommand)
                 activeMonitor.eventBasedRecording.process = spawn(
                     config.ffmpegDir,
