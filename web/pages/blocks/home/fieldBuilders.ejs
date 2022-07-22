@@ -294,7 +294,7 @@ drawBlock = function(monitorSettings){
                  <% }
              %>
          <% }else{ %>
-             <div <%- hidden %> class="form-group <%- field['form-group-class'] || '' %>" <%- field['form-group-attribute'] || '' %>>
+             <div <%- hidden %> <%- field.uiVisibilityConditions ? `visibility-conditions="${field.uiVisibilityConditions}"` : `` %> class="form-group <%- field['form-group-class'] || '' %>" <%- field['form-group-attribute'] || '' %>>
                  <div>
                      <label><%- field.field %></label>
                  </div>
