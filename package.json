@@ -22,7 +22,7 @@
     "connection-tester": "^0.2.0",
     "cws": "^2.0.0",
     "digest-fetch": "^1.2.1",
-    "discord.js": "^13.6.0",
+    "discord.js": "^12.2.0",
     "ejs": "^2.5.5",
     "express": "^4.16.4",
     "express-fileupload": "^1.1.6-alpha.6",
