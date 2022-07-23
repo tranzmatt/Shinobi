@@ -1,12 +1,11 @@
-#easyRemoteAccess .card {
-    cursor: pointer;
+#easyRemoteAccess .card * {
     transition: none;
 }
 #easyRemoteAccess .card.active {
-    background-color: #18ce0f !important;
+    background-color: #088c4c !important;
     color: #fff;
 }
-#easyRemoteAccess .card.active *{
+#easyRemoteAccess .card.active * {
     color: #fff!important;
 }
 #easyRemoteAccess .card.active .card-header,
@@ -45,6 +44,15 @@
 #easyRemoteAccess .card.selected .selected-badge {
     display: inline-block;
 }
-#easyRemoteAccess .card.active .table-striped tbody tr:nth-of-type(odd) {
+#p2pServerList .card.active .table-striped tbody tr:nth-of-type(odd) {
     background-color: rgb(49 204 68 / 5%);
+}
+#p2pServerList .card .d-flex.flex-row > div {
+    padding: 1rem;
+}
+#p2pServerList .card.active .d-flex.flex-row .epic-text-filter {
+    font-weight: bold;
+}
+#p2pServerList .card .d-flex.flex-row:nth-of-type(odd) {
+    background: rgba(0,0,0,0.1)
 }

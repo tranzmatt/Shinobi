@@ -15,4 +15,8 @@ $(document).ready(function(){
         })
         return false
     })
+    function loadPreferences(){
+        changeSuperPreferencesTab.find('[name=mail]').val($user.mail)
+    }
+    loadPreferences()
 })

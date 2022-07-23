@@ -465,6 +465,7 @@ module.exports = function(s,config,lang,app,io){
                     renderPage(config.renderPaths.super,{
                         config: config,
                         lang: lang,
+                        define: s.getDefinitonFile(config.language),
                         $user: superLoginResponse.user,
                         customAutoLoad: s.customAutoLoadTree,
                         currentVersion: s.currentVersion,

@@ -8080,5 +8080,386 @@ module.exports = function(s,config,lang){
            },
          }
       },
+      "Admin Account Settings": {
+           "section": "Admin Account Settings",
+           "blocks": {
+               "Editor": {
+                  "name": lang["Admin Account Settings"],
+                  "color": "blue",
+                  "info": [
+                      {
+                         "name": "mail",
+                         "field": lang.Email,
+                      },
+                      {
+                         "name": "ke",
+                         "field": lang['Group Key'],
+                      },
+                      {
+                         "name": "pass",
+                         "type": "password",
+                         "field": lang['Password'],
+                         "fieldType": "password",
+                      },
+                      {
+                         "name": "password_again",
+                         "type": "password",
+                         "field": lang['Password Again'],
+                         "fieldType": "password",
+                      },
+                      {
+                          "field": lang['2-Factor Authentication'],
+                          "name": "detail=factorAuth",
+                          "default":'0',
+                          "fieldType": "select",
+                          possible: [
+                            {
+                                "name": lang.No,
+                               "value": "0"
+                            },
+                            {
+                               "name": lang.Yes,
+                               "value": "1"
+                            },
+                         ]
+                      },
+                      {
+                         "name": "detail=size",
+                         "field": lang['Max Storage Amount'],
+                         "default": '10000'
+                      },
+                      {
+                         "name": "detail=days",
+                         "field": `${lang['Number of Days to keep']} ${lang['Videos']}`,
+                         "default": '5'
+                      },
+                      {
+                         "name": "detail=event_days",
+                         "field": `${lang['Number of Days to keep']} ${lang['Events']}`,
+                         "default": '10'
+                      },
+                      {
+                         "name": "detail=log_days",
+                         "field": `${lang['Number of Days to keep']} ${lang['Logs']}`,
+                         "default": '10'
+                      },
+                      // {
+                      //    "name": "detail=log_timelapseFrames",
+                      //    "field": `${lang['Number of Days to keep']} ${lang['Timelapse Frames']}`,
+                      //    "default": '10'
+                      // },
+                      {
+                         "name": "detail=max_camera",
+                         "field": lang['Max Number of Cameras'],
+                         "placeholder": lang['Leave blank for unlimited']
+                      },
+                      {
+                          "field": lang.Permissions,
+                          "name": "detail=permissions",
+                          "default":'1',
+                          "fieldType": "select",
+                          selector:'more_perms',
+                          possible: [
+                            {
+                                "name": lang['All Privileges'],
+                               "value": "all"
+                            },
+                            {
+                               "name": lang.Limited,
+                               "value": "limited"
+                            },
+                         ]
+                      },
+                      {
+                          "field": lang['Can edit Max Storage'],
+                          "name": "detail=edit_size",
+                          "default":'1',
+                          "fieldType": "select",
+                          "form-group-class":"more_perms_input more_perms_limited",
+                          possible: [
+                            {
+                                "name": lang.No,
+                               "value": "0"
+                            },
+                            {
+                               "name": lang.Yes,
+                               "value": "1"
+                            },
+                         ]
+                      },
+                      {
+                          "field": lang['Can edit Max Days'],
+                          "name": "detail=edit_days",
+                          "default":'1',
+                          "fieldType": "select",
+                          "form-group-class":"more_perms_input more_perms_limited",
+                          possible: [
+                            {
+                                "name": lang.No,
+                               "value": "0"
+                            },
+                            {
+                               "name": lang.Yes,
+                               "value": "1"
+                            },
+                         ]
+                      },
+                      {
+                          "field": lang['Can edit how long to keep Events'],
+                          "name": "detail=edit_event_days",
+                          "default":'1',
+                          "fieldType": "select",
+                          "form-group-class":"more_perms_input more_perms_limited",
+                          possible: [
+                            {
+                                "name": lang.No,
+                               "value": "0"
+                            },
+                            {
+                               "name": lang.Yes,
+                               "value": "1"
+                            },
+                         ]
+                      },
+                      {
+                          "field": lang['Can edit how long to keep Logs'],
+                          "name": "detail=edit_log_days",
+                          "default":'1',
+                          "fieldType": "select",
+                          "form-group-class":"more_perms_input more_perms_limited",
+                          possible: [
+                            {
+                                "name": lang.No,
+                               "value": "0"
+                            },
+                            {
+                               "name": lang.Yes,
+                               "value": "1"
+                            },
+                         ]
+                      },
+                      // NEEDS TO MOVE DESIGNATED FILES AFTER TESTING >
+                      {
+                          "field": lang['Can use Amazon S3'],
+                          "name": "detail=use_aws_s3",
+                          "default":'1',
+                          "fieldType": "select",
+                          "form-group-class":"more_perms_input more_perms_limited",
+                          possible: [
+                            {
+                                "name": lang.No,
+                               "value": "0"
+                            },
+                            {
+                               "name": lang.Yes,
+                               "value": "1"
+                            },
+                         ]
+                      },
+                      {
+                          "field": lang['Can use Wasabi Hot Cloud Storage'],
+                          "name": "detail=use_whcs",
+                          "default":'1',
+                          "fieldType": "select",
+                          "form-group-class":"more_perms_input more_perms_limited",
+                          possible: [
+                            {
+                                "name": lang.No,
+                               "value": "0"
+                            },
+                            {
+                               "name": lang.Yes,
+                               "value": "1"
+                            },
+                         ]
+                      },
+                      {
+                          "field": lang['Can use SFTP'],
+                          "name": "detail=use_sftp",
+                          "default":'1',
+                          "fieldType": "select",
+                          "form-group-class":"more_perms_input more_perms_limited",
+                          possible: [
+                            {
+                                "name": lang.No,
+                               "value": "0"
+                            },
+                            {
+                               "name": lang.Yes,
+                               "value": "1"
+                            },
+                         ]
+                      },
+                      {
+                          "field": lang['Can use WebDAV'],
+                          "name": "detail=use_webdav",
+                          "default":'1',
+                          "fieldType": "select",
+                          "form-group-class":"more_perms_input more_perms_limited",
+                          possible: [
+                            {
+                                "name": lang.No,
+                               "value": "0"
+                            },
+                            {
+                               "name": lang.Yes,
+                               "value": "1"
+                            },
+                         ]
+                      },
+                      {
+                          "field": lang['Can use Discord Bot'],
+                          "name": "detail=use_discordbot",
+                          "default":'1',
+                          "fieldType": "select",
+                          "form-group-class":"more_perms_input more_perms_limited",
+                          possible: [
+                            {
+                                "name": lang.No,
+                               "value": "0"
+                            },
+                            {
+                               "name": lang.Yes,
+                               "value": "1"
+                            },
+                         ]
+                      },
+                      {
+                          "field": lang['Can use LDAP'],
+                          "name": "detail=use_ldap",
+                          "default":'1',
+                          "fieldType": "select",
+                          "form-group-class":"more_perms_input more_perms_limited",
+                          possible: [
+                            {
+                                "name": lang.No,
+                               "value": "0"
+                            },
+                            {
+                               "name": lang.Yes,
+                               "value": "1"
+                            },
+                         ]
+                      },
+                      {
+                          "field": lang['Use Global Amazon S3 Video Storage'],
+                          "name": "detail=aws_use_global",
+                          "default":'0',
+                          "fieldType": "select",
+                          "form-group-class":"more_perms_input more_perms_limited",
+                          possible: [
+                            {
+                                "name": lang.No,
+                               "value": "0"
+                            },
+                            {
+                               "name": lang.Yes,
+                               "value": "1"
+                            },
+                         ]
+                      },
+                      {
+                          "field": lang['Use Global Wasabi Hot Cloud Storage Video Storage'],
+                          "name": "detail=whcs_use_global",
+                          "default":'0',
+                          "fieldType": "select",
+                          "form-group-class":"more_perms_input more_perms_limited",
+                          possible: [
+                            {
+                                "name": lang.No,
+                               "value": "0"
+                            },
+                            {
+                               "name": lang.Yes,
+                               "value": "1"
+                            },
+                         ]
+                      },
+                      {
+                          "field": lang['Use Global Backblaze B2 Video Storage'],
+                          "name": "detail=b2_use_global",
+                          "default":'0',
+                          "fieldType": "select",
+                          "form-group-class":"more_perms_input more_perms_limited",
+                          possible: [
+                            {
+                                "name": lang.No,
+                               "value": "0"
+                            },
+                            {
+                               "name": lang.Yes,
+                               "value": "1"
+                            },
+                         ]
+                      },
+                      {
+                          "field": lang['Use Global WebDAV Video Storage'],
+                          "name": "detail=webdav_use_global",
+                          "default":'0',
+                          "fieldType": "select",
+                          "form-group-class":"more_perms_input more_perms_limited",
+                          possible: [
+                            {
+                                "name": lang.No,
+                               "value": "0"
+                            },
+                            {
+                               "name": lang.Yes,
+                               "value": "1"
+                            },
+                         ]
+                      },
+                      // NEEDS TO MOVE DESIGNATED FILES AFTER TESTING />
+                      {
+                         "fieldType": "btn-group",
+                         "btns": [
+                             {
+                                 "fieldType": "btn",
+                                 "class": `submit btn-success fill`,
+                                 "btnContent": `${lang['Save']}`,
+                             },
+                         ],
+                      },
+                 ]
+             },
+          }
+        },
+    "Super User Preferences": {
+         "section": "Super User Preferences",
+         "blocks": {
+             "Editor": {
+                noHeader: true,
+                "color": "grey",
+                "info": [
+                    {
+                       "name": "mail",
+                       "field": lang.Email,
+                    },
+                    {
+                       "name": "pass",
+                       "type": "password",
+                       "fieldType": "password",
+                       "field": lang['Password'],
+                    },
+                    {
+                       "name": "pass_again",
+                       "type": "password",
+                       "fieldType": "password",
+                       "field": lang['Password Again'],
+                    },
+                    {
+                       "fieldType": "btn-group",
+                       "btns": [
+                           {
+                               "fieldType": "btn",
+                               "class": `submit btn-success`,
+                               "btnContent": `${lang['Save']}`,
+                           },
+                       ],
+                    },
+                ]
+            }
+        }
+    },
   })
 }

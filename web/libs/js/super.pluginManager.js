@@ -14,11 +14,11 @@ $(document).ready(function(){
         }else{
             listElement.append(`
                 <div class="col-md-12">
-                    <div class="card" package-name="${module.name}">
-                        <div class="card-body">
+                    <div class="card bg-dark text-white mb-3" package-name="${module.name}">
+                        <div class="card-body pb-3">
                             <div><h4 class="title mt-0">${humanName}</h4></div>
-                            <div><pre><b>${lang['Time Created']} :</b> ${module.created}</pre></div>
-                            <div><pre><b>${lang['Last Modified']} :</b> ${module.lastModified}</pre></div>
+                            <div class="pb-2"><b>${lang['Time Created']} :</b> ${module.created}</div>
+                            <div class="pb-2"><b>${lang['Last Modified']} :</b> ${module.lastModified}</div>
                             <div class="mb-2">
                                 ${module.hasInstaller ? `
                                     <a class="btn btn-sm btn-info" plugin-manager-action="install">${lang['Run Installer']}</a>
@@ -30,8 +30,8 @@ $(document).ready(function(){
                             </div>
                             <div class="pl-2 pr-2">
                                 <div class="install-output row">
-                                    <div class="col-md-6 pr-2"><pre class="install-output-stdout"></pre></div>
-                                    <div class="col-md-6 pl-2"><pre class="install-output-stderr"></pre></div>
+                                    <div class="col-md-6 pr-2"><pre class="install-output-stdout text-white mb-0"></pre></div>
+                                    <div class="col-md-6 pl-2"><pre class="install-output-stderr text-white mb-0"></pre></div>
                                 </div>
                                 <div class="command-installer row" style="display:none">
                                     <div class="col-md-6">
