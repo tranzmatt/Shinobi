@@ -28,7 +28,7 @@
 }%>
 <% if(screen){screen=screen.toLowerCase()} %>
 <div id="page-contents" class="display-table full-height">
-    <div class="shinobi-bg-shade bg-gradient-blue">
+    <div class="shinobi-bg-shade bg-gradient-<%- screen === 'super' ? 'green' : 'blue' %>">
     	<div class="d-flex flex-row full-height">
 			<div class="col-0 col-lg-8" style="background-image:url(<%- config.loginScreenBackground %>);<%- config.loginScreenBackgroundCss ? config.loginScreenBackgroundCss : 'background-size: cover;opacity: 0.2;' %>">
 
