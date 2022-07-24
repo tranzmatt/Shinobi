@@ -219,15 +219,19 @@ module.exports = function(s,config,lang){
                         }
                         //change global size value
                         s.group[e.ke].usedSpace += currentChange
+                        s.group[e.ke].usedSpace = s.group[e.ke].usedSpace < 0 ? 0 : s.group[e.ke].usedSpace
                         switch(storageType){
                             case'timelapeFrames':
                                 s.group[e.ke].usedSpaceTimelapseFrames += currentChange
+                                s.group[e.ke].usedSpaceTimelapseFrames = s.group[e.ke].usedSpaceTimelapseFrames < 0 ? 0 : s.group[e.ke].usedSpaceTimelapseFrames
                             break;
                             case'fileBin':
                                 s.group[e.ke].usedSpaceFilebin += currentChange
+                                s.group[e.ke].usedSpaceFilebin = s.group[e.ke].usedSpaceFilebin < 0 ? 0 : s.group[e.ke].usedSpaceFilebin
                             break;
                             default:
                                 s.group[e.ke].usedSpaceVideos += currentChange
+                                s.group[e.ke].usedSpaceVideos = s.group[e.ke].usedSpaceVideos < 0 ? 0 : s.group[e.ke].usedSpaceVideos
                             break;
                         }
                         //remove value just used from queue
