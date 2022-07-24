@@ -8,7 +8,7 @@
                     <img src="<%- window.libURL + config.logoLocation196x196 %>" width="42" style="<%- config.logoLocation76x76Style %>">
                 </div>
             </div>
-            <div class="flex-grow-1 align-items-center mr-3 py-3 <%- !showMonitors ? `pr-3` : '' %> <%- showMonitors ? `toggle-menu-collapse` : '' %>">
+            <div class="flex-grow-1 align-items-center mr-3 py-3 <%- !showMonitors ? `pr-3` : '' %> <%- showMonitors ? `toggle-menu-collapse` : '' %>" style="max-width: 40%;">
                 <h1 class="h6 mb-0 lh-1 text-ellipsis" style="overflow: hidden;"><%- $user.mail %></h1>
                 <small><%- lang.Monitors %> : <span class="cameraCount"></span></small>
             </div>
