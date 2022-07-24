@@ -150,6 +150,13 @@ module.exports = function (s, config, lang, getSnapshot) {
                         }),
                     },files || [],d.ke)
                 }
+                await getSnapshot(d,monitorConfig)
+                sendMail([
+                    {
+                        filename: d.screenshotName + '.jpg',
+                        content: d.screenshotBuffer
+                    }
+                ])
                 if(monitorConfig.details.detector_mail_send_video === '1'){
                     let videoPath = null
                     let videoName = null
@@ -178,13 +185,6 @@ module.exports = function (s, config, lang, getSnapshot) {
                         })
                     }
                 }
-                await getSnapshot(d,monitorConfig)
-                sendMail([
-                    {
-                        filename: d.screenshotName + '.jpg',
-                        content: d.screenshotBuffer
-                    }
-                ])
             }
         };
 

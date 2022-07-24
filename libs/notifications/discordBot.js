@@ -66,6 +66,28 @@ module.exports = function(s,config,lang,getSnapshot){
                         clearTimeout(s.group[d.ke].activeMonitors[d.id].detector_discordbot);
                         s.group[d.ke].activeMonitors[d.id].detector_discordbot = null
                     },detector_discordbot_timeout)
+                    await getSnapshot(d,monitorConfig)
+                    if(d.screenshotBuffer){
+                        sendMessage({
+                            author: {
+                              name: s.group[d.ke].rawMonitorConfigurations[d.id].name,
+                              icon_url: config.iconURL
+                            },
+                            title: lang.Event+' - '+d.screenshotName,
+                            description: lang.EventText1+' '+d.currentTimestamp,
+                            fields: [],
+                            timestamp: d.currentTime,
+                            footer: {
+                              icon_url: config.iconURL,
+                              text: "Shinobi Systems"
+                            }
+                        },[
+                            {
+                                attachment: d.screenshotBuffer,
+                                name: d.screenshotName+'.jpg'
+                            }
+                        ],d.ke)
+                    }
                     if(monitorConfig.details.detector_discordbot_send_video === '1'){
                         let videoPath = null
                         let videoName = null
@@ -101,28 +123,6 @@ module.exports = function(s,config,lang,getSnapshot){
                                 }
                             ],d.ke)
                         }
-                    }
-                    await getSnapshot(d,monitorConfig)
-                    if(d.screenshotBuffer){
-                        sendMessage({
-                            author: {
-                              name: s.group[d.ke].rawMonitorConfigurations[d.id].name,
-                              icon_url: config.iconURL
-                            },
-                            title: lang.Event+' - '+d.screenshotName,
-                            description: lang.EventText1+' '+d.currentTimestamp,
-                            fields: [],
-                            timestamp: d.currentTime,
-                            footer: {
-                              icon_url: config.iconURL,
-                              text: "Shinobi Systems"
-                            }
-                        },[
-                            {
-                                attachment: d.screenshotBuffer,
-                                name: d.screenshotName+'.jpg'
-                            }
-                        ],d.ke)
                     }
                 }
             }
