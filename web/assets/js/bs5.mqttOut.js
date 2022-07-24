@@ -32,7 +32,7 @@ $(document).ready(function(){
             },
             {
                 value: 'onDetectorNoTriggerTimeout',
-                label: lang['Detection Event'],
+                label: lang['No Trigger'],
             },
             {
                 value: 'onAccountSave',
