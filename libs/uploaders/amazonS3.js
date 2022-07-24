@@ -1,12 +1,12 @@
 var fs = require('fs');
 module.exports = function(s,config,lang){
     //Amazon S3
-    var beforeAccountSaveForAmazonS3 = function(d){
+    function beforeAccountSave(d){
         //d = save event
         d.formDetails.aws_use_global=d.d.aws_use_global
         d.formDetails.use_aws_s3=d.d.use_aws_s3
     }
-    var cloudDiskUseStartupForAmazonS3 = function(group,userDetails){
+    function cloudDiskUseStartup(group,userDetails){
         group.cloudDiskUse['s3'].name = 'Amazon S3'
         group.cloudDiskUse['s3'].sizeLimitCheck = (userDetails.use_aws_s3_size_limit === '1')
         if(!userDetails.aws_s3_size_limit || userDetails.aws_s3_size_limit === ''){
@@ -15,7 +15,7 @@ module.exports = function(s,config,lang){
             group.cloudDiskUse['s3'].sizeLimit = parseFloat(userDetails.aws_s3_size_limit)
         }
     }
-    var loadAmazonS3ForUser = function(e){
+    function loadGroupApp(e){
         // e = user
         var userDetails = JSON.parse(e.details)
         if(userDetails.aws_use_global === '1' && config.cloudUploaders && config.cloudUploaders.AmazonS3){
@@ -54,11 +54,11 @@ module.exports = function(s,config,lang){
             s.group[e.ke].aws_s3 = new s.group[e.ke].aws.S3();
         }
     }
-    var unloadAmazonS3ForUser = function(user){
+    function unloadGroupApp(user){
         s.group[user.ke].aws = null
         s.group[user.ke].aws_s3 = null
     }
-    var deleteVideoFromAmazonS3 = function(e,video,callback){
+    function deleteVideo(e,video,callback){
         // e = user
         try{
             var videoDetails = JSON.parse(video.details)
@@ -76,7 +76,7 @@ module.exports = function(s,config,lang){
             callback()
         });
     }
-    var uploadVideoToAmazonS3 = function(e,k){
+    function uploadVideo(e,k){
         //e = video object
         //k = temporary values
         if(!k)k={};
@@ -126,7 +126,7 @@ module.exports = function(s,config,lang){
             })
         }
     }
-    var onInsertTimelapseFrame = function(monitorObject,queryInfo,filePath){
+    function onInsertTimelapseFrame(monitorObject,queryInfo,filePath){
         var e = monitorObject
         if(s.group[e.ke].aws_s3 && s.group[e.ke].init.use_aws_s3 !== '0' && s.group[e.ke].init.aws_s3_save === '1'){
             var fileStream = fs.createReadStream(filePath)
@@ -169,7 +169,7 @@ module.exports = function(s,config,lang){
             })
         }
     }
-    var onDeleteTimelapseFrameFromCloud = function(e,frame,callback){
+    function onDeleteTimelapseFrameFromCloud(e,frame,callback){
         // e = user
         try{
             var frameDetails = JSON.parse(frame.details)
@@ -193,13 +193,13 @@ module.exports = function(s,config,lang){
     //amazon s3
     s.addCloudUploader({
         name: 's3',
-        loadGroupAppExtender: loadAmazonS3ForUser,
-        unloadGroupAppExtender: unloadAmazonS3ForUser,
-        insertCompletedVideoExtender: uploadVideoToAmazonS3,
-        deleteVideoFromCloudExtensions: deleteVideoFromAmazonS3,
-        cloudDiskUseStartupExtensions: cloudDiskUseStartupForAmazonS3,
-        beforeAccountSave: beforeAccountSaveForAmazonS3,
-        onAccountSave: cloudDiskUseStartupForAmazonS3,
+        loadGroupAppExtender: loadGroupApp,
+        unloadGroupAppExtender: unloadGroupApp,
+        insertCompletedVideoExtender: uploadVideo,
+        deleteVideoFromCloudExtensions: deleteVideo,
+        cloudDiskUseStartupExtensions: cloudDiskUseStartup,
+        beforeAccountSave: beforeAccountSave,
+        onAccountSave: cloudDiskUseStartup,
         onInsertTimelapseFrame: onInsertTimelapseFrame,
         onDeleteTimelapseFrameFromCloud: onDeleteTimelapseFrameFromCloud
     })
