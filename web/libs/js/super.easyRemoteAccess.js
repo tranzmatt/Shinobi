@@ -1,6 +1,6 @@
 $(document).ready(function(){
     var easyRemoteAccessTab = $('#easyRemoteAccess')
-    var p2pServerListContainer = $('#p2pServerList')
+    var toggleAffected = easyRemoteAccessTab.find('.p2p-toggle-affected')
     var p2pEnabledSwitch = easyRemoteAccessTab.find('[name="p2pEnabled"]')
     var p2pHostSelectedContainer = $('#p2pHostSelected')
     var easyRemoteAccessForm = easyRemoteAccessTab.find('form')
@@ -117,10 +117,10 @@ $(document).ready(function(){
         var isOn = p2pEnabledSwitch.val() === '1'
         if(isOn){
             beginAllStatusConnections()
-            p2pServerListContainer.show()
+            toggleAffected.show()
         }else{
             closeAllStatusConnections()
-            p2pServerListContainer.hide()
+            toggleAffected.hide()
         }
     }
     p2pEnabledSwitch.change(setVisibilityForList)
