@@ -828,21 +828,23 @@ function convertKbToHumanSize(theNumber){
     return `${number} ${unit}`
 }
 function drawIndicatorBar(item){
-    var html = `<div id="indicator-${item.name}" class="mb-2">
-        <div class="d-flex flex-row text-white mb-1">
-            <div class="pr-2">
-                <i class="fa fa-${item.icon}"></i>
-            </div>
-            <div class="flex-grow-1">
-                <small>${item.label}</small>
+    var html = `<div class="box-wrapper " style>
+        <div id="indicator-${item.name}" class="mb-2">
+            <div class="d-flex flex-row text-white mb-1">
+                <div class="pr-2">
+                    <i class="fa fa-${item.icon}"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <small>${item.label}</small>
+                </div>
+                <div>
+                    <small class="indicator-percent">0%</small>
+                </div>
             </div>
             <div>
-                <small class="indicator-percent">0%</small>
-            </div>
-        </div>
-        <div>
-            <div class="progress">
-                <div class="progress-bar progress-bar-warning" role="progressbar" style="width: 0%;"></div>
+                <div class="progress">
+                    <div class="progress-bar progress-bar-warning" role="progressbar" style="width: 0%;"></div>
+                </div>
             </div>
         </div>
     </div>`
