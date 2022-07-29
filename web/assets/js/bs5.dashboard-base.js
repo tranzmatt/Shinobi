@@ -862,7 +862,7 @@ function setInterfaceCounts(monitors){
     // Update Camera count in status bar
     var el = $(`#indicator-activeCameraCount`)
     var count = el.find('.indicator-percent')
-    count.text(activeCameraCount)
+    count.text(parseInt(activeCameraCount) + ' / ' + parseInt(allCameraCount))
     var progress = el.find('.progress-bar')
     progress.css('width', parseInt((activeCameraCount/allCameraCount)*100)+'%')
 }
