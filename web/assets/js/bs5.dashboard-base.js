@@ -852,12 +852,19 @@ function drawIndicatorBar(item){
 }
 function setInterfaceCounts(monitors){
     var data = monitors || Object.values(loadedMonitors)
+    var allCameraCount = data.length
     var activeCameraCount = data.filter((monitor) => {
         var monCode = parseInt(monitor.code)
         return monCode === 9 || monCode === 2 || monCode === 3
     }).length
-    $('.activeCameraCount').text(activeCameraCount)
-    $('.cameraCount').text(data.length)
+    // Update Camera count in Monitors menu
+    $('.cameraCount').text(allCameraCount)
+    // Update Camera count in status bar
+    var el = $(`#indicator-activeCameraCount`)
+    var count = el.find('.indicator-percent')
+    count.text(activeCameraCount)
+    var progress = el.find('.progress-bar')
+    progress.css('width', parseInt((activeCameraCount/allCameraCount)*100)+'%')
 }
 // on page load
 var readyFunctions = []
