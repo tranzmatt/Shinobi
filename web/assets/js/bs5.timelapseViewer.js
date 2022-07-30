@@ -36,6 +36,7 @@ $(document).ready(function(e){
     var liveStreamView = timelapseWindow.find('.liveStreamView')
     var monitorsList = timelapseWindow.find('.monitors_list')
     var downloadButton = timelapseWindow.find('.download_mp4')
+    var selectAllBox = timelapseWindow.find('.select-all')
     var downloadRecheckTimers = {}
     var currentPlaylist = {}
     var frameSelected = null
@@ -100,7 +101,7 @@ $(document).ready(function(e){
                 currentPlaylistArray = []
                 $.each(data.reverse(),function(n,fileInfo){
                     fileInfo.number = n
-                    frameIconsHtml += '<div class="col-md-4 frame-container"><div class="frame" data-filename="' + fileInfo.filename + '" frame-container-unloaded="' + fileInfo.href + '"><div class="button-strip"><button type="button" class="btn btn-sm btn-danger delete"><i class="fa fa-trash-o"></i></button></div><div class="shade">' + moment(fileInfo.time).format('YYYY-MM-DD HH:mm:ss') + '</div></div></div>'
+                    frameIconsHtml += '<div class="col-md-4 frame-container" frame-container="' + fileInfo.filename + '"><div class="frame" data-filename="' + fileInfo.filename + '" frame-container-unloaded="' + fileInfo.href + '"><div class="button-strip"><input name="' + fileInfo.href + '" value="' + fileInfo.filename + '" type="checkbox" class="form-check-input"><button type="button" class="btn btn-sm btn-danger delete"><i class="fa fa-trash-o"></i></button></div><div class="shade">' + moment(fileInfo.time).format('YYYY-MM-DD HH:mm:ss') + '</div></div></div>'
                     currentPlaylist[fileInfo.filename] = fileInfo
                 })
                 currentPlaylistArray = data
@@ -110,7 +111,7 @@ $(document).ready(function(e){
                 resetFilmStripPositions()
                 loadVisibleTimelapseFrames()
             }else{
-                frameIconsHtml = lang['No Data']
+                frameIconsHtml = `<div class="text-center">${lang['No Data']}</div>`
                 frameIcons.html(frameIconsHtml)
             }
         })
@@ -151,7 +152,7 @@ $(document).ready(function(e){
     var playTimelapse = function(){
         var playPauseText = timelapseWindow.find('.playPauseText')
         canPlay = true
-        playPauseText.text(lang.Pause)
+        playPauseText.text(`<i class="fa fa-pause"></i> ${lang['Pause']}`)
         startPlayLoop()
     }
     var destroyTimelapse = function(){
@@ -165,7 +166,7 @@ $(document).ready(function(e){
     var pauseTimelapse = function(){
         var playPauseText = timelapseWindow.find('.playPauseText')
         canPlay = false
-        playPauseText.text(lang.Play)
+        playPauseText.text(`<i class="fa fa-play"></i> ${lang['Play']}`)
         clearTimeout(playIntervalTimer)
         playIntervalTimer = null
     }
@@ -182,6 +183,47 @@ $(document).ready(function(e){
     }
     var setDownloadButtonLabel = function(text,icon){
         downloadButton.html(icon ? iconHtml(icon) + text : text)
+    }
+    function deleteFrame(frame){
+        return new Promise((resolve,reject) => {
+            $.getJSON((frame.href || frame) + '/delete',function(response){
+                resolve(response)
+            })
+        })
+    }
+    async function deleteFrames(frameHrefs){
+        for (let i = 0; i < frameHrefs.length; i++) {
+            const frameHref = frameHrefs[i]
+            await deleteFrame(frameHref)
+        }
+    }
+    function deleteSelectedFrames(){
+        var checkedBoxes = frameIcons.serializeObject()
+        var frameHrefs = Object.keys(checkedBoxes)
+        var fileNames = Object.values(checkedBoxes)
+        $.confirm.create({
+            title: lang['Delete selected'],
+            body: lang.DeleteTheseMsg + `<br><br><img style="max-width:100%" src="${frameHrefs[0]}">`,
+            clickOptions: {
+                class: 'btn-danger',
+                title: lang.Delete,
+            },
+            clickCallback: function(){
+                deleteFrames(frameHrefs)
+                fileNames.forEach((filename) => {
+                    frameIcons.find(`[frame-container="${filename}"]`).remove()
+                })
+            }
+        })
+    }
+    function toggleSelectOnAllFrames(){
+        var isMasterToggleSelected = selectAllBox.is(':checked')
+        var checkBoxes = frameIcons.find('input[type="checkbox"]')
+        if(isMasterToggleSelected){
+            checkBoxes.prop('checked',true)
+        }else{
+            checkBoxes.prop('checked',false)
+        }
     }
     timelapseWindow.on('click','.frame',function(){
         pauseTimelapse()
@@ -210,14 +252,22 @@ $(document).ready(function(e){
                 class: 'btn-danger',
                 title: lang.Delete,
             },
-            clickCallback: function(){
-                $.getJSON(frame.href + '/delete',function(response){
-                    if(response.ok){
-                        el.parent().remove()
-                    }
-                })
+            clickCallback: async function(){
+                const response = await deleteFrame(frame)
+                if(response.ok){
+                    el.parent().remove()
+                }
             }
         })
+    })
+    timelapseWindow.on('click','.delete-selected',function(e){
+        deleteSelectedFrames()
+    })
+    timelapseWindow.on('click','.select-all',function(e){
+        toggleSelectOnAllFrames()
+    })
+    timelapseWindow.on('click','.frame input',function(e){
+        e.stopPropagation()
     })
     downloadButton.click(function(){
         var fps = fpsSelector.val()

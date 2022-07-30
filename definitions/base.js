@@ -6180,42 +6180,61 @@ module.exports = function(s,config,lang){
                 "name": lang["Search Settings"],
                 "color": "green",
                 "section-pre-class": "col-md-4",
+                isFormGroupGroup: true,
+                "noHeader": true,
+                "noDefaultSectionClasses": true,
                 "info": [
                     {
-                        "field": lang["Monitor"],
-                        "fieldType": "select",
-                        "class": "monitors_list",
-                        "possible": []
-                    },
-                    {
-                        "id": "timelapsejpeg_date",
-                        "field": lang.Date,
-                    },
-                    {
-                        "id": "timelapseJpegFps",
-                        "field": lang["Frame Rate"],
-                        "fieldType": "range",
-                        "min": "1",
-                        "max": "30",
-                    },
-                    {
-                       "fieldType": "btn-group",
-                       "btns": [
+                       isFormGroupGroup: true,
+                       "noHeader": true,
+                       "info": [
                            {
-                               "fieldType": "btn",
-                               "class": `btn-primary playPause playPauseText`,
-                               "btnContent": `${lang['Play']}`,
+                               "field": lang["Monitor"],
+                               "fieldType": "select",
+                               "class": "monitors_list",
+                               "possible": []
                            },
                            {
-                               "fieldType": "btn",
-                               "class": `btn-success download_mp4`,
-                               "btnContent": `${lang['Download']}`,
+                               "id": "timelapsejpeg_date",
+                               "field": lang.Date,
                            },
-                       ],
+                           {
+                               "id": "timelapseJpegFps",
+                               "field": lang["Frame Rate"],
+                               "fieldType": "range",
+                               "min": "1",
+                               "max": "30",
+                           },
+                           {
+                              "fieldType": "btn-group",
+                              "btns": [
+                                  {
+                                      "fieldType": "btn",
+                                      "class": `btn-primary playPause playPauseText`,
+                                      "btnContent": `<i class="fa fa-play"></i> ${lang['Play']}`,
+                                  },
+                                  {
+                                      "fieldType": "btn",
+                                      "class": `btn-success download_mp4`,
+                                      "btnContent": `${lang['Download']}`,
+                                  },
+                              ],
+                           }
+                      ]
                     },
                     {
-                        "fieldType": "div",
-                        "class": "frameIcons mt-3 row scroll-style-6",
+                       isFormGroupGroup: true,
+                       "headerTitle": `
+                         <a href=# class="btn btn-danger btn-sm delete-selected"><i class="fa fa-trash-o"></i> ${lang['Delete selected']}</a>
+                         <div class="pull-right">
+                             <input type="checkbox" class="form-check-input select-all">
+                         </div>`,
+                       "info": [
+                           {
+                               "fieldType": "form",
+                               "class": "frameIcons mt-3 mb-0 row scroll-style-6",
+                           }
+                      ]
                     }
                ]
            },
