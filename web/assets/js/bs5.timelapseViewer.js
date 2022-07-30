@@ -152,7 +152,7 @@ $(document).ready(function(e){
     var playTimelapse = function(){
         var playPauseText = timelapseWindow.find('.playPauseText')
         canPlay = true
-        playPauseText.text(`<i class="fa fa-pause"></i> ${lang['Pause']}`)
+        playPauseText.html(`<i class="fa fa-pause"></i> ${lang.Pause}`)
         startPlayLoop()
     }
     var destroyTimelapse = function(){
@@ -166,7 +166,7 @@ $(document).ready(function(e){
     var pauseTimelapse = function(){
         var playPauseText = timelapseWindow.find('.playPauseText')
         canPlay = false
-        playPauseText.text(`<i class="fa fa-play"></i> ${lang['Play']}`)
+        playPauseText.html(`<i class="fa fa-play"></i> ${lang.Play}`)
         clearTimeout(playIntervalTimer)
         playIntervalTimer = null
     }
