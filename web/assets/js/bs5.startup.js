@@ -95,7 +95,7 @@ function drawAddStorageIndicators(){
         var el = $(`#indicator-${storage.name}`)
         loadedIndicators[storage.name] = {
             value: el.find('.value'),
-            percent: el.find('.percent'),
+            percent: el.find('.indicator-percent'),
             progressBar: el.find('.progress-bar'),
         }
     })
