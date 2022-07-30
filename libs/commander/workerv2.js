@@ -258,8 +258,9 @@ function startConnection(p2pServerAddress,subscriptionId){
     })
     onIncomingMessage('disconnect',function(data,requestId){
         console.log(`FAILED LICENSE CHECK ON P2P`)
-        if(data.retryLater)console.log(`Retrying Later`)
-        stayDisconnected = data && !data.retryLater
+        const retryLater = data && data.retryLater;
+        stayDisconnected = !retryLater
+        if(retryLater)console.log(`Retrying P2P Later...`)
     })
 }
 const responseTunnels = {}
