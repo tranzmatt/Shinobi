@@ -7703,13 +7703,13 @@ module.exports = function(s,config,lang){
                          info: [
                              {
                                  "fieldType": "indicatorBar",
-                                 "icon": "microchip",
+                                 "icon": "square",
                                  "name": "cpu",
                                  "label": `<span class="os_cpuCount"><i class="fa fa-spinner fa-pulse"></i></span> ${lang.CPU}<span class="os_cpuCount_trailer"></span> : <span class="os_platform" style="text-transform:capitalize"><i class="fa fa-spinner fa-pulse"></i></span>`,
                              },
                              {
                                  "fieldType": "indicatorBar",
-                                 "icon": "square",
+                                 "icon": "microchip",
                                  "name": "ram",
                                  "label": `<span class="os_totalmem used"><i class="fa fa-spinner fa-pulse"></i></span> ${lang.MB} ${lang.RAM}`,
                              },
