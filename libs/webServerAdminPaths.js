@@ -5,6 +5,9 @@ var exec = require('child_process').exec;
 var spawn = require('child_process').spawn;
 var execSync = require('child_process').execSync;
 module.exports = function(s,config,lang,app){
+    const {
+        deleteMonitorData,
+    } = require('./monitor/utils.js')(s,config,lang)
     /**
     * API : Administrator : Edit Sub-Account (Account to share cameras with)
     */
@@ -20,7 +23,7 @@ module.exports = function(s,config,lang,app){
             }
             var form = s.getPostData(req)
             var uid = form.uid || s.getPostData(req,'uid',false)
-            var mail = form.mail || s.getPostData(req,'mail',false)
+            var mail = (form.mail || s.getPostData(req,'mail',false) || '').trim()
             if(form){
                 var keys = ['details']
                 form.details = s.parseJSON(form.details) || {"sub": 1, "allmonitors": "1"}
@@ -342,27 +345,11 @@ module.exports = function(s,config,lang,app){
                     //     }
                     // })
                     if(req.query.deleteFiles === 'true'){
-                        //videos
-                        s.dir.addStorage.forEach(function(v,n){
-                            var videosDir = v.path+req.params.ke+'/'+req.params.id+'/'
-                            fs.stat(videosDir,function(err,stat){
-                                if(!err){
-                                    s.file('deleteFolder',videosDir)
-                                }
+                        deleteMonitorData(req.params.ke,req.params.id).then(() => {
+                            s.debugLog(`Deleted Monitor Data`,{
+                                ke: req.params.ke,
+                                mid: req.params.id,
                             })
-                        })
-                        var videosDir = s.dir.videos+req.params.ke+'/'+req.params.id+'/'
-                        fs.stat(videosDir,function(err,stat){
-                            if(!err){
-                                s.file('deleteFolder',videosDir)
-                            }
-                        })
-                        //fileBin
-                        var binDir = s.dir.fileBin+req.params.ke+'/'+req.params.id+'/'
-                        fs.stat(binDir,function(err,stat){
-                            if(!err){
-                                s.file('deleteFolder',binDir)
-                            }
                         })
                     }
                     endData.ok=true;
