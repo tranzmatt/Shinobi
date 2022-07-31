@@ -263,11 +263,15 @@ $(document).ready(function(e){
     timelapseWindow.on('click','.delete-selected',function(e){
         deleteSelectedFrames()
     })
-    timelapseWindow.on('click','.select-all',function(e){
+    selectAllBox.click(function(e){
         toggleSelectOnAllFrames()
     })
     timelapseWindow.on('click','.frame input',function(e){
         e.stopPropagation()
+        const checked = $(this).is(':checked')
+        if(!checked){
+            selectAllBox.prop('checked',false)
+        }
     })
     downloadButton.click(function(){
         var fps = fpsSelector.val()
