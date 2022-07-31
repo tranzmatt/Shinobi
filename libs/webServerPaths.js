@@ -40,7 +40,9 @@ module.exports = function(s,config,lang,app,io){
         passables.originalURL = s.getOriginalUrl(req)
         passables.baseUrl = req.protocol+'://'+req.hostname
         passables.config = s.getConfigWithBranding(req.hostname)
-        res.render(paths,passables,callback)
+        res.render(paths,passables, {async: true},async () => {
+            if(callback)callback()
+        })
     }
     //child node proxy check
     //params = parameters
