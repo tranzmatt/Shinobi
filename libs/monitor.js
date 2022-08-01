@@ -1790,20 +1790,107 @@ module.exports = function(s,config,lang){
         ){}
         return monitorRestrictions
     }
-    // s.checkViewerConnectionsForMonitor = function(monitorObject){
-    //     var monitorConfig = s.group[monitorObject.ke].rawMonitorConfigurations[monitorObject.mid]
-    //     if(monitorConfig.mode === 'start'){
-    //
-    //     }
-    // }
-    // s.addViewerConnectionForMonitor = function(monitorObject,viewerDetails){
-    //     s.group[monitorObject.ke].activeMonitors[monitorObject.mid].viewerConnection[viewerDetails.viewerId] = viewerDetails
-    //     s.group[monitorObject.ke].activeMonitors[monitorObject.mid].viewerConnectionCount += 1
-    //     return s.group[monitorObject.ke].activeMonitors[monitorObject.mid].viewerConnectionCount
-    // }
-    // s.removeViewerConnectionForMonitor = function(monitorObject,viewerDetails){
-    //     delete(s.group[monitorObject.ke].activeMonitors[monitorObject.mid].viewerConnection[viewerDetails.viewerId])
-    //     s.group[monitorObject.ke].activeMonitors[monitorObject.mid].viewerConnectionCount -= 1
-    //     return s.group[monitorObject.ke].activeMonitors[monitorObject.mid].viewerConnectionCount
-    // }
+    s.checkPermission = (user) => {
+        // provide "user" object given from "s.auth"
+        const isSubAccount = !!user.details.sub
+        const response = {
+            isSubAccount,
+            hasAllPermissions: isSubAccount && user.details.allmonitors === '1',
+            isRestricted: isSubAccount && user.details.allmonitors !== '1',
+            apiKeyPermissions: {},
+            userPermissions: {},
+        }
+        const permissions = user.permissions
+        const details = user.details;
+        [
+            'auth_socket',
+            'get_monitors',
+            'control_monitors',
+            'get_logs',
+            'watch_stream',
+            'watch_snapshot',
+            'watch_videos',
+            'delete_videos',
+        ].forEach((key) => {
+            response.apiKeyPermissions[key] = permissions[key] === '1';
+            response.apiKeyPermissions[`${key}_disallowed`] = permissions[key] === '0';
+        });
+        // Base Level Permissions
+            // allmonitors : All Monitors and Privileges
+            // monitor_create : Can Create and Delete Monitors
+            // user_change : Can Change User Settings
+            // view_logs : Can View Logs
+        [
+            'allmonitors',
+            'monitor_create',
+            'user_change',
+            'view_logs',
+        ].forEach((key) => {
+            response.userPermissions[key] = details[key] === '1';
+            response.userPermissions[`${key}_disallowed`] = details[key] === '0';
+        });
+        return response
+    }
+    s.getMonitorsPermitted = (userDetails,monitorId,groupKey,permissionToCheck,addQueries) => {
+        const monitorRestrictions = []
+        const monitors = {}
+        function setMonitorPermissions(mid){
+            // monitors : Can View Monitor
+            // monitor_edit : Can Edit Monitor (Delete as well)
+            // video_view : Can View Videos and Events
+            // video_delete : Can Delete Videos and Events
+            [
+                'monitors',
+                'monitor_edit',
+                'video_view',
+                'video_delete',
+            ].forEach((key) => {
+                monitors[`${mid}_${key}`] = userDetails[key] && userDetails[key].indexOf(mid) > -1 || false;
+            });
+            return true
+        }
+        function addToQuery(mid,n){
+            if(n === 0){
+                monitorRestrictions.push(['mid','=',mid])
+            }else{
+                monitorRestrictions.push(['or','mid','=',mid])
+            }
+            monitorRestrictions.push(['ke','=',groupKey])
+            if(addQueries)monitorRestrictions.push(...addQueries)
+        };
+        if(
+            !monitorId &&
+            userDetails.sub &&
+            userDetails.monitors &&
+            userDetails.allmonitors !== '1'
+        ){
+            try{
+                userDetails.monitors = s.parseJSON(userDetails.monitors)
+                userDetails.monitors.forEach(function(v,n){
+                    setMonitorPermissions(v)
+                    if(permissionToCheck && monitor[`${v}_${permissionToCheck}`]){
+                        addToQuery(v,n)
+                    }else if(!permissionToCheck){
+                        addToQuery(v,n)
+                    }
+                })
+            }catch(err){
+                s.debugLog(err)
+            }
+        }
+        // else if(
+        //     monitorId && (
+        //         !userDetails.sub ||
+        //         userDetails.allmonitors === '1'
+        //     )
+        // ){
+        //     setMonitorPermissions(monitorId)
+        //     addToQuery(monitorId,0)
+        // }
+        return {
+            monitorPermissions: monitors,
+            // queryConditions
+            monitorRestrictions: monitorRestrictions,
+        }
+    }
 }

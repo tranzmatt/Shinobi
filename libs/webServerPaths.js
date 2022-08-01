@@ -752,8 +752,21 @@ module.exports = function(s,config,lang,app,io){
         s.auth(req.params,(user) => {
             const groupKey = req.params.ke
             const monitorId = req.params.id
-            const monitorRestrictions = s.getMonitorRestrictions(user.details,monitorId)
-            if(user.details.sub && user.details.allmonitors === '0' && (user.permissions.get_monitors === "0" || monitorRestrictions.length === 0)){
+            const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(user.details,monitorId,groupKey)
+            const {
+                isRestricted,
+                apiKeyPermissions,
+            } = s.checkPermission(user)
+            if(
+                isRestricted &&
+                (
+                    apiKeyPermissions.get_monitors_disallowed ||
+                    monitorRestrictions.length === 0
+                )
+            ){
                 s.closeJsonResponse(res,[]);
                 return
             }
@@ -761,9 +774,8 @@ module.exports = function(s,config,lang,app,io){
                 action: "select",
                 columns: "*",
                 table: "Monitors",
-                where: [
+                where: monitorRestrictions ? monitorRestrictions : [
                     ['ke','=',groupKey],
-                    monitorRestrictions
                 ]
             },(err,r) => {
                 r.forEach(function(v,n){
@@ -831,11 +843,20 @@ module.exports = function(s,config,lang,app,io){
         s.auth(req.params,async (user) => {
             const groupKey = req.params.ke
             const monitorId = req.params.id
+            const permissionToCheck = 'monitor_edit'
+            const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(user.details,monitorId,groupKey,permissionToCheck)
+            const {
+                isRestricted,
+                userPermissions,
+                apiKeyPermissions,
+            } = s.checkPermission(user)
             if(
-                user.permissions.control_monitors === "0" ||
-                user.details.sub &&
-                user.details.allmonitors !== '1' &&
-                user.details.monitor_edit.indexOf(monitorId) === -1
+                apiKeyPermissions.control_monitors_disallowed ||
+                isRestricted &&
+                !monitorPermissions[`${monitorId}_monitor_edit`]
             ){
                 response.msg = user.lang['Not Permitted']
             }else{
@@ -860,64 +881,64 @@ module.exports = function(s,config,lang,app,io){
             s.closeJsonResponse(res,response);
         },res,req);
     });
-    /**
-    * API : Merge Recorded Videos into one file
-     */
-     app.get(config.webPaths.apiPrefix+':auth/videosMerge/:ke', function (req,res){
-         var failed = function(resp){
-             res.setHeader('Content-Type', 'application/json');
-             res.end(s.prettyPrint(resp))
-         }
-         if(req.query.videos && req.query.videos !== ''){
-             s.auth(req.params,function(user){
-                 var videosSelected = JSON.parse(req.query.videos)
-                 const whereQuery = []
-                 var didOne = false
-                 videosSelected.forEach(function(video){
-                     var time = s.nameToTime(video.filename)
-                     if(req.query.isUTC === 'true'){
-                         time = s.utcToLocal(time)
-                     }
-                     if(didOne){
-                         whereQuery.push(['or','ke','=',req.params.ke])
-                     }else{
-                         didOne = true
-                         whereQuery.push(['ke','=',req.params.ke])
-                     }
-                     whereQuery.push(
-                         ['mid','=',video.mid],
-                         ['time','=',time],
-                     )
-
-                 })
-                 s.knexQuery({
-                     action: "select",
-                     columns: "*",
-                     table: "Videos",
-                     where: whereQuery
-                 },(err,r) => {
-                     var resp = {ok: false}
-                     if(r && r[0]){
-                         s.mergeRecordedVideos(r,req.params.ke,function(fullPath,filename){
-                             res.setHeader('Content-Disposition', 'attachment; filename="'+filename+'"')
-                             var file = fs.createReadStream(fullPath)
-                             file.on('close',function(){
-                                 setTimeout(function(){
-                                     s.file('delete',fullPath)
-                                 },1000 * 60 * 3)
-                                 res.end()
-                             })
-                             file.pipe(res)
-                         })
-                     }else{
-                         failed({ok:false,msg:'No Videos Found'})
-                     }
-                 })
-             },res,req);
-         }else{
-             failed({ok:false,msg:'"videos" query variable is missing from request.'})
-         }
-    })
+    // /**
+    // * API : Merge Recorded Videos into one file
+    //  */
+    //  app.get(config.webPaths.apiPrefix+':auth/videosMerge/:ke', function (req,res){
+    //      var failed = function(resp){
+    //          res.setHeader('Content-Type', 'application/json');
+    //          res.end(s.prettyPrint(resp))
+    //      }
+    //      if(req.query.videos && req.query.videos !== ''){
+    //          s.auth(req.params,function(user){
+    //              var videosSelected = JSON.parse(req.query.videos)
+    //              const whereQuery = []
+    //              var didOne = false
+    //              videosSelected.forEach(function(video){
+    //                  var time = s.nameToTime(video.filename)
+    //                  if(req.query.isUTC === 'true'){
+    //                      time = s.utcToLocal(time)
+    //                  }
+    //                  if(didOne){
+    //                      whereQuery.push(['or','ke','=',req.params.ke])
+    //                  }else{
+    //                      didOne = true
+    //                      whereQuery.push(['ke','=',req.params.ke])
+    //                  }
+    //                  whereQuery.push(
+    //                      ['mid','=',video.mid],
+    //                      ['time','=',time],
+    //                  )
+    //
+    //              })
+    //              s.knexQuery({
+    //                  action: "select",
+    //                  columns: "*",
+    //                  table: "Videos",
+    //                  where: whereQuery
+    //              },(err,r) => {
+    //                  var resp = {ok: false}
+    //                  if(r && r[0]){
+    //                      s.mergeRecordedVideos(r,req.params.ke,function(fullPath,filename){
+    //                          res.setHeader('Content-Disposition', 'attachment; filename="'+filename+'"')
+    //                          var file = fs.createReadStream(fullPath)
+    //                          file.on('close',function(){
+    //                              setTimeout(function(){
+    //                                  s.file('delete',fullPath)
+    //                              },1000 * 60 * 3)
+    //                              res.end()
+    //                          })
+    //                          file.pipe(res)
+    //                      })
+    //                  }else{
+    //                      failed({ok:false,msg:'No Videos Found'})
+    //                  }
+    //              })
+    //          },res,req);
+    //      }else{
+    //          failed({ok:false,msg:'"videos" query variable is missing from request.'})
+    //      }
+    // })
     /**
     * API : Get Videos
      */
@@ -932,7 +953,16 @@ module.exports = function(s,config,lang,app,io){
             const userDetails = user.details
             const monitorId = req.params.id
             const groupKey = req.params.ke
-            const hasRestrictions = userDetails.sub && userDetails.allmonitors !== '1';
+            const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(userDetails,monitorId,groupKey)
+            const {
+                isSubAccount,
+                isRestricted,
+                userPermissions,
+                apiKeyPermissions,
+            } = s.checkPermission(user)
             var origURL = req.originalUrl.split('/')
             var videoParam = origURL[origURL.indexOf(req.params.auth) + 1]
             var videoSet = 'Videos'
@@ -958,9 +988,8 @@ module.exports = function(s,config,lang,app,io){
                 parseRowDetails: false,
                 rowName: 'videos',
                 preliminaryValidationFailed: (
-                    user.permissions.watch_videos === "0" ||
-                    hasRestrictions &&
-                    (!userDetails.video_view || userDetails.video_view.indexOf(monitorId)===-1)
+                    apiKeyPermissions.watch_videos_disallowed ||
+                    isRestricted && !userPermissions[`${monitorId}_video_view`]
                 )
             },(response) => {
                 if(response && response.videos){
