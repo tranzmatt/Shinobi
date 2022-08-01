@@ -286,6 +286,14 @@ function getMonitorGroupsSelected(){
     })
     return monitorGroupsInSelection
 }
+function getMonitorTriggerGroupsSelected(){
+    var monitorGroupsInSelection = []
+    monitorEditorWindow.find('[group_detector_multi]:checked').each(function(n,v){
+        var monitorId = $(v).val()
+        monitorGroupsInSelection.push(monitorId)
+    })
+    return monitorGroupsInSelection
+}
 var differentiateMonitorConfig = function(firstConfig,secondConfig){
     console.log(firstConfig,secondConfig)
     var diffedConfig = {}
@@ -407,6 +415,7 @@ window.getMonitorEditFormFields = function(){
     monitorConfig.details = safeJsonParse(monitorConfig.details)
     monitorConfig.details.substream = getSubStreamChannelFields()
     monitorConfig.details.groups = getMonitorGroupsSelected()
+    monitorConfig.details.group_detector_multi = getMonitorTriggerGroupsSelected()
     monitorConfig.details.input_map_choices = monitorSectionInputMapsave()
     // TODO : Input Maps and Stream Channels (does old way at the moment)
 
@@ -648,7 +657,7 @@ function importIntoMonitorEditor(options){
                             ${v.name} <span class="text-muted">(${v.id})</span>
                         </div>
                         <div class="pr-3">
-                            <span><input class="form-check-input no-abs mdl-switch__input form-check-input" type="checkbox" value="${v.id}" ${isSelected ? 'checked' : ''}/></span>
+                            <span><input class="form-check-input no-abs" ${b} type="checkbox" value="${v.id}" ${isSelected ? 'checked' : ''}/></span>
                         </div>
                     </div>
                 </div>`
@@ -974,15 +983,6 @@ monitorEditorWindow.on('change','[groups]',function(){
     });
     monitorEditorWindow.find('[detail="groups"]').val(JSON.stringify(selectedGroups)).change()
 })
-monitorEditorWindow.on('change','[group_detector_multi]',function(){
-  var e={};
-    var el = monitorEditorWindow.find('[group_detector_multi]:checked');
-    var selectedMultiTrigger=[];
-    el.each(function(n,v){
-        selectedMultiTrigger.push($(v).val())
-    });
-    monitorEditorWindow.find('[detail="group_detector_multi"]').val(JSON.stringify(selectedMultiTrigger)).change()
-})
 monitorEditorWindow.on('change','.detector_cascade_selection',function(){
   var e={};
     var el = monitorEditorWindow.find('.detector_cascade_selection:checked');
@@ -1166,7 +1166,7 @@ editorForm.find('[name="type"]').change(function(e){
                         ${hasSelectedMonitor ? `<ul class="json-to-block striped import-monitor-preset cursor-pointer">${jsonToHtmlBlock(humanizedMonitorKeys)}</ul>` : ''}
                     </div>
                     <div class="pr-3">
-                        <span><input class="form-check-input no-abs mdl-switch__input" type="checkbox" value="${preset.name}" ${hasSelectedMonitor ? 'checked' : ''}/></span>
+                        <span><input class="form-check-input no-abs" type="checkbox" value="${preset.name}" ${hasSelectedMonitor ? 'checked' : ''}/></span>
                     </div>
                     <div>
                         <a class="badge btn btn-sm btn-danger delete-preset"><i class="fa fa-trash-o"></i></a>
