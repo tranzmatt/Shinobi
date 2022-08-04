@@ -911,7 +911,7 @@ var showInputMappingFields = function(showMaps){
 function setFieldVisibilityNewWay(){
     var validation = getMonitorEditFormFields()
     if(!validation.ok){
-        return console.log('Failed setFieldVisibilityNewWay',new Error())
+        return console.log('Failed setFieldVisibilityNewWay',new Error(),validation)
     }
     var monitorConfig = validation.monitorConfig
     var monitorDetails = safeJsonParse(monitorConfig.details)
@@ -973,40 +973,6 @@ monitorStreamChannels.on('click','.delete',function(){
 monitorEditorWindow.on('change','[channel-detail]',function(){
     monitorStreamChannelsave()
 })
-//////////////////
-monitorEditorWindow.on('change','[groups]',function(){
-  var e={};
-    var el = monitorEditorWindow.find('[groups]:checked');
-    var selectedGroups = [];
-    el.each(function(n,v){
-        selectedGroups.push($(v).val())
-    });
-    monitorEditorWindow.find('[detail="groups"]').val(JSON.stringify(selectedGroups)).change()
-})
-monitorEditorWindow.on('change','.detector_cascade_selection',function(){
-  var e={};
-    var el = monitorEditorWindow.find('.detector_cascade_selection:checked');
-    var selectedCascades = {};
-    el.each(function(n,v){
-        selectedCascades[$(v).val()]={}
-    });
-    monitorEditorWindow.find('[detail="detector_cascades"]').val(JSON.stringify(selectedCascades)).change()
-})
-//monitorEditorWindow.on('change','.detector_cascade_selection',function(){
-//  var e={};
-//    e.details=monitorEditorWindow.find('[name="details"]')
-//    try{
-//        e.detailsVal=safeJsonParse(e.details.val())
-//    }catch(err){
-//        e.detailsVal={}
-//    }
-//    e.detailsVal.detector_cascades=[];
-//    var el = monitorEditorWindow.find('.detector_cascade_selection:checked');
-//    el.each(function(n,v){
-//        e.detailsVal.detector_cascades.push($(v).val())
-//    });
-//    e.details.val(JSON.stringify(e.detailsVal))
-//})
 monitorEditorWindow.find('.probe-monitor-settings').click(function(){
     $.pB.submit(buildMonitorURL(),true)
 })
