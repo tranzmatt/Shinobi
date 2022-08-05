@@ -75,6 +75,6 @@ $(document).ready(function(){
         dontShowForOneWeek()
         return false;
     })
-    console.log('Please support the Shinobi developement.')
+    console.log('Please support the Shinobi development.')
     console.log('https://licenses.shinobi.video/subscribe')
 })
