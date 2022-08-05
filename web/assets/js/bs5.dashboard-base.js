@@ -850,6 +850,12 @@ function drawIndicatorBar(item){
     </div>`
     $('.disk-indicator-bars').append(html)
 }
+function updateInterfaceStatus(data){
+    // Updated status of interface in loaded Monitors
+    loadedMonitors[data.id].code = data.code
+    // Update counters in status bar
+    setInterfaceCounts()
+}
 function setInterfaceCounts(monitors){
     var data = monitors || Object.values(loadedMonitors)
     var allCameraCount = data.length

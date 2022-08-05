@@ -209,6 +209,9 @@ onWebSocketEvent(function (d){
                 })
             }
         break;
+        case'monitor_status':
+            updateInterfaceStatus(d);
+        break;
     }
 })
 $(document).ready(function(){
