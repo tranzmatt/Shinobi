@@ -1773,6 +1773,7 @@ module.exports = function(s,config,lang){
                         monitorRestrictions.push(['or','mid','=',v])
                     }
                 })
+                console.log(monitorRestrictions)
             }catch(er){
             }
         }else if(
@@ -1797,6 +1798,7 @@ module.exports = function(s,config,lang){
             isSubAccount,
             hasAllPermissions: isSubAccount && user.details.allmonitors === '1',
             isRestricted: isSubAccount && user.details.allmonitors !== '1',
+            isRestrictedApiKey: false,
             apiKeyPermissions: {},
             userPermissions: {},
         }
@@ -1812,8 +1814,10 @@ module.exports = function(s,config,lang){
             'watch_videos',
             'delete_videos',
         ].forEach((key) => {
+            const permissionOff = permissions[key] === '0';
             response.apiKeyPermissions[key] = permissions[key] === '1';
-            response.apiKeyPermissions[`${key}_disallowed`] = permissions[key] === '0';
+            response.apiKeyPermissions[`${key}_disallowed`] = permissionOff;
+            response.isRestrictedApiKey = response.isRestrictedApiKey || permissionOff;
         });
         // Base Level Permissions
             // allmonitors : All Monitors and Privileges
@@ -1831,7 +1835,7 @@ module.exports = function(s,config,lang){
         });
         return response
     }
-    s.getMonitorsPermitted = (userDetails,monitorId,groupKey,permissionToCheck,addQueries) => {
+    s.getMonitorsPermitted = (userDetails,monitorId) => {
         const monitorRestrictions = []
         const monitors = {}
         function setMonitorPermissions(mid){
@@ -1855,8 +1859,6 @@ module.exports = function(s,config,lang){
             }else{
                 monitorRestrictions.push(['or','mid','=',mid])
             }
-            monitorRestrictions.push(['ke','=',groupKey])
-            if(addQueries)monitorRestrictions.push(...addQueries)
         };
         if(
             !monitorId &&
@@ -1868,25 +1870,21 @@ module.exports = function(s,config,lang){
                 userDetails.monitors = s.parseJSON(userDetails.monitors)
                 userDetails.monitors.forEach(function(v,n){
                     setMonitorPermissions(v)
-                    if(permissionToCheck && monitor[`${v}_${permissionToCheck}`]){
-                        addToQuery(v,n)
-                    }else if(!permissionToCheck){
-                        addToQuery(v,n)
-                    }
+                    addToQuery(v,n)
                 })
             }catch(err){
                 s.debugLog(err)
             }
+        }else if(
+            monitorId && (
+                !userDetails.sub ||
+                userDetails.allmonitors !== '0' ||
+                userDetails.monitors.indexOf(monitorId) >- 1
+            )
+        ){
+            setMonitorPermissions(monitorId)
+            addToQuery(monitorId,0)
         }
-        // else if(
-        //     monitorId && (
-        //         !userDetails.sub ||
-        //         userDetails.allmonitors === '1'
-        //     )
-        // ){
-        //     setMonitorPermissions(monitorId)
-        //     addToQuery(monitorId,0)
-        // }
         return {
             monitorPermissions: monitors,
             // queryConditions
