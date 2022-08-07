@@ -37,23 +37,25 @@
               <ul id="pageTabLinks" class="nav flex-column nav-pills">
                   <div class="pb-2 px-3" id="home-collapse">
                       <% menuInfo.links.forEach((item) => {
-                            if(item.divider){ %>
-                                <li><hr class="dropdown-divider"></li>
-                            <% }else{ %>
-                                <li class="nav-item" <%- item.attributes ? item.attributes : '' %> <%- item.pageOpen ? `id="side-menu-link-${item.pageOpen}"` : '' %>>
-                                    <a class="nav-link side-menu-link <%- item.class %>" aria-current="page" <%- item.pageOpen ? `page-open="${item.pageOpen}"` : '' %>>
-                                      <i class="fa fa-<%- item.icon %>"></i> &nbsp; <%- item.label %>
-                                    </a>
-                                    <% if(item.addUl){ %>
-                                        <ul class="btn-default rounded btn-toggle-nav list-unstyled fw-normal ml-3 mt-2 px-2 pb-2 pt-1 <%- item.ulClass ? item.ulClass : '' %>">
-                                            <% if(item.ulItems){
-                                                item.ulItems.forEach((listItem) => { %>
-                                                    <li><a class="<%- define.Theme.isDark ? 'text-white' : 'text-dark' %> <%- listItem.class ? listItem.class : '' %>" <%- listItem.attributes ? listItem.attributes : '' %>><span class="dot dot-<%- listItem.color ? listItem.color : 'blue' %> shadow mr-2"></span><%- listItem.label ? listItem.label : 'Need Label' %></a></li>
-                                            <%  })
-                                               } %>
-                                        </ul>
-                                    <% } %>
-                                </li>
+                            if(!item.eval || eval(item.eval)){
+                                if(item.divider){ %>
+                                    <li><hr class="dropdown-divider"></li>
+                                <% }else{ %>
+                                    <li class="nav-item" <%- item.attributes ? item.attributes : '' %> <%- item.pageOpen ? `id="side-menu-link-${item.pageOpen}"` : '' %>>
+                                        <a class="nav-link side-menu-link <%- item.class %>" aria-current="page" <%- item.pageOpen ? `page-open="${item.pageOpen}"` : '' %>>
+                                          <i class="fa fa-<%- item.icon %>"></i> &nbsp; <%- item.label %>
+                                        </a>
+                                        <% if(item.addUl){ %>
+                                            <ul class="btn-default rounded btn-toggle-nav list-unstyled fw-normal ml-3 mt-2 px-2 pb-2 pt-1 <%- item.ulClass ? item.ulClass : '' %>">
+                                                <% if(item.ulItems){
+                                                    item.ulItems.forEach((listItem) => { %>
+                                                        <li><a class="<%- define.Theme.isDark ? 'text-white' : 'text-dark' %> <%- listItem.class ? listItem.class : '' %>" <%- listItem.attributes ? listItem.attributes : '' %>><span class="dot dot-<%- listItem.color ? listItem.color : 'blue' %> shadow mr-2"></span><%- listItem.label ? listItem.label : 'Need Label' %></a></li>
+                                                <%  })
+                                                   } %>
+                                            </ul>
+                                        <% } %>
+                                    </li>
+                              <% } %>
                           <% } %>
                       <% }) %>
                   </div>

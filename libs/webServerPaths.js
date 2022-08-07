@@ -1209,6 +1209,10 @@ module.exports = function(s,config,lang,app,io){
             const groupKey = req.params.ke
             const monitorId = req.params.id
             const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(user.details,monitorId)
+            const {
                 isRestricted,
                 isRestrictedApiKey,
                 apiKeyPermissions,
@@ -1772,7 +1776,7 @@ module.exports = function(s,config,lang,app,io){
                 isRestricted,
                 isRestrictedApiKey,
                 apiKeyPermissions,
-            } = s.checkPermission(user)
+            } = s.checkPermission(user);
             if(
                 isRestrictedApiKey && apiKeyPermissions.delete_videos_disallowed ||
                 isRestricted && !monitorPermissions[`${monitorId}_video_delete`]

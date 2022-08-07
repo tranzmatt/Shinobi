@@ -1830,7 +1830,7 @@ module.exports = function(s,config,lang){
             'user_change',
             'view_logs',
         ].forEach((key) => {
-            response.userPermissions[key] = details[key] === '1';
+            response.userPermissions[key] = details[key] === '1' || !details[key];
             response.userPermissions[`${key}_disallowed`] = details[key] === '0';
         });
         return response

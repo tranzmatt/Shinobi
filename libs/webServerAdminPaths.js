@@ -298,9 +298,12 @@ module.exports = function(s,config,lang,app){
         }
         res.setHeader('Content-Type', 'application/json');
         s.auth(req.params,function(user){
-            var hasRestrictions = user.details.sub && user.details.allmonitors !== '1'
             const groupKey = req.params.ke
             const monitorId = req.params.id
+            const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(user.details,monitorId)
             const {
                 isRestricted,
                 isRestrictedApiKey,
