@@ -92,9 +92,8 @@ module.exports = function(s,config,lang){
             s.group[e.ke].aws_s3.upload({
                 Bucket: s.group[e.ke].init.aws_s3_bucket,
                 Key: saveLocation,
-                Body:fileStream,
-                ACL:'public-read',
-                ContentType:'video/'+ext
+                Body: fileStream,
+                ContentType: 'video/'+ext
             },function(err,data){
                 if(err){
                     s.userLog(e,{type:lang['Amazon S3 Upload Error'],msg:err})
@@ -114,7 +113,7 @@ module.exports = function(s,config,lang){
                             }),
                             size: k.filesize,
                             end: k.endTime,
-                            href: data.Location
+                            href: ''
                         }
                     })
                     s.setCloudDiskUsedForGroup(e.ke,{
@@ -152,6 +151,7 @@ module.exports = function(s,config,lang){
                             mid: queryInfo.mid,
                             ke: queryInfo.ke,
                             time: queryInfo.time,
+                            filename: queryInfo.filename,
                             details: s.s({
                                 type : 's3',
                                 location : saveLocation
@@ -190,6 +190,17 @@ module.exports = function(s,config,lang){
             callback()
         });
     }
+    function onGetVideoData(video){
+        const videoDetails = s.parseJSON(video.details)
+        return new Promise((resolve, reject) => {
+            const saveLocation = videoDetails.location
+            var fileStream = s.group[video.ke].aws_s3.getObject({
+                Bucket: s.group[video.ke].init.aws_s3_bucket,
+                Key: saveLocation,
+            }).createReadStream();
+            resolve(fileStream)
+        })
+    }
     //amazon s3
     s.addCloudUploader({
         name: 's3',
@@ -201,7 +212,8 @@ module.exports = function(s,config,lang){
         beforeAccountSave: beforeAccountSave,
         onAccountSave: cloudDiskUseStartup,
         onInsertTimelapseFrame: onInsertTimelapseFrame,
-        onDeleteTimelapseFrameFromCloud: onDeleteTimelapseFrameFromCloud
+        onDeleteTimelapseFrameFromCloud: onDeleteTimelapseFrameFromCloud,
+        onGetVideoData
     })
     //return fields that will appear in settings
     return {
