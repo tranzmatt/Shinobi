@@ -5,6 +5,7 @@ $(document).ready(function(e){
     var videosTableDrawArea = $('#videosTable_draw_area')
     var videosTablePreviewArea = $('#videosTable_preview_area')
     var objectTagSearchField = $('#videosTable_tag_search')
+    var cloudVideoCheckSwitch = $('#videosTable_cloudVideos')
     var loadedVideosTable = [];
     var redrawTimeout;
     var frameUrlCache = {}
@@ -69,6 +70,9 @@ $(document).ready(function(e){
     objectTagSearchField.change(function(){
         drawVideosTableViewElements()
     })
+    cloudVideoCheckSwitch.change(function(){
+        drawVideosTableViewElements()
+    })
     async function drawVideosTableViewElements(usePreloadedData){
         var dateRange = getSelectedTime(false)
         var searchQuery = objectTagSearchField.val() || null
@@ -82,6 +86,7 @@ $(document).ready(function(e){
                 startDate,
                 endDate,
                 searchQuery,
+                customVideoSet: wantCloudVideos() ? 'cloudVideos' : null,
             })).videos;
             $.each(loadedVideosTable,function(n,v){
                 loadedVideosInMemory[`${monitorId}${v.time}`]
@@ -182,6 +187,10 @@ $(document).ready(function(e){
             })
         })
         return rowsSelected
+    }
+    function wantCloudVideos(){
+        const isChecked = cloudVideoCheckSwitch.val() === 'cloud'
+        return isChecked
     }
     $('body')
     .on('click','.open-videosTable',function(e){

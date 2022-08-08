@@ -441,6 +441,7 @@ function getVideos(options,callback){
         var searchQuery = options.searchQuery
         var requestQueries = []
         var monitorId = options.monitorId
+        var customVideoSet = options.customVideoSet
         var limit = options.limit || 300
         var eventStartTime
         var eventEndTime
@@ -457,7 +458,7 @@ function getVideos(options,callback){
         if(searchQuery){
             requestQueries.push(`search=${searchQuery}`)
         }
-        $.getJSON(`${getApiPrefix(searchQuery ? `videosByEventTag` : `videos`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`noLimit=1`]).join('&')}`,function(data){
+        $.getJSON(`${getApiPrefix(customVideoSet ? customVideoSet : searchQuery ? `videosByEventTag` : `videos`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`noLimit=1`]).join('&')}`,function(data){
             var videos = data.videos
             $.getJSON(`${getApiPrefix(`timelapse`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`noLimit=1`]).join('&')}`,function(timelapseFrames){
                 $.getJSON(`${getApiPrefix(`events`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`limit=${limit}`]).join('&')}`,function(eventData){

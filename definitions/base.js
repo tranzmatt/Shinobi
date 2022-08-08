@@ -7574,7 +7574,7 @@ module.exports = function(s,config,lang){
                               {
                                   label: lang['Stream in Background'],
                                   class: 'cursor-pointer',
-                                  attributes: 'shinobi-switch="backgroundStream" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
+                                  attributes: 'shinobi-switch="backgroundStream" ui-change-target=".dot" on-class="dot-grey" off-class="dot-green"',
                                   color: 'grey',
                               },
                               {
@@ -8137,10 +8137,26 @@ module.exports = function(s,config,lang){
                          "field": lang.Date,
                      },
                      {
+                         id:'videosTable_cloudVideos',
+                         field: lang['Video Set'],
+                         default:'local',
+                         "fieldType": "select",
+                         possible:[
+                           {
+                               "name": lang.Local,
+                              "value": "local"
+                           },
+                           {
+                              "name": lang.Cloud,
+                              "value": "cloud"
+                           },
+                        ]
+                     },
+                     {
                          "fieldType": "div",
                          "id": "videosTable_preview_area",
                          "divContent": ""
-                     }
+                     },
                 ]
             },
             "theTable": {
