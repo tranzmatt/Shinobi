@@ -428,6 +428,9 @@ module.exports = function(s,config,lang,app,io){
         config.webPaths.apiPrefix+':auth/timelapse/:ke',
         config.webPaths.apiPrefix+':auth/timelapse/:ke/:id',
         config.webPaths.apiPrefix+':auth/timelapse/:ke/:id/:date',
+        config.webPaths.apiPrefix+':auth/cloudTimelapse/:ke',
+        config.webPaths.apiPrefix+':auth/cloudTimelapse/:ke/:id',
+        config.webPaths.apiPrefix+':auth/cloudTimelapse/:ke/:id/:date',
     ], function (req,res){
         res.setHeader('Content-Type', 'application/json');
         s.auth(req.params,function(user){
@@ -452,9 +455,17 @@ module.exports = function(s,config,lang,app,io){
                 s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized'], frames: []});
                 return
             }
+            var origURL = req.originalUrl.split('/')
+            var videoParam = origURL[origURL.indexOf(req.params.auth) + 1]
+            var dataSet = 'Timelapse Frames'
+            switch(videoParam){
+                case'cloudTimelapse':
+                    dataSet = 'Cloud Timelapse Frames'
+                break;
+            }
             s.getDatabaseRows({
                 monitorRestrictions: monitorRestrictions,
-                table: 'Timelapse Frames',
+                table: dataSet,
                 groupKey: req.params.ke,
                 date: req.query.date,
                 startDate: req.query.start,
