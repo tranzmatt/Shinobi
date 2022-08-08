@@ -1,4 +1,5 @@
 PNotify.prototype.options.styling = "fontawesome";
+var isSubAccount = !!$user.details.sub
 var loadedMonitors = {}
 var tabTree = null
 var pageLoadingData = {}

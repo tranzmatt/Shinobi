@@ -128,6 +128,7 @@ function buildLiveGridBlock(monitor){
         })
         return
     }
+    var monitorId = monitor.mid
     var monitorDetails = safeJsonParse(monitor.details)
     var monitorLiveId = `monitor_live_${monitor.mid}`
     var subStreamChannel = monitor.subStreamChannel
@@ -135,6 +136,11 @@ function buildLiveGridBlock(monitor){
     var streamElement = buildStreamElementHtml(streamType)
     var streamBlockInfo = definitions['Monitor Stream Window']
     if(!loadedLiveGrids[monitor.mid])loadedLiveGrids[monitor.mid] = {}
+    var quickLinkHtml = ''
+    $.each(streamBlockInfo.quickLinks,function(n,button){
+        if(button.eval && !eval(button.eval))return;
+        quickLinkHtml += `<a title="${button.label}" class="btn btn-sm mr-1 badge btn-${button.class}"><i class="fa fa-${button.icon}"></i></a>`
+    })
     var baseHtml = `<div
         id="${monitorLiveId}"
         data-ke="${monitor.ke}"
@@ -155,24 +161,13 @@ function buildLiveGridBlock(monitor){
                 ${streamElement}
             </div>
         </div>
-        ${streamBlockInfo.gridBlockAfterContentHtml || ''}
+        ${(streamBlockInfo.gridBlockAfterContentHtml || '').replace(`$QUICKLINKS`,quickLinkHtml)}
         <div class="mdl-overlay-menu-backdrop hidden">
             <ul class="mdl-overlay-menu list-group">`
             var buttons = streamBlockInfo.links
-            if(!monitor.details.control === '1'){
-                delete(buttons["Control"])
-            }
-            if(!permissionCheck('video_view',monitor.mid)){
-                delete(buttons["Videos List"])
-                delete(buttons["Time-lapse"])
-                delete(buttons["Power Viewer"])
-                delete(buttons["Calendar"])
-            }
-            if(!permissionCheck('monitor_edit',monitor.mid)){
-                delete(buttons["Monitor Settings"])
-            }
-            $.each(buttons,function(n,v){
-                baseHtml += `<li class="list-item cursor-pointer ${v.class}" title="${v.label}" ${v.attr}><i class="fa fa-${v.icon}"></i> ${v.label}</li>`
+            $.each(buttons,function(n,button){
+                if(button.eval && !eval(button.eval))return;
+                baseHtml += `<li class="list-item cursor-pointer ${button.class}" title="${button.label}" ${button.attr}><i class="fa fa-${button.icon}"></i> ${button.label}</li>`
             })
             baseHtml += `</ul>
         </div>

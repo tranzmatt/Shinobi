@@ -7365,14 +7365,7 @@ module.exports = function(s,config,lang){
                </div>
                <div class="monitor_details">
                    <div class="pull-left">
-                       <a title="${lang['Options']}" class="btn btn-sm badge btn-secondary toggle-live-grid-monitor-menu"><i class="fa fa-bars"></i></a>
-                       <a title="${lang['Edit']}" class="btn btn-sm badge btn-primary open-monitor-settings"><i class="fa fa-wrench"></i></a>
-                       <a title="${lang['Toggle Substream']}" class="btn btn-sm badge btn-secondary toggle-monitor-substream"><i class="fa fa-eye"></i></a>
-                       <a title="${lang['Snapshot']}" class="btn btn-sm badge btn-warning snapshot-live-grid-monitor"><i class="fa fa-camera"></i></a>
-                       <a title="${lang['Videos List']}" class="btn btn-sm badge btn-secondary open-videosTable"><i class="fa fa-film"></i></a>
-                       <a title="${lang['Reconnect Stream']}" class="btn btn-sm badge btn-success signal reconnect-live-grid-monitor"><i class="fa fa-plug"></i></a>
-                       <a title="${lang['Show Logs']}" class="btn btn-sm badge btn-warning toggle-live-grid-monitor-logs"><i class="fa fa-exclamation-triangle"></i></a>
-                       <a title="${lang['Close']}" class="btn btn-sm badge btn-danger close-live-grid-monitor"><i class="fa fa-times"></i></a>
+                        $QUICKLINKS
                   </div>
                    <div><span class="monitor_name">$MONITOR_NAME</span></div>
                </div>
@@ -7383,6 +7376,56 @@ module.exports = function(s,config,lang){
                    <div class="data-menu col-md-6 p-2 logs scrollable"></div>
                </div>
            </div>`,
+           quickLinks: {
+               "Options": {
+                  "label": lang['Options'],
+                  "class": "default toggle-live-grid-monitor-menu",
+                  "icon": "bars"
+               },
+               "Monitor Settings": {
+                  "label": lang['Monitor Settings'],
+                  "class": "default open-monitor-settings",
+                  "icon": "wrench",
+                  eval: `isSubAccount && permissionCheck('monitor_edit',monitorId)`,
+               },
+               "Toggle Substream": {
+                  "label": lang['Toggle Substream'],
+                  "class": "warning toggle-monitor-substream",
+                  "icon": "eye"
+               },
+               "Snapshot": {
+                  "label": lang['Snapshot'],
+                  "class": "primary snapshot-live-grid-monitor",
+                  "icon": "camera"
+               },
+               "Videos List": {
+                  "label": lang['Videos List'],
+                  "class": "default open-videosTable",
+                  "icon": "film",
+                  eval: `isSubAccount && permissionCheck('video_view',monitorId)`,
+               },
+               "Reconnect Stream": {
+                  "label": lang['Reconnect Stream'],
+                  "class": "success signal reconnect-live-grid-monitor",
+                  "icon": "plug"
+               },
+               "Control": {
+                  "label": lang['Control'],
+                  "class": "default toggle-live-grid-monitor-ptz-controls",
+                  "icon": "arrows",
+                  eval: `monitor.details.control === '1'`,
+               },
+               "Show Logs": {
+                  "label": lang['Show Logs'],
+                  "class": "warning toggle-live-grid-monitor-logs",
+                  "icon": "exclamation-triangle"
+               },
+               "Close": {
+                  "label": lang['Close'],
+                  "class": "danger close-live-grid-monitor",
+                  "icon": "times"
+               }
+           },
            links: {
               "Mute Audio": {
                   "label": lang['Mute Audio'],
@@ -7400,7 +7443,7 @@ module.exports = function(s,config,lang){
                  "class": "warning toggle-live-grid-monitor-logs",
                  "icon": "exclamation-triangle"
               },
-              "Show Logs": {
+              "Toggle Substream": {
                  "label": lang['Toggle Substream'],
                  "class": "warning toggle-monitor-substream",
                  "icon": "eye"
@@ -7408,7 +7451,8 @@ module.exports = function(s,config,lang){
               "Control": {
                  "label": lang['Control'],
                  "class": "default toggle-live-grid-monitor-ptz-controls",
-                 "icon": "arrows"
+                 "icon": "arrows",
+                 eval: `monitor.details.control === '1'`,
               },
               "Reconnect Stream": {
                  "label": lang['Reconnect Stream'],
@@ -7442,7 +7486,8 @@ module.exports = function(s,config,lang){
                  "label": lang['Time-lapse'],
                  "attr": `monitor="timelapseJpeg"`,
                  "class": "default",
-                 "icon": "angle-double-right"
+                 "icon": "angle-double-right",
+                 eval: `isSubAccount && permissionCheck('video_view',monitorId)`,
               },
               // "Video Grid": {
               //    "label": "Video Grid",
@@ -7453,12 +7498,14 @@ module.exports = function(s,config,lang){
               "Videos List": {
                  "label": lang['Videos List'],
                  "class": "default open-videosTable",
-                 "icon": "film"
+                 "icon": "film",
+                 eval: `isSubAccount && permissionCheck('video_view',monitorId)`,
               },
               "Monitor Settings": {
                  "label": lang['Monitor Settings'],
                  "class": "default open-monitor-settings",
-                 "icon": "wrench"
+                 "icon": "wrench",
+                 eval: `isSubAccount && permissionCheck('monitor_edit',monitorId)`,
               },
               "Fullscreen": {
                  "label": lang['Fullscreen'],
