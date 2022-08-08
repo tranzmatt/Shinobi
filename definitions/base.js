@@ -8460,32 +8460,62 @@ module.exports = function(s,config,lang){
              "Editor": {
                 noHeader: true,
                 "color": "grey",
+                "noDefaultSectionClasses": true,
+                "box-wrapper-class": "row",
                 "info": [
                     {
-                       "name": "mail",
-                       "field": lang.Email,
+                        isFormGroupGroup: true,
+                        "noHeader": true,
+                        "section-pre-class": "col-md-6",
+                        info: [
+                            {
+                               "name": "mail",
+                               "field": lang.Email,
+                            },
+                            {
+                               "name": "pass",
+                               "type": "password",
+                               "fieldType": "password",
+                               "field": lang['Password'],
+                            },
+                            {
+                               "name": "pass_again",
+                               "type": "password",
+                               "fieldType": "password",
+                               "field": lang['Password Again'],
+                            },
+                            {
+                               "fieldType": "btn-group",
+                               "btns": [
+                                   {
+                                       "fieldType": "btn",
+                                       "class": `submit btn-success`,
+                                       "btnContent": `${lang['Save']}`,
+                                   },
+                               ],
+                            },
+                        ]
                     },
                     {
-                       "name": "pass",
-                       "type": "password",
-                       "fieldType": "password",
-                       "field": lang['Password'],
-                    },
-                    {
-                       "name": "pass_again",
-                       "type": "password",
-                       "fieldType": "password",
-                       "field": lang['Password Again'],
-                    },
-                    {
-                       "fieldType": "btn-group",
-                       "btns": [
-                           {
-                               "fieldType": "btn",
-                               "class": `submit btn-success`,
-                               "btnContent": `${lang['Save']}`,
-                           },
-                       ],
+                        isFormGroupGroup: true,
+                        "name": lang["API Keys"],
+                        "section-pre-class": "col-md-6",
+                        info: [
+                            {
+                               "fieldType": "btn-group",
+                               "btns": [
+                                   {
+                                       "fieldType": "btn",
+                                       "class": `new-token btn-success`,
+                                       "btnContent": `${lang['Add']}`,
+                                   },
+                               ],
+                            },
+                            {
+                               "id": "super-tokens",
+                               "fieldType": "div",
+                            },
+                        ]
                     },
                 ]
             }
