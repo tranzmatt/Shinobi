@@ -2,10 +2,16 @@ $(document).ready(function(){
     var changeSuperPreferencesTab = $('#changeSuperPreferences')
     var tokenContainer = $('#super-tokens')
     var changeSuperPreferencesForm = changeSuperPreferencesTab.find('form')
+    function generateId(x){
+        if(!x){x=10};var t = "";var p = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        for( var i=0; i < x; i++ )
+            t += p.charAt(Math.floor(Math.random() * p.length));
+        return t;
+    }
     function drawTokenRow(tokenValue){
         var html = `<div class="d-flex flex-row token-row mt-3">
             <div class="flex-grow-1">
-                <input class="form-control form-control-sm token-row-input" value="${tokenValue || ''}">
+                <input class="form-control form-control-sm token-row-input" value="${tokenValue || generateId(30)}">
             </div>
             <div>
                 <a class="delete-token btn btn-danger btn-sm my-0 ml-3"><i class="fa fa-trash"></i></a>
