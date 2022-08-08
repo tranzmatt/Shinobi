@@ -7592,31 +7592,37 @@ module.exports = function(s,config,lang){
                           label: `${lang['Monitor Settings']}`,
                           pageOpen: 'monitorSettings',
                           addUl: true,
+                          eval: `!$user.details.sub || $user.details.monitor_create !== 0`,
                       },
                       {
                           icon: 'grav',
                           label: `${lang['Region Editor']}`,
                           pageOpen: 'regionEditor',
+                          eval: `!$user.details.sub`,
                       },
                       {
                           icon: 'filter',
                           label: `${lang['Event Filters']}`,
                           pageOpen: 'eventFilters',
+                          eval: `!$user.details.sub`,
                       },
                       {
                           icon: 'align-right',
                           label: `${lang['Monitor States']}`,
                           pageOpen: 'monitorStates',
+                          eval: `!$user.details.sub`,
                       },
                       {
                           icon: 'clock',
                           label: `${lang['Schedules']}`,
                           pageOpen: 'schedules',
+                          eval: `!$user.details.sub`,
                       },
                       {
                           icon: 'exclamation-triangle',
                           label: `${lang['Logs']}`,
                           pageOpen: 'logViewer',
+                          eval: `!$user.details.sub || $user.details.view_logs !== 0`,
                       },
                       {
                           divider: true,
@@ -7625,6 +7631,7 @@ module.exports = function(s,config,lang){
                           icon: 'gears',
                           label: `${lang['Account Settings']}`,
                           pageOpen: 'accountSettings',
+                          eval: `!$user.details.sub || $user.details.user_change !== 0`,
                           addUl: true,
                       },
                       {
@@ -7632,6 +7639,7 @@ module.exports = function(s,config,lang){
                           label: `${lang.subAccountManager}`,
                           pageOpen: 'subAccountManager',
                           addUl: true,
+                          eval: `!$user.details.sub`,
                       },
                       {
                           icon: 'key',
@@ -7645,12 +7653,14 @@ module.exports = function(s,config,lang){
                           icon: 'search',
                           label: `${lang['ONVIF Scanner']}`,
                           pageOpen: 'onvifScanner',
-                          addUl:true
+                          addUl:true,
+                          eval: `!$user.details.sub || $user.details.monitor_create !== 0`,
                       },
                       {
                           icon: 'opera',
                           label: `${lang['ONVIF Device Manager']}`,
                           pageOpen: 'onvifDeviceManager',
+                          eval: `!$user.details.sub || $user.details.monitor_create !== 0`,
                       },
                       {
                           icon: 'eyedropper',
@@ -7662,6 +7672,7 @@ module.exports = function(s,config,lang){
                           label: `${lang['ShinobiHub']}`,
                           pageOpen: 'configFinder',
                           addUl: true,
+                          eval: `!$user.details.sub || $user.details.monitor_create !== 0`,
                       },
                       {
                           divider: true,
@@ -8449,32 +8460,62 @@ module.exports = function(s,config,lang){
              "Editor": {
                 noHeader: true,
                 "color": "grey",
+                "noDefaultSectionClasses": true,
+                "box-wrapper-class": "row",
                 "info": [
                     {
-                       "name": "mail",
-                       "field": lang.Email,
+                        isFormGroupGroup: true,
+                        "noHeader": true,
+                        "section-pre-class": "col-md-6",
+                        info: [
+                            {
+                               "name": "mail",
+                               "field": lang.Email,
+                            },
+                            {
+                               "name": "pass",
+                               "type": "password",
+                               "fieldType": "password",
+                               "field": lang['Password'],
+                            },
+                            {
+                               "name": "pass_again",
+                               "type": "password",
+                               "fieldType": "password",
+                               "field": lang['Password Again'],
+                            },
+                            {
+                               "fieldType": "btn-group",
+                               "btns": [
+                                   {
+                                       "fieldType": "btn",
+                                       "class": `submit btn-success`,
+                                       "btnContent": `${lang['Save']}`,
+                                   },
+                               ],
+                            },
+                        ]
                     },
                     {
-                       "name": "pass",
-                       "type": "password",
-                       "fieldType": "password",
-                       "field": lang['Password'],
-                    },
-                    {
-                       "name": "pass_again",
-                       "type": "password",
-                       "fieldType": "password",
-                       "field": lang['Password Again'],
-                    },
-                    {
-                       "fieldType": "btn-group",
-                       "btns": [
-                           {
-                               "fieldType": "btn",
-                               "class": `submit btn-success`,
-                               "btnContent": `${lang['Save']}`,
-                           },
-                       ],
+                        isFormGroupGroup: true,
+                        "name": lang["API Keys"],
+                        "section-pre-class": "col-md-6",
+                        info: [
+                            {
+                               "fieldType": "btn-group",
+                               "btns": [
+                                   {
+                                       "fieldType": "btn",
+                                       "class": `new-token btn-success`,
+                                       "btnContent": `${lang['Add']}`,
+                                   },
+                               ],
+                            },
+                            {
+                               "id": "super-tokens",
+                               "fieldType": "div",
+                            },
+                        ]
                     },
                 ]
             }

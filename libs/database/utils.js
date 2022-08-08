@@ -87,11 +87,11 @@ module.exports = function(s,config){
     const knexError = (dbQuery,options,err) => {
         console.error('knexError----------------------------------- START')
         if(config.debugLogVerbose && config.debugLog === true){
-            s.debugLog('s.knexQuery QUERY',JSON.stringify(options,null,3))
             s.debugLog('STACK TRACE, NOT AN ',new Error())
         }
         console.error(err)
-        console.error(dbQuery.toString())
+        // CANNOT USE `dbQuery.toString()` because it breaks the query
+        console.error(options)
         console.error('knexError----------------------------------- END')
     }
     const knexQuery = (options,callback) => {
@@ -149,7 +149,8 @@ module.exports = function(s,config){
                 }
             }
             if(config.debugLog === true){
-                console.log(dbQuery.toString())
+                // CANNOT USE `dbQuery.toString()` because it breaks the query
+                console.log(options)
             }
             if(callback || options.update || options.insert || options.action === 'delete'){
                 dbQuery.asCallback(function(err,r) {

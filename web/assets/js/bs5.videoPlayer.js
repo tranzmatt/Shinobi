@@ -59,7 +59,7 @@ $(document).ready(function(){
                               <div class="d-block pt-4">
                                   <div class="btn-group btn-group-justified">
                                         <a class="btn btn-sm btn-success" download href="${videoUrl}"><i class="fa fa-download"></i> ${lang.Download}</a>
-                                        <a class="btn btn-sm btn-danger delete-video"><i class="fa fa-trash-o"></i> ${lang.Delete}</a>
+                                        ${permissionCheck('video_delete',video.mid) ? `<a class="btn btn-sm btn-danger delete-video"><i class="fa fa-trash-o"></i> ${lang.Delete}</a>` : ''}
                                   </div>
                               </div>
                           </div>

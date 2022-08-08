@@ -215,12 +215,20 @@ module.exports = function(s,config,lang,app,io){
             }
             const groupKey = req.params.ke
             const monitorId = req.params.id
-            const monitorRestrictions = s.getMonitorRestrictions(user.details,monitorId)
-            if(user.details.sub && user.details.allmonitors === '0' && (user.permissions.get_monitors === "0" || monitorRestrictions.length === 0)){
-                s.closeJsonResponse(res,{
-                    ok: false,
-                    msg: lang['Not Permitted']
-                })
+            const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(user.details,monitorId)
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+            } = s.checkPermission(user)
+            if(
+                isRestrictedApiKey && apiKeyPermissions.watch_videos_disallowed ||
+                isRestricted && !monitorPermissions[`${monitorId}_video_view`]
+            ){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
                 return
             }
             s.knexQuery({

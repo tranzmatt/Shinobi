@@ -14,11 +14,11 @@ $(document).ready(function(){
         }else{
             listElement.append(`
                 <div class="col-md-12">
-                    <div class="card" package-name="${module.name}">
+                    <div class="card bg-dark" package-name="${module.name}">
                         <div class="card-body">
                             <div><h4 class="title mt-0">${humanName}</h4></div>
-                            <div><pre><b>${lang['Time Created']} :</b> ${module.created}</pre></div>
-                            <div><pre><b>${lang['Last Modified']} :</b> ${module.lastModified}</pre></div>
+                            <div class="pb-2"><b>${lang['Time Created']} :</b> ${module.created}</div>
+                            <div class="pb-2"><b>${lang['Last Modified']} :</b> ${module.lastModified}</div>
                             <div class="mb-2">
                                 ${!module.isIgnitor ? `
                                     ${module.hasInstaller ? `

@@ -16,9 +16,11 @@ module.exports = function(s,config,lang,app){
             var endData = {
                 ok : false
             }
-            if(user.details.sub){
-                endData.msg = user.lang['Not Permitted']
-                s.closeJsonResponse(res,endData)
+            const {
+                isSubAccount,
+            } = s.checkPermission(user)
+            if(isSubAccount){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not an Administrator Account']});
                 return
             }
             var form = s.getPostData(req)
@@ -103,9 +105,11 @@ module.exports = function(s,config,lang,app){
             var endData = {
                 ok : false
             }
-            if(user.details.sub){
-                endData.msg = user.lang['Not Permitted']
-                s.closeJsonResponse(res,endData)
+            const {
+                isSubAccount,
+            } = s.checkPermission(user)
+            if(isSubAccount){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not an Administrator Account']});
                 return
             }
             var form = s.getPostData(req) || {}
@@ -174,9 +178,11 @@ module.exports = function(s,config,lang,app){
             var endData = {
                 ok : false
             }
-            if(user.details.sub){
-                endData.msg = user.lang['Not Permitted']
-                s.closeJsonResponse(res,endData)
+            const {
+                isSubAccount,
+            } = s.checkPermission(user)
+            if(isSubAccount){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not an Administrator Account']});
                 return
             }else{
                 endData.ok = true
@@ -209,9 +215,11 @@ module.exports = function(s,config,lang,app){
         }
         res.setHeader('Content-Type', 'application/json');
         s.auth(req.params,function(user){
-            if(user.details.sub){
-                endData.msg = user.lang['Not an Administrator Account']
-                s.closeJsonResponse(res,endData)
+            const {
+                isSubAccount,
+            } = s.checkPermission(user)
+            if(isSubAccount){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not an Administrator Account']});
                 return
             }
             var form = s.getPostData(req)
@@ -290,7 +298,26 @@ module.exports = function(s,config,lang,app){
         }
         res.setHeader('Content-Type', 'application/json');
         s.auth(req.params,function(user){
-            var hasRestrictions = user.details.sub && user.details.allmonitors !== '1'
+            const groupKey = req.params.ke
+            const monitorId = req.params.id
+            const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(user.details,monitorId)
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+                userPermissions,
+            } = s.checkPermission(user)
+            if(
+                userPermissions.monitor_create_disallowed ||
+                isRestrictedApiKey && apiKeyPermissions.control_monitors_disallowed ||
+                isRestricted && !monitorPermissions[`${monitorId}_monitor_edit`]
+            ){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
+                return
+            }
             if(req.params.f !== 'delete'){
                 var form = s.getPostData(req)
                 if(!form){
@@ -299,66 +326,46 @@ module.exports = function(s,config,lang,app){
                    return
                 }
                 form.mid = req.params.id.replace(/[^\w\s]/gi,'').replace(/ /g,'')
-                if(!user.details.sub ||
-                   user.details.allmonitors === '1' ||
-                   hasRestrictions && user.details.monitor_edit.indexOf(form.mid) >- 1 ||
-                   hasRestrictions && user.details.monitor_create === '1'){
-                        if(form && form.name){
-                            s.checkDetails(form)
-                            form.ke = req.params.ke
-                            s.addOrEditMonitor(form,function(err,endData){
-                                res.end(s.prettyPrint(endData))
-                            },user)
-                        }else{
-                            endData.msg = user.lang.monitorEditText1;
-                            res.end(s.prettyPrint(endData))
-                        }
-                }else{
-                        endData.msg = user.lang['Not Permitted']
+                if(form && form.name){
+                    s.checkDetails(form)
+                    form.ke = req.params.ke
+                    s.addOrEditMonitor(form,function(err,endData){
                         res.end(s.prettyPrint(endData))
+                    },user)
+                }else{
+                    endData.msg = user.lang.monitorEditText1;
+                    res.end(s.prettyPrint(endData))
                 }
             }else{
-                if(!user.details.sub || user.details.allmonitors === '1' || user.details.monitor_edit.indexOf(req.params.id) > -1 || hasRestrictions && user.details.monitor_create === '1'){
-                    s.userLog({
+                s.userLog({
+                    ke: req.params.ke,
+                    mid: req.params.id
+                },{
+                    type: 'Monitor Deleted',
+                    msg: 'by user : '+user.uid
+                });
+                req.params.delete=1;
+                s.camera('stop',req.params);
+                s.tx({f:'monitor_delete',uid:user.uid,mid:req.params.id,ke:req.params.ke},'GRP_'+req.params.ke);
+                s.knexQuery({
+                    action: "delete",
+                    table: "Monitors",
+                    where: {
                         ke: req.params.ke,
-                        mid: req.params.id
-                    },{
-                        type: 'Monitor Deleted',
-                        msg: 'by user : '+user.uid
-                    });
-                    req.params.delete=1;s.camera('stop',req.params);
-                    s.tx({f:'monitor_delete',uid:user.uid,mid:req.params.id,ke:req.params.ke},'GRP_'+req.params.ke);
-                    s.knexQuery({
-                        action: "delete",
-                        table: "Monitors",
-                        where: {
+                        mid: req.params.id,
+                    }
+                })
+                if(req.query.deleteFiles === 'true'){
+                    deleteMonitorData(req.params.ke,req.params.id).then(() => {
+                        s.debugLog(`Deleted Monitor Data`,{
                             ke: req.params.ke,
                             mid: req.params.id,
-                        }
-                    })
-                    // s.knexQuery({
-                    //     action: "delete",
-                    //     table: "Files",
-                    //     where: {
-                    //         ke: req.params.ke,
-                    //         mid: req.params.id,
-                    //     }
-                    // })
-                    if(req.query.deleteFiles === 'true'){
-                        deleteMonitorData(req.params.ke,req.params.id).then(() => {
-                            s.debugLog(`Deleted Monitor Data`,{
-                                ke: req.params.ke,
-                                mid: req.params.id,
-                            })
                         })
-                    }
-                    endData.ok=true;
-                    endData.msg='Monitor Deleted by user : '+user.uid
-                    res.end(s.prettyPrint(endData))
-                }else{
-                    endData.msg=user.lang['Not Permitted'];
-                    res.end(s.prettyPrint(endData))
+                    })
                 }
+                endData.ok=true;
+                endData.msg='Monitor Deleted by user : '+user.uid
+                res.end(s.prettyPrint(endData))
             }
         },res,req)
     })
@@ -509,9 +516,18 @@ module.exports = function(s,config,lang,app){
             var endData = {
                 ok : false
             }
-            if(user.details.sub){
-                endData.msg = user.lang['Not Permitted']
-                s.closeJsonResponse(res,endData)
+            const groupKey = req.params.ke
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+                userPermissions,
+            } = s.checkPermission(user)
+            if(
+                userPermissions.monitor_create_disallowed ||
+                isRestrictedApiKey && apiKeyPermissions.control_monitors_disallowed
+            ){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
                 return
             }
             s.knexQuery({
@@ -547,9 +563,18 @@ module.exports = function(s,config,lang,app){
             var endData = {
                 ok : false
             }
-            if(user.details.sub){
-                endData.msg = user.lang['Not Permitted']
-                s.closeJsonResponse(res,endData)
+            const groupKey = req.params.ke
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+                userPermissions,
+            } = s.checkPermission(user)
+            if(
+                userPermissions.monitor_create_disallowed ||
+                isRestrictedApiKey && apiKeyPermissions.control_monitors_disallowed
+            ){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
                 return
             }
             var presetQueryVals = [req.params.ke,'monitorStates',req.params.stateName]
