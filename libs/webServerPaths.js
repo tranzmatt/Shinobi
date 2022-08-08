@@ -871,7 +871,7 @@ module.exports = function(s,config,lang,app,io){
             } = s.checkPermission(user)
             if(
                 isRestrictedApiKey && apiKeyPermissions.control_monitors_disallowed ||
-                isRestricted && !monitorPermissions[`${monitorId}_monitor_edit`]
+                isRestricted && !monitorPermissions[`${monitorId}_monitors`]
             ){
                 response.msg = user.lang['Not Permitted']
             }else{
