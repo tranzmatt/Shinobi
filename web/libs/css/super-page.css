@@ -291,17 +291,17 @@ a {cursor:pointer}
 } */
 /* Slim Style */
 .form-control {
-    background-color: transparent;
+    /* background-color: transparent;
     border: 1px solid #E3E3E3;
     border-radius: 30px;
     color: #2c2c2c;
     line-height: normal;
     font-size: 0.8571em;
-    box-shadow: none;
+    box-shadow: none; */
 }
 .btn-round {
-    border-width: 1px;
-    border-radius: 30px !important;
+    /* border-width: 1px; */
+    /* border-radius: 30px !important; */
 }
 .btn, .navbar .navbar-nav>a.btn {
     font-weight: 400;

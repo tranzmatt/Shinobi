@@ -194,9 +194,11 @@ module.exports = function(s,config,lang,app,io){
             var endData = {
                 ok : false
             }
-            if(user.details.sub){
-                endData.msg = user.lang['Not Permitted']
-                s.closeJsonResponse(res,endData)
+            const {
+                isSubAccount,
+            } = s.checkPermission(user)
+            if(isSubAccount){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not an Administrator Account']});
                 return
             }
             var whereQuery = [
@@ -234,9 +236,11 @@ module.exports = function(s,config,lang,app,io){
             var endData = {
                 ok : false
             }
-            if(user.details.sub){
-                endData.msg = user.lang['Not Permitted']
-                s.closeJsonResponse(res,endData)
+            const {
+                isSubAccount,
+            } = s.checkPermission(user)
+            if(isSubAccount){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not an Administrator Account']});
                 return
             }
             switch(req.params.action){
