@@ -12,6 +12,7 @@ var copySettingsSelector = $('#copy_settings')
 var monitorPresetsSelection = $('#monitorPresetsSelection')
 var monitorPresetsNameField = $('#monitorPresetsName')
 var monitorGroupSelectors = $('#monitor_groups')
+var monitorGroupMutliTriggerSelectContainer = $('#monitor_group_detector_multi')
 var editorForm = monitorEditorWindow.find('form')
 var fieldsLoaded = {}
 var sections = {}
@@ -288,9 +289,9 @@ function getMonitorGroupsSelected(){
 }
 function getMonitorTriggerGroupsSelected(){
     var monitorGroupsInSelection = []
-    monitorEditorWindow.find('[group_detector_multi]:checked').each(function(n,v){
-        var monitorId = $(v).val()
-        monitorGroupsInSelection.push(monitorId)
+    monitorGroupMutliTriggerSelectContainer.find('input:checked').each(function(n,v){
+        var groupId = $(v).val()
+        monitorGroupsInSelection.push(groupId)
     })
     return monitorGroupsInSelection
 }
