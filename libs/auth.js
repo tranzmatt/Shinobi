@@ -129,9 +129,7 @@ module.exports = function(s,config,lang){
     var editSession = function(user,additionalData){
         if(user){
             if(!additionalData)additionalData = {}
-            Object.keys(additionalData).forEach(function(value,key){
-                s.api[user.auth][key] = value
-            })
+            Object.assign(s.api[user.auth], additionalData)
         }
     }
     var failHttpAuthentication = function(res,req,message){
