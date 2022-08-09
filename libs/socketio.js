@@ -10,6 +10,9 @@ module.exports = function(s,config,lang,io){
     const {
         ptzControl
     } = require('./control/ptz.js')(s,config,lang)
+    const {
+        legacyFilterEvents
+    } = require('./events/utils.js')(s,config,lang)
     s.clientSocketConnection = {}
     //send data to socket client function
     s.tx = function(z,y,x){
