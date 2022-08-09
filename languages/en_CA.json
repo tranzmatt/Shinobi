@@ -776,6 +776,8 @@
    "Check the Recipient ID": "Check the Recipient ID",
    "AppNotEnabledText": "App Not Enabled, Enable it in your Account Settings.",
    "DiscordNotEnabledText": "Discord Bot Not Enabled, Enable it in your Account Settings.",
+   "PushoverNotifyErrorText": "An error occurred while sending Pushover notification",
+   "PushoverNotEnabledText": "Pushover notifications are not enabled. Enable Pushover notifications in Account Settings.",
    "Account Settings": "Account Settings",
    "How to Record": "How to Record",
    "Trigger Record": "Trigger Record",
