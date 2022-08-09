@@ -84,6 +84,9 @@ module.exports = function(s,config,lang){
         if(!videoDetails.location){
             videoDetails.location = video.href.split(locationUrl)[1]
         }
+        if(videoDetails.type !== 'whcs'){
+            return
+        }
         s.group[e.ke].whcs.deleteObject({
             Bucket: s.group[e.ke].init.whcs_bucket,
             Key: videoDetails.location,
@@ -114,9 +117,8 @@ module.exports = function(s,config,lang){
             s.group[e.ke].whcs.upload({
                 Bucket: bucketName,
                 Key: saveLocation,
-                Body:fileStream,
-                ACL:'public-read',
-                ContentType:'video/'+ext
+                Body: fileStream,
+                ContentType: 'video/'+ext
             },options,function(err,data){
                 if(err){
                     console.error(err)
@@ -177,7 +179,7 @@ module.exports = function(s,config,lang){
                             mid: queryInfo.mid,
                             ke: queryInfo.ke,
                             time: queryInfo.time,
-			    filename: queryInfo.filename,
+			                filename: queryInfo.filename,
                             details: s.s({
                                 type : 'whcs',
                                 location : saveLocation
@@ -232,6 +234,17 @@ module.exports = function(s,config,lang){
         }
         return cloudLink
     }
+    function onGetVideoData(video){
+        const videoDetails = s.parseJSON(video.details)
+        return new Promise((resolve, reject) => {
+            const saveLocation = videoDetails.location
+            var fileStream = s.group[video.ke].whcs.getObject({
+                Bucket: s.group[video.ke].init.whcs_bucket,
+                Key: saveLocation,
+            }).createReadStream();
+            resolve(fileStream)
+        })
+    }
     //wasabi
     s.addCloudUploader({
         name: 'whcs',
@@ -243,7 +256,8 @@ module.exports = function(s,config,lang){
         beforeAccountSave: beforeAccountSaveForWasabiHotCloudStorage,
         onAccountSave: cloudDiskUseStartupForWasabiHotCloudStorage,
         onInsertTimelapseFrame: onInsertTimelapseFrame,
-        onDeleteTimelapseFrameFromCloud: onDeleteTimelapseFrameFromCloud
+        onDeleteTimelapseFrameFromCloud: onDeleteTimelapseFrameFromCloud,
+        onGetVideoData
     })
     return {
        "evaluation": "details.use_whcs !== '0'",

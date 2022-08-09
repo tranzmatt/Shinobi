@@ -1,4 +1,5 @@
 PNotify.prototype.options.styling = "fontawesome";
+var isSubAccount = !!$user.details.sub
 var loadedMonitors = {}
 var tabTree = null
 var pageLoadingData = {}
@@ -679,7 +680,7 @@ function permissionCheck(toCheck,monitorId){
     return false
 }
 
-function drawMonitorListToSelector(jqTarget,selectFirst,showId){
+function drawMonitorListToSelector(jqTarget,selectFirst,showId,addAllMonitorsOption){
     var html = ''
     $.each(loadedMonitors,function(n,v){
         html += createOptionHtml({
@@ -687,7 +688,10 @@ function drawMonitorListToSelector(jqTarget,selectFirst,showId){
             label: v.name + (showId ? ` (${v.mid})` : ''),
         })
     })
-    jqTarget.html(html)
+    addAllMonitorsOption ? jqTarget.html(`
+        <option value="">${lang['All Monitors']}</option>
+        <optgroup label="${lang.Monitors}">${html}</optgroup>
+    `) : jqTarget.html(html);
     if(selectFirst){
         jqTarget
         .find('option')
@@ -812,6 +816,12 @@ function downloadJSON(jsonData,filename){
         .attr('download',filename)
         [0].click()
 }
+function downloadFile(downloadUrl,fileName){
+    var a = document.createElement('a')
+    a.href = downloadUrl
+    a.download = fileName
+    a.click()
+}
 function convertKbToHumanSize(theNumber){
     var amount = theNumber / 1048576
     var unit = amount / 1000 >= 1000 ? 'TB' : amount >= 1000 ? 'GB' : 'MB'
@@ -819,21 +829,23 @@ function convertKbToHumanSize(theNumber){
     return `${number} ${unit}`
 }
 function drawIndicatorBar(item){
-    var html = `<div id="indicator-${item.name}" class="mb-2">
-        <div class="d-flex flex-row text-white mb-1">
-            <div class="pr-2">
-                <i class="fa fa-${item.icon}"></i>
-            </div>
-            <div class="flex-grow-1">
-                <small>${item.label}</small>
+    var html = `<div class="box-wrapper " style>
+        <div id="indicator-${item.name}" class="mb-2">
+            <div class="d-flex flex-row text-white mb-1">
+                <div class="pr-2">
+                    <i class="fa fa-${item.icon}"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <small>${item.label}</small>
+                </div>
+                <div>
+                    <small class="indicator-percent">0%</small>
+                </div>
             </div>
             <div>
-                <small class="indicator-percent">0%</small>
-            </div>
-        </div>
-        <div>
-            <div class="progress">
-                <div class="progress-bar progress-bar-warning" role="progressbar" style="width: 0%;"></div>
+                <div class="progress">
+                    <div class="progress-bar progress-bar-warning" role="progressbar" style="width: 0%;"></div>
+                </div>
             </div>
         </div>
     </div>`

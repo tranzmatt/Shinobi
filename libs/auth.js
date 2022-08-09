@@ -78,24 +78,21 @@ module.exports = function(s,config,lang){
             var isSessionKey = false
             if(apiKey){
                 var sessionKey = params.auth
-                createSession(apiKey,{
-                    auth: sessionKey,
-                    permissions: s.parseJSON(apiKey.details),
-                    details: {}
-                })
                 getUserByUid(apiKey,'mail,details',function(err,user){
                     if(user){
-                        try{
-                            editSession({
-                                auth: sessionKey
-                            },{
-                                mail: user.mail,
-                                details: s.parseJSON(user.details),
-                                lang: s.getLanguageFile(user.details.lang)
-                            })
-                        }catch(er){
-                            console.log('FAILED TO EDIT',er)
-                        }
+                        createSession(apiKey,{
+                            auth: sessionKey,
+                            permissions: s.parseJSON(apiKey.details),
+                            mail: user.mail,
+                            details: s.parseJSON(user.details),
+                            lang: s.getLanguageFile(user.details.lang)
+                        })
+                    }else{
+                        createSession(apiKey,{
+                            auth: sessionKey,
+                            permissions: s.parseJSON(apiKey.details),
+                            details: {}
+                        })
                     }
                     callback(err,s.api[params.auth])
                 })
@@ -132,9 +129,7 @@ module.exports = function(s,config,lang){
     var editSession = function(user,additionalData){
         if(user){
             if(!additionalData)additionalData = {}
-            Object.keys(additionalData).forEach(function(value,key){
-                s.api[user.auth][key] = value
-            })
+            Object.assign(s.api[user.auth], additionalData)
         }
     }
     var failHttpAuthentication = function(res,req,message){

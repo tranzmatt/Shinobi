@@ -32,7 +32,7 @@ module.exports = function(s,config,lang,getSnapshot){
                     username: username,
                     password: password,
                     clientId: `shinobi_${Math.random().toString(16).substr(2, 8)}`,
-                    reconnectPeriod: 1000, // 10 seconds
+                    reconnectPeriod: 10000, // 10 seconds
                 });
                 client.on('reconnect', (e) => mqttUserLog(`MQTT Reconnected`))
                 client.on('disconnect', (e) => mqttUserLog(`MQTT Disconnected`))

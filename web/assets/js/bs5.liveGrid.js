@@ -128,6 +128,7 @@ function buildLiveGridBlock(monitor){
         })
         return
     }
+    var monitorId = monitor.mid
     var monitorDetails = safeJsonParse(monitor.details)
     var monitorLiveId = `monitor_live_${monitor.mid}`
     var subStreamChannel = monitor.subStreamChannel
@@ -135,6 +136,11 @@ function buildLiveGridBlock(monitor){
     var streamElement = buildStreamElementHtml(streamType)
     var streamBlockInfo = definitions['Monitor Stream Window']
     if(!loadedLiveGrids[monitor.mid])loadedLiveGrids[monitor.mid] = {}
+    var quickLinkHtml = ''
+    $.each(streamBlockInfo.quickLinks,function(n,button){
+        if(button.eval && !eval(button.eval))return;
+        quickLinkHtml += `<a title="${button.label}" class="btn btn-sm mr-1 badge btn-${button.class}"><i class="fa fa-${button.icon}"></i></a>`
+    })
     var baseHtml = `<div
         id="${monitorLiveId}"
         data-ke="${monitor.ke}"
@@ -155,24 +161,13 @@ function buildLiveGridBlock(monitor){
                 ${streamElement}
             </div>
         </div>
-        ${streamBlockInfo.gridBlockAfterContentHtml || ''}
+        ${(streamBlockInfo.gridBlockAfterContentHtml || '').replace(`$QUICKLINKS`,quickLinkHtml)}
         <div class="mdl-overlay-menu-backdrop hidden">
             <ul class="mdl-overlay-menu list-group">`
             var buttons = streamBlockInfo.links
-            if(!monitor.details.control === '1'){
-                delete(buttons["Control"])
-            }
-            if(!permissionCheck('video_view',monitor.mid)){
-                delete(buttons["Videos List"])
-                delete(buttons["Time-lapse"])
-                delete(buttons["Power Viewer"])
-                delete(buttons["Calendar"])
-            }
-            if(!permissionCheck('monitor_edit',monitor.mid)){
-                delete(buttons["Monitor Settings"])
-            }
-            $.each(buttons,function(n,v){
-                baseHtml += `<li class="list-item cursor-pointer ${v.class}" title="${v.label}" ${v.attr}><i class="fa fa-${v.icon}"></i> ${v.label}</li>`
+            $.each(buttons,function(n,button){
+                if(button.eval && !eval(button.eval))return;
+                baseHtml += `<li class="list-item cursor-pointer ${button.class}" title="${button.label}" ${button.attr}><i class="fa fa-${button.icon}"></i> ${button.label}</li>`
             })
             baseHtml += `</ul>
         </div>
@@ -182,15 +177,17 @@ function buildLiveGridBlock(monitor){
 function drawPtzControlsOnLiveGridBlock(monitorId){
     var monitorItem = $('#monitor_live_' + monitorId)
     var ptzControls = monitorItem.find('.PTZ_controls');
+    var loadedMonitor = loadedMonitors[monitorId]
+    var stopCommandOnRelease = loadedMonitor.details.control_stop === '2'
     if(ptzControls.length>0){
         ptzControls.remove()
     }else{
         var html = `<div class="PTZ_controls">
             <div class="pad">
-                <div class="control top run-live-grid-monitor-ptz" data-ptz-control="up"></div>
-                <div class="control left run-live-grid-monitor-ptz" data-ptz-control="left"></div>
-                <div class="control right run-live-grid-monitor-ptz" data-ptz-control="right"></div>
-                <div class="control bottom run-live-grid-monitor-ptz" data-ptz-control="down"></div>
+                <div class="control top run-live-grid-monitor-ptz${stopCommandOnRelease ? `-move` : '' }" data-ptz-control="up"></div>
+                <div class="control left run-live-grid-monitor-ptz${stopCommandOnRelease ? `-move` : '' }" data-ptz-control="left"></div>
+                <div class="control right run-live-grid-monitor-ptz${stopCommandOnRelease ? `-move` : '' }" data-ptz-control="right"></div>
+                <div class="control bottom run-live-grid-monitor-ptz${stopCommandOnRelease ? `-move` : '' }" data-ptz-control="down"></div>
                 <div class="control middle run-live-grid-monitor-ptz" data-ptz-control="center"></div>
             </div>
             <div class="btn-group btn-group-sm btn-group-justified">
@@ -808,8 +805,9 @@ function signalCheckLiveStream(options){
 }
 $(document).ready(function(e){
     liveGrid
-    .on('dblclick','.stream-hud',function(){
-        $(this).parents('[data-mid]').find('[monitor="fullscreen"]').click();
+    .on('dblclick','.stream-block',function(){
+        var monitorItem = $(this).parents('[data-mid]');
+        fullScreenLiveGridStream(monitorItem)
     })
     $('body')
     .resize(function(){
@@ -898,6 +896,18 @@ $(document).ready(function(e){
         var switchChosen = el.attr('data-ptz-control')
         runPtzCommand(monitorId,switchChosen)
     })
+    .on('mousedown','.run-live-grid-monitor-ptz-move',function(){
+        var el = $(this)
+        var monitorId = el.parents('[data-mid]').attr('data-mid')
+        var switchChosen = el.attr('data-ptz-control')
+        runPtzMove(monitorId,switchChosen,true)
+    })
+    .on('mouseup','.run-live-grid-monitor-ptz-move',function(){
+        var el = $(this)
+        var monitorId = el.parents('[data-mid]').attr('data-mid')
+        var switchChosen = el.attr('data-ptz-control')
+        runPtzMove(monitorId,switchChosen,false)
+    })
     .on('click','.run-monitor-detection-trigger-test',function(){
         var el = $(this)
         var monitorId = el.parents('[data-mid]').attr('data-mid')
@@ -936,7 +946,7 @@ $(document).ready(function(e){
         },700)
     })
     .on('gsresizestop', function(){
-        resetAllLiveGridDimensionsInMemory()
+        // resetAllLiveGridDimensionsInMemory()
         saveLiveGridBlockPositions()
     });
     addOnTabReopen('liveGrid', function () {
@@ -956,7 +966,10 @@ $(document).ready(function(e){
             case'video_build_success':
                 d.status = 1
                 d.mid = d.id || d.mid
-                if(liveGridElements[d.mid] && liveGridElements[d.mid].streamElement)drawVideoCardToMiniList(d.mid,createVideoLinks(d),false)
+                var monitorId = d.mid
+                var videoTime = d.time
+                loadedVideosInMemory[`${monitorId}${videoTime}`] = d
+                if(liveGridElements[monitorId] && liveGridElements[monitorId].streamElement)drawVideoCardToMiniList(monitorId,createVideoLinks(d),false)
             break;
             case'monitor_watch_off':case'monitor_stopping':
                 var monitorId = d.mid || d.id
@@ -1091,9 +1104,9 @@ $(document).ready(function(e){
     }
     dashboardSwitchCallbacks.dontShowDetection = function(toggleState){
         if(toggleState !== 1){
-            window.dontShowDetection = true
-        }else{
             window.dontShowDetection = false
+        }else{
+            window.dontShowDetection = true
         }
     }
     dashboardSwitchCallbacks.monitorMuteAudio = function(toggleState){

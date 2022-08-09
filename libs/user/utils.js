@@ -288,7 +288,10 @@ module.exports = (s,config,lang) => {
     }
     const deleteTimelapseFrames = function(groupKey,callback){
         //run purge command
-        if(s.group[groupKey].usedSpaceTimelapseFrames > (s.group[groupKey].sizeLimit * (s.group[groupKey].sizeLimitTimelapseFramesPercent / 100) * config.cron.deleteOverMaxOffset)){
+        const maxSize = (s.group[groupKey].sizeLimit * (s.group[groupKey].sizeLimitTimelapseFramesPercent / 100) * config.cron.deleteOverMaxOffset);
+        const currentlyUsedSize = s.group[groupKey].usedSpaceTimelapseFrames
+        s.debugLog(`deleteTimelapseFrames`,`${currentlyUsedSize}/${maxSize}`)
+        if(currentlyUsedSize > maxSize){
             s.knexQuery({
                 action: "select",
                 columns: "*",

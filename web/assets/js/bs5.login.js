@@ -7,14 +7,17 @@ function generateId(x){
         t += p.charAt(Math.floor(Math.random() * p.length));
     return t;
 }
-function onSelectorChange(_this,parent){
-    var el = $(_this)
-    var theParam = el.attr('selector')
-    var theValue = el.val()
-    var theSelected = el.find('option:selected').text()
-    parent.find(`.${theParam}_input`).hide()
-    parent.find(`.${theParam}_${theValue}`).show()
-    parent.find(`.${theParam}_text`).text(theSelected)
+function onSelectorChange(el){
+    try{
+        var theParam = el.attr('selector')
+        var theValue = el.val()
+        var theSelected = el.find('option:selected').text()
+        loginForm.find(`.${theParam}_input`).hide()
+        loginForm.find(`.${theParam}_${theValue}`).show()
+        loginForm.find(`.${theParam}_text`).text(theSelected)
+    }catch(err){
+        console.log(err)
+    }
 }
 if(!cachedMachineId){
     cachedMachineId = generateId(20)
@@ -22,7 +25,10 @@ if(!cachedMachineId){
 }
 $(document).ready(function(){
     $('#machineID').val(cachedMachineId)
-    $('[selector]').change(onSelectorChange).change();
+    $('[selector]').change(function(){
+        var el = $(this)
+        onSelectorChange(el)
+    }).change();
 })
 loginForm.submit(function(e){
     $('#login-message').remove()

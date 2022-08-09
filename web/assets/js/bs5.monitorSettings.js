@@ -12,6 +12,7 @@ var copySettingsSelector = $('#copy_settings')
 var monitorPresetsSelection = $('#monitorPresetsSelection')
 var monitorPresetsNameField = $('#monitorPresetsName')
 var monitorGroupSelectors = $('#monitor_groups')
+var monitorGroupMutliTriggerSelectContainer = $('#monitor_group_detector_multi')
 var editorForm = monitorEditorWindow.find('form')
 var fieldsLoaded = {}
 var sections = {}
@@ -134,7 +135,6 @@ function generateDefaultMonitorSettings(){
            "detector_scale_y": "480",
            "detector_record_method": "sip",
            "detector_trigger": "1",
-           "detector_trigger_record_fps": "",
            "detector_timeout": "0.5",
            "detector_send_video_length": "",
            "watchdog_reset": "1",
@@ -287,6 +287,14 @@ function getMonitorGroupsSelected(){
     })
     return monitorGroupsInSelection
 }
+function getMonitorTriggerGroupsSelected(){
+    var monitorGroupsInSelection = []
+    monitorGroupMutliTriggerSelectContainer.find('input:checked').each(function(n,v){
+        var groupId = $(v).val()
+        monitorGroupsInSelection.push(groupId)
+    })
+    return monitorGroupsInSelection
+}
 var differentiateMonitorConfig = function(firstConfig,secondConfig){
     console.log(firstConfig,secondConfig)
     var diffedConfig = {}
@@ -408,6 +416,7 @@ window.getMonitorEditFormFields = function(){
     monitorConfig.details = safeJsonParse(monitorConfig.details)
     monitorConfig.details.substream = getSubStreamChannelFields()
     monitorConfig.details.groups = getMonitorGroupsSelected()
+    monitorConfig.details.group_detector_multi = getMonitorTriggerGroupsSelected()
     monitorConfig.details.input_map_choices = monitorSectionInputMapsave()
     // TODO : Input Maps and Stream Channels (does old way at the moment)
 
@@ -437,12 +446,12 @@ function getAdditionalStreamChannelFields(tempID,channelId){
 }
 
 addOnTabOpen('monitorSettings', function () {
-    triggerSecondaryHideCheckOnAll()
+    setFieldVisibility()
     drawMonitorSettingsSubMenu()
 })
 
 addOnTabReopen('monitorSettings', function () {
-    triggerSecondaryHideCheckOnAll()
+    setFieldVisibility()
     drawMonitorSettingsSubMenu()
 })
 function drawInputMapHtml(options){
@@ -649,7 +658,7 @@ function importIntoMonitorEditor(options){
                             ${v.name} <span class="text-muted">(${v.id})</span>
                         </div>
                         <div class="pr-3">
-                            <span><input class="form-check-input no-abs mdl-switch__input form-check-input" type="checkbox" value="${v.id}" ${isSelected ? 'checked' : ''}/></span>
+                            <span><input class="form-check-input no-abs" ${b} type="checkbox" value="${v.id}" ${isSelected ? 'checked' : ''}/></span>
                         </div>
                     </div>
                 </div>`
@@ -675,7 +684,7 @@ function importIntoMonitorEditor(options){
         }
     })
     monitorsForCopy.find('optgroup').html(tmp)
-    triggerSecondaryHideCheckOnAll()
+    setFieldVisibility()
     drawMonitorSettingsSubMenu()
 }
 //parse "Automatic" field in "Input" Section
@@ -897,27 +906,65 @@ var showInputMappingFields = function(showMaps){
     }else{
         el.hide()
     }
-    triggerSecondaryHideCheckOnAll()
+    setFieldVisibility()
     drawMonitorSettingsSubMenu()
 }
-var triggerSecondaryHideCheck = function(el){
-    var key = el.attr('selector')
-    var value = el.val();
-    var triggerChange = el.attr('triggerchange')
-    var triggerChangeIgnore = el.attr('triggerChangeIgnore')
-    editorForm.find('.' + key + '_input').hide()
-    editorForm.find('.' + key + '_' + value).show();
-    editorForm.find('.' + key + '_text').text($(this).find('option:selected').text())
-    if(triggerChange && triggerChange !== '' && !triggerChangeIgnore || (triggerChangeIgnore && triggerChangeIgnore.split(',').indexOf(value) === -1)){
-        console.log(triggerChange)
-        $(triggerChange).trigger('change')
+function setFieldVisibilityNewWay(){
+    var validation = getMonitorEditFormFields()
+    if(!validation.ok){
+        return console.log('Failed setFieldVisibilityNewWay',new Error(),validation)
+    }
+    var monitorConfig = validation.monitorConfig
+    var monitorDetails = safeJsonParse(monitorConfig.details)
+    var commonChecks = {
+        streamSectionCopyModeVisibilities: `monitorDetails.stream_vcodec === 'libx264' ||
+        monitorDetails.stream_vcodec === 'libx265' ||
+        monitorDetails.stream_vcodec === 'h264_nvenc' ||
+        monitorDetails.stream_vcodec === 'hevc_nvenc' ||
+        monitorDetails.stream_vcodec === 'no' ||
+
+        monitorDetails.stream_type === 'mjpeg' ||
+        monitorDetails.stream_type === 'b64' ||
+        ((monitorDetails.stream_type === 'hls' || monitorDetails.stream_type === 'mp4') && monitorDetails.stream_vcodec !== 'copy') ||
+        monitorDetails.stream_type === 'gif' ||
+        monitorDetails.stream_type === 'flv'`
+    }
+    editorForm.find('[visibility-conditions]').each(function(n,v){
+        var el = $(v)
+        var visibilityConditions = el.attr('visibility-conditions')
+        var response = true
+        var commonCheck = commonChecks[visibilityConditions]
+        if(commonCheck){
+            response = eval(commonCheck)
+        }else{
+            response = eval(visibilityConditions)
+        }
+        if(response){
+            el.show()
+        }else{
+            el.hide()
+        }
+    })
+}
+function setFieldVisibilityOldWay(formElement){
+    var listToShow = []
+    formElement.find('[selector]').each(function(n,v){
+        var el = $(this)
+        var keyName = el.attr('selector')
+        var value = el.val()
+        var toShow = `${keyName}_${value}`
+        listToShow.push(toShow)
+        formElement.find(`.${keyName}_input`).hide()
+    })
+    for (let i = 0; i < listToShow.length; i++) {
+        var item = listToShow[i];
+        var elements = formElement.find(`[class*="${item}"]`)
+        elements.show()
     }
 }
-var triggerSecondaryHideCheckOnAll = function(){
-    monitorEditorWindow.find('[selector]').each(function(){
-        var el = $(this);
-        triggerSecondaryHideCheck(el)
-    })
+function setFieldVisibility(){
+    setFieldVisibilityOldWay(editorForm)
+    setFieldVisibilityNewWay()
 }
 monitorStreamChannels.on('click','.delete',function(){
     $(this).parents('.stream-channel').remove()
@@ -927,49 +974,6 @@ monitorStreamChannels.on('click','.delete',function(){
 monitorEditorWindow.on('change','[channel-detail]',function(){
     monitorStreamChannelsave()
 })
-//////////////////
-monitorEditorWindow.on('change','[groups]',function(){
-  var e={};
-    var el = monitorEditorWindow.find('[groups]:checked');
-    var selectedGroups = [];
-    el.each(function(n,v){
-        selectedGroups.push($(v).val())
-    });
-    monitorEditorWindow.find('[detail="groups"]').val(JSON.stringify(selectedGroups)).change()
-})
-monitorEditorWindow.on('change','[group_detector_multi]',function(){
-  var e={};
-    var el = monitorEditorWindow.find('[group_detector_multi]:checked');
-    var selectedMultiTrigger=[];
-    el.each(function(n,v){
-        selectedMultiTrigger.push($(v).val())
-    });
-    monitorEditorWindow.find('[detail="group_detector_multi"]').val(JSON.stringify(selectedMultiTrigger)).change()
-})
-monitorEditorWindow.on('change','.detector_cascade_selection',function(){
-  var e={};
-    var el = monitorEditorWindow.find('.detector_cascade_selection:checked');
-    var selectedCascades = {};
-    el.each(function(n,v){
-        selectedCascades[$(v).val()]={}
-    });
-    monitorEditorWindow.find('[detail="detector_cascades"]').val(JSON.stringify(selectedCascades)).change()
-})
-//monitorEditorWindow.on('change','.detector_cascade_selection',function(){
-//  var e={};
-//    e.details=monitorEditorWindow.find('[name="details"]')
-//    try{
-//        e.detailsVal=safeJsonParse(e.details.val())
-//    }catch(err){
-//        e.detailsVal={}
-//    }
-//    e.detailsVal.detector_cascades=[];
-//    var el = monitorEditorWindow.find('.detector_cascade_selection:checked');
-//    el.each(function(n,v){
-//        e.detailsVal.detector_cascades.push($(v).val())
-//    });
-//    e.details.val(JSON.stringify(e.detailsVal))
-//})
 monitorEditorWindow.find('.probe-monitor-settings').click(function(){
     $.pB.submit(buildMonitorURL(),true)
 })
@@ -1035,7 +1039,8 @@ editorForm.find('[detail]').change(function(){
 })
 editorForm.on('change','[selector]',function(){
     var el = $(this);
-    triggerSecondaryHideCheck(el)
+    onSelectorChange(el,editorForm)
+    setFieldVisibilityNewWay()
     drawMonitorSettingsSubMenu()
 });
 editorForm.find('[name="type"]').change(function(e){
@@ -1073,7 +1078,7 @@ editorForm.find('[name="type"]').change(function(e){
             $('.shinobi-detector_name').empty()
             $('.shinobi-detector_plug').hide()
             $('.shinobi-detector-invert').show()
-            triggerSecondaryHideCheckOnAll()
+            setFieldVisibility()
             drawMonitorSettingsSubMenu()
         }else{
             var pluginTitle = []
@@ -1089,7 +1094,7 @@ editorForm.find('[name="type"]').change(function(e){
             $('.shinobi-detector-invert').hide()
             $('.shinobi-detector_name').text(pluginTitle.join(', '))
             if(pluginNotice.length > 0)$('.shinobi-detector-msg').text(pluginNotice.join('<br>'))
-            triggerSecondaryHideCheckOnAll()
+            setFieldVisibility()
             drawMonitorSettingsSubMenu()
         }
     }
@@ -1128,7 +1133,7 @@ editorForm.find('[name="type"]').change(function(e){
                         ${hasSelectedMonitor ? `<ul class="json-to-block striped import-monitor-preset cursor-pointer">${jsonToHtmlBlock(humanizedMonitorKeys)}</ul>` : ''}
                     </div>
                     <div class="pr-3">
-                        <span><input class="form-check-input no-abs mdl-switch__input" type="checkbox" value="${preset.name}" ${hasSelectedMonitor ? 'checked' : ''}/></span>
+                        <span><input class="form-check-input no-abs" type="checkbox" value="${preset.name}" ${hasSelectedMonitor ? 'checked' : ''}/></span>
                     </div>
                     <div>
                         <a class="badge btn btn-sm btn-danger delete-preset"><i class="fa fa-trash-o"></i></a>
@@ -1440,7 +1445,7 @@ editorForm.find('[name="type"]').change(function(e){
         var monitorConfig = validation.monitorConfig
         if(loadedMonitors[monitorConfig.mid]){
             deleteMonitors([monitorConfig],function(){
-                resetMonitorEditor()
+                openMonitorEditorPage()
                 goBackOneTab()
             })
         }else{

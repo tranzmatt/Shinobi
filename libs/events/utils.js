@@ -152,7 +152,6 @@ module.exports = (s,config,lang,app,io) => {
     }
     const addToEventCounter = (eventData) => {
         const eventsCounted = s.group[eventData.ke].activeMonitors[eventData.id].detector_motion_count
-        s.debugLog(`addToEventCounter`,eventData,eventsCounted.length)
         eventsCounted.push(eventData)
     }
     const clearEventCounter = (groupKey,monitorId) => {
@@ -420,7 +419,8 @@ module.exports = (s,config,lang,app,io) => {
             monitorConfig.mode === 'start' &&
             (monitorDetails.detector_record_method === 'sip' || monitorDetails.detector_record_method === 'hot')
         ){
-            createEventBasedRecording(d,moment(eventTime).subtract(5,'seconds').format('YYYY-MM-DDTHH-mm-ss'))
+            const secondBefore = (parseInt(monitorDetails.detector_buffer_seconds_before) || 5) + 1
+            createEventBasedRecording(d,moment(eventTime).subtract(secondBefore,'seconds').format('YYYY-MM-DDTHH-mm-ss'))
         }
         d.currentTime = eventTime
         d.currentTimestamp = s.timeObject(d.currentTime).format()
@@ -527,14 +527,26 @@ module.exports = (s,config,lang,app,io) => {
                 var ffmpegError = ''
                 var error
                 var filename = fileTime + '.mp4'
+                let outputMap = `-map 0:0 `
+                const analyzeDuration = parseInt(monitorDetails.event_record_aduration) || 1000
+                const probeSize = parseInt(monitorDetails.event_record_probesize) || 32
                 s.userLog(d,{
                     type: logTitleText,
                     msg: lang["Started"]
                 })
                 //-t 00:'+s.timeObject(new Date(detector_timeout * 1000 * 60)).format('mm:ss')+'
+                if(
+                    monitorDetails.detector_buffer_acodec &&
+                    monitorDetails.detector_buffer_acodec !== 'no' &&
+                    monitorDetails.detector_buffer_acodec !== 'auto'
+                ){
+                    outputMap += `-map 0:1 `
+                }
+                const ffmpegCommand = `-loglevel warning -live_start_index -99999 -analyzeduration ${analyzeDuration} -probesize ${probeSize} -re -i "${s.dir.streams+d.ke+'/'+d.id}/detectorStream.m3u8" ${outputMap}-movflags faststart+frag_keyframe+empty_moov -fflags +igndts -c:v copy -c:a aac -strict -2 -strftime 1 -y "${s.getVideoDirectory(monitorConfig) + filename}"`
+                s.debugLog(ffmpegCommand)
                 activeMonitor.eventBasedRecording.process = spawn(
                     config.ffmpegDir,
-                    splitForFFPMEG(('-loglevel warning -analyzeduration 1000000 -probesize 1000000 -re -i "'+s.dir.streams+d.ke+'/'+d.id+'/detectorStream.m3u8" -movflags faststart+frag_keyframe+empty_moov -fflags +igndts -c:v copy -strftime 1 "'+s.getVideoDirectory(monitorConfig) + filename + '"'))
+                    splitForFFPMEG(ffmpegCommand)
                 )
                 activeMonitor.eventBasedRecording.process.stderr.on('data',function(data){
                     s.userLog(d,{

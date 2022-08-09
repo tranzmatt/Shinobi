@@ -53,6 +53,7 @@ $(document).ready(function(e){
             var theLocation = getLocationFromUri(options.uri)
             var pathLocation = theLocation.location
             var monitorConfigPartial = {
+                name: pathLocation.hostname,
                 mid: tempID + `${options.port}`,
                 host: pathLocation.hostname,
                 port: pathLocation.port,

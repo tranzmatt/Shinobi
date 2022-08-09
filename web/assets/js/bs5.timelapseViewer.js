@@ -1,3 +1,25 @@
+var apiBaseUrl = getApiPrefix()
+function getTimelapseFrames(monitorId,startDate,endDate,limit){
+    return new Promise((resolve,reject) => {
+        if(!monitorId || !startDate || !endDate){
+            console.log(new Error(`getTimelapseFrames error : Failed to get proper params`))
+            resolve([])
+            return
+        }
+        var queryString = [
+            'start=' + startDate,
+            'end=' + endDate,
+            limit === 'noLimit' ? `noLimit=1` : limit ? `limit=${limit}` : `limit=50`
+        ]
+        var apiURL = apiBaseUrl + '/timelapse/' + $user.ke + '/' + monitorId
+        $.getJSON(apiURL + '?' + queryString.join('&'),function(data){
+            $.each(data,function(n,fileInfo){
+                fileInfo.href = apiURL + '/' + fileInfo.filename.split('T')[0] + '/' + fileInfo.filename
+            })
+            resolve(data)
+        })
+    })
+}
 $(document).ready(function(e){
     //Timelapse JPEG Window
     var timelapseWindow = $('#tab-timelapseViewer')
@@ -14,7 +36,7 @@ $(document).ready(function(e){
     var liveStreamView = timelapseWindow.find('.liveStreamView')
     var monitorsList = timelapseWindow.find('.monitors_list')
     var downloadButton = timelapseWindow.find('.download_mp4')
-    var apiBaseUrl = getApiPrefix()
+    var selectAllBox = timelapseWindow.find('.select-all')
     var downloadRecheckTimers = {}
     var currentPlaylist = {}
     var frameSelected = null
@@ -64,29 +86,22 @@ $(document).ready(function(e){
         liveStreamView.find('iframe').width(playBackViewImage.width())
 
     }
-    var drawTimelapseWindowElements = function(selectedMonitor,startDate,endDate){
+    function drawTimelapseWindowElements(selectedMonitor,startDate,endDate){
         setDownloadButtonLabel(lang['Build Video'], 'database')
         var dateRange = getSelectedTime(false)
         if(!startDate)startDate = dateRange.startDate
         if(!endDate)endDate = dateRange.endDate
         if(!selectedMonitor)selectedMonitor = monitorsList.val()
-        var queryString = [
-            'start=' + startDate,
-            'end=' + endDate,
-            'noLimit=1'
-        ]
         var frameIconsHtml = ''
-        var apiURL = apiBaseUrl + '/timelapse/' + $user.ke + '/' + selectedMonitor
-        $.getJSON(apiURL + '?' + queryString.join('&'),function(data){
+        getTimelapseFrames(selectedMonitor,startDate,endDate,'noLimit').then((data) => {
             if(data && data[0]){
                 var firstFilename = data[0].filename
                 frameSelected = firstFilename
                 currentPlaylist = {}
                 currentPlaylistArray = []
                 $.each(data.reverse(),function(n,fileInfo){
-                    fileInfo.href = apiURL + '/' + fileInfo.filename.split('T')[0] + '/' + fileInfo.filename
                     fileInfo.number = n
-                    frameIconsHtml += '<div class="col-md-4 frame-container"><div class="frame" data-filename="' + fileInfo.filename + '" frame-container-unloaded="' + fileInfo.href + '"><div class="button-strip"><button type="button" class="btn btn-sm btn-danger delete"><i class="fa fa-trash-o"></i></button></div><div class="shade">' + moment(fileInfo.time).format('YYYY-MM-DD HH:mm:ss') + '</div></div></div>'
+                    frameIconsHtml += '<div class="col-md-4 frame-container" frame-container="' + fileInfo.filename + '"><div class="frame" data-filename="' + fileInfo.filename + '" frame-container-unloaded="' + fileInfo.href + '"><div class="button-strip"><input name="' + fileInfo.href + '" value="' + fileInfo.filename + '" type="checkbox" class="form-check-input"><button type="button" class="btn btn-sm btn-danger delete"><i class="fa fa-trash-o"></i></button></div><div class="shade">' + moment(fileInfo.time).format('YYYY-MM-DD HH:mm:ss') + '</div></div></div>'
                     currentPlaylist[fileInfo.filename] = fileInfo
                 })
                 currentPlaylistArray = data
@@ -96,7 +111,7 @@ $(document).ready(function(e){
                 resetFilmStripPositions()
                 loadVisibleTimelapseFrames()
             }else{
-                frameIconsHtml = lang['No Data']
+                frameIconsHtml = `<div class="text-center">${lang['No Data']}</div>`
                 frameIcons.html(frameIconsHtml)
             }
         })
@@ -137,7 +152,7 @@ $(document).ready(function(e){
     var playTimelapse = function(){
         var playPauseText = timelapseWindow.find('.playPauseText')
         canPlay = true
-        playPauseText.text(lang.Pause)
+        playPauseText.html(`<i class="fa fa-pause"></i> ${lang.Pause}`)
         startPlayLoop()
     }
     var destroyTimelapse = function(){
@@ -151,7 +166,7 @@ $(document).ready(function(e){
     var pauseTimelapse = function(){
         var playPauseText = timelapseWindow.find('.playPauseText')
         canPlay = false
-        playPauseText.text(lang.Play)
+        playPauseText.html(`<i class="fa fa-play"></i> ${lang.Play}`)
         clearTimeout(playIntervalTimer)
         playIntervalTimer = null
     }
@@ -168,6 +183,47 @@ $(document).ready(function(e){
     }
     var setDownloadButtonLabel = function(text,icon){
         downloadButton.html(icon ? iconHtml(icon) + text : text)
+    }
+    function deleteFrame(frame){
+        return new Promise((resolve,reject) => {
+            $.getJSON((frame.href || frame) + '/delete',function(response){
+                resolve(response)
+            })
+        })
+    }
+    async function deleteFrames(frameHrefs){
+        for (let i = 0; i < frameHrefs.length; i++) {
+            const frameHref = frameHrefs[i]
+            await deleteFrame(frameHref)
+        }
+    }
+    function deleteSelectedFrames(){
+        var checkedBoxes = frameIcons.serializeObject()
+        var frameHrefs = Object.keys(checkedBoxes)
+        var fileNames = Object.values(checkedBoxes)
+        $.confirm.create({
+            title: lang['Delete selected'],
+            body: lang.DeleteTheseMsg + `<br><br><img style="max-width:100%" src="${frameHrefs[0]}">`,
+            clickOptions: {
+                class: 'btn-danger',
+                title: lang.Delete,
+            },
+            clickCallback: function(){
+                deleteFrames(frameHrefs)
+                fileNames.forEach((filename) => {
+                    frameIcons.find(`[frame-container="${filename}"]`).remove()
+                })
+            }
+        })
+    }
+    function toggleSelectOnAllFrames(){
+        var isMasterToggleSelected = selectAllBox.is(':checked')
+        var checkBoxes = frameIcons.find('input[type="checkbox"]')
+        if(isMasterToggleSelected){
+            checkBoxes.prop('checked',true)
+        }else{
+            checkBoxes.prop('checked',false)
+        }
     }
     timelapseWindow.on('click','.frame',function(){
         pauseTimelapse()
@@ -196,14 +252,26 @@ $(document).ready(function(e){
                 class: 'btn-danger',
                 title: lang.Delete,
             },
-            clickCallback: function(){
-                $.getJSON(frame.href + '/delete',function(response){
-                    if(response.ok){
-                        el.parent().remove()
-                    }
-                })
+            clickCallback: async function(){
+                const response = await deleteFrame(frame)
+                if(response.ok){
+                    el.parent().remove()
+                }
             }
         })
+    })
+    timelapseWindow.on('click','.delete-selected',function(e){
+        deleteSelectedFrames()
+    })
+    selectAllBox.click(function(e){
+        toggleSelectOnAllFrames()
+    })
+    timelapseWindow.on('click','.frame input',function(e){
+        e.stopPropagation()
+        const checked = $(this).is(':checked')
+        if(!checked){
+            selectAllBox.prop('checked',false)
+        }
     })
     downloadButton.click(function(){
         var fps = fpsSelector.val()
@@ -211,24 +279,19 @@ $(document).ready(function(e){
         var startDate = dateRange.startDate
         var endDate = dateRange.endDate
         var selectedMonitor = monitorsList.val()
-        var parsedFrames = JSON.stringify(currentPlaylistArray.map(function(frame){
+        window.askedForTimelapseVideoBuild = true
+        var parsedFrames = currentPlaylistArray.map(function(frame){
             return {
                 mid: frame.mid,
                 ke: frame.ke,
                 filename: frame.filename,
             }
-        }));
-        $.post(apiBaseUrl + '/timelapseBuildVideo/' + $user.ke + '/' + selectedMonitor,{
-            fps: fps,
+        });
+        mainSocket.f({
+            f: 'timelapseVideoBuild',
+            mid: selectedMonitor,
             frames: parsedFrames,
-        },function(response){
-            setDownloadButtonLabel(response.msg, '')
-            new PNotify({
-                title: lang['Timelapse Frames Video'],
-                text: response.msg,
-                type: response.fileExists ? 'success' : 'info'
-            })
-            if(response.fileExists)downloadTimelapseVideo(response);
+            fps: fps,
         })
     })
     function isElementVisible (el) {
@@ -254,10 +317,7 @@ $(document).ready(function(e){
     }
     function downloadTimelapseVideo(data){
         var downloadUrl = buildFileBinUrl(data)
-        var a = document.createElement('a')
-        a.href = downloadUrl
-        a.download = data.name
-        a.click()
+        downloadFile(downloadUrl,data.name)
     }
     function onTimelapseVideoBuildComplete(data){
         var saveBuiltVideo = dashboardOptions().switches.timelapseSaveBuiltVideo
@@ -303,6 +363,18 @@ $(document).ready(function(e){
     }
     onWebSocketEvent(function(data){
         switch(data.f){
+            case'timelapse_build_requested':
+                console.log(data)
+                var response = data.buildResponse;
+                setDownloadButtonLabel(response.msg, '')
+                new PNotify({
+                    title: lang['Timelapse Frames Video'],
+                    text: response.msg,
+                    type: response.fileExists ? 'success' : 'info'
+                });
+                if(response.fileExists && window.askedForTimelapseVideoBuild)downloadTimelapseVideo(response);
+                window.askedForTimelapseVideoBuild = false
+            break;
             case'fileBin_item_added':
                 var saveBuiltVideo = dashboardOptions().switches.timelapseSaveBuiltVideo
                 let statusText = `${lang['Done!']}`

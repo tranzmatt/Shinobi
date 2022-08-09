@@ -1,6 +1,7 @@
 var os = require('os');
 const onvif = require("shinobi-onvif");
 const {
+    addCredentialsToUrl,
     stringContains,
     getBuffer,
 } = require('../common.js')
@@ -145,9 +146,13 @@ module.exports = (s,config,lang) => {
                 responseList.push(cameraResponse)
                 var imageSnap
                 try{
-                    const snapUri = (await device.services.media.getSnapshotUri({
-                        ProfileToken : device.current_profile.token,
-                    })).data.GetSnapshotUriResponse.MediaUri.Uri
+                    const snapUri = addCredentialsToUrl({
+                        username: onvifUsername,
+                        password: onvifPassword,
+                        url: (await device.services.media.getSnapshotUri({
+                            ProfileToken : device.current_profile.token,
+                        })).data.GetSnapshotUriResponse.MediaUri.Uri,
+                    });
                     imageSnap = (await getBuffer(snapUri)).toString('base64');
                 }catch(err){
                     s.debugLog(err)

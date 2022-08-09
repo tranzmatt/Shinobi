@@ -186,6 +186,13 @@ module.exports = (processCwd,config) => {
         else
             return false;
     }
+    function asyncSetTimeout(timeoutAmount) {
+        return new Promise((resolve,reject) => {
+            setTimeout(function(){
+                resolve()
+            },timeoutAmount)
+        })
+    }
     return {
         parseJSON: parseJSON,
         stringJSON: stringJSON,
@@ -203,5 +210,6 @@ module.exports = (processCwd,config) => {
         fetchTimeout: fetchTimeout,
         fetchDownloadAndWrite: fetchDownloadAndWrite,
         fetchWithAuthentication: fetchWithAuthentication,
+        asyncSetTimeout: asyncSetTimeout,
     }
 }

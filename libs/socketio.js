@@ -367,7 +367,8 @@ module.exports = function(s,config,lang,io){
                 return;
             }
             if((d.id||d.uid||d.mid)&&cn.ke){
-                try{
+            try{
+                d.callbackResponse = {ok: true}
                 switch(d.f){
                     case'monitorOrder':
                         if(d.monitorOrder && d.monitorOrder instanceof Object){
@@ -630,12 +631,6 @@ module.exports = function(s,config,lang,io){
                                     break;
                                 }
                             break;
-                            case'control':
-                                ptzControl(d,function(msg){
-                                    s.userLog(d,msg)
-                                    tx({f:'control',response:msg})
-                                })
-                            break;
                             case'jpeg_off':
                               delete(cn.jpeg_on);
                                 if(cn.monitorsCurrentlyWatching){
@@ -699,6 +694,18 @@ module.exports = function(s,config,lang,io){
                             break;
                         }
                     break;
+                    default:
+                        s.onOtherWebSocketMessagesExtensions.forEach(function(extender){
+                            extender(d,cn,tx)
+                        })
+                    break;
+                }
+                if(d.callbackId && !d.hasResponded){
+                    tx({
+                        f:'callback',
+                        callbackId: d.callbackId,
+                        args: [d.callbackResponse]
+                    })
                 }
             }catch(er){
                 s.systemLog('ERROR CATCH 1',er)

@@ -12,7 +12,6 @@ function buildTabHtml(tabName,tabLabel,tabIcon){
             <i class="fa fa-${tabIcon ? tabIcon : 'file-o'}"></i> &nbsp; ${tabLabel} <span class="delete-tab align-text-bottom"><i class="fa fa-times"></i></span>
         </a>
       </li>`
-    return `<a class="nav-link" page-open="${tabName}">${tabLabel} &nbsp; <span class="delete-tab badge btn bg-light text-dark rounded-pill align-text-bottom"><i class="fa fa-times"></i></span></a>`
 }
 function drawMonitorIconToMenu(item){
     var html = `<li class="nav-item monitor-icon monitor_block glM${item.mid}" data-ke="${item.ke}" data-mid="${item.mid}" data-status-code="${item.code}">

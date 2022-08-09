@@ -1,6 +1,9 @@
 const fs = require('fs')
 const { spawn } = require('child_process')
 module.exports = (s,config,lang) => {
+    const {
+        splitForFFPMEG,
+    } = require('../ffmpeg/utils.js')(s,config,lang)
     // orphanedVideoCheck : new function
     const checkIfVideoIsOrphaned = (monitor,videosDirectory,filename) => {
         const response = {ok: true}
@@ -64,10 +67,10 @@ module.exports = (s,config,lang) => {
                 let listing = spawn('sh',[tempDirectory + 'orphanCheck.sh'])
                 // const onData = options.onData ? options.onData : () => {}
                 const onError = options.onError ? options.onError : s.systemLog
-                const onExit = () => {
+                const onExit = async () => {
                     try{
                         listing.kill('SIGTERM')
-                        fs.unlink(tempDirectory + 'orphanCheck.sh',() => {})
+                        await fs.promises.rm(tempDirectory + 'orphanCheck.sh')
                     }catch(err){
                         s.debugLog(err)
                     }
@@ -210,9 +213,105 @@ module.exports = (s,config,lang) => {
             })
         })
     }
+    async function getVideosBasedOnTagFoundInMatrixOfAssociatedEvent({
+        groupKey,
+        monitorId,
+        startTime,
+        endTime,
+        searchQuery,
+        monitorRestrictions
+    }){
+        const initialEventQuery = [
+            ['ke','=',groupKey],
+            ['objects','LIKE',`%${searchQuery}%`],
+        ]
+        if(monitorId)initialEventQuery.push(['mid','=',monitorId]);
+        if(startTime)initialEventQuery.push(['time','>',startTime]);
+        if(endTime)initialEventQuery.push(['end','<',endTime]);
+        if(monitorRestrictions)initialEventQuery.push(monitorRestrictions);
+        const videoSelectResponse = await s.knexQueryPromise({
+            action: "select",
+            columns: "*",
+            table: "Videos",
+            orderBy: ['time','desc'],
+            where: initialEventQuery
+        });
+        return videoSelectResponse
+    }
+    async function stitchMp4Files(options){
+        return new Promise((resolve,reject) => {
+            const concatListFile = options.listFile
+            const finalMp4OutputLocation = options.output
+            const commandString = `-y -threads 1 -f concat -safe 0 -i "${concatListFile}" -c:v copy -an -preset ultrafast "${finalMp4OutputLocation}"`
+            s.debugLog("stitchMp4Files",commandString)
+            const videoBuildProcess = spawn(config.ffmpegDir,splitForFFPMEG(commandString))
+            videoBuildProcess.stdout.on('data',function(data){
+                s.debugLog('stdout',finalMp4OutputLocation,data.toString())
+            })
+            videoBuildProcess.stderr.on('data',function(data){
+                s.debugLog('stderr',finalMp4OutputLocation,data.toString())
+            })
+            videoBuildProcess.on('exit',async function(data){
+                resolve()
+            })
+        })
+    }
+    const fixingAlready = {}
+    async function reEncodeVideoAndReplace(videoRow){
+        return new Promise((resolve,reject) => {
+            const response = {ok: true}
+            const fixingId = `${videoRow.ke}${videoRow.mid}${videoRow.time}`
+            if(fixingAlready[fixingId]){
+                response.ok = false
+                response.msg = lang['Already Processing']
+                resolve(response)
+            }else{
+                const filename = s.formattedTime(videoRow.time)+'.'+videoRow.ext
+                const tempFilename = s.formattedTime(videoRow.time)+'.reencoding.'+videoRow.ext
+                const videoFolder = s.getVideoDirectory(videoRow)
+                const inputFilePath = `${videoFolder}${filename}`
+                const outputFilePath = `${videoFolder}${tempFilename}`
+                const commandString = `-y -threads 1 -re -i "${inputFilePath}" -c:v copy -c:a copy -preset ultrafast "${outputFilePath}"`
+                fixingAlready[fixingId] = true
+                const videoBuildProcess = spawn(config.ffmpegDir,splitForFFPMEG(commandString))
+                videoBuildProcess.stdout.on('data',function(data){
+                    s.debugLog('stdout',outputFilePath,data.toString())
+                })
+                videoBuildProcess.stderr.on('data',function(data){
+                    s.debugLog('stderr',outputFilePath,data.toString())
+                })
+                videoBuildProcess.on('exit',async function(data){
+                    fixingAlready[fixingId] = false
+                    try{
+                        function failed(err){
+                            response.ok = false
+                            response.err = err
+                            resolve(response)
+                        }
+                        const newFileStats = await fs.promises.stat(outputFilePath)
+                        await fs.promises.rm(inputFilePath)
+                        let readStream = fs.createReadStream(outputFilePath);
+                        let writeStream = fs.createWriteStream(inputFilePath);
+                        readStream.pipe(writeStream);
+                        writeStream.on('finish', async () => {
+                            resolve(response)
+                            await fs.promises.rm(outputFilePath)
+                        });
+                        writeStream.on('error', failed);
+                        readStream.on('error', failed);
+                    }catch(err){
+                        failed()
+                    }
+                })
+            }
+        })
+    }
     return {
+        reEncodeVideoAndReplace,
+        stitchMp4Files,
         orphanedVideoCheck: orphanedVideoCheck,
         scanForOrphanedVideos: scanForOrphanedVideos,
         cutVideoLength: cutVideoLength,
+        getVideosBasedOnTagFoundInMatrixOfAssociatedEvent: getVideosBasedOnTagFoundInMatrixOfAssociatedEvent,
     }
 }

@@ -31,7 +31,9 @@ module.exports = (s,config,lang) => {
                 resolve(response)
             }
             try{
-                proc.stdin.write("q\r\n")
+                if(proc && proc.stdin) {
+                    proc.stdin.write("q\r\n");
+                }
                 setTimeout(() => {
                     if(proc && proc.kill){
                         if(s.isWin){
@@ -473,7 +475,102 @@ module.exports = (s,config,lang) => {
             // },1000 * 60)
         // }
     }
+    async function deleteMonitorData(groupKey,monitorId){
+        // deleteVideos
+        // deleteFileBinFiles
+        // deleteTimelapseFrames
+        async function deletePath(thePath){
+            try{
+                await fs.promises.stat(thePath)
+                await fs.promises.rm(thePath, {recursive: true})
+            }catch(err){
+
+            }
+        }
+        async function deleteFromTable(tableName){
+            await s.knexQueryPromise({
+                action: "delete",
+                table: tableName,
+                where: {
+                    ke: groupKey,
+                    mid: monitorId,
+                }
+            })
+        }
+        async function getSizeFromTable(tableName){
+            const response = await s.knexQueryPromise({
+                action: "select",
+                columns: "size",
+                table: tableName,
+                where: {
+                    ke: groupKey,
+                    mid: monitorId,
+                }
+            })
+            const rows = response.rows
+            let size = 0
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i]
+                size += row.size
+            }
+            return size
+        }
+        async function adjustSpaceCounterForTableWithAddStorage(tableName,storageType){
+            // does normal videos and addStorage
+            const response = await s.knexQueryPromise({
+                action: "select",
+                columns: "ke,mid,details,size",
+                table: tableName || 'Videos',
+                where: {
+                    ke: groupKey,
+                    mid: monitorId,
+                }
+            })
+            const rows = response.rows
+            for (let i = 0; i < rows.length; i++) {
+                const video = rows[i]
+                const storageIndex = s.getVideoStorageIndex(video)
+                if(storageIndex){
+                    s.setDiskUsedForGroupAddStorage(video.ke,{
+                        size: -(video.size / 1048576),
+                        storageIndex: storageIndex
+                    },storageType)
+                }else{
+                    s.setDiskUsedForGroup(video.ke,-(video.size / 1048576),storageType)
+                }
+            }
+        }
+        async function adjustSpaceCounter(tableName,storageType){
+            const amount = await getSizeFromTable(tableName)
+            s.setDiskUsedForGroup(groupKey,-amount,storageType)
+        }
+        const videosDir = s.dir.videos + `${groupKey}/${monitorId}`
+        const binDir = s.dir.fileBin + `${groupKey}/${monitorId}`
+
+        // videos and addStorage
+        await adjustSpaceCounterForTableWithAddStorage('Timelapse Frames','timelapeFrames')
+        await adjustSpaceCounterForTableWithAddStorage('Videos')
+        await deleteFromTable('Videos')
+        await deletePath(videosDir)
+        for (let i = 0; i < s.dir.addStorage.length; i++) {
+            const storage = s.dir.addStorage[i]
+            const addStorageDir = storage.path + groupKey + '/' + monitorId
+            await deletePath(addStorageDir)
+            await deletePath(addStorageDir + '_timelapse')
+        }
+
+        // timelapse frames
+        await adjustSpaceCounter('Timelapse Frames','timelapeFrames')
+        await deleteFromTable('Timelapse Frames')
+        await deletePath(videosDir + '_timelapse')
+
+        // fileBin
+        await adjustSpaceCounter('Files','fileBin')
+        await deleteFromTable('Files')
+        await deletePath(binDir)
+    }
     return {
+        deleteMonitorData,
         cameraDestroy: cameraDestroy,
         createSnapshot: createSnapshot,
         processKill: processKill,

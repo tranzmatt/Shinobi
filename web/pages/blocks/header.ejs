@@ -7,7 +7,6 @@
 <html lang="en">
 <head>
     <title><%-pageTitle%></title>
-    <div><%-window.libURL%></div>
     <meta charset="utf-8">
     <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, shrink-to-fit=no' name='viewport' />
     <meta name="description" content="Shinobi">
@@ -63,14 +62,12 @@
     <link rel="stylesheet" href="<%-window.libURL%>assets/css/bs5.livePlayer.css">
     <%
         const details = $user.details
-        if(!details.sub){ %>
-            <script>
-                window.getAdminApiPrefix = function(piece){
-                    return "<%=originalURL%><%=config.webPaths.adminApiPrefix%><%- $user.auth_token %>/"
-                }
-            </script>
-        <% }
     %>
+    <script>
+        window.getAdminApiPrefix = function(piece){
+            return "<%=originalURL%><%= config.webPaths.adminApiPrefix %><%- $user.auth_token %>/"
+        }
+    </script>
     <% customAutoLoad.LibsCss.forEach(function(lib){ %>
         <link rel="stylesheet" href="<%-window.libURL%>libs/css/<%-lib%>">
     <% }) %>

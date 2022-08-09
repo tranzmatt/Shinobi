@@ -8,10 +8,11 @@ module.exports = function(s,config,lang,app,io){
             columns: "*",
             table: "Schedules"
         },(err,rows) => {
-            rows.forEach(function(schedule){
+
+            rows && rows.forEach(function(schedule){
                 s.updateSchedule(schedule)
             })
-            if(callback)callback()
+            if(callback && typeof callback === 'function')callback()
         })
     }
     //update schedule
@@ -193,9 +194,11 @@ module.exports = function(s,config,lang,app,io){
             var endData = {
                 ok : false
             }
-            if(user.details.sub){
-                endData.msg = user.lang['Not Permitted']
-                s.closeJsonResponse(res,endData)
+            const {
+                isSubAccount,
+            } = s.checkPermission(user)
+            if(isSubAccount){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not an Administrator Account']});
                 return
             }
             var whereQuery = [
@@ -233,9 +236,11 @@ module.exports = function(s,config,lang,app,io){
             var endData = {
                 ok : false
             }
-            if(user.details.sub){
-                endData.msg = user.lang['Not Permitted']
-                s.closeJsonResponse(res,endData)
+            const {
+                isSubAccount,
+            } = s.checkPermission(user)
+            if(isSubAccount){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not an Administrator Account']});
                 return
             }
             switch(req.params.action){

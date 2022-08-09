@@ -17,6 +17,9 @@ module.exports = function(s,config,lang,app,io){
     const {
         processKill,
     } = require('./monitor/utils.js')(s,config,lang)
+    const {
+        stitchMp4Files,
+    } = require('./video/utils.js')(s,config,lang)
     const timelapseFramesCache = {}
     const timelapseFramesCacheTimeouts = {}
     s.getTimelapseFrameDirectory = function(e){
@@ -248,24 +251,6 @@ module.exports = function(s,config,lang,app,io){
             })
         })
     }
-    async function stitchMp4Files(options){
-        return new Promise((resolve,reject) => {
-            const concatListFile = options.listFile
-            const finalMp4OutputLocation = options.output
-            const commandString = `-y -threads 1 -f concat -safe 0 -i "${concatListFile}" -c:v copy -an -preset ultrafast "${finalMp4OutputLocation}"`
-            s.debugLog("stitchMp4Files",commandString)
-            const videoBuildProcess = spawn(config.ffmpegDir,splitForFFPMEG(commandString))
-            videoBuildProcess.stdout.on('data',function(data){
-                s.debugLog('stdout',finalMp4OutputLocation,data.toString())
-            })
-            videoBuildProcess.stderr.on('data',function(data){
-                s.debugLog('stderr',finalMp4OutputLocation,data.toString())
-            })
-            videoBuildProcess.on('exit',async function(data){
-                resolve()
-            })
-        })
-    }
     async function chunkFramesAndBuildMultipleVideosThenSticth(options){
         // a single video with too many frames makes the video unplayable, this is the fix.
         const frames = options.frames
@@ -311,10 +296,10 @@ module.exports = function(s,config,lang,app,io){
             listFile: concatListFile,
             output: finalMp4OutputLocation,
         })
-        await fs.promises.unlink(concatListFile)
-        for (let i = 0; i < filePathsList; i++) {
+        await fs.promises.rm(concatListFile)
+        for (let i = 0; i < filePathsList.length; i++) {
             var segmentFileOutput = filePathsList[i]
-            await fs.promises.unlink(segmentFileOutput)
+            await fs.promises.rm(segmentFileOutput)
         }
         s.debugLog('videoBuildProcess Stitching Complete!',finalMp4OutputLocation)
     }
@@ -400,6 +385,40 @@ module.exports = function(s,config,lang,app,io){
         response.msg = `${lang.Building}... ${lang['Please Wait...']}`
         return response
     }
+    function initiateTimelapseVideoBuild({
+        groupKey,
+        monitorId,
+        framesPerSecond,
+        framesPosted,
+    }){
+        return new Promise((resolve,reject) => {
+            let response = {ok: false}
+            if(!monitorId){
+                response.msg = lang['No Monitor Found, Ignoring Request']
+                resolve(response)
+            }else{
+                const frames = []
+                var n = 0
+                framesPosted.forEach((frame) => {
+                    var firstParam = [['ke','=',groupKey],['mid','=',monitorId],['filename','=',frame.filename]]
+                    if(n !== 0)firstParam[0] = (['or']).concat(firstParam[0])
+                    frames.push(...firstParam)
+                    ++n
+                })
+                s.knexQuery({
+                    action: "select",
+                    columns: "*",
+                    table: "Timelapse Frames",
+                    where: frames
+                },async (err,r) => {
+                    if(r.length > 0){
+                        response = await createVideoFromTimelapse(r.reverse(),framesPerSecond)
+                    }
+                    resolve(response)
+                })
+            }
+        })
+    }
     // Web Paths
     // // // // //
     /**
@@ -409,25 +428,44 @@ module.exports = function(s,config,lang,app,io){
         config.webPaths.apiPrefix+':auth/timelapse/:ke',
         config.webPaths.apiPrefix+':auth/timelapse/:ke/:id',
         config.webPaths.apiPrefix+':auth/timelapse/:ke/:id/:date',
+        config.webPaths.apiPrefix+':auth/cloudTimelapse/:ke',
+        config.webPaths.apiPrefix+':auth/cloudTimelapse/:ke/:id',
+        config.webPaths.apiPrefix+':auth/cloudTimelapse/:ke/:id/:date',
     ], function (req,res){
         res.setHeader('Content-Type', 'application/json');
         s.auth(req.params,function(user){
-            var hasRestrictions = user.details.sub && user.details.allmonitors !== '1'
+            const monitorId = req.params.id
+            const groupKey = req.params.ke
+            const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(user.details,monitorId)
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+            } = s.checkPermission(user);
             if(
-                user.permissions.watch_videos==="0" ||
-                hasRestrictions &&
-                (
-                    !user.details.video_view ||
-                    user.details.video_view.indexOf(req.params.id) === -1
+                isRestrictedApiKey && apiKeyPermissions.watch_videos_disallowed ||
+                isRestricted && (
+                    monitorId && !monitorPermissions[`${monitorId}_video_view`] ||
+                    monitorRestrictions.length === 0
                 )
             ){
-                s.closeJsonResponse(res,[])
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized'], frames: []});
                 return
             }
-            const monitorRestrictions = s.getMonitorRestrictions(user.details,req.params.id)
+            var origURL = req.originalUrl.split('/')
+            var videoParam = origURL[origURL.indexOf(req.params.auth) + 1]
+            var dataSet = 'Timelapse Frames'
+            switch(videoParam){
+                case'cloudTimelapse':
+                    dataSet = 'Cloud Timelapse Frames'
+                break;
+            }
             s.getDatabaseRows({
                 monitorRestrictions: monitorRestrictions,
-                table: 'Timelapse Frames',
+                table: dataSet,
                 groupKey: req.params.ke,
                 date: req.query.date,
                 startDate: req.query.start,
@@ -453,47 +491,33 @@ module.exports = function(s,config,lang,app,io){
     ], function (req,res){
         res.setHeader('Content-Type', 'application/json');
         s.auth(req.params,function(user){
-            var hasRestrictions = user.details.sub && user.details.allmonitors !== '1'
+            const groupKey = req.params.ke
+            const monitorId = req.params.id
+            const actionParameter = !!req.params.action
+            const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(user.details,monitorId)
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+            } = s.checkPermission(user)
             if(
-                user.permissions.watch_videos==="0" ||
-                hasRestrictions &&
-                (
-                    !user.details.video_view ||
-                    user.details.video_view.indexOf(req.params.id) === -1
-                )
+                isRestrictedApiKey && apiKeyPermissions.delete_videos_disallowed ||
+                isRestricted && !monitorPermissions[`${monitorId}_video_delete`]
             ){
-                s.closeJsonResponse(res,[])
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
                 return
             }
-            const monitorRestrictions = s.getMonitorRestrictions(user.details,req.params.id)
-            if(monitorRestrictions.length === 0){
-                s.closeJsonResponse(res,{
-                    ok: false
-                })
-                return
-            }
+            const framesPerSecond = s.getPostData(req, 'fps')
             const framesPosted = s.getPostData(req, 'frames', true) || []
-            const frames = []
-            var n = 0
-            framesPosted.forEach((frame) => {
-                var firstParam = [['ke','=',req.params.ke],['mid','=',req.params.id],['filename','=',frame.filename]]
-                if(n !== 0)firstParam[0] = (['or']).concat(firstParam[0])
-                frames.push(...firstParam)
-                ++n
-            })
-            s.knexQuery({
-                action: "select",
-                columns: "*",
-                table: "Timelapse Frames",
-                where: frames
-            },async (err,r) => {
-                if(r.length === 0){
-                    s.closeJsonResponse(res,{
-                        ok: false
-                    })
-                    return
-                }
-                const buildResponse = await createVideoFromTimelapse(r.reverse(),s.getPostData(req, 'fps'))
+            initiateTimelapseVideoBuild({
+                groupKey,
+                monitorId,
+                framesPosted,
+                framesPerSecond,
+            }).then((buildResponse) => {
                 s.closeJsonResponse(res,buildResponse)
             })
         },res,req);
@@ -507,15 +531,31 @@ module.exports = function(s,config,lang,app,io){
     ], function (req,res){
         res.setHeader('Content-Type', 'application/json');
         s.auth(req.params,function(user){
-            var hasRestrictions = user.details.sub && user.details.allmonitors !== '1'
+            const groupKey = req.params.ke
+            const monitorId = req.params.id
+            const actionParameter = !!req.params.action
+            const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(user.details,monitorId)
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+            } = s.checkPermission(user)
             if(
-                user.permissions.watch_videos==="0" ||
-                hasRestrictions && (!user.details.video_view || user.details.video_view.indexOf(req.params.id)===-1)
+                actionParameter && (
+                    isRestrictedApiKey && apiKeyPermissions.delete_videos_disallowed ||
+                    isRestricted && !monitorPermissions[`${monitorId}_video_delete`]
+                ) ||
+                !actionParameter && (
+                    isRestrictedApiKey && apiKeyPermissions.watch_videos_disallowed ||
+                    isRestricted && monitorId && !monitorPermissions[`${monitorId}_video_view`]
+                )
             ){
-                res.end(s.prettyPrint([]))
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
                 return
             }
-            const monitorRestrictions = s.getMonitorRestrictions(user.details,req.params.id)
             const cacheKey = req.params.ke + req.params.id + req.params.filename
             const processFrame = (frame) => {
                 var fileLocation
@@ -529,7 +569,7 @@ module.exports = function(s,config,lang,app,io){
                     selectedDate = req.params.filename.split('T')[0]
                 }
                 fileLocation = `${fileLocation}${frame.ke}/${frame.mid}_timelapse/${selectedDate}/${req.params.filename}`
-                if(req.params.action === 'delete'){
+                if(actionParameter === 'delete'){
                     deleteTimelapseFrame({
                         ke: frame.ke,
                         mid: frame.mid,
@@ -597,35 +637,63 @@ module.exports = function(s,config,lang,app,io){
             })
         },res,req);
     });
-    var buildTimelapseVideos = function(){
-        var dateNow = new Date()
-        var hoursNow = dateNow.getHours()
-        if(hoursNow === 1){
-            var dateNowMoment = moment(dateNow).utc().format('YYYY-MM-DDTHH:mm:ss')
-            var dateMinusOneDay = moment(dateNow).utc().subtract(1, 'days').format('YYYY-MM-DDTHH:mm:ss')
-            s.knexQuery({
-                action: "select",
-                columns: "*",
-                table: "Timelapse Frames",
-                where: [
-                    ['time','=>',dateMinusOneDay],
-                    ['time','=<',dateNowMoment],
-                ]
-            },function(err,frames) {
-                var groups = {}
-                frames.forEach(function(frame){
-                    if(groups[frame.ke])groups[frame.ke] = {}
-                    if(groups[frame.ke][frame.mid])groups[frame.ke][frame.mid] = []
-                    groups[frame.ke][frame.mid].push(frame)
+    s.onOtherWebSocketMessages((d,connection) => {
+        switch(d.f){
+            case'timelapseVideoBuild':
+                initiateTimelapseVideoBuild({
+                    groupKey: d.ke,
+                    monitorId: d.mid,
+                    framesPosted: d.frames,
+                    framesPerSecond: d.fps,
+                }).then((buildResponse) => {
+                    s.tx({
+                        f: 'timelapse_build_requested',
+                        ke: d.ke,
+                        mid: d.mid,
+                        buildResponse: buildResponse,
+                    },'GRP_'+d.ke);
                 })
-                Object.keys(groups).forEach(function(groupKey){
-                    Object.keys(groups[groupKey]).forEach(async function(monitorId){
-                        var frameSet = groups[groupKey][monitorId]
-                        await createVideoFromTimelapse(frameSet,30)
-                    })
-                })
-            })
+            break;
         }
+    })
+    function buildTimelapseVideos(){
+        return new Promise((resolve,reject) => {
+            var dateNow = new Date()
+            var hoursNow = dateNow.getHours()
+            if(hoursNow === 1){
+                var dateNowMoment = moment(dateNow).utc().format('YYYY-MM-DDTHH:mm:ss')
+                var dateMinusOneDay = moment(dateNow).utc().subtract(1, 'days').format('YYYY-MM-DDTHH:mm:ss')
+                s.knexQuery({
+                    action: "select",
+                    columns: "*",
+                    table: "Timelapse Frames",
+                    where: [
+                        ['time','=>',dateMinusOneDay],
+                        ['time','=<',dateNowMoment],
+                    ]
+                },async function(err,frames) {
+                    var groups = {}
+                    frames.forEach(function(frame){
+                        if(groups[frame.ke])groups[frame.ke] = {}
+                        if(groups[frame.ke][frame.mid])groups[frame.ke][frame.mid] = []
+                        groups[frame.ke][frame.mid].push(frame)
+                    })
+                    const groupKeys = Object.keys(groups);
+                    for (let i = 0; i < groupKeys.length; i++) {
+                        const groupKey = groupKeys[i]
+                        const monitorIds = Object.keys(groups[groupKey]);
+                        for (let ii = 0; ii < monitorIds.length; ii++) {
+                            const monitorId = monitorIds[ii]
+                            const frameSet = groups[groupKey][monitorId]
+                            await createVideoFromTimelapse(frameSet,30)
+                        }
+                    }
+                    resolve()
+                })
+            }else{
+                resolve()
+            }
+        })
     }
     // Auto Build Timelapse Videos
     if(config.autoBuildTimelapseVideosDaily === true){

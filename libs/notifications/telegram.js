@@ -68,6 +68,19 @@ module.exports = function(s,config,lang,getSnapshot){
                         clearTimeout(s.group[d.ke].activeMonitors[d.id].detector_telegrambot);
                         s.group[d.ke].activeMonitors[d.id].detector_telegrambot = null
                     },detector_telegrambot_timeout)
+                    await getSnapshot(d,monitorConfig)
+                    if(d.screenshotBuffer){
+                        sendMessage({
+                            title: lang.Event+' - '+d.screenshotName,
+                            description: lang.EventText1+' '+d.currentTimestamp,
+                        },[
+                            {
+                                type: 'photo',
+                                attachment: d.screenshotBuffer,
+                                name: d.screenshotName+'.jpg'
+                            }
+                        ],d.ke)
+                    }
                     if(monitorConfig.details.detector_telegrambot_send_video === '1'){
                         // await asyncSetTimeout(3000)
                         let videoPath = null
@@ -95,19 +108,6 @@ module.exports = function(s,config,lang,getSnapshot){
                                 }
                             ],d.ke)
                         }
-                    }
-                    await getSnapshot(d,monitorConfig)
-                    if(d.screenshotBuffer){
-                        sendMessage({
-                            title: lang.Event+' - '+d.screenshotName,
-                            description: lang.EventText1+' '+d.currentTimestamp,
-                        },[
-                            {
-                                type: 'photo',
-                                attachment: d.screenshotBuffer,
-                                name: d.screenshotName+'.jpg'
-                            }
-                        ],d.ke)
                     }
                 }
             }

@@ -1,9 +1,12 @@
 $(document).ready(function(){
     var easyRemoteAccessTab = $('#easyRemoteAccess')
+    var toggleAffected = easyRemoteAccessTab.find('.p2p-toggle-affected')
+    var p2pEnabledSwitch = easyRemoteAccessTab.find('[name="p2pEnabled"]')
     var p2pHostSelectedContainer = $('#p2pHostSelected')
     var easyRemoteAccessForm = easyRemoteAccessTab.find('form')
     var remoteDashboardLinkButton = easyRemoteAccessTab.find('.remote-dashboard-link')
     var loadingRegistration = false
+    var statusConnections = {}
     var currentlyRegisteredP2PServer = currentlySelectedP2PServerId ? currentlySelectedP2PServerId + '' : undefined
     function copyToClipboard(str) {
         const el = document.createElement('textarea');
@@ -58,6 +61,7 @@ $(document).ready(function(){
             connectedUsers.text(data.users)
             chartViewerCount.text(data.statViewers)
         })
+        statusConnections[key] = socketConnection
     }
     function disableForm(){
         loadingRegistration = true
@@ -95,6 +99,31 @@ $(document).ready(function(){
             })
         }
     }
+    function beginAllStatusConnections(){
+        $.each(p2pServerList,function(key,server){
+            server.key = key
+            if(window.useBetterP2P && !server.v2)return;
+            if(!window.useBetterP2P && server.v2)return;
+            beginStatusConnectionForServer(key,server)
+        })
+    }
+    function closeAllStatusConnections(){
+        $.each(statusConnections,function(key,server){
+            server.disconnect()
+            delete(statusConnections[key])
+        })
+    }
+    function setVisibilityForList(){
+        var isOn = p2pEnabledSwitch.val() === '1'
+        if(isOn){
+            beginAllStatusConnections()
+            toggleAffected.show()
+        }else{
+            closeAllStatusConnections()
+            toggleAffected.hide()
+        }
+    }
+    p2pEnabledSwitch.change(setVisibilityForList)
     easyRemoteAccessTab.find('.submit').click(function(){
         easyRemoteAccessForm.submit()
     })
@@ -152,11 +181,6 @@ $(document).ready(function(){
         }
         return false;
     })
-    $.each(p2pServerList,function(key,server){
-        server.key = key
-        if(window.useBetterP2P && !server.v2)return;
-        if(!window.useBetterP2P && server.v2)return;
-        beginStatusConnectionForServer(key,server)
-    })
+    setVisibilityForList()
     displayCurrentlySelectedInternally()
 })

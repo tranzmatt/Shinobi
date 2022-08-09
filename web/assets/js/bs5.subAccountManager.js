@@ -209,13 +209,18 @@ $(document).ready(function(){
         permissionsSection.find('.permission-view select').each(function(n,v){
             var el = $(v)
             var monitorId = el.attr('monitor')
-            var value = el.val()
+            var value = el.val() // permissions selected
             $.each(value,function(n,permissionNameSelected){
                 if(!foundSelected[permissionNameSelected])foundSelected[permissionNameSelected] = []
                 foundSelected[permissionNameSelected].push(monitorId)
             })
         })
-        details = Object.assign(details,foundSelected)
+        details = Object.assign(details,{
+            'monitors': [],
+            'monitor_edit': [],
+            'video_view': [],
+            'video_delete': [],
+        },foundSelected)
         detailsElement.val(JSON.stringify(details))
     }
     var getCompleteForm = function(){
