@@ -84,6 +84,9 @@ module.exports = function(s,config,lang){
         if(!videoDetails.location){
             videoDetails.location = video.href.split(locationUrl)[1]
         }
+        if(videoDetails.type !== 'whcs'){
+            return
+        }
         s.group[e.ke].whcs.deleteObject({
             Bucket: s.group[e.ke].init.whcs_bucket,
             Key: videoDetails.location,

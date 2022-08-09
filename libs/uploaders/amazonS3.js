@@ -68,6 +68,9 @@ module.exports = function(s,config,lang){
         if(!videoDetails.location){
             videoDetails.location = video.href.split('.amazonaws.com')[1]
         }
+        if(videoDetails.type !== 's3'){
+            return
+        }
         s.group[e.ke].aws_s3.deleteObject({
             Bucket: s.group[e.ke].init.aws_s3_bucket,
             Key: videoDetails.location,
