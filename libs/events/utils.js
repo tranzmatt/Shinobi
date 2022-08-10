@@ -70,6 +70,9 @@ module.exports = (s,config,lang,app,io) => {
         var newString = string + ''
         var d = Object.assign(eventData,addOps)
         var detailString = s.stringJSON(d.details)
+        var tag = d.details.matrices
+            && d.details.matrices[0]
+            && d.details.matrices[0].tag;
         newString = newString
             .replace(/{{TIME}}/g,d.currentTimestamp)
             .replace(/{{REGION_NAME}}/g,d.details.name)
@@ -77,7 +80,10 @@ module.exports = (s,config,lang,app,io) => {
             .replace(/{{MONITOR_ID}}/g,d.id)
             .replace(/{{MONITOR_NAME}}/g,s.group[d.ke].rawMonitorConfigurations[d.id].name)
             .replace(/{{GROUP_KEY}}/g,d.ke)
-            .replace(/{{DETAILS}}/g,detailString)
+            .replace(/{{DETAILS}}/g,detailString);
+        if(tag){
+            newString = newString.replace(/{{TAG}}/g,tag)
+        }
         if(d.details.confidence){
             newString = newString
             .replace(/{{CONFIDENCE}}/g,d.details.confidence)
