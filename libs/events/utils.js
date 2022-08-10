@@ -70,9 +70,9 @@ module.exports = (s,config,lang,app,io) => {
         var newString = string + ''
         var d = Object.assign(eventData,addOps)
         var detailString = s.stringJSON(d.details)
-        var tag = d.details.matrices
-            && d.details.matrices[0]
-            && d.details.matrices[0].tag;
+        var tag = detailString.matrices
+            && detailString.matrices[0]
+            && detailString.matrices[0].tag;
         newString = newString
             .replace(/{{TIME}}/g,d.currentTimestamp)
             .replace(/{{REGION_NAME}}/g,d.details.name)
