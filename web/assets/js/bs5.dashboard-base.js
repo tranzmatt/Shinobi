@@ -851,14 +851,27 @@ function drawIndicatorBar(item){
     </div>`
     $('.disk-indicator-bars').append(html)
 }
+function updateInterfaceStatus(data){
+    // Updated status of interface in loaded Monitors
+    loadedMonitors[data.id].code = data.code
+    // Update counters in status bar
+    setInterfaceCounts()
+}
 function setInterfaceCounts(monitors){
     var data = monitors || Object.values(loadedMonitors)
+    var allCameraCount = data.length
     var activeCameraCount = data.filter((monitor) => {
         var monCode = parseInt(monitor.code)
         return monCode === 9 || monCode === 2 || monCode === 3
     }).length
-    $('.activeCameraCount').text(activeCameraCount)
-    $('.cameraCount').text(data.length)
+    var percentActive = (activeCameraCount/allCameraCount)*100
+    // Update Camera count in Monitors menu
+    $('.cameraCount').text(allCameraCount)
+    // Update Camera count in status bar
+    var el = $(`#indicator-activeCameraCount`)
+    var count = el.find('.indicator-percent')
+    count.text(`${activeCameraCount} / ${allCameraCount}`)
+    el.find('.progress-bar').css('width', `${percentActive}%`)
 }
 // on page load
 var readyFunctions = []
