@@ -87,7 +87,7 @@ module.exports = function(s,config,lang,io){
                                     status: 'Stopped',
                                     code: 5
                                 });
-                                var monObj = Object.assign(monitor,{id : monitor.mid})
+                                const monObj = Object.assign({},monitor,{id : monitor.mid})
                                 s.camera(monitor.mode,monObj)
                                 checkAnother()
                             },1000)
