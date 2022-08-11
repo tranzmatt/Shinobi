@@ -297,10 +297,6 @@ function downloadMonitorConfigurationsToDisk(monitorIds){
         [0].click()
 }
 
-function importShinobiMonitor(monitor){
-
-}
-
 function importM3u8Playlist(textData){
     var m3u8List = textData.replace('#EXTM3U','').trim().split('\n')
     var parsedList = {}
@@ -313,9 +309,9 @@ function importM3u8Playlist(textData){
         }
     })
     $.each(parsedList,function(name,url){
-        var link = getUrlPieces(url)
+        var link = getUrlParts(url)
         var newMon = generateDefaultMonitorSettings()
-        newMon.details = JSON.parse(newMon.details)
+        newMon.details = safeJsonParse(newMon.details)
         newMon.mid = 'HLS' + name.toLowerCase()
         newMon.name = name
         newMon.port = link.port
@@ -339,23 +335,90 @@ function importM3u8Playlist(textData){
 
 function importZoneMinderMonitor(Monitor){
     var newMon = generateDefaultMonitorSettings()
-    newMon.details = JSON.parse(newMon.details)
+    newMon.details = safeJsonParse(newMon.details)
     newMon.details.stream_type = 'jpeg'
     switch(Monitor.Type.toLowerCase()){
         case'ffmpeg':case'libvlc':
+            const url = getUrlParts(Monitor.Path)
+            const username = url.username || Monitor.User || Monitor.ONVIF_Username
+            const password = url.password || Monitor.Pass || Monitor.ONVIF_Password
+            const host = addCredentialsToUrl(url.origin,username,password)
+            const monitorIdSuffix = removeSpecialCharacters(Monitor.Name).toLowerCase().substring(0,15)
+            newMon.name = Monitor.Name + ` (ZM)`
+            newMon.mid = `zm${monitorIdSuffix}`;
+            newMon.host = host
+            newMon.protocol = `${url.protocol}//`
+            newMon.port = url.port || Monitor.Port
+            newMon.path = url.pathname + url.search
             newMon.details.auto_host_enable = '1'
             newMon.details.auto_host = Monitor.Path
-            if(newMon.auto_host.indexOf('rtsp://') > -1 || newMon.auto_host.indexOf('rtmp://') > -1 || newMon.auto_host.indexOf('rtmps://') > -1){
+            newMon.details.muser = username
+            newMon.details.mpass = password
+            newMon.details.stream_type = 'hls'
+            newMon.details.detector_buffer_acodec = 'auto'
+            newMon.type = 'h264'
+            switch(Monitor.Function){
+                case'None':
+                    // The monitor is currently disabled.
+                break;
+                case'Monitor':
+                    // The monitor is only available for live streaming.
+                    // No image analysis is done so no alarms or events will be generated
+                    // nothing will be recorded.
+                    newMon.mode = 'start'
+                    newMon.details.detector = '0'
+                break;
+                case'Modect':
+                    // (Monitor) or MOtion DEteCTtion.
+                    // All captured images will be analysed
+                    // events generated with recorded video where motion is detected.
+                    newMon.mode = 'start'
+                    newMon.details.detector = '1'
+                    newMon.details.detector_http_api = '1'
+                    newMon.details.detector_send_frames = '1'
+                break;
+                case'Record':
+                    // The monitor will be continuously recorded.
+                    // No motion detection takes place in this mode.
+                    newMon.mode = 'record'
+                    newMon.details.detector = '0'
+                break;
+                case'Mocord':
+                    // The monitor will be continuously recorded
+                    // motion being highlighted within those events.
+                    newMon.mode = 'record'
+                    newMon.details.detector = '1'
+                    newMon.details.detector_http_api = '1'
+                    newMon.details.detector_send_frames = '1'
+                break;
+                case'Nodect':
+                    // (Mocord) or No DEteCTtion.
+                    // This is a special mode designed to be used with external triggers.
+                    // In Nodect no motion detection takes place but events are recorded if external triggers require it.
+                    newMon.mode = 'start'
+                    newMon.details.detector = '1'
+                    newMon.details.detector_send_frames = '0'
+                    newMon.details.detector_http_api = '1'
+                break;
+            }
+            if(
+                url.protocol === 'rtsp:' ||
+                url.protocol === 'rtmp:' ||
+                url.protocol === 'rtmps:'
+            ){
                 newMon.type = 'h264'
             }else{
-                $.ccio.init('note',{title:lang['Please Check Your Settings'],text:lang.migrateText1,type:'error'})
+                new PNotify({
+                    title: lang['Please Check Your Settings'],
+                    text: lang.migrateText1,type:'error'
+                })
             }
         break;
-        case'local':
-            newMon.details.auto_host = Monitor.Device
-        break;
-        case'remote':
-
+        default:
+            new PNotify({
+                title: lang['Please Check Your Settings'],
+                text: lang.migrateText1,type:'error'
+            })
         break;
     }
     newMon.details = JSON.stringify(newMon.details)

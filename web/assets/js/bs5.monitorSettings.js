@@ -1436,8 +1436,24 @@ editorForm.find('[name="type"]').change(function(e){
     })
     .on('click','.import-into-monitor-settings-window',function(){
         launchImportMonitorWindow(function(monitor){
-            if(monitor[0])monitor = monitor[0];
-            if(monitor.mid)importIntoMonitorEditor(monitor)
+            var monitorConfig = null
+            if(monitor.monitor){
+                monitorConfig = importZoneMinderMonitor(monitor.monitor.Monitor)
+            }else
+            //zoneminder multiple monitors
+            if(monitor.monitors){
+                monitorConfig = importZoneMinderMonitor(monitor.monitors[0].Monitor)
+            }else{
+                if(monitor[0] && monitor.mid){
+                    monitorConfig = monitor[0];
+                }else if(monitor.mid){
+                    monitorConfig = monitor;
+                }
+            }
+            if(monitorConfig){
+                importIntoMonitorEditor(monitorConfig)
+            }
+
         })
     })
     .on('click','.delete-monitor-in-settings-window',function(){

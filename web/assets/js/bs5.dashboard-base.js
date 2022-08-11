@@ -75,6 +75,37 @@ function base64ArrayBuffer(arrayBuffer) {
 function getLocationPathName(){
     return location.pathname.endsWith('/') ? location.pathname : location.pathname + '/'
 }
+function getUrlProtocol(urlString){
+    let modifiedUrlString = `${urlString}`.split('://')
+    const originalProtocol = `${modifiedUrlString[0]}`
+    return originalProtocol
+}
+function modifyUrlProtocol(urlString,newProtocol){
+    let modifiedUrlString = `${urlString}`.split('://')
+    const originalProtocol = `${modifiedUrlString[0]}`
+    modifiedUrlString[0] = newProtocol;
+    modifiedUrlString = modifiedUrlString.join('://')
+    return modifiedUrlString
+}
+function getUrlParts(urlString){
+    const originalProtocol = getUrlProtocol(urlString)
+    const modifiedUrlString = modifyUrlProtocol(urlString,'http')
+    const url = new URL(modifiedUrlString)
+    const data = {}
+    $.each(url,function(key,value){
+        data[key] = value
+    });
+    data.href = `${urlString}`
+    data.origin = modifyUrlProtocol(data.origin,originalProtocol)
+    data.protocol = `${originalProtocol}:`
+    delete(data.toString)
+    delete(data.toJSON)
+    return data
+}
+function addCredentialsToUrl(streamUrl,username,password){
+    const urlParts = streamUrl.split('://')
+    return [urlParts[0],'://',`${username}:${password}@`,urlParts[1]].join('')
+}
 function getFullOrigin(withoutTrailingSlash){
     var url = location.origin + getLocationPathName()
     if(withoutTrailingSlash)url = url.slice(0, -1);
@@ -88,6 +119,9 @@ function generateId(x){
     for( var i=0; i < x; i++ )
         t += p.charAt(Math.floor(Math.random() * p.length));
     return t;
+}
+function removeSpecialCharacters(stringToReplace){
+    return stringToReplace.replace(/[^\w\s]/gi, '').replace(/\s+/g, '');
 }
 const mergeDeep = function(...objects) {
   const isObject = obj => obj && typeof obj === 'object';
