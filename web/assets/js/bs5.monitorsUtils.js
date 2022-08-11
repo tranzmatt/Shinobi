@@ -360,6 +360,7 @@ function importZoneMinderMonitor(Monitor){
             switch(Monitor.Function){
                 case'None':
                     // The monitor is currently disabled.
+                    newMon.mode = 'stop'
                 break;
                 case'Monitor':
                     // The monitor is only available for live streaming.
