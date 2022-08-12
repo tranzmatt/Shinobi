@@ -106,6 +106,9 @@ function addCredentialsToUrl(streamUrl,username,password){
     const urlParts = streamUrl.split('://')
     return [urlParts[0],'://',`${username}:${password}@`,urlParts[1]].join('')
 }
+function mergeConcattedJsonString(textData){
+    return textData.replace(/[\r\n]/gm, '').replace('}{',',')
+}
 function getFullOrigin(withoutTrailingSlash){
     var url = location.origin + getLocationPathName()
     if(withoutTrailingSlash)url = url.slice(0, -1);

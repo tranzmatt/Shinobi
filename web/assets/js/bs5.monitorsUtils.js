@@ -332,7 +332,50 @@ function importM3u8Playlist(textData){
         postMonitor(newMon)
     })
 }
-
+function convertZoneMinderZonesToCords(rows,width,height){
+    var coordinates = {}
+    const defaultDetectionWidth = 640
+    const defaultDetectionHeight = 480
+    rows.forEach((row) => {
+        const zone = row.Zone || row
+        let widthRatio = width > defaultDetectionWidth ? defaultDetectionWidth / width : 1
+        let heightRatio = height > defaultDetectionHeight ? defaultDetectionHeight / height : 1
+        const points = zone.Coords.split(' ').map((item) => {
+            let points = item.split(',').map((num) => parseInt(num));
+            points[0] = parseInt(points[0] * widthRatio);
+            points[1] = parseInt(points[1] * heightRatio);
+            return points
+        })
+        const monitorId = zone.MonitorId
+        coordinates[generateId(5)] = {
+           "name": `${zone.Id}-${monitorId}`,
+           "sensitivity": "5",
+           "max_sensitivity": "",
+           "threshold": 1,
+           "color_threshold": 9,
+           "points": points
+        }
+    })
+    return coordinates
+}
+function mergeZoneMinderZonesIntoMonitors(data){
+    const monitors = data.monitors
+    const singleMonitor = data.monitor && data.monitor.Monitor ? data.monitor.Monitor : null
+    const zones = data.zones
+    const targetMonitors = singleMonitor ? [singleMonitor] : monitors
+    targetMonitors.forEach((row) => {
+        const monitor = row.Monitor
+        const width = parseInt(monitor.Width)
+        const height = parseInt(monitor.Height)
+        const monitorZones = zones.filter(zone => {
+            return zone.Zone.MonitorId === monitor.Id
+        })
+        monitor.Zones = convertZoneMinderZonesToCords(monitorZones,width,height) || {}
+    })
+    if(singleMonitor){
+        data.monitor.Monitor = targetMonitors[0]
+    }
+}
 function importZoneMinderMonitor(Monitor){
     var newMon = generateDefaultMonitorSettings()
     newMon.details = safeJsonParse(newMon.details)
@@ -356,7 +399,11 @@ function importZoneMinderMonitor(Monitor){
             newMon.details.mpass = password
             newMon.details.stream_type = 'hls'
             newMon.details.detector_buffer_acodec = 'auto'
+            // newMon.details.detector_scale_x = '640'
             newMon.type = 'h264'
+            if(Monitor.Zones){
+                newMon.details.cords = JSON.stringify(Monitor.Zones)
+            }
             switch(Monitor.Function){
                 case'None':
                     // The monitor is currently disabled.
@@ -428,7 +475,7 @@ function importZoneMinderMonitor(Monitor){
 
 function importMonitor(textData){
     try{
-        var parsedData = textData instanceof Object ? textData : safeJsonParse(textData)
+        var parsedData = textData instanceof Object ? textData : safeJsonParse(mergeConcattedJsonString(textData))
         function postMonitor(v){
             var monitorId = v.mid
             $.post(`${getApiPrefix('configureMonitor')}/${monitorId}`,{
@@ -439,10 +486,12 @@ function importMonitor(textData){
         }
         //zoneminder one monitor
         if(parsedData.monitor){
+            mergeZoneMinderZonesIntoMonitors(parsedData)
             postMonitor(importZoneMinderMonitor(parsedData.monitor.Monitor))
         }else
         //zoneminder multiple monitors
         if(parsedData.monitors){
+            mergeZoneMinderZonesIntoMonitors(parsedData)
             $.each(parsedData.monitors,function(n,v){
                 postMonitor(importZoneMinderMonitor(v.Monitor))
             })
@@ -525,7 +574,7 @@ function launchImportMonitorWindow(callback){
                 title: lang['Import'],
                 class: 'btn-primary',
                 callback: function(){
-                    var textData = safeJsonParse($.confirm.e.find('textarea').val())
+                    var textData = safeJsonParse(mergeConcattedJsonString($.confirm.e.find('textarea').val()))
                     if(callback){
                         callback(textData)
                     }else{

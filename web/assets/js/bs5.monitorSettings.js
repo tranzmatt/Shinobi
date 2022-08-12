@@ -977,37 +977,6 @@ monitorEditorWindow.on('change','[channel-detail]',function(){
 monitorEditorWindow.find('.probe-monitor-settings').click(function(){
     $.pB.submit(buildMonitorURL(),true)
 })
-monitorEditorWindow.find('.import_config').click(function(e){
-    var el = $(this);
-    var monitorId = el.parents('[mid]').attr('mid');
-    $.confirm.create({
-        title: lang['Import Monitor Configuration'],
-        body: lang.ImportMonitorConfigurationText+'<div style="margin-top:15px"><div class="form-group"><textarea placeholder="'+lang['Paste JSON here.']+'" class="form-control"></textarea></div><label class="upload_file btn btn-primary btn-block"> Upload File <input class="upload" type=file name="files[]"></label></div>',
-        clickOptions: {
-            title: 'Import',
-            class: 'btn-primary'
-        },
-        clickCallback: function(){
-            try{
-                var monitorConfig = safeJsonParse($.confirm.e.find('textarea').val());
-                importIntoMonitorEditor(monitorConfig)
-                monitorEditorWindow.modal('show')
-            }catch(err){
-                debugLog(err)
-                new PNotify({title:lang['Invalid JSON'],text:lang.InvalidJSONText,type:'error'})
-            }
-        }
-    })
-    $.confirm.e.find('.upload').change(function(e){
-        var files = e.target.files; // FileList object
-        f = files[0];
-        var reader = new FileReader();
-        reader.onload = function(ee) {
-            $.confirm.e.find('textarea').val(ee.target.result);
-        }
-        reader.readAsText(f);
-    });
-});
 monitorEditorWindow.find('.save_config').click(function(e){
     //export monior config in view
   var el = $(this);
@@ -1438,10 +1407,12 @@ editorForm.find('[name="type"]').change(function(e){
         launchImportMonitorWindow(function(monitor){
             var monitorConfig = null
             if(monitor.monitor){
+                mergeZoneMinderZonesIntoMonitors(monitor)
                 monitorConfig = importZoneMinderMonitor(monitor.monitor.Monitor)
             }else
             //zoneminder multiple monitors
             if(monitor.monitors){
+                mergeZoneMinderZonesIntoMonitors(monitor)
                 monitorConfig = importZoneMinderMonitor(monitor.monitors[0].Monitor)
             }else{
                 if(monitor[0] && monitor.mid){
