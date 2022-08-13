@@ -73,7 +73,11 @@
     <% }) %>
     <style id="theme">
         <% details.theme = details.theme || config.defaultTheme %>
-        <%- include(__dirname + `/web/libs/themes/${details.theme}/style.css`); %>
+        <% try{ %>
+            <%- include(__dirname + `/web/libs/themes/${details.theme}/style.css`); %>
+        <% }catch(err){ %>
+            <%- include(__dirname + `/web/libs/themes/Ice-v3/style.css`); %>
+        <% } %>
     </style>
     <style id="custom_css">
         <%= details.css %>
