@@ -379,7 +379,6 @@ function mergeZoneMinderZonesIntoMonitors(data){
 function importZoneMinderMonitor(Monitor){
     var newMon = generateDefaultMonitorSettings()
     newMon.details = safeJsonParse(newMon.details)
-    newMon.details.stream_type = 'jpeg'
     switch(Monitor.Type.toLowerCase()){
         case'ffmpeg':case'libvlc':
             const url = getUrlParts(Monitor.Path)
@@ -399,7 +398,6 @@ function importZoneMinderMonitor(Monitor){
             newMon.details.mpass = password
             newMon.details.stream_type = 'hls'
             newMon.details.detector_buffer_acodec = 'auto'
-            // newMon.details.detector_scale_x = '640'
             newMon.type = 'h264'
             if(Monitor.Zones){
                 newMon.details.cords = JSON.stringify(Monitor.Zones)
