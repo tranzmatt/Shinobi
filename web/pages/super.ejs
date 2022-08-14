@@ -18,13 +18,13 @@
     <link rel="stylesheet" href="<%-window.libURL%>assets/css/super-page.css" />
     <link rel="stylesheet" href="<%-window.libURL%>assets/css/dashboard.css">
     <link rel="stylesheet" href="<%-window.libURL%>assets/css/bs5.darktheme.css">
-    <script src="<%-window.libURL%>libs/js/jquery.min.js"></script>
-    <script src="<%-window.libURL%>libs/js/jquery-ui.min.js"></script>
-    <script src="<%-window.libURL%>libs/js/basic.js"></script>
-    <script src="<%-window.libURL%>libs/js/jquery.serialize.js"></script>
-    <script src="<%-window.libURL%>libs/js/pnotify.custom.min.js"></script>
+    <script src="<%-window.libURL%>assets/vendor/js/jquery.min.js"></script>
+    <script src="<%-window.libURL%>assets/vendor/js/jquery-ui.min.js"></script>
+    <script src="<%-window.libURL%>assets/vendor/js/basic.js"></script>
+    <script src="<%-window.libURL%>assets/vendor/js/jquery.serialize.js"></script>
+    <script src="<%-window.libURL%>assets/vendor/js/pnotify.custom.min.js"></script>
     <script src="<%-window.libURL%>assets/vendor/bootstrap5/js/bootstrap.bundle.min.js"></script>
-    <script src="<%-window.libURL%>libs/js/dash2.confirm.js" type="text/javascript"></script>
+    <script src="<%-window.libURL%>assets/vendor/js/dash2.confirm.js" type="text/javascript"></script>
 
     <script>
         var superApiPrefix = location.search === '?p2p=1' ? (location.pathname.endsWith('/') ? location.pathname : location.pathname) : "<%=originalURL%><%=config.webPaths.superApiPrefix%>"
@@ -145,11 +145,11 @@
 <% customAutoLoad.superPageBlocks.forEach(function(block){ %>
     <%- include(block) %>
 <% }) %>
-<script src="<%-window.libURL%>libs/js/pnotify.custom.min.js" type="text/javascript"></script>
+<script src="<%-window.libURL%>assets/vendor/js/pnotify.custom.min.js" type="text/javascript"></script>
 <script src="<%-window.libURL%>assets/vendor/moment-with-locales.js"></script>
-<script src="<%-window.libURL%>libs/js/livestamp.min.js" type="text/javascript"></script>
-<script src="<%-window.libURL%>libs/js/socket.io.min.js" type="text/javascript"></script>
-<script src="<%-window.libURL%>libs/js/placeholder.js" type="text/javascript"></script>
+<script src="<%-window.libURL%>assets/vendor/js/livestamp.min.js" type="text/javascript"></script>
+<script src="<%-window.libURL%>assets/vendor/js/socket.io.min.js" type="text/javascript"></script>
+<script src="<%-window.libURL%>assets/vendor/js/placeholder.js" type="text/javascript"></script>
 <script type="text/javascript">
     var lang = <%- JSON.stringify(lang) || {} %>;
     PNotify.prototype.options.styling = "fontawesome";
