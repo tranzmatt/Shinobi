@@ -209,14 +209,12 @@ module.exports = async (s,config,lang,app,io) => {
                                                         app.use('/libs',express.static(webFolder + '/libs'))
                                                     }
                                                     app.use(s.checkCorrectPathEnding(config.webPaths.home)+'libs',express.static(webFolder + '/libs'))
-                                                    app.use(s.checkCorrectPathEnding(config.webPaths.admin)+'libs',express.static(webFolder + '/libs'))
                                                     app.use(s.checkCorrectPathEnding(config.webPaths.super)+'libs',express.static(webFolder + '/libs'))
                                                 }else if(name === 'assets'){
                                                     if(config.webPaths.home !== '/'){
                                                         app.use('/assets',express.static(webFolder + '/assets'))
                                                     }
                                                     app.use(s.checkCorrectPathEnding(config.webPaths.home)+'assets',express.static(webFolder + '/assets'))
-                                                    app.use(s.checkCorrectPathEnding(config.webPaths.admin)+'assets',express.static(webFolder + '/assets'))
                                                     app.use(s.checkCorrectPathEnding(config.webPaths.super)+'assets',express.static(webFolder + '/assets'))
                                                 }
                                                 var libFolder = webFolder + name + '/'
@@ -235,9 +233,6 @@ module.exports = async (s,config,lang,app,io) => {
                                                                         switch(true){
                                                                             case filename.indexOf('super.') > -1:
                                                                                 blockPrefix = 'super'
-                                                                            break;
-                                                                            case filename.indexOf('admin.') > -1:
-                                                                                blockPrefix = 'admin'
                                                                             break;
                                                                         }
                                                                         if(name === 'libs'){
@@ -351,11 +346,8 @@ module.exports = async (s,config,lang,app,io) => {
             PageBlocks: [],
             LibsJs: [],
             LibsCss: [],
-            adminPageBlocks: [],
-            adminLibsJs: [],
-            adminLibsCss: [],
-            adminAssetsJs: [],
-            adminAssetsCss: [],
+            AssetsJs: [],
+            AssetsCss: [],
             superPageBlocks: [],
             superLibsJs: [],
             superRawJs: [],
