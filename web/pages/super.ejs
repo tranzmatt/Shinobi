@@ -8,11 +8,11 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
     <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, shrink-to-fit=no' name='viewport' />
     <!--     Fonts and icons     -->
-    <link href="<%-window.libURL%>libs/css/font-awesome.min.css" rel="stylesheet" />
+    <link href="<%-window.libURL%>assets/vendor/font-awesome/font-awesome.min.css" rel="stylesheet" />
     <!-- CSS Files -->
     <link rel="stylesheet" href="<%-window.libURL%>assets/vendor/bootstrap5/css/bootstrap.min.css">
     <link rel="stylesheet" href="<%-window.libURL%>assets/css/bootstrap5-theme.css">
-    <link rel="stylesheet" href="<%-window.libURL%>libs/css/pnotify.custom.min.css">
+    <link rel="stylesheet" href="<%-window.libURL%>assets/vendor/pnotify.custom.min.css">
     <link rel="stylesheet" href="<%-window.libURL%>assets/css/bs5.forms.css">
     <link rel="stylesheet" href="<%-window.libURL%>assets/css/gradients.css" />
     <link rel="stylesheet" href="<%-window.libURL%>assets/css/super-page.css" />
@@ -31,6 +31,9 @@
     </script>
     <% customAutoLoad.superLibsCss.forEach(function(lib){ %>
         <link rel="stylesheet" href="<%-window.libURL%>libs/css/<%-lib%>">
+    <% }) %>
+    <% customAutoLoad.superAssetsCss.forEach(function(lib){ %>
+        <link rel="stylesheet" href="<%-window.libURL%>assets/vendor/<%-lib%>">
     <% }) %>
 </head>
 <script>$user=<%-JSON.stringify($user)%></script>
