@@ -211,6 +211,13 @@ module.exports = async (s,config,lang,app,io) => {
                                                     app.use(s.checkCorrectPathEnding(config.webPaths.home)+'libs',express.static(webFolder + '/libs'))
                                                     app.use(s.checkCorrectPathEnding(config.webPaths.admin)+'libs',express.static(webFolder + '/libs'))
                                                     app.use(s.checkCorrectPathEnding(config.webPaths.super)+'libs',express.static(webFolder + '/libs'))
+                                                }else if(name === 'assets'){
+                                                    if(config.webPaths.home !== '/'){
+                                                        app.use('/assets',express.static(webFolder + '/assets'))
+                                                    }
+                                                    app.use(s.checkCorrectPathEnding(config.webPaths.home)+'assets',express.static(webFolder + '/assets'))
+                                                    app.use(s.checkCorrectPathEnding(config.webPaths.admin)+'assets',express.static(webFolder + '/assets'))
+                                                    app.use(s.checkCorrectPathEnding(config.webPaths.super)+'assets',express.static(webFolder + '/assets'))
                                                 }
                                                 var libFolder = webFolder + name + '/'
                                                 fs.readdir(libFolder,function(err,webFolderContents){
@@ -233,16 +240,30 @@ module.exports = async (s,config,lang,app,io) => {
                                                                                 blockPrefix = 'admin'
                                                                             break;
                                                                         }
-                                                                        switch(libName){
-                                                                            case'js':
-                                                                                s.customAutoLoadTree[blockPrefix + 'LibsJs'].push(filename)
-                                                                            break;
-                                                                            case'css':
-                                                                                s.customAutoLoadTree[blockPrefix + 'LibsCss'].push(filename)
-                                                                            break;
-                                                                            case'blocks':
-                                                                                s.customAutoLoadTree[blockPrefix + 'PageBlocks'].push(fullPath)
-                                                                            break;
+                                                                        if(name === 'libs'){
+                                                                            switch(libName){
+                                                                                case'js':
+                                                                                    s.customAutoLoadTree[blockPrefix + 'AssetsJs'].push(filename)
+                                                                                break;
+                                                                                case'css':
+                                                                                    s.customAutoLoadTree[blockPrefix + 'AssetsCss'].push(filename)
+                                                                                break;
+                                                                                case'blocks':
+                                                                                    s.customAutoLoadTree[blockPrefix + 'PageBlocks'].push(fullPath)
+                                                                                break;
+                                                                            }
+                                                                        }else if(name === 'assets'){
+                                                                            switch(libName){
+                                                                                case'js':
+                                                                                    s.customAutoLoadTree[blockPrefix + 'LibsJs'].push(filename)
+                                                                                break;
+                                                                                case'css':
+                                                                                    s.customAutoLoadTree[blockPrefix + 'LibsCss'].push(filename)
+                                                                                break;
+                                                                                case'blocks':
+                                                                                    s.customAutoLoadTree[blockPrefix + 'PageBlocks'].push(fullPath)
+                                                                                break;
+                                                                            }
                                                                         }
                                                                     })
                                                                 })
@@ -333,10 +354,14 @@ module.exports = async (s,config,lang,app,io) => {
             adminPageBlocks: [],
             adminLibsJs: [],
             adminLibsCss: [],
+            adminAssetsJs: [],
+            adminAssetsCss: [],
             superPageBlocks: [],
             superLibsJs: [],
             superRawJs: [],
-            superLibsCss: []
+            superLibsCss: [],
+            superAssetsJs: [],
+            superAssetsCss: []
         }
         fs.readdir(modulesBasePath,function(err,folderContents){
             if(!err && folderContents.length > 0){
