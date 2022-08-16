@@ -69,7 +69,6 @@ module.exports = function(s,config,lang){
         if(e.details && e.details.dir && e.details.dir !== ''){
             k.details.dir = e.details.dir
         }
-        if(config.useUTC === true)k.details.isUTC = config.useUTC;
         s.knexQuery({
             action: "insert",
             table: "Videos",
@@ -77,7 +76,7 @@ module.exports = function(s,config,lang){
                 ke: e.ke,
                 mid: e.mid,
                 time: k.startTime,
-                ext: e.ext,
+                ext: k.ext || e.ext,
                 status: 1,
                 details: s.s(k.details),
                 objects: k.objects || '',
@@ -119,27 +118,20 @@ module.exports = function(s,config,lang){
             k.details = k.details && k.details instanceof Object ? k.details : {}
             var listOEvents = activeMonitor.detector_motion_count || []
             var listOTags = listOEvents.filter(row => row.details.reason === 'object').map(row => row.details.matrices.map(matrix => matrix.tag).join(',')).join(',').split(',')
-            if(listOTags)k.objects = [...new Set(listOTags)].join(',');
+            if(listOTags && !k.objects)k.objects = [...new Set(listOTags)].join(',');
+            k.filename = k.filename || k.file
+            k.ext = k.ext || e.ext || k.filename.split('.')[1]
             k.stat = fs.statSync(k.dir+k.file)
             k.filesize = k.stat.size
             k.filesizeMB = parseFloat((k.filesize/1048576).toFixed(2))
-
             k.startTime = new Date(s.nameToTime(k.file))
             k.endTime = new Date(k.endTime || k.stat.mtime)
-            if(config.useUTC === true){
-                fs.rename(k.dir+k.file, k.dir+s.formattedTime(k.startTime)+'.'+e.ext, (err) => {
-                    if (err) return console.error(err);
-                });
-                k.filename = s.formattedTime(k.startTime)+'.'+e.ext
-            }else{
-                k.filename = k.file
-            }
-            if(!e.ext){e.ext = k.filename.split('.')[1]}
             //send event for completed recording
             const response = {
                 mid: e.mid,
                 ke: e.ke,
                 filename: k.filename,
+                ext: k.ext,
                 filesize: k.filesize,
                 objects: k.objects,
                 time: s.timeObject(k.startTime).format('YYYY-MM-DD HH:mm:ss'),
@@ -150,7 +142,6 @@ module.exports = function(s,config,lang){
                 sendVideoToMasterNode(filePath,response)
             }else{
                 var href = '/videos/'+e.ke+'/'+e.mid+'/'+k.filename
-                if(config.useUTC === true)href += '?isUTC=true';
                 const monitorEventsCounted = activeMonitor.detector_motion_count
                 s.txWithSubPermissions({
                     f: 'video_build_success',
@@ -158,6 +149,7 @@ module.exports = function(s,config,lang){
                     filename: k.filename,
                     mid: e.mid,
                     ke: e.ke,
+                    ext: k.ext,
                     time: k.startTime,
                     size: k.filesize,
                     end: k.endTime,
@@ -188,76 +180,80 @@ module.exports = function(s,config,lang){
         s.group[e.ke].activeMonitors[e.mid].detector_motion_count = []
     }
     s.deleteVideo = function(e){
-        //e = video object
-        s.checkDetails(e)
-        e.dir = s.getVideoDirectory(e)
-        if(!e.filename && e.time){
-            e.filename = s.formattedTime(e.time)
-        }
-        var filename,
-            time
-        if(e.filename.indexOf('.')>-1){
-            filename = e.filename
-        }else{
-            filename = e.filename+'.'+e.ext
-        }
-        if(e.filename && !e.time){
-            time = s.nameToTime(filename)
-        }else{
-            time = e.time
-        }
-        time = new Date(time)
-        const whereQuery = {
-            ke: e.ke,
-            mid: e.id,
-            time: time,
-        }
-        s.knexQuery({
-            action: "select",
-            columns: "*",
-            table: "Videos",
-            where: whereQuery
-        },(err,r) => {
-            if(r && r[0]){
-                r = r[0]
-                fs.chmod(e.dir+filename,0o777,function(err){
-                    s.tx({
-                        f: 'video_delete',
-                        filename: filename,
-                        mid: e.id,
-                        ke: e.ke,
-                        time: new Date(s.nameToTime(filename)),
-                        end: s.formattedTime(new Date,'YYYY-MM-DD HH:mm:ss')
-                    },'GRP_'+e.ke);
-                    var storageIndex = s.getVideoStorageIndex(e)
-                    if(storageIndex){
-                        s.setDiskUsedForGroupAddStorage(e.ke,{
-                            size: -(r.size / 1048576),
-                            storageIndex: storageIndex
-                        })
-                    }else{
-                        s.setDiskUsedForGroup(e.ke,-(r.size / 1048576))
-                    }
-                    s.knexQuery({
-                        action: "delete",
-                        table: "Videos",
-                        where: whereQuery
-                    },(err) => {
-                        if(err){
-                            s.systemLog(lang['File Delete Error'] + ' : '+e.ke+' : '+' : '+e.id,err)
+        return new Promise((resolve) => {
+            //e = video object
+            s.checkDetails(e)
+            e.dir = s.getVideoDirectory(e)
+            if(!e.filename && e.time){
+                e.filename = s.formattedTime(e.time)
+            }
+            var filename,
+                time
+            if(e.filename.indexOf('.')>-1){
+                filename = e.filename
+            }else{
+                filename = e.filename+'.'+e.ext
+            }
+            if(e.filename && !e.time){
+                time = s.nameToTime(filename)
+            }else{
+                time = e.time
+            }
+            time = new Date(time)
+            const whereQuery = {
+                ke: e.ke,
+                mid: e.id,
+                time: time,
+            }
+            s.knexQuery({
+                action: "select",
+                columns: "*",
+                table: "Videos",
+                where: whereQuery
+            },(err,r) => {
+                if(r && r[0]){
+                    r = r[0]
+                    fs.chmod(e.dir+filename,0o777,function(err){
+                        s.tx({
+                            f: 'video_delete',
+                            filename: filename,
+                            mid: e.id,
+                            ke: e.ke,
+                            time: new Date(s.nameToTime(filename)),
+                            end: s.formattedTime(new Date,'YYYY-MM-DD HH:mm:ss')
+                        },'GRP_'+e.ke);
+                        var storageIndex = s.getVideoStorageIndex(e)
+                        if(storageIndex){
+                            s.setDiskUsedForGroupAddStorage(e.ke,{
+                                size: -(r.size / 1048576),
+                                storageIndex: storageIndex
+                            })
+                        }else{
+                            s.setDiskUsedForGroup(e.ke,-(r.size / 1048576))
                         }
-                    })
-                    fs.unlink(e.dir+filename,function(err){
-                        fs.stat(e.dir+filename,function(err){
-                            if(!err){
-                                s.file('delete',e.dir+filename)
+                        s.knexQuery({
+                            action: "delete",
+                            table: "Videos",
+                            where: whereQuery
+                        },(err) => {
+                            if(err){
+                                s.systemLog(lang['File Delete Error'] + ' : '+e.ke+' : '+' : '+e.id,err)
                             }
                         })
+                        fs.unlink(e.dir+filename,function(err){
+                            fs.stat(e.dir+filename,function(err){
+                                if(!err){
+                                    s.file('delete',e.dir+filename)
+                                }
+                            })
+                            resolve()
+                        })
                     })
-                })
-            }else{
-                console.log(lang['Database row does not exist'],whereQuery)
-            }
+                }else{
+                    console.log(lang['Database row does not exist'],whereQuery)
+                    resolve()
+                }
+            })
         })
     }
     s.deleteListOfVideos = function(videos){

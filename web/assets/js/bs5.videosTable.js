@@ -139,6 +139,10 @@ $(document).ready(function(e){
                     title: lang['Objects Found']
                   },
                   {
+                    field: 'ext',
+                    title: ''
+                  },
+                  {
                     field: 'size',
                     title: ''
                   },
@@ -156,6 +160,7 @@ $(document).ready(function(e){
                     mid: file.mid,
                     time: formattedTime(file.time, 'DD-MM-YYYY hh:mm:ss AA'),
                     end: formattedTime(file.end, 'DD-MM-YYYY hh:mm:ss AA'),
+                    ext: file.ext,
                     objects: file.objects,
                     size: convertKbToHumanSize(file.size),
                     buttons: `
@@ -164,6 +169,7 @@ $(document).ready(function(e){
                         <a class="btn btn-sm btn-primary preview-video" href="${href}" title="${lang.Play}"><i class="fa fa-play"></i></a>
                         <a class="btn btn-sm btn-default open-video" href="${href}" title="${lang.Play}"><i class="fa fa-play"></i></a>
                         ${permissionCheck('video_delete',file.mid) ? `<a class="btn btn-sm btn-danger delete-video" href="${href}" title="${lang.Delete}"><i class="fa fa-trash-o"></i></a>` : ''}
+                        ${permissionCheck('video_delete',file.mid) ? `<a class="btn btn-sm btn-danger compress-video" href="${href}" title="${lang.Compress}"><i class="fa fa-square"></i></a>` : ''}
                     </div>
                     `,
                 }

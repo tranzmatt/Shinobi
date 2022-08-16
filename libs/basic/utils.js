@@ -193,6 +193,24 @@ module.exports = (processCwd,config) => {
             },timeoutAmount)
         })
     }
+    function copyFile(inputFilePath,outputFilePath) {
+        const response = {ok: true}
+        return new Promise((resolve,reject) => {
+            function failed(err){
+                response.ok = false
+                response.err = err
+                resolve(response)
+            }
+            const readStream = fs.createReadStream(inputFilePath)
+            const writeStream = fs.createWriteStream(outputFilePath)
+            writeStream.on('finish', () => {
+                resolve(response)
+            })
+            writeStream.on('error', failed)
+            readStream.on('error', failed)
+            readStream.pipe(writeStream)
+        })
+    }
     return {
         parseJSON: parseJSON,
         stringJSON: stringJSON,
@@ -211,5 +229,6 @@ module.exports = (processCwd,config) => {
         fetchDownloadAndWrite: fetchDownloadAndWrite,
         fetchWithAuthentication: fetchWithAuthentication,
         asyncSetTimeout: asyncSetTimeout,
+        copyFile: copyFile,
     }
 }

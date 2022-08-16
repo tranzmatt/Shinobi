@@ -4,6 +4,9 @@ module.exports = (s,config,lang) => {
     const {
         splitForFFPMEG,
     } = require('../ffmpeg/utils.js')(s,config,lang)
+    const {
+        copyFile,
+    } = require('../basic/utils.js')(process.cwd(),config)
     // orphanedVideoCheck : new function
     const checkIfVideoIsOrphaned = (monitor,videosDirectory,filename) => {
         const response = {ok: true}
@@ -257,7 +260,7 @@ module.exports = (s,config,lang) => {
         })
     }
     const fixingAlready = {}
-    async function reEncodeVideoAndReplace(videoRow){
+    function reEncodeVideoAndReplace(videoRow){
         return new Promise((resolve,reject) => {
             const response = {ok: true}
             const fixingId = `${videoRow.ke}${videoRow.mid}${videoRow.time}`
@@ -306,12 +309,117 @@ module.exports = (s,config,lang) => {
             }
         })
     }
+    function reEncodeVideoAndBinOriginal({
+        video,
+        targetVideoCodec,
+        targetAudioCodec,
+        targetQuality,
+        targetExtension,
+        doSlowly,
+    }){
+        return new Promise((resolve,reject) => {
+            const response = {ok: true}
+            const fixingId = `${video.ke}${video.mid}${video.time}`
+            if(fixingAlready[fixingId]){
+                response.ok = false
+                response.msg = lang['Already Processing']
+                resolve(response)
+            }else{
+                targetVideoCodec = targetVideoCodec || `copy`
+                targetAudioCodec = targetAudioCodec || `copy`
+                targetQuality = targetQuality || ``
+                if(!targetVideoCodec || !targetAudioCodec){
+                    switch(targetExtension){
+                        case'mp4':
+                            targetVideoCodec = `libx264`
+                            targetAudioCodec = `aac -strict -2`
+                            targetQuality = `-crf 1`
+                        break;
+                        case'webm':
+                        case'mkv':
+                            targetVideoCodec = `vp9`
+                            targetAudioCodec = `libopus`
+                            targetQuality = `-q:v 1 -q:a 1`
+                        break;
+                    }
+                }
+                const filename = s.formattedTime(video.time)+'.'+video.ext
+                const tempFilename = s.formattedTime(video.time)+'.reencoding.'+ targetExtension
+                const finalFilename = s.formattedTime(video.time)+'.'+ targetExtension
+                const videoFolder = s.getVideoDirectory(video)
+                const fileBinFolder = s.getFileBinDirectory(video)
+                const inputFilePath = `${videoFolder}${filename}`
+                const fileBinFilePath = `${fileBinFolder}${filename}`
+                const outputFilePath = `${videoFolder}${tempFilename}`
+                const finalFilePath = `${videoFolder}${finalFilename}`
+                const commandString = `-y ${doSlowly ? `-re -threads 1` : ''} -i "${inputFilePath}" -c:v ${targetVideoCodec} -c:a ${targetAudioCodec} ${targetQuality} "${outputFilePath}"`
+                fixingAlready[fixingId] = true
+                const videoBuildProcess = spawn(config.ffmpegDir,splitForFFPMEG(commandString))
+                videoBuildProcess.stdout.on('data',function(data){
+                    s.debugLog('stdout',outputFilePath,data.toString())
+                })
+                videoBuildProcess.stderr.on('data',function(data){
+                    s.debugLog('stderr',outputFilePath,data.toString())
+                })
+                videoBuildProcess.on('exit',async function(data){
+                    fixingAlready[fixingId] = false
+                    try{
+                        // check that new file is existing
+                        const newFileStats = await fs.promises.stat(outputFilePath)
+                        // move old file to fileBin
+                        await copyFile(inputFilePath,fileBinFilePath)
+                        const fileBinInsertQuery = {
+                            ke: video.ke,
+                            mid: video.mid,
+                            name: filename,
+                            size: video.size,
+                            details: video.details,
+                            status: video.status,
+                            time: video.time,
+                        }
+                        await s.insertFileBinEntry(fileBinInsertQuery)
+                        // delete original
+                        await s.deleteVideo(video)
+                        // copy temp file to final path
+                        await copyFile(outputFilePath,finalFilePath)
+                        await fs.promises.rm(outputFilePath)
+                        s.insertCompletedVideo({
+                            id: video.mid,
+                            mid: video.mid,
+                            ke: video.ke,
+                            ext: targetExtension,
+                        },{
+                            file: finalFilename,
+                            objects: video.objects,
+                            endTime: video.end,
+                            ext: targetExtension,
+                        },function(){
+                            resolve({
+                                ok: true,
+                                path: finalFilePath,
+                                time: video.time,
+                                fileBin: fileBinInsertQuery,
+                                videoCodec: targetVideoCodec,
+                                audioCodec: targetAudioCodec,
+                                videoQuality: targetQuality,
+                            })
+                        })
+                    }catch(err){
+                        response.ok = false
+                        response.err = err
+                        resolve(response)
+                    }
+                })
+            }
+        })
+    }
     return {
         reEncodeVideoAndReplace,
         stitchMp4Files,
-        orphanedVideoCheck: orphanedVideoCheck,
-        scanForOrphanedVideos: scanForOrphanedVideos,
-        cutVideoLength: cutVideoLength,
-        getVideosBasedOnTagFoundInMatrixOfAssociatedEvent: getVideosBasedOnTagFoundInMatrixOfAssociatedEvent,
+        orphanedVideoCheck,
+        scanForOrphanedVideos,
+        cutVideoLength,
+        getVideosBasedOnTagFoundInMatrixOfAssociatedEvent,
+        reEncodeVideoAndBinOriginal,
     }
 }
