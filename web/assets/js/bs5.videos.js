@@ -523,6 +523,31 @@ async function downloadVideos(videos){
         await downloadVideo(video)
     }
 }
+function compressVideo(video,callback){
+    if(video.filename.includes('.webm')){
+        console.log('Already Compressed')
+        if(callback)callback('Already Compressed')
+        return
+    }
+    return new Promise((resolve) => {
+        var videoEndpoint = getApiPrefix(`videos`) + '/' + video.mid + '/' + video.filename
+        $.getJSON(videoEndpoint + '/compress',function(data){
+            if(data.ok){
+                console.log('Video Compressing')
+            }else{
+                console.log('Video Not Compressing',data,videoEndpoint)
+            }
+            if(callback)callback()
+            resolve()
+        })
+    })
+}
+async function compressVideos(videos){
+    for (let i = 0; i < videos.length; i++) {
+        var video = videos[i];
+        await compressVideo(video)
+    }
+}
 onWebSocketEvent(function(d){
     switch(d.f){
         case'video_delete':
@@ -611,13 +636,7 @@ $(document).ready(function(){
                 class: 'btn-primary btn-sm'
             },
             clickCallback: function(){
-                $.getJSON(videoEndpoint + '/compress',function(data){
-                    if(data.ok){
-                        console.log('Video Compressing')
-                    }else{
-                        console.log('Video Not Compressing',data,videoEndpoint)
-                    }
-                })
+                compressVideo(video)
             }
         });
         return false;

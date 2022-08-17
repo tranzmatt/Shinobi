@@ -170,7 +170,7 @@ $(document).ready(function(e){
                         <a class="btn btn-sm btn-primary preview-video" href="${href}" title="${lang.Play}"><i class="fa fa-play"></i></a>
                         <a class="btn btn-sm btn-default open-video" href="${href}" title="${lang.Play}"><i class="fa fa-play"></i></a>
                         ${permissionCheck('video_delete',file.mid) ? `<a class="btn btn-sm btn-danger delete-video" href="${href}" title="${lang.Delete}"><i class="fa fa-trash-o"></i></a>` : ''}
-                        ${permissionCheck('video_delete',file.mid) ? `<a class="btn btn-sm btn-danger compress-video" href="${href}" title="${lang.Compress}"><i class="fa fa-compress"></i></a>` : ''}
+                        ${permissionCheck('video_delete',file.mid) ? `<a class="btn btn-sm btn-warning compress-video" href="${href}" title="${lang.Compress}"><i class="fa fa-compress"></i></a>` : ''}
                     </div>
                     `,
                 }
@@ -265,6 +265,25 @@ $(document).ready(function(e){
             },
             clickCallback: function(){
                 deleteVideos(videos).then(() => {
+                    console.log(`Done Deleting Rows!`)
+                })
+            }
+        });
+        return false;
+    })
+    .on('click','.compress-selected-videos',function(e){
+        e.preventDefault()
+        var videos = getSelectedRows()
+        if(videos.length === 0)return;
+        $.confirm.create({
+            title: lang["Compress Videos"],
+            body: `${lang.CompressTheseMsg}`,
+            clickOptions: {
+                title: '<i class="fa fa-compress"></i> ' + lang.Compress,
+                class: 'btn-primary btn-sm'
+            },
+            clickCallback: function(){
+                compressVideos(videos).then(() => {
                     console.log(`Done Deleting Rows!`)
                 })
             }
