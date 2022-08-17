@@ -722,7 +722,7 @@ function drawMonitorListToSelector(jqTarget,selectFirst,showId,addAllMonitorsOpt
     $.each(loadedMonitors,function(n,v){
         html += createOptionHtml({
             value: v.mid,
-            label: v.name + (showId ? ` (${v.mid})` : ''),
+            label: v.name + (showId === 'host' ? ` (${v.host})` : showId ? ` (${v.mid})` : ''),
         })
     })
     addAllMonitorsOption ? jqTarget.html(`

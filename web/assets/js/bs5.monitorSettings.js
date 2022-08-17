@@ -12,6 +12,7 @@ var copySettingsSelector = $('#copy_settings')
 var monitorPresetsSelection = $('#monitorPresetsSelection')
 var monitorPresetsNameField = $('#monitorPresetsName')
 var monitorGroupSelectors = $('#monitor_groups')
+var monitorsList = monitorEditorWindow.find('.monitors_list')
 var monitorGroupMutliTriggerSelectContainer = $('#monitor_group_detector_multi')
 var editorForm = monitorEditorWindow.find('form')
 var fieldsLoaded = {}
@@ -1393,6 +1394,10 @@ editorForm.find('[name="type"]').change(function(e){
             })
         }
     })
+    monitorsList.change(function(){
+        var monitorId = monitorsList.val()
+        openMonitorEditorPage(monitorId ? monitorId : null)
+    })
     $('body')
     .on('tab-open-monitorSettings',function(){
         console.log('Opened Account Settings')
@@ -1492,12 +1497,20 @@ editorForm.find('[name="type"]').change(function(e){
             sideMenuCollapsePoint.collapse('show')
         }
     }
-    addOnTabOpen('monitorSettings', checkToOpenSideMenu)
-    addOnTabReopen('monitorSettings', checkToOpenSideMenu)
     addOnTabAway('monitorSettings', function(){
         if(isSideBarMenuCollapsed()){
             sideMenuCollapsePoint.collapse('hide')
         }
+    })
+    addOnTabOpen('monitorSettings', function () {
+        drawMonitorListToSelector(monitorsList.find('optgroup'),false,'host')
+        checkToOpenSideMenu()
+    })
+    addOnTabReopen('monitorSettings', function () {
+        var theSelected = `${monitorsList.val()}`
+        drawMonitorListToSelector(monitorsList.find('optgroup'),false,'host')
+        monitorsList.val(theSelected)
+        checkToOpenSideMenu()
     })
     window.generateDefaultMonitorSettings = generateDefaultMonitorSettings
 })

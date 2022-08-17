@@ -22,6 +22,34 @@ module.exports = function(s,config,lang){
        "Monitor Settings": {
           "section": "Monitor Settings",
           "blocks": {
+              "Page Control": {
+                 name: lang.Monitor,
+                 headerTitle: `<div id="tab-monitorSettings-title">Monitor Settings : <span>Add New</span></div>`,
+                "color": "blue",
+                 isSection: false,
+                "info": [
+                    {
+                        "field": lang.Monitor,
+                        "fieldType": "select",
+                        "class": "monitors_list",
+                        "possible": [
+                            {
+                               "name": lang['Add New'],
+                               "value": ""
+                            },
+                            {
+                               "name": lang.Saved,
+                               "optgroup": []
+                            },
+                        ]
+                    },
+                    {
+                       "fieldType": "btn",
+                       "class": `btn-success reset-monitor-settings-form`,
+                       "btnContent": `<i class="fa fa-refresh"></i> &nbsp; ${lang['Reset Form']}`,
+                    },
+                ]
+             },
              "Identity": {
                 "name": lang.Identity,
                 "color": "grey",
