@@ -1542,7 +1542,7 @@ module.exports = function(s,config,lang,app,io){
                  })
                  return
              }
-             var details = s.group[d.ke].rawMonitorConfigurations[d.id].details
+             var details = s.group[groupKey].rawMonitorConfigurations[monitorId].details
              var detectorHttpApi = details.detector_http_api
              var detectorOn = (details.detector === '1')
              if(
