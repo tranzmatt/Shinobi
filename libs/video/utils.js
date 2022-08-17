@@ -1,11 +1,14 @@
 const fs = require('fs')
 const { spawn } = require('child_process')
+const async = require('async');
 module.exports = (s,config,lang) => {
     const {
+        ffprobe,
         splitForFFPMEG,
     } = require('../ffmpeg/utils.js')(s,config,lang)
     const {
         copyFile,
+        hmsToSeconds,
     } = require('../basic/utils.js')(process.cwd(),config)
     // orphanedVideoCheck : new function
     const checkIfVideoIsOrphaned = (monitor,videosDirectory,filename) => {
@@ -309,6 +312,21 @@ module.exports = (s,config,lang) => {
             }
         })
     }
+    const reEncodeVideoAndBinOriginalQueue = {}
+    function reEncodeVideoAndBinOriginalAddToQueue(data){
+        const groupKey = data.video.ke
+        if(!reEncodeVideoAndBinOriginalQueue[groupKey]){
+            reEncodeVideoAndBinOriginalQueue[groupKey] = async.queue(async function(data, callback) {
+                const response = await reEncodeVideoAndBinOriginal(data)
+                callback(response)
+            }, 1);
+        }
+        return new Promise((resolve) => {
+            reEncodeVideoAndBinOriginalQueue[groupKey].push(data,(response) => {
+                resolve(response)
+            })
+        })
+    }
     function reEncodeVideoAndBinOriginal({
         video,
         targetVideoCodec,
@@ -316,100 +334,146 @@ module.exports = (s,config,lang) => {
         targetQuality,
         targetExtension,
         doSlowly,
+        onPercentChange,
     }){
-        return new Promise((resolve,reject) => {
-            const response = {ok: true}
-            const fixingId = `${video.ke}${video.mid}${video.time}`
-            if(fixingAlready[fixingId]){
-                response.ok = false
-                response.msg = lang['Already Processing']
-                resolve(response)
-            }else{
-                targetVideoCodec = targetVideoCodec || `copy`
-                targetAudioCodec = targetAudioCodec || `copy`
-                targetQuality = targetQuality || ``
-                if(!targetVideoCodec || !targetAudioCodec){
-                    switch(targetExtension){
-                        case'mp4':
-                            targetVideoCodec = `libx264`
-                            targetAudioCodec = `aac -strict -2`
-                            targetQuality = `-crf 1`
-                        break;
-                        case'webm':
-                        case'mkv':
-                            targetVideoCodec = `vp9`
-                            targetAudioCodec = `libopus`
-                            targetQuality = `-q:v 1 -q:a 1`
-                        break;
-                    }
-                }
-                const filename = s.formattedTime(video.time)+'.'+video.ext
-                const tempFilename = s.formattedTime(video.time)+'.reencoding.'+ targetExtension
-                const finalFilename = s.formattedTime(video.time)+'.'+ targetExtension
-                const videoFolder = s.getVideoDirectory(video)
-                const fileBinFolder = s.getFileBinDirectory(video)
-                const inputFilePath = `${videoFolder}${filename}`
-                const fileBinFilePath = `${fileBinFolder}${filename}`
-                const outputFilePath = `${videoFolder}${tempFilename}`
-                const finalFilePath = `${videoFolder}${finalFilename}`
-                const commandString = `-y ${doSlowly ? `-re -threads 1` : ''} -i "${inputFilePath}" -c:v ${targetVideoCodec} -c:a ${targetAudioCodec} ${targetQuality} "${outputFilePath}"`
-                fixingAlready[fixingId] = true
-                const videoBuildProcess = spawn(config.ffmpegDir,splitForFFPMEG(commandString))
-                videoBuildProcess.stdout.on('data',function(data){
-                    s.debugLog('stdout',outputFilePath,data.toString())
-                })
-                videoBuildProcess.stderr.on('data',function(data){
-                    s.debugLog('stderr',outputFilePath,data.toString())
-                })
-                videoBuildProcess.on('exit',async function(data){
-                    fixingAlready[fixingId] = false
-                    try{
-                        // check that new file is existing
-                        const newFileStats = await fs.promises.stat(outputFilePath)
-                        // move old file to fileBin
-                        await copyFile(inputFilePath,fileBinFilePath)
-                        const fileBinInsertQuery = {
-                            ke: video.ke,
-                            mid: video.mid,
-                            name: filename,
-                            size: video.size,
-                            details: video.details,
-                            status: video.status,
-                            time: video.time,
+        targetVideoCodec = targetVideoCodec || `copy`
+        targetAudioCodec = targetAudioCodec || `copy`
+        targetQuality = targetQuality || ``
+        onPercentChange = onPercentChange || function(){};
+        if(!targetVideoCodec || !targetAudioCodec){
+            switch(targetExtension){
+                case'mp4':
+                    targetVideoCodec = `libx264`
+                    targetAudioCodec = `aac -strict -2`
+                    targetQuality = `-crf 1`
+                break;
+                case'webm':
+                case'mkv':
+                    targetVideoCodec = `vp9`
+                    targetAudioCodec = `libopus`
+                    targetQuality = `-q:v 1 -q:a 1`
+                break;
+            }
+        }
+        const response = {ok: true}
+        const groupKey = video.ke
+        const monitorId = video.mid
+        const filename = s.formattedTime(video.time)+'.'+video.ext
+        const tempFilename = s.formattedTime(video.time)+'.reencoding.'+ targetExtension
+        const finalFilename = s.formattedTime(video.time)+'.'+ targetExtension
+        const tempFolder = s.getStreamsDirectory(video)
+        const videoFolder = s.getVideoDirectory(video)
+        const fileBinFolder = s.getFileBinDirectory(video)
+        const inputFilePath = `${videoFolder}${filename}`
+        const fileBinFilePath = `${fileBinFolder}${filename}`
+        const outputFilePath = `${tempFolder}${tempFilename}`
+        const finalFilePath = `${videoFolder}${finalFilename}`
+        const fixingId = `${video.ke}${video.mid}${video.time}`
+        return new Promise(async (resolve,reject) => {
+            function completeResolve(data){
+                s.tx({
+                    f: 'video_compress_completed',
+                    ke: groupKey,
+                    mid: monitorId,
+                    oldName: filename,
+                    name: finalFilename,
+                    success: !!data.ok,
+                },'GRP_'+groupKey);
+                resolve(data)
+            }
+            try{
+                if(fixingAlready[fixingId]){
+                    response.ok = false
+                    response.msg = lang['Already Processing']
+                    resolve(response)
+                }else{
+                    const inputFileStats = await fs.promises.stat(inputFilePath)
+                    const originalFileInfo = (await ffprobe(inputFilePath,inputFilePath)).result
+                    const videoDuration = originalFileInfo.format.duration
+                    const commandString = `-y ${doSlowly ? `-re -threads 1` : ''} -i "${inputFilePath}" -c:v ${targetVideoCodec} -c:a ${targetAudioCodec} ${targetQuality} "${outputFilePath}"`
+                    fixingAlready[fixingId] = true
+                    s.tx({
+                        f: 'video_compress_started',
+                        ke: groupKey,
+                        mid: monitorId,
+                        oldName: filename,
+                        name: finalFilename,
+                    },'GRP_'+groupKey);
+                    const videoBuildProcess = spawn(config.ffmpegDir,splitForFFPMEG(commandString))
+                    videoBuildProcess.stdout.on('data',function(data){
+                        s.debugLog('stdout',outputFilePath,data.toString())
+                    })
+                    videoBuildProcess.stderr.on('data',function(data){
+                        const text = data.toString()
+                        if(text.includes('frame=')){
+                            const durationSoFar = hmsToSeconds(text.split('time=')[1].trim().split(/(\s+)/)[0])
+                            const percent = (durationSoFar / videoDuration * 100).toFixed(1)
+                            s.tx({
+                                f: 'video_compress_percent',
+                                ke: groupKey,
+                                mid: monitorId,
+                                oldName: filename,
+                                name: finalFilename,
+                                percent: percent,
+                            },'GRP_'+groupKey);
+                            onPercentChange(percent)
+                            s.debugLog('stderr',outputFilePath,`${percent}%`)
                         }
-                        await s.insertFileBinEntry(fileBinInsertQuery)
-                        // delete original
-                        await s.deleteVideo(video)
-                        // copy temp file to final path
-                        await copyFile(outputFilePath,finalFilePath)
-                        await fs.promises.rm(outputFilePath)
-                        s.insertCompletedVideo({
-                            id: video.mid,
-                            mid: video.mid,
-                            ke: video.ke,
-                            ext: targetExtension,
-                        },{
-                            file: finalFilename,
-                            objects: video.objects,
-                            endTime: video.end,
-                            ext: targetExtension,
-                        },function(){
-                            resolve({
-                                ok: true,
-                                path: finalFilePath,
+                    })
+                    videoBuildProcess.on('exit',async function(data){
+                        fixingAlready[fixingId] = false
+                        try{
+                            // check that new file is existing
+                            const newFileStats = await fs.promises.stat(outputFilePath)
+                            // move old file to fileBin
+                            await copyFile(inputFilePath,fileBinFilePath)
+                            const fileBinInsertQuery = {
+                                ke: video.ke,
+                                mid: video.mid,
+                                name: filename,
+                                size: video.size,
+                                details: video.details,
+                                status: video.status,
                                 time: video.time,
-                                fileBin: fileBinInsertQuery,
-                                videoCodec: targetVideoCodec,
-                                audioCodec: targetAudioCodec,
-                                videoQuality: targetQuality,
+                            }
+                            await s.insertFileBinEntry(fileBinInsertQuery)
+                            // delete original
+                            await s.deleteVideo(video)
+                            // copy temp file to final path
+                            await copyFile(outputFilePath,finalFilePath)
+                            await fs.promises.rm(outputFilePath)
+                            s.insertCompletedVideo({
+                                id: video.mid,
+                                mid: video.mid,
+                                ke: video.ke,
+                                ext: targetExtension,
+                            },{
+                                file: finalFilename,
+                                objects: video.objects,
+                                endTime: video.end,
+                                ext: targetExtension,
+                            },function(){
+                                completeResolve({
+                                    ok: true,
+                                    path: finalFilePath,
+                                    time: video.time,
+                                    fileBin: fileBinInsertQuery,
+                                    videoCodec: targetVideoCodec,
+                                    audioCodec: targetAudioCodec,
+                                    videoQuality: targetQuality,
+                                })
                             })
-                        })
-                    }catch(err){
-                        response.ok = false
-                        response.err = err
-                        resolve(response)
-                    }
-                })
+                        }catch(err){
+                            response.ok = false
+                            response.err = err
+                            completeResolve(response)
+                        }
+                    })
+                }
+            }catch(err){
+                response.ok = false
+                response.err = err
+                completeResolve(response)
             }
         })
     }
@@ -421,5 +485,6 @@ module.exports = (s,config,lang) => {
         cutVideoLength,
         getVideosBasedOnTagFoundInMatrixOfAssociatedEvent,
         reEncodeVideoAndBinOriginal,
+        reEncodeVideoAndBinOriginalAddToQueue,
     }
 }

@@ -211,6 +211,17 @@ module.exports = (processCwd,config) => {
             readStream.pipe(writeStream)
         })
     }
+    function hmsToSeconds(str) {
+        var p = str.split(':'),
+            s = 0, m = 1;
+
+        while (p.length > 0) {
+            s += m * parseFloat(p.pop(), 10);
+            m *= 60;
+        }
+
+        return s;
+    }
     return {
         parseJSON: parseJSON,
         stringJSON: stringJSON,
@@ -230,5 +241,6 @@ module.exports = (processCwd,config) => {
         fetchWithAuthentication: fetchWithAuthentication,
         asyncSetTimeout: asyncSetTimeout,
         copyFile: copyFile,
+        hmsToSeconds,
     }
 }

@@ -28,7 +28,7 @@ $(document).ready(function(){
                 icon: 'bank',
                 color: 'default',
                 text: 'University of Zurich (UZH)',
-                href: 'https://www.media.uzh.ch/en/Press-Releases/2017/Generosity.html',
+                href: 'https://www.zora.uzh.ch/id/eprint/139275/',
                 class: ''
             },
             {

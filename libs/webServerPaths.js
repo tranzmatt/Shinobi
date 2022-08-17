@@ -32,7 +32,7 @@ module.exports = function(s,config,lang,app,io){
     } = require('./monitor/utils.js')(s,config,lang)
     const {
         reEncodeVideoAndReplace,
-        reEncodeVideoAndBinOriginal,
+        reEncodeVideoAndBinOriginalAddToQueue,
         getVideosBasedOnTagFoundInMatrixOfAssociatedEvent,
     } = require('./video/utils.js')(s,config,lang)
     s.renderPage = function(req,res,paths,passables,callback){
@@ -1786,9 +1786,6 @@ module.exports = function(s,config,lang,app,io){
                 return
             }
             var time = s.nameToTime(req.params.file)
-            if(req.query.isUTC === 'true'){
-                time = s.utcToLocal(time)
-            }
             time = new Date(time)
             var origURL = req.originalUrl.split('/')
             var videoParam = origURL[origURL.indexOf(req.params.auth) + 1]
@@ -1811,7 +1808,7 @@ module.exports = function(s,config,lang,app,io){
             },async (err,r) => {
                 if(r && r[0]){
                     r=r[0];
-                    r.filename=s.formattedTime(r.time)+'.'+r.ext;
+                    const originalFileName = `${s.formattedTime(r.time)+'.'+r.ext}`
                     var details = s.parseJSON(r.details) || {}
                     switch(req.params.mode){
                         case'fix':
@@ -1819,13 +1816,13 @@ module.exports = function(s,config,lang,app,io){
                         break;
                         case'compress':
                             response.ok = true
-                            reEncodeVideoAndBinOriginal({
+                            reEncodeVideoAndBinOriginalAddToQueue({
                                 video: r,
                                 targetVideoCodec: 'vp9',
                                 targetAudioCodec: 'libopus',
                                 targetQuality: '-q:v 1 -q:a 1',
                                 targetExtension: 'webm',
-                                doSlowly: false,
+                                doSlowly: false
                             }).then((encodeResponse) => {
                                 s.debugLog('Complete Encoding',encodeResponse)
                             }).catch((err) => {

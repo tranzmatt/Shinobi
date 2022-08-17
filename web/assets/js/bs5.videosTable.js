@@ -6,6 +6,7 @@ $(document).ready(function(e){
     var videosTablePreviewArea = $('#videosTable_preview_area')
     var objectTagSearchField = $('#videosTable_tag_search')
     var cloudVideoCheckSwitch = $('#videosTable_cloudVideos')
+    var sideLinkListBox = $('#side-menu-link-videosTableView ul')
     var loadedVideosTable = [];
     var redrawTimeout;
     var frameUrlCache = {}
@@ -198,6 +199,36 @@ $(document).ready(function(e){
         const isChecked = cloudVideoCheckSwitch.val() === 'cloud'
         return isChecked
     }
+    function drawCompressedVideoProgressBar(data){
+        var videoUrl = buildNewFileLink(data)
+        var html = `<li data-mid="${data.mid}" data-ke="${data.mid}" data-name="${data.name}" title="${data.name}">
+            <div class="text-white cursor-pointer d-flex flex-row" style="align-items: center;justify-content: center;">
+                <span class="dot shadow mr-2 dot-orange"></span>
+                <div class="row-status">
+                    ${lang.Compressing}...
+                </div>
+                <div class="flex-grow-1 px-2 pt-1">
+                    <div class="progress" style="height:18px">
+                        <div class="progress-bar progress-bar-warning" role="progressbar" style="width: ${data.percent}%;">${data.percent}%</div>
+                    </div>
+                </div>
+                <div style="display:none;" class="download-button pr-2">
+                    <a class="badge badge-sm badge-success" download href="${videoUrl}"><i class="fa fa-download"></i></a>
+                </div>
+                <div style="display:none;" class="download-button">
+                    <a class="badge badge-sm badge-dark remove-row"><i class="fa fa-times"></i></a>
+                </div>
+            </div>
+        </li>`
+        sideLinkListBox.append(html)
+    }
+    function buildNewFileLink(data){
+        return apiBaseUrl + '/videos/' + data.ke + '/' + data.mid + '/' + data.name
+    }
+    function downloadCompressedVideo(data){
+        var downloadUrl = buildNewFileLink(data)
+        downloadFile(downloadUrl,data.name)
+    }
     $('body')
     .on('click','.open-videosTable',function(e){
         e.preventDefault()
@@ -208,6 +239,11 @@ $(document).ready(function(e){
             drawVideosTableViewElements()
         })
         return false;
+    });
+    sideLinkListBox
+    .on('click','.remove-row',function(){
+        var el = $(this).parents('[data-mid]')
+        el.remove()
     });
     theEnclosure
     .on('click','.preview-video',function(e){
@@ -283,6 +319,32 @@ $(document).ready(function(e){
                         },2000)
                     }
                 }
+            break;
+            case'video_compress_started':
+                console.log(`Compressing Video...`,data)
+            break;
+            case'video_compress_completed':
+                if(data.success){
+                    var saveBuiltVideo = dashboardOptions().switches.saveCompressedVideo
+                    if(data.timelapseVideo && saveBuiltVideo === 1){
+                        downloadCompressedVideo(data)
+                    }
+                    var progressItem = sideLinkListBox.find(`[data-mid="${data.mid}"][data-ke="${data.mid}"][data-name="${data.name}"]`)
+                    progressItem.find('.row-status').text(`${lang.Done}!`)
+                    progressItem.find('.dot').removeClass('dot-orange').addClass('dot-green')
+                    progressItem.find('.download-button').show()
+                }
+            break;
+            case'video_compress_percent':
+                var progressItem = sideLinkListBox.find(`[data-mid="${data.mid}"][data-ke="${data.mid}"][data-name="${data.name}"]`)
+                if(progressItem.length === 0){
+                    drawCompressedVideoProgressBar(data)
+                }else{
+                    progressItem = sideLinkListBox.find(`[data-mid="${data.mid}"][data-ke="${data.mid}"][data-name="${data.name}"]`)
+                    progressItem.find('.progress-bar').css('width',`${data.percent}%`).text(`${data.percent}%`)
+                    progressItem.find('.percent').text(data.percent)
+                }
+                console.log(data)
             break;
         }
     })

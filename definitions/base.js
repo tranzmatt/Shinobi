@@ -7601,6 +7601,15 @@ module.exports = function(s,config,lang){
                           icon: 'film',
                           label: `${lang['Videos']}`,
                           pageOpen: 'videosTableView',
+                          addUl: true,
+                          ulItems: [
+                              {
+                                  label: lang[`Save Compressed Video on Completion`],
+                                  class: 'cursor-pointer',
+                                  attributes: 'shinobi-switch="saveCompressedVideo" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
+                                  color: 'grey',
+                              },
+                          ]
                       },
                       {
                           icon: 'map-marker',
