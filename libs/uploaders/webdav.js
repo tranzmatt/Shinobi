@@ -159,10 +159,11 @@ module.exports = function(s,config,lang){
     }
     function onInsertTimelapseFrame(monitorObject,queryInfo,filePath){
         var e = monitorObject
-        if(s.group[e.ke].aws_s3 && s.group[e.ke].init.use_aws_s3 !== '0' && s.group[e.ke].init.aws_s3_save === '1'){
+        if(s.group[e.ke].webdav && s.group[e.ke].init.use_webdav !== '0' && s.group[e.ke].init.webdav_save === '1'){
+            const wfs = s.group[e.ke].webdav
             const saveLocation = s.group[e.ke].init.webdav_dir+e.ke+'/'+e.mid+'_timelapse/' + queryInfo.filename
             fs.createReadStream(filePath).pipe(wfs.createWriteStream(saveLocation))
-            if(s.group[e.ke].init.aws_s3_log === '1'){
+            if(s.group[e.ke].init.webdav_log === '1'){
                 s.knexQuery({
                     action: "insert",
                     table: "Cloud Timelapse Frames",
