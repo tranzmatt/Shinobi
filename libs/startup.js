@@ -265,11 +265,15 @@ module.exports = function(s,config,lang,io){
                 },function(err,frames) {
                     if(frames && frames[0]){
                         frames.forEach(function(frame){
-                            var storageType = JSON.parse(frame.details).type
-                            if(!storageType)storageType = 's3'
-                            var frameSize = frame.size / 1048576
-                            user.cloudDiskUse[storageType].usedSpace += frameSize
-                            user.cloudDiskUse[storageType].usedSpaceTimelapseFrames += frameSize
+                            try{
+                                var storageType = JSON.parse(frame.details).type
+                                if(!storageType)storageType = 's3'
+                                var frameSize = frame.size / 1048576
+                                user.cloudDiskUse[storageType].usedSpace += frameSize
+                                user.cloudDiskUse[storageType].usedSpaceTimelapseFrames += frameSize
+                            }catch(err){
+                                s.debugLog(err)
+                            }
                         })
                     }
                     callback()
