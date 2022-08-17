@@ -198,7 +198,7 @@ module.exports = (s,config,lang,app,io) => {
             Object.keys(filters).forEach(function(key){
                 var conditionChain = {}
                 var dFilter = filters[key]
-                if(dFilter.enabled === '0')return;
+                if(!dFilter || !dFilter.where || dFilter.enabled === '0')return;
                 var numberOfOpenAndCloseBrackets = 0
                 dFilter.where.forEach(function(condition,place){
                     const hasOpenBracket = condition.openBracket === '1';

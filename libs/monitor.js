@@ -7,7 +7,6 @@ const onvif = require("shinobi-onvif");
 const treekill = require('tree-kill');
 const connectionTester = require('connection-tester')
 const SoundDetection = require('shinobi-sound-detection')
-const async = require("async");
 const URL = require('url')
 const {
   Worker
