@@ -607,7 +607,7 @@ $(document).ready(function(){
             title: lang["Compress"] + ' : ' + video.filename,
             body: `${lang.CompressVideoMsg}<br><br><div class="row"><video class="video_video" autoplay loop controls><source src="${videoEndpoint}" type="video/${ext}"></video></div>`,
             clickOptions: {
-                title: '<i class="fa fa-square"></i> ' + lang.Compress,
+                title: '<i class="fa fa-compress"></i> ' + lang.Compress,
                 class: 'btn-primary btn-sm'
             },
             clickCallback: function(){

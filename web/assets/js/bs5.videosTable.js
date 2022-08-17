@@ -170,7 +170,7 @@ $(document).ready(function(e){
                         <a class="btn btn-sm btn-primary preview-video" href="${href}" title="${lang.Play}"><i class="fa fa-play"></i></a>
                         <a class="btn btn-sm btn-default open-video" href="${href}" title="${lang.Play}"><i class="fa fa-play"></i></a>
                         ${permissionCheck('video_delete',file.mid) ? `<a class="btn btn-sm btn-danger delete-video" href="${href}" title="${lang.Delete}"><i class="fa fa-trash-o"></i></a>` : ''}
-                        ${permissionCheck('video_delete',file.mid) ? `<a class="btn btn-sm btn-danger compress-video" href="${href}" title="${lang.Compress}"><i class="fa fa-square"></i></a>` : ''}
+                        ${permissionCheck('video_delete',file.mid) ? `<a class="btn btn-sm btn-danger compress-video" href="${href}" title="${lang.Compress}"><i class="fa fa-compress"></i></a>` : ''}
                     </div>
                     `,
                 }
