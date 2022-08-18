@@ -213,6 +213,9 @@ $(document).ready(function(e){
                     </div>
                 </div>
                 <div style="display:none;" class="download-button pr-2">
+                    <a class="badge badge-sm badge-default open-video" href="${videoUrl}"><i class="fa fa-play"></i></a>
+                </div>
+                <div style="display:none;" class="download-button pr-2">
                     <a class="badge badge-sm badge-success" download href="${videoUrl}"><i class="fa fa-download"></i></a>
                 </div>
                 <div style="display:none;" class="download-button">
@@ -344,24 +347,28 @@ $(document).ready(function(e){
             break;
             case'video_compress_completed':
                 if(data.success){
-                    var saveBuiltVideo = dashboardOptions().switches.saveCompressedVideo
-                    if(data.timelapseVideo && saveBuiltVideo === 1){
-                        downloadCompressedVideo(data)
-                    }
                     var progressItem = sideLinkListBox.find(`[data-mid="${data.mid}"][data-ke="${data.mid}"][data-name="${data.name}"]`)
-                    progressItem.find('.row-status').text(`${lang.Done}!`)
-                    progressItem.find('.dot').removeClass('dot-orange').addClass('dot-green')
-                    progressItem.find('.download-button').show()
+                    var saveBuiltVideo = dashboardOptions().switches.saveCompressedVideo
+                    if(saveBuiltVideo === 1){
+                        downloadCompressedVideo(data)
+                        progressItem.remove()
+                        console.log(`Downloaded!`,data)
+                    }else{
+                        progressItem.find('.row-status').text(`${lang.Done}!`)
+                        progressItem.find('.dot').removeClass('dot-orange').addClass('dot-green')
+                        progressItem.find('.download-button').show()
+                        progressItem.find('.progress-bar').css('width',`100%`).text(`100%`)
+                    }
                 }
             break;
             case'video_compress_percent':
                 var progressItem = sideLinkListBox.find(`[data-mid="${data.mid}"][data-ke="${data.mid}"][data-name="${data.name}"]`)
+                data.percent = data.percent > 100 ? 100 : data.percent
                 if(progressItem.length === 0){
                     drawCompressedVideoProgressBar(data)
                 }else{
                     progressItem = sideLinkListBox.find(`[data-mid="${data.mid}"][data-ke="${data.mid}"][data-name="${data.name}"]`)
                     progressItem.find('.progress-bar').css('width',`${data.percent}%`).text(`${data.percent}%`)
-                    progressItem.find('.percent').text(data.percent)
                 }
                 console.log(data)
             break;
