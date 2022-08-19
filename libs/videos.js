@@ -63,16 +63,14 @@ module.exports = function(s,config,lang){
         })
     }
     s.insertDatabaseRow = function(e,k,callback){
-        s.checkDetails(e)
-        //save database row
-        if(!k.details)k.details = {}
-        if(e.details && e.details.dir && e.details.dir !== ''){
-            k.details.dir = e.details.dir
-        }
-        s.knexQuery({
-            action: "insert",
-            table: "Videos",
-            insert: {
+        return new Promise((resolve) => {
+            s.checkDetails(e)
+            //save database row
+            if(!k.details)k.details = {}
+            if(e.details && e.details.dir && e.details.dir !== ''){
+                k.details.dir = e.details.dir
+            }
+            const insertQuery = {
                 ke: e.ke,
                 mid: e.mid,
                 time: k.startTime,
@@ -83,10 +81,20 @@ module.exports = function(s,config,lang){
                 size: k.filesize,
                 end: k.endTime,
             }
-        },(err) => {
-            if(callback)callback(err)
-            fs.chmod(k.dir+k.file,0o777,function(err){
-
+            s.knexQuery({
+                action: "insert",
+                table: "Videos",
+                insert: insertQuery
+            },(err) => {
+                const response = {
+                    ok: !err,
+                    err: err,
+                    insertQuery: insertQuery,
+                }
+                if(callback)callback(err,response)
+                fs.chmod(k.dir+k.file,0o777,function(err){
+                    resolve(response)
+                })
             })
         })
     }
@@ -113,7 +121,7 @@ module.exports = function(s,config,lang){
                 })
             }
         }
-        if(k.fileExists===true){
+        if(k.fileExists === true){
             //close video row
             k.details = k.details && k.details instanceof Object ? k.details : {}
             var listOEvents = activeMonitor.detector_motion_count || []
@@ -127,17 +135,18 @@ module.exports = function(s,config,lang){
             k.startTime = new Date(s.nameToTime(k.file))
             k.endTime = new Date(k.endTime || k.stat.mtime)
             //send event for completed recording
-            const response = {
-                mid: e.mid,
-                ke: e.ke,
-                filename: k.filename,
-                ext: k.ext,
-                filesize: k.filesize,
-                objects: k.objects,
-                time: s.timeObject(k.startTime).format('YYYY-MM-DD HH:mm:ss'),
-                end: s.timeObject(k.endTime).format('YYYY-MM-DD HH:mm:ss')
-            }
             if(config.childNodes.enabled === true && config.childNodes.mode === 'child' && config.childNodes.host){
+                const response = {
+                    mid: e.mid,
+                    ke: e.ke,
+                    filename: k.filename,
+                    ext: k.ext,
+                    size: k.filesize,
+                    filesize: k.filesize,
+                    objects: k.objects,
+                    time: s.timeObject(k.startTime).format('YYYY-MM-DD HH:mm:ss'),
+                    end: s.timeObject(k.endTime).format('YYYY-MM-DD HH:mm:ss')
+                }
                 var filePath = k.dir + k.filename;
                 sendVideoToMasterNode(filePath,response)
             }else{
@@ -171,9 +180,11 @@ module.exports = function(s,config,lang){
                 s.onBeforeInsertCompletedVideoExtensions.forEach(function(extender){
                     extender(e,k)
                 })
-                s.insertDatabaseRow(e,k,callback)
-                s.insertCompletedVideoExtensions.forEach(function(extender){
-                    extender(e,k,response)
+                s.insertDatabaseRow(e,k,(err,response) => {
+                    if(callback)callback(err,response);
+                    s.insertCompletedVideoExtensions.forEach(function(extender){
+                        extender(e,k,response.insertQuery,response)
+                    })
                 })
             }
         }

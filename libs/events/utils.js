@@ -21,7 +21,8 @@ module.exports = (s,config,lang,app,io) => {
         moveCameraPtzToMatrix
     } = require('../control/ptz.js')(s,config,lang)
     const {
-        cutVideoLength
+        cutVideoLength,
+        reEncodeVideoAndBinOriginalAddToQueue
     } = require('../video/utils.js')(s,config,lang)
     const {
         isEven,
@@ -571,7 +572,23 @@ module.exports = (s,config,lang,app,io) => {
                     }
                     s.insertCompletedVideo(monitorConfig,{
                         file : filename,
-                    })
+                    },function(err,response){
+                        const autoCompressionEnabled = monitorDetails.auto_compress_videos === '1';
+                        if(autoCompressionEnabled){
+                            reEncodeVideoAndBinOriginalAddToQueue({
+                                video: response.insertQuery,
+                                targetVideoCodec: 'vp9',
+                                targetAudioCodec: 'libopus',
+                                targetQuality: '-q:v 1 -q:a 1',
+                                targetExtension: 'webm',
+                                doSlowly: false
+                            }).then((encodeResponse) => {
+                                s.debugLog('Complete Automatic Compression',encodeResponse)
+                            }).catch((err) => {
+                                console.log(err)
+                            })
+                        }
+                    });
                     s.userLog(d,{
                         type: logTitleText,
                         msg: lang["Detector Recording Complete"]

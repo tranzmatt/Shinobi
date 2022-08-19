@@ -1824,7 +1824,7 @@ module.exports = function(s,config,lang,app,io){
                                 targetExtension: 'webm',
                                 doSlowly: false
                             }).then((encodeResponse) => {
-                                s.debugLog('Complete Encoding',encodeResponse)
+                                s.debugLog('Complete Compression',encodeResponse)
                             }).catch((err) => {
                                 console.log(err)
                             })

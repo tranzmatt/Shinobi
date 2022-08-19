@@ -982,6 +982,9 @@ module.exports = function(s,config,lang){
         }
     }
     const catchNewSegmentNames = function(e){
+        const monitorConfig = s.group[e.ke].rawMonitorConfigurations[e.id]
+        const monitorDetails = monitorConfig.details
+        const autoCompressionEnabled = monitorDetails.auto_compress_videos === '1'
         var checkLog = function(d,x){return d.indexOf(x)>-1}
         s.group[e.ke].activeMonitors[e.id].spawn.stdio[8].on('data',function(d){
             d=d.toString();
@@ -990,7 +993,7 @@ module.exports = function(s,config,lang){
                 s.insertCompletedVideo(e,{
                     file: filename,
                     events: s.group[e.ke].activeMonitors[e.id].detector_motion_count
-                },function(err){
+                },function(err,response){
                     s.userLog(e,{type:lang['Video Finished'],msg:{filename:d}})
                     if(
                         e.details.detector === '1' &&
@@ -1007,6 +1010,20 @@ module.exports = function(s,config,lang){
                             filename : filename,
                             ke : e.ke,
                             id : e.id
+                        })
+                    }else if(autoCompressionEnabled){
+                        s.debugLog('Queue Automatic Compression',response.insertQuery)
+                        reEncodeVideoAndBinOriginalAddToQueue({
+                            video: response.insertQuery,
+                            targetVideoCodec: 'vp9',
+                            targetAudioCodec: 'libopus',
+                            targetQuality: '-q:v 1 -q:a 1',
+                            targetExtension: 'webm',
+                            doSlowly: false
+                        }).then((encodeResponse) => {
+                            s.debugLog('Complete Automatic Compression',encodeResponse)
+                        }).catch((err) => {
+                            console.log(err)
                         })
                     }
                     s.group[e.ke].activeMonitors[e.id].detector_motion_count = []

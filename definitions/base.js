@@ -119,6 +119,21 @@ module.exports = function(s,config,lang){
                       "description": lang["fieldTextDir"],
                       "fieldType": "select",
                       "possible": s.listOfStorage
+                  },
+                  {
+                     "name": "detail=auto_compress_videos",
+                     "field": lang['Compress Completed Videos'],
+                     "fieldType": "select",
+                     "possible": [
+                         {
+                            "name": lang.No,
+                            "value": "0"
+                         },
+                         {
+                            "name": lang.Yes,
+                            "value": "1"
+                         }
+                     ]
                   }
                 ]
              },
