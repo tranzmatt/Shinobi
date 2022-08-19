@@ -353,11 +353,13 @@ $(document).ready(function(e){
                         downloadCompressedVideo(data)
                         progressItem.remove()
                         console.log(`Downloaded!`,data)
-                    }else{
+                    }else if(!data.automated){
                         progressItem.find('.row-status').text(`${lang.Done}!`)
                         progressItem.find('.dot').removeClass('dot-orange').addClass('dot-green')
                         progressItem.find('.download-button').show()
                         progressItem.find('.progress-bar').css('width',`100%`).text(`100%`)
+                    }else if(data.automated){
+                        progressItem.remove()
                     }
                 }
             break;

@@ -335,6 +335,7 @@ module.exports = (s,config,lang) => {
         targetExtension,
         doSlowly,
         onPercentChange,
+        automated,
     }){
         targetVideoCodec = targetVideoCodec || `copy`
         targetAudioCodec = targetAudioCodec || `copy`
@@ -377,6 +378,7 @@ module.exports = (s,config,lang) => {
                     mid: monitorId,
                     oldName: filename,
                     name: finalFilename,
+                    automated: !!automated,
                     success: !!data.ok,
                 },'GRP_'+groupKey);
                 resolve(data)

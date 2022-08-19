@@ -581,7 +581,8 @@ module.exports = (s,config,lang,app,io) => {
                                 targetAudioCodec: 'libopus',
                                 targetQuality: '-q:v 1 -q:a 1',
                                 targetExtension: 'webm',
-                                doSlowly: false
+                                doSlowly: false,
+                                automated: true,
                             }).then((encodeResponse) => {
                                 s.debugLog('Complete Automatic Compression',encodeResponse)
                             }).catch((err) => {
