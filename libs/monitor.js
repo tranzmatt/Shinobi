@@ -48,7 +48,8 @@ module.exports = function(s,config,lang){
         setPresetForCurrentPosition
     } = require('./control/ptz.js')(s,config,lang)
     const {
-        scanForOrphanedVideos
+        scanForOrphanedVideos,
+        reEncodeVideoAndBinOriginalAddToQueue,
     } = require('./video/utils.js')(s,config,lang)
     const {
         selectNodeForOperation,

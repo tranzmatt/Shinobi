@@ -123,6 +123,7 @@ module.exports = function(s,config,lang){
                   {
                      "name": "detail=auto_compress_videos",
                      "field": lang['Compress Completed Videos'],
+                     "description": lang.compressCompletedVideosFieldText,
                      "fieldType": "select",
                      "possible": [
                          {
