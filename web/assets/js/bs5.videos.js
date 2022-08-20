@@ -548,13 +548,13 @@ async function compressVideos(videos){
         await compressVideo(video)
     }
 }
-function getArchiveButtons(video){
-    return $(`[data-mid="${video.mid}"][data-ke="${video.ke}"][data-time="${video.time}"] .archive-video`)
+function getArchiveButtons(video,isFileBin){
+    return $(`[data-mid="${video.mid}"][data-ke="${video.ke}"][data-time="${video.time}"] .archive-${isFileBin ? `file` : 'video'}`)
 }
 var currentlyArchiving = {}
-function archiveVideo(video,unarchive){
+function archiveVideo(video,unarchive,isFileBin){
     return new Promise((resolve) => {
-        var videoEndpoint = getApiPrefix(`videos`) + '/' + video.mid + '/' + video.filename
+        var videoEndpoint = getApiPrefix(isFileBin ? `fileBin` : `videos`) + '/' + video.mid + '/' + (isFileBin ? video.name : video.filename)
         // var currentlyArchived = video.archive === 1
         if(currentlyArchiving[videoEndpoint]){
             resolve({ok: false})
@@ -563,7 +563,7 @@ function archiveVideo(video,unarchive){
         currentlyArchiving[videoEndpoint] = true
         $.getJSON(videoEndpoint + '/archive' + `${unarchive ? `?unarchive=1` : ''}`,function(data){
             if(data.ok){
-                var archiveButtons = getArchiveButtons(video)
+                var archiveButtons = getArchiveButtons(video,isFileBin)
                 var classToRemove = 'btn-default'
                 var classToAdd = 'btn-success status-archived'
                 var iconToRemove = 'fa-unlock-alt'

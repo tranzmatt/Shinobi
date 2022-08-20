@@ -4,7 +4,7 @@ $(document).ready(function(e){
     var dateSelector = theEnclosure.find('.date_selector')
     var fileBinDrawArea = $('#fileBin_draw_area')
     var fileBinPreviewArea = $('#fileBin_preview_area')
-    var loadedVideosInMemory = {};
+    var loadedFilesInMemory = {};
     function openFileBinView(monitorId,startDate,endDate){
         drawFileBinViewElements(monitorId,startDate,endDate)
     }
@@ -37,6 +37,10 @@ $(document).ready(function(e){
     monitorsList.change(function(){
         drawFileBinViewElements()
     })
+    function loadFileData(video){
+        delete(video.f)
+        loadedFilesInMemory[`${video.mid}${video.name}`] = video
+    }
     function drawFileBinViewElements(selectedMonitor,startDate,endDate){
         var dateRange = getSelectedTime(false)
         if(!startDate)startDate = dateRange.startDate
@@ -46,8 +50,11 @@ $(document).ready(function(e){
         var frameIconsHtml = ''
         var apiURL = getApiPrefix('fileBin') + '/' + selectedMonitor;
         var fileBinData = []
-        loadedVideosInMemory = {}
+        loadedFilesInMemory = {}
         $.getJSON(apiURL + '?' + queryString.join('&'),function(data){
+            $.each(data.files,function(n,file){
+                loadFileData(file)
+            })
             fileBinDrawArea.bootstrapTable('destroy')
             fileBinDrawArea.bootstrapTable({
                 pagination: true,
@@ -76,6 +83,7 @@ $(document).ready(function(e){
                 ],
                 data: data.files.map((file) => {
                     var href = getApiPrefix('fileBin') + '/' + selectedMonitor + '/' + file.name
+                    var isVideo = file.name.includes('.mp4') || file.name.includes('.webm')
                     return {
                         monitorName: `<b>${loadedMonitors[file.mid]?.name || file.mid}</b>`,
                         name: file.name,
@@ -86,8 +94,11 @@ $(document).ready(function(e){
                         `,
                         size: convertKbToHumanSize(file.size),
                         buttons: `
-                            <a class="btn btn-sm btn-primary" href="${href}" download title="${lang.Download}"><i class="fa fa-download"></i></a>
-                            ${file.details.video ? `<a class="btn btn-sm btn-primary preview-video" href="${href}" title="${lang.Play}"><i class="fa fa-play"></i></a>` : ``}
+                            <div class="row-info" data-mid="${file.mid}" data-ke="${file.ke}" data-time="${file.time}" data-name="${file.name}">
+                                <a class="btn btn-sm btn-primary" href="${href}" download title="${lang.Download}"><i class="fa fa-download"></i></a>
+                                ${isVideo ? `<a class="btn btn-sm btn-primary preview-video" href="${href}" title="${lang.Play}"><i class="fa fa-play"></i></a>` : ``}
+                                ${permissionCheck('video_delete',file.mid) ? `<a class="btn btn-sm btn-${file.archive === 1 ? `success status-archived` : `default`} archive-file" title="${lang.Archive}"><i class="fa fa-${file.archive === 1 ? `lock` : `unlock-alt`}"></i></a>` : ''}
+                            </div>
                         `,
                     }
                 })
@@ -96,6 +107,24 @@ $(document).ready(function(e){
     }
     function drawPreviewVideo(href){
         fileBinPreviewArea.html(`<video class="video_video" style="width:100%" autoplay controls preload loop src="${href}"></video>`)
+    }
+    function archiveFile(video,unarchive){
+        return archiveVideo(video,unarchive,true)
+    }
+    async function archiveFiles(videos){
+        for (let i = 0; i < videos.length; i++) {
+            var video = videos[i];
+            await archiveFile(video,false)
+        }
+    }
+    function unarchiveFile(video){
+        return archiveFile(video,true)
+    }
+    async function unarchiveFiles(videos){
+        for (let i = 0; i < videos.length; i++) {
+            var video = videos[i];
+            await unarchiveFile(video)
+        }
     }
     $('body')
     .on('click','.open-fileBin-video',function(e){
@@ -110,6 +139,21 @@ $(document).ready(function(e){
         e.preventDefault()
         var href = $(this).attr('href')
         drawPreviewVideo(href)
+        return false;
+    })
+    .on('click','.archive-file',function(e){
+        e.preventDefault()
+        var el = $(this).parents('[data-mid]')
+        var monitorId = el.attr('data-mid')
+        var filename = el.attr('data-name')
+        var unarchive = $(this).hasClass('status-archived')
+        var file = loadedFilesInMemory[`${monitorId}${filename}`]
+        if(!file)return console.log(`No File`,monitorId,filename,unarchive,file);
+        if(unarchive){
+            unarchiveFile(file)
+        }else{
+            archiveFile(file)
+        }
         return false;
     })
     addOnTabOpen('fileBinView', function () {
