@@ -479,6 +479,61 @@ module.exports = (s,config,lang) => {
             }
         })
     }
+    function archiveVideo(video,unarchive){
+        return new Promise((resolve) => {
+            s.knexQuery({
+                action: "update",
+                table: 'Videos',
+                update: {
+                    archive: unarchive ? '0' : 1
+                },
+                where: {
+                    ke: video.ke,
+                    mid: video.mid,
+                    time: video.time,
+                }
+            },function(errVideos){
+                s.knexQuery({
+                    action: "update",
+                    table: 'Events',
+                    update: {
+                        archive: unarchive ? '0' : 1
+                    },
+                    where: [
+                        ['ke','=',video.ke],
+                        ['mid','=',video.mid],
+                        ['time','>=',video.time],
+                        ['time','<=',video.end],
+                    ]
+                },function(errEvents){
+                    s.knexQuery({
+                        action: "update",
+                        table: 'Timelapse Frames',
+                        update: {
+                            archive: unarchive ? '0' : 1
+                        },
+                        limit: 1,
+                        where: [
+                            ['ke','=',video.ke],
+                            ['mid','=',video.mid],
+                            ['time','>=',video.time],
+                            ['time','<=',video.end],
+                        ]
+                    },function(errTimelapseFrames){
+                        resolve({
+                            ok: !errVideos && !errEvents && !errTimelapseFrames,
+                            err: errVideos || errEvents || errTimelapseFrames ? {
+                                errVideos,
+                                errEvents,
+                                errTimelapseFrames,
+                            } : undefined,
+                            archived: !unarchive
+                        })
+                    })
+                })
+            })
+        })
+    }
     return {
         reEncodeVideoAndReplace,
         stitchMp4Files,
@@ -488,5 +543,6 @@ module.exports = (s,config,lang) => {
         getVideosBasedOnTagFoundInMatrixOfAssociatedEvent,
         reEncodeVideoAndBinOriginal,
         reEncodeVideoAndBinOriginalAddToQueue,
+        archiveVideo,
     }
 }

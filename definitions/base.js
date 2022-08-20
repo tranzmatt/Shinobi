@@ -8223,6 +8223,10 @@ module.exports = function(s,config,lang){
                               "value": "local"
                            },
                            {
+                               "name": lang.Archive,
+                              "value": "archive"
+                           },
+                           {
                               "name": lang.Cloud,
                               "value": "cloud"
                            },

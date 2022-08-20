@@ -31,6 +31,7 @@ module.exports = function(s,config,lang,app,io){
         destroySubstreamProcess,
     } = require('./monitor/utils.js')(s,config,lang)
     const {
+        archiveVideo,
         reEncodeVideoAndReplace,
         reEncodeVideoAndBinOriginalAddToQueue,
         getVideosBasedOnTagFoundInMatrixOfAssociatedEvent,
@@ -1141,6 +1142,7 @@ module.exports = function(s,config,lang,app,io){
                     endTimeOperator: req.query.endOperator,
                     noLimit: req.query.noLimit,
                     limit: req.query.limit,
+                    archived: req.query.archived,
                     endIsStartTo: true,
                     parseRowDetails: true,
                     noFormat: true,
@@ -1811,6 +1813,13 @@ module.exports = function(s,config,lang,app,io){
                     const originalFileName = `${s.formattedTime(r.time)+'.'+r.ext}`
                     var details = s.parseJSON(r.details) || {}
                     switch(req.params.mode){
+                        case'archive':
+                            response.ok = true
+                            const unarchive = s.getPostData(req,'unarchive') == '1';
+                            const archiveResponse = await archiveVideo(r,unarchive)
+                            response.ok = archiveResponse.ok
+                            response.archived = archiveResponse.archived
+                        break;
                         case'fix':
                             await reEncodeVideoAndReplace(r)
                         break;

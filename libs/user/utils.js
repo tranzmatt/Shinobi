@@ -221,7 +221,7 @@ module.exports = (s,config,lang) => {
                         where: [
                             ['ke','=',groupKey],
                             ['status','!=','0'],
-                            ['details','NOT LIKE',`%"archived":"1"%`],
+                            ['archive','!=',`1`],
                             ['details','LIKE',`%"dir":"${storage.value}"%`],
                         ],
                         orderBy: ['time','asc'],
@@ -266,7 +266,7 @@ module.exports = (s,config,lang) => {
                 where: [
                     ['ke','=',groupKey],
                     ['status','!=','0'],
-                    ['details','NOT LIKE',`%"archived":"1"%`],
+                    ['archive','!=',`1`],
                     ['details','NOT LIKE',`%"dir"%`],
                 ],
                 orderBy: ['time','asc'],
@@ -298,7 +298,7 @@ module.exports = (s,config,lang) => {
                 table: "Timelapse Frames",
                 where: [
                     ['ke','=',groupKey],
-                    ['details','NOT LIKE',`%"archived":"1"%`],
+                    ['archive','!=',`1`],
                 ],
                 orderBy: ['time','asc'],
                 limit: 3
@@ -326,6 +326,7 @@ module.exports = (s,config,lang) => {
                     table: "Files",
                     where: [
                         ['ke','=',groupKey],
+                        ['archive','!=',`1`],
                     ],
                     orderBy: ['time','asc'],
                     limit: 1
@@ -408,7 +409,6 @@ module.exports = (s,config,lang) => {
                 table: "Cloud Timelapse Frames",
                 where: [
                     ['ke','=',groupKey],
-                    ['details','NOT LIKE',`%"archived":"1"%`],
                 ],
                 orderBy: ['time','asc'],
                 limit: 3

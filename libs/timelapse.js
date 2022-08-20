@@ -350,7 +350,6 @@ module.exports = function(s,config,lang,app,io){
             const timeNow = new Date()
             const fileStats = await fs.promises.stat(finalMp4OutputLocation)
             const details = {
-                video: true,
                 start: frames[0].time,
                 end: frames[frames.length - 1].time,
             }

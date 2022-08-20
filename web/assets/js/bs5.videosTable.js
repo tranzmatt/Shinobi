@@ -32,8 +32,9 @@ $(document).ready(function(e){
             const monitorId = el.attr('data-mid')
             const startDate = el.attr('data-time')
             const endDate = el.attr('data-end')
+            const imgBlock = el.find('.video-thumbnail-img-block')
             const href = await getSnapshotFromVideoTimeFrame(monitorId,startDate,endDate)
-            imgEl.innerHTML = href ? `<img class="pop-image cursor-pointer" src="${href}">` : ''
+            imgBlock.html(`<img class="pop-image cursor-pointer" src="${href}">`)
         })
     }
     function openVideosTableView(monitorId,startDate,endDate){
@@ -80,6 +81,7 @@ $(document).ready(function(e){
         var startDate = dateRange.startDate
         var endDate = dateRange.endDate
         var monitorId = monitorsList.val()
+        var wantsArchivedVideo = getVideoSetSelected() === 'archive'
         var frameIconsHtml = ''
         if(!usePreloadedData){
             loadedVideosTable = (await getVideos({
@@ -87,6 +89,7 @@ $(document).ready(function(e){
                 startDate,
                 endDate,
                 searchQuery,
+                archived: wantsArchivedVideo,
                 customVideoSet: wantCloudVideos() ? 'cloudVideos' : null,
             })).videos;
             $.each(loadedVideosTable,function(n,v){
@@ -140,7 +143,7 @@ $(document).ready(function(e){
                     title: lang['Objects Found']
                   },
                   {
-                    field: 'ext',
+                    field: 'tags',
                     title: ''
                   },
                   {
@@ -156,21 +159,34 @@ $(document).ready(function(e){
                 var href = getFullOrigin(true) + file.href
                 var loadedMonitor = loadedMonitors[file.mid]
                 return {
-                    image: `<div class="video-thumbnail" data-mid="${file.mid}" data-ke="${file.ke}" data-time="${file.time}" data-end="${file.end}"></div>`,
+                    image: `<div class="video-thumbnail" data-mid="${file.mid}" data-ke="${file.ke}" data-time="${file.time}" data-end="${file.end}" data-filename="${file.filename}">
+                        <div class="video-thumbnail-img-block">
+                        </div>
+                        <div class="video-thumbnail-buttons d-flex">
+                            <a class="video-thumbnail-button-cell open-snapshot p-3">
+                                <i class="fa fa-camera"></i>
+                            </a>
+                            <a class="video-thumbnail-button-cell preview-video p-3" href="${href}" title="${lang.Play}">
+                                <i class="fa fa-play"></i>
+                            </a>
+                        </div>
+                    </div>`,
                     Monitor: loadedMonitor && loadedMonitor.name ? loadedMonitor.name : file.mid,
                     mid: file.mid,
                     time: formattedTime(file.time, 'DD-MM-YYYY hh:mm:ss AA'),
                     end: formattedTime(file.end, 'DD-MM-YYYY hh:mm:ss AA'),
-                    ext: file.ext,
+                    tags: `
+                        <span class="badge badge-${file.ext ==='webm' ? `primary` : 'danger'}">${file.ext}</span>
+                    `,
                     objects: file.objects,
                     size: convertKbToHumanSize(file.size),
                     buttons: `
                     <div class="row-info" data-mid="${file.mid}" data-ke="${file.ke}" data-time="${file.time}" data-filename="${file.filename}">
                         <a class="btn btn-sm btn-primary" href="${href}" download title="${lang.Download}"><i class="fa fa-download"></i></a>
-                        <a class="btn btn-sm btn-primary preview-video" href="${href}" title="${lang.Play}"><i class="fa fa-play"></i></a>
                         <a class="btn btn-sm btn-default open-video" href="${href}" title="${lang.Play}"><i class="fa fa-play"></i></a>
                         ${permissionCheck('video_delete',file.mid) ? `<a class="btn btn-sm btn-danger delete-video" href="${href}" title="${lang.Delete}"><i class="fa fa-trash-o"></i></a>` : ''}
                         ${permissionCheck('video_delete',file.mid) ? `<a class="btn btn-sm btn-warning compress-video" href="${href}" title="${lang.Compress}"><i class="fa fa-compress"></i></a>` : ''}
+                        ${permissionCheck('video_delete',file.mid) ? `<a class="btn btn-sm btn-${file.archive === 1 ? `success status-archived` : `default`} archive-video" title="${lang.Archive}"><i class="fa fa-${file.archive === 1 ? `lock` : `unlock-alt`}"></i></a>` : ''}
                     </div>
                     `,
                 }
@@ -195,8 +211,11 @@ $(document).ready(function(e){
         })
         return rowsSelected
     }
+    function getVideoSetSelected(){
+        return cloudVideoCheckSwitch.val()
+    }
     function wantCloudVideos(){
-        const isChecked = cloudVideoCheckSwitch.val() === 'cloud'
+        const isChecked = getVideoSetSelected() === 'cloud'
         return isChecked
     }
     function drawCompressedVideoProgressBar(data){
@@ -255,6 +274,11 @@ $(document).ready(function(e){
         drawPreviewVideo(href)
         return false;
     })
+    .on('click','.open-snapshot',function(e){
+        e.preventDefault()
+        var href = $(this).parents('.video-thumbnail-img-block').find('img').click()
+        return false;
+    })
     .on('click','.delete-selected-videos',function(e){
         e.preventDefault()
         var videos = getSelectedRows()
@@ -287,7 +311,26 @@ $(document).ready(function(e){
             },
             clickCallback: function(){
                 compressVideos(videos).then(() => {
-                    console.log(`Done Deleting Rows!`)
+                    console.log(`Done Sending Compression Request!`)
+                })
+            }
+        });
+        return false;
+    })
+    .on('click','.archive-selected-videos',function(e){
+        e.preventDefault()
+        var videos = getSelectedRows()
+        if(videos.length === 0)return;
+        $.confirm.create({
+            title: lang["Archive Videos"],
+            body: `${lang.ArchiveTheseMsg}`,
+            clickOptions: {
+                title: '<i class="fa fa-lock"></i> ' + lang.Archive,
+                class: 'btn-primary btn-sm'
+            },
+            clickCallback: function(){
+                archiveVideos(videos).then(() => {
+                    console.log(`Done Archiving Rows!`)
                 })
             }
         });

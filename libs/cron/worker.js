@@ -142,7 +142,7 @@ function beginProcessing(){
                         const whereQuery = [
                             ['ke','=',v.ke],
                             ['status','!=',"0"],
-                            ['details','NOT LIKE','%"archived":"1"%'],
+                            ['archive','!=',`1`],
                         ]
                         b.where.forEach(function(condition){
                             if(condition.p1 === 'ke'){condition.p3 = v.ke}
@@ -203,6 +203,7 @@ function beginProcessing(){
         const groupKey = v.ke;
         const whereQuery = [
             ['ke','=',v.ke],
+            ['archive','!=',`1`],
             ['time','<', sqlDate(days+' DAY')],
             addedQueries
         ]
@@ -261,6 +262,7 @@ function beginProcessing(){
                 table: "Monitors",
                 where: [
                     ['ke','=',v.ke],
+                    ['archive','!=',`1`],
                 ]
             })
             const monitorRows = monitorsResponse.rows
@@ -314,7 +316,7 @@ function beginProcessing(){
                     where: [
                         ['ke','=',v.ke],
                         ['status','!=','0'],
-                        ['details','NOT LIKE','%"archived":"1"%'],
+                        ['archive','!=',`1`],
                         ['time','<', sqlDate('10 MINUTE')],
                     ]
                 },(err,evs) => {
@@ -384,6 +386,7 @@ function beginProcessing(){
             const groupKey = v.ke;
             const whereQuery = [
                 ['ke','=',v.ke],
+                ['archive','!=',`1`],
                 ['time','<', sqlDate(daysOldForDeletion+' DAY')],
             ]
             const selectResponse = await knexQueryPromise({
@@ -455,6 +458,7 @@ function beginProcessing(){
                     table: "Events",
                     where: [
                         ['ke','=',v.ke],
+                        ['archive','!=',`1`],
                         ['time','<', sqlDate(daysOldForDeletion + ' DAY')],
                     ]
                 },(err,rrr) => {
@@ -505,6 +509,7 @@ function beginProcessing(){
                     table: "Files",
                     where: [
                         ['ke','=',v.ke],
+                        ['archive','!=',`1`],
                         ['time','<', sqlDate(daysOldForDeletion + ' DAY')],
                     ]
                 },(err,files) => {
