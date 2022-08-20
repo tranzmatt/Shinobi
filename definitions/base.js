@@ -4141,6 +4141,24 @@ module.exports = function(s,config,lang){
                       ]
                    },
                    {
+                      "field": lang['Compress Completed Videos'],
+                      "default": "0",
+                      "fieldType": "select",
+                      "attribute": `copy="field=detail=auto_compress_videos"`,
+                      "form-group-class": "h_copy_settings_input h_copy_settings_1",
+                      "form-group-class-pre-layer": "col-md-6",
+                      "possible": [
+                         {
+                            "name": lang.No,
+                            "value": "0"
+                         },
+                         {
+                            "name": lang.Yes,
+                            "value": "1"
+                         }
+                      ]
+                   },
+                   {
                       "field": lang['Stream Channels'],
                       "description": "",
                       "default": "0",
