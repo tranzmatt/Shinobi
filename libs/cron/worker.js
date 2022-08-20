@@ -262,7 +262,6 @@ function beginProcessing(){
                 table: "Monitors",
                 where: [
                     ['ke','=',v.ke],
-                    ['archive','!=',`1`],
                 ]
             })
             const monitorRows = monitorsResponse.rows
