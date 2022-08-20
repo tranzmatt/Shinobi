@@ -551,10 +551,16 @@ async function compressVideos(videos){
 function getArchiveButtons(video){
     return $(`[data-mid="${video.mid}"][data-ke="${video.ke}"][data-time="${video.time}"] .archive-video`)
 }
+var currentlyArchiving = {}
 function archiveVideo(video,unarchive){
     return new Promise((resolve) => {
         var videoEndpoint = getApiPrefix(`videos`) + '/' + video.mid + '/' + video.filename
         // var currentlyArchived = video.archive === 1
+        if(currentlyArchiving[videoEndpoint]){
+            resolve({ok: false})
+            return;
+        }
+        currentlyArchiving[videoEndpoint] = true
         $.getJSON(videoEndpoint + '/archive' + `${unarchive ? `?unarchive=1` : ''}`,function(data){
             if(data.ok){
                 var archiveButtons = getArchiveButtons(video)
@@ -563,7 +569,7 @@ function archiveVideo(video,unarchive){
                 var iconToRemove = 'fa-unlock-alt'
                 var iconToAdd = 'fa-lock'
                 var elTitle = `${lang.Unarchive}`
-                if(unarchive){
+                if(!data.archived){
                     console.log('Video Unarchived',unarchive)
                     classToRemove = 'btn-success status-archived'
                     classToAdd = 'btn-default'
@@ -576,9 +582,11 @@ function archiveVideo(video,unarchive){
                 archiveButtons.removeClass(classToRemove).addClass(classToAdd).attr('title',elTitle)
                 archiveButtons.find('i').removeClass(iconToRemove).addClass(iconToAdd)
                 archiveButtons.find('span').text(elTitle)
+                video.archive = data.archived ? 1 : 0
             }else{
                 console.log('Video Archive status unchanged',data,videoEndpoint)
             }
+            delete(currentlyArchiving[videoEndpoint])
             resolve(data)
         })
     })

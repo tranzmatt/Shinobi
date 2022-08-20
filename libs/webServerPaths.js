@@ -1814,7 +1814,7 @@ module.exports = function(s,config,lang,app,io){
                     switch(req.params.mode){
                         case'archive':
                             response.ok = true
-                            const unarchive = s.getPostData(req,'unarchive') === '1';
+                            const unarchive = s.getPostData(req,'unarchive') == '1';
                             const archiveResponse = await archiveVideo(r,unarchive)
                             response.ok = archiveResponse.ok
                             response.archived = archiveResponse.archived

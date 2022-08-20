@@ -326,6 +326,7 @@ module.exports = (s,config,lang) => {
                     table: "Files",
                     where: [
                         ['ke','=',groupKey],
+                        ['archive','!=',`1`],
                     ],
                     orderBy: ['time','asc'],
                     limit: 1
@@ -408,7 +409,6 @@ module.exports = (s,config,lang) => {
                 table: "Cloud Timelapse Frames",
                 where: [
                     ['ke','=',groupKey],
-                    ['archive','!=',`1`],
                 ],
                 orderBy: ['time','asc'],
                 limit: 3
