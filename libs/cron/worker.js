@@ -203,6 +203,7 @@ function beginProcessing(){
         const groupKey = v.ke;
         const whereQuery = [
             ['ke','=',v.ke],
+            ['archive','!=',`1`],
             ['time','<', sqlDate(days+' DAY')],
             addedQueries
         ]
@@ -261,6 +262,7 @@ function beginProcessing(){
                 table: "Monitors",
                 where: [
                     ['ke','=',v.ke],
+                    ['archive','!=',`1`],
                 ]
             })
             const monitorRows = monitorsResponse.rows
@@ -384,6 +386,7 @@ function beginProcessing(){
             const groupKey = v.ke;
             const whereQuery = [
                 ['ke','=',v.ke],
+                ['archive','!=',`1`],
                 ['time','<', sqlDate(daysOldForDeletion+' DAY')],
             ]
             const selectResponse = await knexQueryPromise({
@@ -455,6 +458,7 @@ function beginProcessing(){
                     table: "Events",
                     where: [
                         ['ke','=',v.ke],
+                        ['archive','!=',`1`],
                         ['time','<', sqlDate(daysOldForDeletion + ' DAY')],
                     ]
                 },(err,rrr) => {
@@ -505,6 +509,7 @@ function beginProcessing(){
                     table: "Files",
                     where: [
                         ['ke','=',v.ke],
+                        ['archive','!=',`1`],
                         ['time','<', sqlDate(daysOldForDeletion + ' DAY')],
                     ]
                 },(err,files) => {
