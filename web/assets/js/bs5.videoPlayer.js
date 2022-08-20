@@ -34,7 +34,7 @@ $(document).ready(function(){
             })
             eventMatrixHtml += `</div>`
         }
-        var baseHtml = `<main class="container page-tab tab-videoPlayer" id="tab-${newTabId}" video-id="${video.mid}${video.time}" data-time="${video.time}" data-mid="${video.mid}">
+        var baseHtml = `<main class="container page-tab tab-videoPlayer" id="tab-${newTabId}" video-id="${video.mid}${video.time}" data-time="${video.time}" data-mid="${video.mid}" data-ke="${video.ke}">
             <div class="my-3 ${definitions.Theme.isDark ? 'bg-dark text-white' : 'bg-light text-dark'} rounded shadow-sm">
                 <div class="p-3">
                     <h6 class="video-title border-bottom-dotted border-bottom-dark pb-2 mb-0">${tabLabel}</h6>
@@ -60,6 +60,7 @@ $(document).ready(function(){
                                   <div class="btn-group btn-group-justified">
                                         <a class="btn btn-sm btn-success" download href="${videoUrl}"><i class="fa fa-download"></i> ${lang.Download}</a>
                                         ${permissionCheck('video_delete',video.mid) ? `<a class="btn btn-sm btn-danger delete-video"><i class="fa fa-trash-o"></i> ${lang.Delete}</a>` : ''}
+                                        ${permissionCheck('video_delete',video.mid) ? `<a class="btn btn-sm btn-${video.archive === 1 ? `success status-archived` : `default`} archive-video" title="${lang.Archive}"><i class="fa fa-${video.archive === 1 ? `lock` : `unlock-alt`}"></i> <span>${video.archive === 1 ? lang.Unarchive : lang.Archive}</span></a>` : ''}
                                   </div>
                               </div>
                           </div>

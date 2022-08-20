@@ -213,7 +213,7 @@ module.exports = function(s,config){
            whereQuery.push(monitorRestrictions)
        }
        if(options.archived){
-           whereQuery.push(['details','LIKE',`%"archived":"1"%`])
+           whereQuery.push(['archive','=',`1`])
        }
        if(options.filename){
            whereQuery.push(['filename','=',options.filename])

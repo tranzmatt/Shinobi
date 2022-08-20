@@ -176,6 +176,21 @@ module.exports = function(s,config){
         }catch(err){
             console.log(err)
         }
+        try{
+            s.databaseEngine.schema.table('Videos', table => {
+                table.tinyint('archive',1).defaultTo(0)
+                table.string('saveDir',255).defaultTo('')
+            }).then(() => {
+                console.log(`objects added to Videos table`)
+            }).catch((err) => {
+                if(err && err.code !== 'ER_DUP_FIELDNAME'){
+                    console.log('error')
+                    console.log(err)
+                }
+            })
+        }catch(err){
+            console.log(err)
+        }
         delete(s.preQueries)
     }
 }

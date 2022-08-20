@@ -142,7 +142,7 @@ function beginProcessing(){
                         const whereQuery = [
                             ['ke','=',v.ke],
                             ['status','!=',"0"],
-                            ['details','NOT LIKE','%"archived":"1"%'],
+                            ['archive','!=',`1`],
                         ]
                         b.where.forEach(function(condition){
                             if(condition.p1 === 'ke'){condition.p3 = v.ke}
@@ -314,7 +314,7 @@ function beginProcessing(){
                     where: [
                         ['ke','=',v.ke],
                         ['status','!=','0'],
-                        ['details','NOT LIKE','%"archived":"1"%'],
+                        ['archive','!=',`1`],
                         ['time','<', sqlDate('10 MINUTE')],
                     ]
                 },(err,evs) => {

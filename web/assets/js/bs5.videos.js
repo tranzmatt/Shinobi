@@ -548,6 +548,56 @@ async function compressVideos(videos){
         await compressVideo(video)
     }
 }
+function getArchiveButtons(video){
+    return $(`[data-mid="${video.mid}"][data-ke="${video.ke}"][data-time="${video.time}"] .archive-video`)
+}
+function archiveVideo(video,unarchive){
+    return new Promise((resolve) => {
+        var videoEndpoint = getApiPrefix(`videos`) + '/' + video.mid + '/' + video.filename
+        // var currentlyArchived = video.archive === 1
+        $.getJSON(videoEndpoint + '/archive' + `${unarchive ? `?unarchive=1` : ''}`,function(data){
+            if(data.ok){
+                var archiveButtons = getArchiveButtons(video)
+                var classToRemove = 'btn-default'
+                var classToAdd = 'btn-success status-archived'
+                var iconToRemove = 'fa-unlock-alt'
+                var iconToAdd = 'fa-lock'
+                var elTitle = `${lang.Unarchive}`
+                if(unarchive){
+                    console.log('Video Unarchived',unarchive)
+                    classToRemove = 'btn-success status-archived'
+                    classToAdd = 'btn-default'
+                    iconToRemove = 'fa-lock'
+                    iconToAdd = 'fa-unlock-alt'
+                    elTitle = `${lang.Archive}`
+                }else{
+                    console.log('Video Archived',unarchive)
+                }
+                archiveButtons.removeClass(classToRemove).addClass(classToAdd).attr('title',elTitle)
+                archiveButtons.find('i').removeClass(iconToRemove).addClass(iconToAdd)
+                archiveButtons.find('span').text(elTitle)
+            }else{
+                console.log('Video Archive status unchanged',data,videoEndpoint)
+            }
+            resolve(data)
+        })
+    })
+}
+async function archiveVideos(videos){
+    for (let i = 0; i < videos.length; i++) {
+        var video = videos[i];
+        await archiveVideo(video)
+    }
+}
+function unarchiveVideo(video){
+    return archiveVideo(video,true)
+}
+async function unarchiveVideos(videos){
+    for (let i = 0; i < videos.length; i++) {
+        var video = videos[i];
+        await unarchiveVideo(video)
+    }
+}
 onWebSocketEvent(function(d){
     switch(d.f){
         case'video_delete':
@@ -639,6 +689,33 @@ $(document).ready(function(){
                 compressVideo(video)
             }
         });
+        return false;
+    })
+    .on('click','.archive-video',function(e){
+        e.preventDefault()
+        var el = $(this).parents('[data-mid]')
+        var monitorId = el.attr('data-mid')
+        var videoTime = el.attr('data-time')
+        var unarchive = $(this).hasClass('status-archived')
+        var video = loadedVideosInMemory[`${monitorId}${videoTime}`]
+        var ext = video.filename.split('.')
+        ext = ext[ext.length - 1]
+        var videoEndpoint = getApiPrefix(`videos`) + '/' + video.mid + '/' + video.filename
+        if(unarchive){
+            unarchiveVideo(video)
+        }else{
+            // $.confirm.create({
+            //     title: lang["Archive"] + ' : ' + video.filename,
+            //     body: `${lang.ArchiveVideoMsg}<br><br><div class="row"><video class="video_video" autoplay loop controls><source src="${videoEndpoint}" type="video/${ext}"></video></div>`,
+            //     clickOptions: {
+            //         title: '<i class="fa fa-lock"></i> ' + lang.Archive,
+            //         class: 'btn-primary btn-sm'
+            //     },
+            //     clickCallback: function(){
+                    archiveVideo(video)
+            //     }
+            // });
+        }
         return false;
     })
     .on('click','.fix-video',function(e){

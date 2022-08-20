@@ -479,6 +479,28 @@ module.exports = (s,config,lang) => {
             }
         })
     }
+    function archiveVideo(video,unarchive){
+        return new Promise((resolve) => {
+            s.knexQuery({
+                action: "update",
+                table: 'Videos',
+                update: {
+                    archive: unarchive ? '0' : 1
+                },
+                where: {
+                    ke: video.ke,
+                    mid: video.mid,
+                    time: video.time,
+                }
+            },function(err){
+                resolve({
+                    ok: !err,
+                    err: err,
+                    archived: !unarchive
+                })
+            })
+        })
+    }
     return {
         reEncodeVideoAndReplace,
         stitchMp4Files,
@@ -488,5 +510,6 @@ module.exports = (s,config,lang) => {
         getVideosBasedOnTagFoundInMatrixOfAssociatedEvent,
         reEncodeVideoAndBinOriginal,
         reEncodeVideoAndBinOriginalAddToQueue,
+        archiveVideo,
     }
 }
