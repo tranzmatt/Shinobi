@@ -210,6 +210,7 @@ module.exports = function(s,config,lang,app,io){
                 startTimeOperator: req.query.startOperator,
                 endTimeOperator: req.query.endOperator,
                 limit: req.query.limit,
+                archived: req.query.archived,
                 endIsStartTo: true,
                 noFormat: true,
                 noCount: true,

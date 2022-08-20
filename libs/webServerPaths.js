@@ -1142,6 +1142,7 @@ module.exports = function(s,config,lang,app,io){
                     endTimeOperator: req.query.endOperator,
                     noLimit: req.query.noLimit,
                     limit: req.query.limit,
+                    archived: req.query.archived,
                     endIsStartTo: true,
                     parseRowDetails: true,
                     noFormat: true,

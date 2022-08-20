@@ -441,6 +441,7 @@ function getVideos(options,callback){
         var searchQuery = options.searchQuery
         var requestQueries = []
         var monitorId = options.monitorId
+        var archived = options.archived
         var customVideoSet = options.customVideoSet
         var limit = options.limit || 300
         var eventStartTime
@@ -457,6 +458,9 @@ function getVideos(options,callback){
         }
         if(searchQuery){
             requestQueries.push(`search=${searchQuery}`)
+        }
+        if(archived){
+            requestQueries.push(`archived=1`)
         }
         $.getJSON(`${getApiPrefix(customVideoSet ? customVideoSet : searchQuery ? `videosByEventTag` : `videos`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`noLimit=1`]).join('&')}`,function(data){
             var videos = data.videos

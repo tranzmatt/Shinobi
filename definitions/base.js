@@ -7426,6 +7426,11 @@ module.exports = function(s,config,lang){
                   "class": "default toggle-live-grid-monitor-menu",
                   "icon": "bars"
                },
+               "Fullscreen": {
+                  "label": lang['Fullscreen'],
+                  "class": "default toggle-live-grid-monitor-fullscreen",
+                  "icon": "arrows-alt"
+               },
                "Monitor Settings": {
                   "label": lang['Monitor Settings'],
                   "class": "default open-monitor-settings",
@@ -8198,6 +8203,10 @@ module.exports = function(s,config,lang){
                            {
                                "name": lang.Local,
                               "value": "local"
+                           },
+                           {
+                               "name": lang.Archive,
+                              "value": "archive"
                            },
                            {
                               "name": lang.Cloud,

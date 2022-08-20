@@ -32,8 +32,9 @@ $(document).ready(function(e){
             const monitorId = el.attr('data-mid')
             const startDate = el.attr('data-time')
             const endDate = el.attr('data-end')
+            const imgBlock = el.find('.video-thumbnail-img-block')
             const href = await getSnapshotFromVideoTimeFrame(monitorId,startDate,endDate)
-            imgEl.innerHTML = href ? imgEl.innerHTML + `<img class="pop-image cursor-pointer" src="${href}">` : ''
+            imgBlock.html(`<img class="pop-image cursor-pointer" src="${href}">`)
         })
     }
     function openVideosTableView(monitorId,startDate,endDate){
@@ -80,6 +81,7 @@ $(document).ready(function(e){
         var startDate = dateRange.startDate
         var endDate = dateRange.endDate
         var monitorId = monitorsList.val()
+        var wantsArchivedVideo = getVideoSetSelected() === 'archive'
         var frameIconsHtml = ''
         if(!usePreloadedData){
             loadedVideosTable = (await getVideos({
@@ -87,6 +89,7 @@ $(document).ready(function(e){
                 startDate,
                 endDate,
                 searchQuery,
+                archived: wantsArchivedVideo,
                 customVideoSet: wantCloudVideos() ? 'cloudVideos' : null,
             })).videos;
             $.each(loadedVideosTable,function(n,v){
@@ -157,6 +160,8 @@ $(document).ready(function(e){
                 var loadedMonitor = loadedMonitors[file.mid]
                 return {
                     image: `<div class="video-thumbnail" data-mid="${file.mid}" data-ke="${file.ke}" data-time="${file.time}" data-end="${file.end}" data-filename="${file.filename}">
+                        <div class="video-thumbnail-img-block">
+                        </div>
                         <div class="video-thumbnail-buttons d-flex">
                             <a class="video-thumbnail-button-cell open-snapshot p-3">
                                 <i class="fa fa-camera"></i>
@@ -206,8 +211,11 @@ $(document).ready(function(e){
         })
         return rowsSelected
     }
+    function getVideoSetSelected(){
+        return cloudVideoCheckSwitch.val()
+    }
     function wantCloudVideos(){
-        const isChecked = cloudVideoCheckSwitch.val() === 'cloud'
+        const isChecked = getVideoSetSelected() === 'cloud'
         return isChecked
     }
     function drawCompressedVideoProgressBar(data){
@@ -268,7 +276,7 @@ $(document).ready(function(e){
     })
     .on('click','.open-snapshot',function(e){
         e.preventDefault()
-        var href = $(this).parents('.video-thumbnail').find('img').click()
+        var href = $(this).parents('.video-thumbnail-img-block').find('img').click()
         return false;
     })
     .on('click','.delete-selected-videos',function(e){
