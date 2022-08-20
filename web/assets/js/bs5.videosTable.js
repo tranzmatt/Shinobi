@@ -276,7 +276,7 @@ $(document).ready(function(e){
     })
     .on('click','.open-snapshot',function(e){
         e.preventDefault()
-        var href = $(this).parents('.video-thumbnail-img-block').find('img').click()
+        var href = $(this).parents('.video-thumbnail').find('img').click()
         return false;
     })
     .on('click','.delete-selected-videos',function(e){

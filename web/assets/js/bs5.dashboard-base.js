@@ -920,6 +920,9 @@ function onDashboardReadyExecute(theAction){
         theAction()
     })
 }
+function popImage(imageSrc){
+    $('body').append(`<div class="popped-image"><img src="${imageSrc}"></div>`)
+}
 $(document).ready(function(){
     loadMonitorsIntoMemory(function(data){
         setInterfaceCounts(data)
@@ -935,7 +938,7 @@ $(document).ready(function(){
     // })
     .on('click','.pop-image',function(){
         var imageSrc = $(this).attr('src')
-        $('body').append(`<div class="popped-image"><img src="${imageSrc}"></div>`)
+        popImage(imageSrc)
     })
     .on('click','.popped-image',function(){
         $(this).remove()
