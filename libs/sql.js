@@ -163,62 +163,41 @@ module.exports = function(s,config){
             console.log(err)
         }
         try{
-            s.databaseEngine.schema.table('Videos', table => {
+            await s.databaseEngine.schema.table('Videos', table => {
                 table.string('objects')
-            }).then(() => {
-                console.log(`objects added to Videos table`)
-            }).catch((err) => {
-                if(err && err.code !== 'ER_DUP_FIELDNAME'){
-                    console.log('error')
-                    console.log(err)
-                }
             })
         }catch(err){
-            console.log(err)
+            if(err && err.code !== 'ER_DUP_FIELDNAME'){
+                s.debugLog(err)
+            }
         }
         try{
-            s.databaseEngine.schema.table('Videos', table => {
+            await s.databaseEngine.schema.table('Monitors', table => {
+                table.string('saveDir',255).defaultTo('')
+            })
+        }catch(err){
+            if(err && err.code !== 'ER_DUP_FIELDNAME'){
+                s.debugLog(err)
+            }
+        }
+        try{
+            await s.databaseEngine.schema.table('Timelapse Frames', table => {
                 table.tinyint('archive',1).defaultTo(0)
                 table.string('saveDir',255).defaultTo('')
-            }).then(() => {
-                console.log(`archive and saveDir added to Videos table`)
-            }).catch((err) => {
-                if(err && err.code !== 'ER_DUP_FIELDNAME'){
-                    console.log('error')
-                    console.log(err)
-                }
             })
         }catch(err){
-            console.log(err)
+            if(err && err.code !== 'ER_DUP_FIELDNAME'){
+                s.debugLog(err)
+            }
         }
         try{
-            s.databaseEngine.schema.table('Timelapse Frames', table => {
+            await s.databaseEngine.schema.table('Events', table => {
                 table.tinyint('archive',1).defaultTo(0)
-                table.string('saveDir',255).defaultTo('')
-            }).then(() => {
-                console.log(`archive and saveDir added to Timelapse Frames table`)
-            }).catch((err) => {
-                if(err && err.code !== 'ER_DUP_FIELDNAME'){
-                    console.log('error')
-                    console.log(err)
-                }
             })
         }catch(err){
-            console.log(err)
-        }
-        try{
-            s.databaseEngine.schema.table('Events', table => {
-                table.tinyint('archive',1).defaultTo(0)
-            }).then(() => {
-                console.log(`archive added to Events table`)
-            }).catch((err) => {
-                if(err && err.code !== 'ER_DUP_FIELDNAME'){
-                    console.log('error')
-                    console.log(err)
-                }
-            })
-        }catch(err){
-            console.log(err)
+            if(err && err.code !== 'ER_DUP_FIELDNAME'){
+                s.debugLog(err)
+            }
         }
         try{
             s.databaseEngine.schema.table('Files', table => {
