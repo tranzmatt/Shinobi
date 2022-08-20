@@ -163,11 +163,34 @@ module.exports = function(s,config,lang,app,io){
             })
         })
     }
+    function archiveFileBinEntry(file,unarchive){
+        return new Promise((resolve) => {
+            s.knexQuery({
+                action: "update",
+                table: 'Files',
+                update: {
+                    archive: unarchive ? '0' : 1
+                },
+                where: {
+                    ke: file.ke,
+                    mid: file.mid,
+                    name: file.name,
+                }
+            },function(err){
+                resolve({
+                    ok: !err,
+                    err: err,
+                    archived: !unarchive
+                })
+            })
+        })
+    }
     s.getFileBinDirectory = getFileBinDirectory
     s.getFileBinEntry = getFileBinEntry
     s.insertFileBinEntry = insertFileBinEntry
     s.updateFileBinEntry = updateFileBinEntry
     s.deleteFileBinEntry = deleteFileBinEntry
+    s.archiveFileBinEntry = archiveFileBinEntry
     /**
     * API : Get fileBin file rows
      */
@@ -265,4 +288,67 @@ module.exports = function(s,config,lang,app,io){
             })
         },res,req);
     });
+    /**
+    * API : Modify fileBin File
+     */
+    app.get(config.webPaths.apiPrefix+':auth/fileBin/:ke/:id/:file/:mode', function (req,res){
+        let response = { ok: false };
+        res.setHeader('Content-Type', 'application/json');
+        s.auth(req.params,function(user){
+            const monitorId = req.params.id
+            const groupKey = req.params.ke
+            const filename = req.params.file
+            const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(user.details,monitorId)
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+            } = s.checkPermission(user);
+            if(
+                isRestrictedApiKey && apiKeyPermissions.delete_videos_disallowed ||
+                isRestricted && !monitorPermissions[`${monitorId}_video_delete`]
+            ){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
+                return
+            }
+            s.knexQuery({
+                action: "select",
+                columns: "*",
+                table: 'Files',
+                where: [
+                    ['ke','=',groupKey],
+                    ['mid','=',monitorId],
+                    ['name','=',filename]
+                ],
+                limit: 1
+            },async (err,r) => {
+                if(r && r[0]){
+                    const file = r[0];
+                    var details = s.parseJSON(r.details) || {}
+                    switch(req.params.mode){
+                        case'archive':
+                            response.ok = true
+                            const unarchive = s.getPostData(req,'unarchive') == '1';
+                            const archiveResponse = await archiveFileBinEntry(file,unarchive)
+                            response.ok = archiveResponse.ok
+                            response.archived = archiveResponse.archived
+                        break;
+                        case'delete':
+                            response.ok = true;
+                            await s.deleteFileBinEntry(file)
+                        break;
+                        default:
+                            response.msg = user.lang.modifyVideoText1;
+                        break;
+                    }
+                }else{
+                    response.msg = user.lang['No such file'];
+                }
+                s.closeJsonResponse(res,response);
+            })
+        },res,req);
+    })
 }
