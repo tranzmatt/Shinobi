@@ -199,7 +199,7 @@ module.exports = (s,config,lang,app,io) => {
             Object.keys(filters).forEach(function(key){
                 var conditionChain = {}
                 var dFilter = filters[key]
-                if(!dFilter || !dFilter.where || dFilter.enabled === '0')return;
+                if(dFilter.enabled === '0')return;
                 var numberOfOpenAndCloseBrackets = 0
                 dFilter.where.forEach(function(condition,place){
                     const hasOpenBracket = condition.openBracket === '1';
@@ -683,12 +683,13 @@ module.exports = (s,config,lang,app,io) => {
         if(!monitorConfig){
             return s.systemLog(lang['No Monitor Found, Ignoring Request'])
         }
+        const activeMonitor = s.group[d.ke].activeMonitors[d.id]
         const monitorDetails = monitorConfig.details
         s.onEventTriggerBeforeFilterExtensions.forEach(function(extender){
             extender(d,filter)
         })
         const eventDetails = d.details
-        const passedEventFilters = checkEventFilters(d,monitorDetails,filter)
+        const passedEventFilters = checkEventFilters(d,activeMonitor.details,filter)
         if(!passedEventFilters)return;
         const eventTime = new Date()
         if(
