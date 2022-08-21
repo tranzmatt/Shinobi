@@ -16,10 +16,10 @@ if(data.url.charAt(data.url.length - 1) !== '/'){
     data.url += '/'
 }
 %>
-<script src="<%=data.url%>libs/js/socket.io.min.js"></script>
-<script src="<%=data.url%>libs/js/poseidon.js"></script>
-<script src="<%=data.url%>libs/js/hls.min.js"></script>
-<script src="<%=data.url%>libs/js/flv.min.js"></script>
+<script src="<%=data.url%>assets/vendor/js/socket.io.min.js"></script>
+<script src="<%=data.url%>assets/vendor/js/poseidon.js"></script>
+<script src="<%=data.url%>assets/vendor/js/hls.min.js"></script>
+<script src="<%=data.url%>assets/vendor/js/flv.min.js"></script>
 <% if(data.addon){
     var ar={}
     decodeURI(data.addon).split('|').forEach(function(v){
@@ -31,7 +31,7 @@ if(data.url.charAt(data.url.length - 1) !== '/'){
     if(!ar.width){ar.width=640;}
     if(!ar.height){ar.height=480;}
     if(data.addon.indexOf('jquery')>-1){ %>
-<script src="<%=data.url%>libs/js/jquery.min.js"></script>
+<script src="<%=data.url%>assets/vendor/js/jquery.min.js"></script>
 <% };
 if(data.addon.indexOf('gui')>-1){ %>
 <style>
@@ -334,7 +334,9 @@ $(document).ready(function(){
                         $.shinobi.mon[d.id].hls.loadSource(d.url);
                         $.shinobi.mon[d.id].hls.attachMedia(video);
                         $.shinobi.mon[d.id].hls.on(Hls.Events.MANIFEST_PARSED,function() {
-                          video.play();
+                            setTimeout(function(){
+                                video.play();
+                            },1000)
                         });
                     }
                     break;

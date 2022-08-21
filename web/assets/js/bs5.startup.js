@@ -88,7 +88,7 @@ function loadBoxWrappers() {
 function drawAddStorageIndicators(){
     $.each(addStorage,function(n,storage){
         drawIndicatorBar({
-            icon: 'hdd',
+            icon: 'hdd-o',
             name: storage.name,
             label: `<span style="text-transform:capitalize">${storage.name}</span> : <span class="value"></span>`,
         })

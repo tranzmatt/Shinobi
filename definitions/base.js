@@ -6171,7 +6171,7 @@ module.exports = function(s,config,lang){
                        "fieldType": "btn",
                        "attribute": `page-open="schedules"`,
                        "class": `btn-primary`,
-                       "btnContent": `<i class="fa fa-clock"></i> &nbsp; ${lang["Schedules"]}`,
+                       "btnContent": `<i class="fa fa-clock-o"></i> &nbsp; ${lang["Schedules"]}`,
                     },
                 ]
              },
@@ -7736,7 +7736,7 @@ module.exports = function(s,config,lang){
                           eval: `!$user.details.sub`,
                       },
                       {
-                          icon: 'clock',
+                          icon: 'clock-o',
                           label: `${lang['Schedules']}`,
                           pageOpen: 'schedules',
                           eval: `!$user.details.sub`,

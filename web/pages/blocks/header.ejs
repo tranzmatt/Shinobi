@@ -22,14 +22,14 @@
     <meta name="msapplication-square150x150logo" content="libs/img/icon/mstile-150x150.png" />
     <meta name="msapplication-wide310x150logo" content="libs/img/icon/mstile-310x150.png" />
     <meta name="msapplication-square310x310logo" content="libs/img/icon/mstile-310x310.png" />
-    <link rel="stylesheet" href="<%-window.libURL%>libs/css/pnotify.custom.min.css">
+    <link rel="stylesheet" href="<%-window.libURL%>assets/vendor/pnotify.custom.min.css">
     <link rel="stylesheet" href="<%-window.libURL%>assets/vendor/bootstrap5/css/bootstrap.min.css">
     <link rel="stylesheet" href="<%-window.libURL%>assets/vendor/bootstrap-table/bootstrap-table.min.css">
     <link rel="stylesheet" href="<%-window.libURL%>assets/css/bootstrap5-theme.css">
-    <link rel="stylesheet" href="<%-window.libURL%>libs/css/font-awesome.min.css">
-    <link rel="stylesheet" href="<%-window.libURL%>libs/css/daterangepicker.css">
-    <link rel="stylesheet" href="<%-window.libURL%>libs/css/gridstack.min.css">
-    <link rel="stylesheet" href="<%-window.libURL%>libs/css/gridstack-extra.min.css">
+    <link rel="stylesheet" href="<%-window.libURL%>assets/vendor/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="<%-window.libURL%>assets/vendor/daterangepicker.css">
+    <link rel="stylesheet" href="<%-window.libURL%>assets/vendor/gridstack.min.css">
+    <link rel="stylesheet" href="<%-window.libURL%>assets/vendor/gridstack-extra.min.css">
     <link rel="stylesheet" href="<%-window.libURL%>assets/css/clock.css">
     <link rel="stylesheet" href="<%-window.libURL%>assets/css/bs5.liveGrid.css">
     <link rel="stylesheet" href="<%-window.libURL%>assets/css/bs5.regionEditor.css">
@@ -71,6 +71,9 @@
     <% customAutoLoad.LibsCss.forEach(function(lib){ %>
         <link rel="stylesheet" href="<%-window.libURL%>libs/css/<%-lib%>">
     <% }) %>
+    <% customAutoLoad.AssetsCss.forEach(function(lib){ %>
+        <link rel="stylesheet" href="<%-window.libURL%>assets/vendor/<%-lib%>">
+    <% }) %>
     <style id="theme">
         <% details.theme = details.theme || config.defaultTheme %>
         <% try{ %>
@@ -82,7 +85,7 @@
     <style id="custom_css">
         <%= details.css %>
     </style>
-    <script src="<%-window.libURL%>libs/js/jquery.min.js"></script>
+    <script src="<%-window.libURL%>assets/vendor/js/jquery.min.js"></script>
     <script src="<%-window.libURL%>assets/vendor/moment-with-locales.js"></script>
     <script>applicationName = `<%- lang.Shinobi %>`</script>
     <script>$user = <%- JSON.stringify($user) %></script>

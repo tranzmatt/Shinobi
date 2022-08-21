@@ -1,6 +1,7 @@
 <% include blocks/header %>
 <script>var $user=<%- JSON.stringify($user) %>;</script>
-<link rel="stylesheet" href="<%-window.libURL%>libs/css/bootstrap.min.css">
+<link rel="stylesheet" href="<%-window.libURL%>assets/vendor/bootstrap5/css/bootstrap.min.css">
+<link rel="stylesheet" href="<%-window.libURL%>assets/css/bootstrap5-theme.css">
 <div id="main" class="container">
     <a class="btn btn-danger btn-lg" record>Stream</a>
     <div>
@@ -19,10 +20,9 @@ requires https or firefox
 </div>
 <video id="video"><source></video>
 <canvas id="canvas"></canvas>
-<script src="<%-window.libURL%>libs/js/jquery.min.js"></script>
-<script src="<%-window.libURL%>libs/js/socket.io.min.js"></script>
-<script src="<%-window.libURL%>libs/js/basic.js"></script>
-<script src="<%-window.libURL%>libs/js/menu.js"></script>
+<script src="<%-window.libURL%>assets/vendor/js/jquery.min.js"></script>
+<script src="<%-window.libURL%>assets/vendor/js/socket.io.min.js"></script>
+<script src="<%-window.libURL%>assets/vendor/js/basic.js"></script>
 <script>
 $.ccio = {}
 $.ls = localStorage
