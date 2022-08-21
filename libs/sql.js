@@ -172,6 +172,15 @@ module.exports = function(s,config){
             }
         }
         try{
+            await s.databaseEngine.schema.table('Videos', table => {
+                table.tinyint('archive',1).defaultTo(0)
+            })
+        }catch(err){
+            if(err && err.code !== 'ER_DUP_FIELDNAME'){
+                s.debugLog(err)
+            }
+        }
+        try{
             await s.databaseEngine.schema.table('Monitors', table => {
                 table.string('saveDir',255).defaultTo('')
             })
