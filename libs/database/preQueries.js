@@ -58,8 +58,6 @@ module.exports = function(s,config){
         }
     }
     s.preQueries = async function(){
-        var knex = s.databaseEngine
-        var mySQLtail = ''
         await createTable('Files',[
             isMySQL ? {name: 'utf8', type: 'charset'} : null,
             isMySQL ? {name: 'utf8_general_ci', type: 'collate'} : null,
@@ -153,11 +151,9 @@ module.exports = function(s,config){
             {name: 'ke', length: 50, type: 'string'},
             {name: 'uid', length: 50, type: 'string'},
             {name: 'name', length: 50, type: 'string', defaultTo: 'Unknown'},
-        ], async () => {
-            await alterTable('LoginTokens',[
-                {name: 'loginId', type: 'unique'},
-            ])
-        });
+            // UNIQUE KEY `logintokens_loginid_unique` (`loginId`)
+            {name: 'loginId', type: 'unique'},
+        ]);
         await createTable('Logs',[
             isMySQL ? {name: 'utf8', type: 'charset'} : null,
             isMySQL ? {name: 'utf8_general_ci', type: 'collate'} : null,
