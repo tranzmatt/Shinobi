@@ -5,7 +5,8 @@ module.exports = function(s,config){
     }
     async function addColumn(tableName,columns){
         try{
-            columns.forEach(async (column) => {
+            for (let i = 0; i < columns.length; i++) {
+                const column = columns[i]
                 if(!column)return;
                 await s.databaseEngine.schema.table(tableName, table => {
                     const action = table[column.type](column.name,column.length)
@@ -13,7 +14,7 @@ module.exports = function(s,config){
                         action.defaultTo(column.defaultTo)
                     }
                 })
-            })
+            }
         }catch(err){
             if(err && err.code !== 'ER_DUP_FIELDNAME'){
                 s.debugLog(err)
@@ -22,16 +23,19 @@ module.exports = function(s,config){
     }
     async function createTable(tableName,columns,onSuccess){
         try{
-            await s.databaseEngine.schema.createTable(tableName, table => {
-                columns.forEach((column) => {
-                    if(!column)return;
-                    const action = table[column.type](column.name,column.length)
-                    if(column.defaultTo !== null && column.defaultTo !== undefined){
-                        action.defaultTo(column.defaultTo)
-                    }
+            const exists = await s.databaseEngine.schema.hasTable(tableName)
+            if (!exists) {
+                await s.databaseEngine.schema.createTable(tableName, table => {
+                    columns.forEach((column) => {
+                        if(!column)return;
+                        const action = table[column.type](column.name,column.length)
+                        if(column.defaultTo !== null && column.defaultTo !== undefined){
+                            action.defaultTo(column.defaultTo)
+                        }
+                    })
                 })
-            })
-            if(onSuccess)await onSuccess();
+                if(onSuccess)await onSuccess();
+            }
         }catch(err){
             if(err && err.code !== 'ER_TABLE_EXISTS_ERROR'){
                 s.debugLog(err)
@@ -57,8 +61,8 @@ module.exports = function(s,config){
         var knex = s.databaseEngine
         var mySQLtail = ''
         await createTable('Files',[
-            isMySQL : {name: 'utf8', type: 'charset'} : null,
-            isMySQL : {name: 'utf8_general_ci', type: 'collate'} : null,
+            isMySQL ? {name: 'utf8', type: 'charset'} : null,
+            isMySQL ? {name: 'utf8_general_ci', type: 'collate'} : null,
             {name: 'ke', length: 50, type: 'string'},
             {name: 'mid', length: 50, type: 'string'},
             {name: 'name', length: 50, type: 'tinytext'},
@@ -69,8 +73,8 @@ module.exports = function(s,config){
             {name: 'time', type: 'timestamp'},
         ]);
         await createTable('Videos',[
-            isMySQL : {name: 'utf8', type: 'charset'} : null,
-            isMySQL : {name: 'utf8_general_ci', type: 'collate'} : null,
+            isMySQL ? {name: 'utf8', type: 'charset'} : null,
+            isMySQL ? {name: 'utf8_general_ci', type: 'collate'} : null,
             {name: 'ke', length: 50, type: 'string'},
             {name: 'mid', length: 50, type: 'string'},
             {name: 'ext', type: 'string', length: 10, defaultTo: 'mp4'},
@@ -86,8 +90,8 @@ module.exports = function(s,config){
             // CREATE INDEX `videos_index` ON Videos(`time`);
         ]);
         await createTable('Cloud Videos',[
-            isMySQL : {name: 'utf8', type: 'charset'} : null,
-            isMySQL : {name: 'utf8_general_ci', type: 'collate'} : null,
+            isMySQL ? {name: 'utf8', type: 'charset'} : null,
+            isMySQL ? {name: 'utf8_general_ci', type: 'collate'} : null,
             {name: 'ke', length: 50, type: 'string'},
             {name: 'mid', length: 50, type: 'string'},
             {name: 'href', length: 50, type: 'text'},
@@ -99,8 +103,8 @@ module.exports = function(s,config){
             {name: 'end', type: 'timestamp'},
         ]);
         await createTable('Events',[
-            isMySQL : {name: 'utf8', type: 'charset'} : null,
-            isMySQL : {name: 'utf8_general_ci', type: 'collate'} : null,
+            isMySQL ? {name: 'utf8', type: 'charset'} : null,
+            isMySQL ? {name: 'utf8_general_ci', type: 'collate'} : null,
             {name: 'ke', length: 50, type: 'string'},
             {name: 'mid', length: 50, type: 'string'},
             {name: 'details', type: 'text'},
@@ -110,8 +114,8 @@ module.exports = function(s,config){
             // CREATE INDEX `events_index` ON Events(`ke`, `mid`, `time`);
         ]);
         await createTable('Events Counts',[
-            isMySQL : {name: 'utf8', type: 'charset'} : null,
-            isMySQL : {name: 'utf8_general_ci', type: 'collate'} : null,
+            isMySQL ? {name: 'utf8', type: 'charset'} : null,
+            isMySQL ? {name: 'utf8_general_ci', type: 'collate'} : null,
             {name: 'ke', length: 50, type: 'string'},
             {name: 'mid', length: 50, type: 'string'},
             {name: 'tag', length: 30, type: 'string'},
@@ -121,8 +125,8 @@ module.exports = function(s,config){
             {name: 'end', type: 'timestamp'},
         ]);
         await createTable('Cloud Timelapse Frames',[
-            isMySQL : {name: 'utf8', type: 'charset'} : null,
-            isMySQL : {name: 'utf8_general_ci', type: 'collate'} : null,
+            isMySQL ? {name: 'utf8', type: 'charset'} : null,
+            isMySQL ? {name: 'utf8_general_ci', type: 'collate'} : null,
             {name: 'ke', length: 50, type: 'string'},
             {name: 'mid', length: 50, type: 'string'},
             {name: 'href', type: 'text'},
@@ -132,8 +136,8 @@ module.exports = function(s,config){
             {name: 'details', type: 'text'},
         ]);
         await createTable('API',[
-            isMySQL : {name: 'utf8', type: 'charset'} : null,
-            isMySQL : {name: 'utf8_general_ci', type: 'collate'} : null,
+            isMySQL ? {name: 'utf8', type: 'charset'} : null,
+            isMySQL ? {name: 'utf8_general_ci', type: 'collate'} : null,
             {name: 'ke', length: 50, type: 'string'},
             {name: 'uid', length: 50, type: 'string'},
             {name: 'ip', type: 'tinytext'},
@@ -142,14 +146,13 @@ module.exports = function(s,config){
             {name: 'time', type: 'timestamp'},
         ]);
         await createTable('LoginTokens',[
-            isMySQL : {name: 'utf8', type: 'charset'} : null,
-            isMySQL : {name: 'utf8_general_ci', type: 'collate'} : null,
+            isMySQL ? {name: 'utf8', type: 'charset'} : null,
+            isMySQL ? {name: 'utf8_general_ci', type: 'collate'} : null,
             {name: 'loginId', length: 255, type: 'string'},
             {name: 'type', length: 25, type: 'string'},
             {name: 'ke', length: 50, type: 'string'},
             {name: 'uid', length: 50, type: 'string'},
             {name: 'name', length: 50, type: 'string', defaultTo: 'Unknown'},
-            // UNIQUE KEY `logintokens_loginid_unique` (`loginId`)
         ], async () => {
             await alterTable('LoginTokens',[
                 {
@@ -159,8 +162,8 @@ module.exports = function(s,config){
             ])
         });
         await createTable('Logs',[
-            isMySQL : {name: 'utf8', type: 'charset'} : null,
-            isMySQL : {name: 'utf8_general_ci', type: 'collate'} : null,
+            isMySQL ? {name: 'utf8', type: 'charset'} : null,
+            isMySQL ? {name: 'utf8_general_ci', type: 'collate'} : null,
             {name: 'ke', length: 50, type: 'string'},
             {name: 'mid', length: 50, type: 'string'},
             {name: 'info', type: 'text'},
@@ -169,8 +172,8 @@ module.exports = function(s,config){
             // CREATE INDEX `logs_index` ON Logs(`ke`, `mid`, `time`);
         ]);
         await createTable('Monitors',[
-            isMySQL : {name: 'utf8', type: 'charset'} : null,
-            isMySQL : {name: 'utf8_general_ci', type: 'collate'} : null,
+            isMySQL ? {name: 'utf8', type: 'charset'} : null,
+            isMySQL ? {name: 'utf8_general_ci', type: 'collate'} : null,
             {name: 'ke', length: 50, type: 'string'},
             {name: 'mid', length: 50, type: 'string'},
             {name: 'name', length: 50, type: 'string'},
@@ -191,16 +194,16 @@ module.exports = function(s,config){
             // CREATE INDEX `monitors_index` ON Monitors(`ke`, `mode`, `type`, `ext`);
         ]);
         await createTable('Presets',[
-            isMySQL : {name: 'utf8', type: 'charset'} : null,
-            isMySQL : {name: 'utf8_general_ci', type: 'collate'} : null,
+            isMySQL ? {name: 'utf8', type: 'charset'} : null,
+            isMySQL ? {name: 'utf8_general_ci', type: 'collate'} : null,
             {name: 'ke', length: 50, type: 'string'},
             {name: 'name', length: 50, type: 'string'},
             {name: 'type', length: 50, type: 'string'},
             {name: 'details', type: 'text'},
         ]);
         await createTable('Schedules',[
-            isMySQL : {name: 'utf8', type: 'charset'} : null,
-            isMySQL : {name: 'utf8_general_ci', type: 'collate'} : null,
+            isMySQL ? {name: 'utf8', type: 'charset'} : null,
+            isMySQL ? {name: 'utf8_general_ci', type: 'collate'} : null,
             {name: 'ke', length: 50, type: 'string'},
             {name: 'name', length: 50, type: 'string'},
             {name: 'details', type: 'text'},
@@ -209,8 +212,8 @@ module.exports = function(s,config){
             {name: 'enabled', type: 'int', length: 1, defaultTo: 1},
         ]);
         await createTable('Timelapse Frames',[
-            isMySQL : {name: 'utf8', type: 'charset'} : null,
-            isMySQL : {name: 'utf8_general_ci', type: 'collate'} : null,
+            isMySQL ? {name: 'utf8', type: 'charset'} : null,
+            isMySQL ? {name: 'utf8_general_ci', type: 'collate'} : null,
             {name: 'ke', length: 50, type: 'string'},
             {name: 'mid', length: 50, type: 'string'},
             {name: 'filename', length: 50, type: 'string'},
@@ -222,8 +225,8 @@ module.exports = function(s,config){
             // KEY `timelapseframes_index` (`ke`,`mid`,`time`)
         ]);
         await createTable('Users',[
-            isMySQL : {name: 'utf8', type: 'charset'} : null,
-            isMySQL : {name: 'utf8_general_ci', type: 'collate'} : null,
+            isMySQL ? {name: 'utf8', type: 'charset'} : null,
+            isMySQL ? {name: 'utf8_general_ci', type: 'collate'} : null,
             {name: 'ke', length: 50, type: 'string'},
             {name: 'uid', length: 50, type: 'string'},
             {name: 'auth', length: 50, type: 'string'},
@@ -233,8 +236,8 @@ module.exports = function(s,config){
             {name: 'details', type: 'longtext'},
             // UNIQUE KEY `mail` (`mail`)
         ]);
-        // additional requirements for older installs
 
+        // additional requirements for older installs
         await addColumn('Videos',[
             {name: 'archive', length: 1, type: 'tinyint', defaultTo: 0},
             {name: 'objects', type: 'string'},
