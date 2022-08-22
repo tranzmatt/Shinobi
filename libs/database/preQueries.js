@@ -87,7 +87,7 @@ module.exports = function(s,config){
             {name: 'end', type: 'timestamp'},
             {name: 'details', type: 'text'},
             // KEY `videos_index` (`time`)
-            // CREATE INDEX `videos_index` ON Videos(`time`);
+            {name: ['time'], type: 'index', length: 'videos_index'},
         ]);
         await createTable('Cloud Videos',[
             isMySQL ? {name: 'utf8', type: 'charset'} : null,
@@ -111,7 +111,7 @@ module.exports = function(s,config){
             {name: 'archive', type: 'tinyint', length: 1, defaultTo: 0},
             {name: 'time', type: 'timestamp'},
             // KEY `events_index` (`ke`,`mid`,`time`)
-            // CREATE INDEX `events_index` ON Events(`ke`, `mid`, `time`);
+            {name: ['ke', 'mid', 'time'], type: 'index', length: 'events_index'},
         ]);
         await createTable('Events Counts',[
             isMySQL ? {name: 'utf8', type: 'charset'} : null,
@@ -155,10 +155,7 @@ module.exports = function(s,config){
             {name: 'name', length: 50, type: 'string', defaultTo: 'Unknown'},
         ], async () => {
             await alterTable('LoginTokens',[
-                {
-                    name: 'loginId',
-                    type: 'unique',
-                },
+                {name: 'loginId', type: 'unique'},
             ])
         });
         await createTable('Logs',[
@@ -169,7 +166,7 @@ module.exports = function(s,config){
             {name: 'info', type: 'text'},
             {name: 'time', type: 'timestamp', defaultTo: currentTimestamp()},
             // KEY `logs_index` (`ke`,`mid`,`time`)
-            // CREATE INDEX `logs_index` ON Logs(`ke`, `mid`, `time`);
+            {name: ['ke', 'mid', 'time'], type: 'index', length: 'logs_index'},
         ]);
         await createTable('Monitors',[
             isMySQL ? {name: 'utf8', type: 'charset'} : null,
@@ -191,7 +188,7 @@ module.exports = function(s,config){
             {name: 'width', type: 'int', length: 11},
             {name: 'height', type: 'int', length: 11},
             // KEY `monitors_index` (`ke`,`mode`,`type`,`ext`)
-            // CREATE INDEX `monitors_index` ON Monitors(`ke`, `mode`, `type`, `ext`);
+            {name: ['ke', 'mode', 'type', 'ext'], type: 'index', length: 'monitors_index'},
         ]);
         await createTable('Presets',[
             isMySQL ? {name: 'utf8', type: 'charset'} : null,
@@ -223,6 +220,7 @@ module.exports = function(s,config){
             {name: 'saveDir', length: 255, type: 'string'},
             {name: 'details', type: 'text'},
             // KEY `timelapseframes_index` (`ke`,`mid`,`time`)
+            {name: ['ke', 'mid', 'time'], type: 'index', length: 'timelapseframes_index'},
         ]);
         await createTable('Users',[
             isMySQL ? {name: 'utf8', type: 'charset'} : null,
@@ -235,6 +233,7 @@ module.exports = function(s,config){
             {name: 'accountType', type: 'int', length: 1, defaultTo: 0},
             {name: 'details', type: 'longtext'},
             // UNIQUE KEY `mail` (`mail`)
+            {name: 'mail', type: 'unique'},
         ]);
 
         // additional requirements for older installs
