@@ -3,6 +3,7 @@ const {
     stringToSqlTime,
 } = require('../common.js')
 module.exports = function(s,config){
+    const isMySQL = config.databaseType === 'mysql';
     const runQuery = async.queue(function(data, callback) {
         s.databaseEngine
         .raw(data.query,data.values)
@@ -420,6 +421,48 @@ module.exports = function(s,config){
     const connectDatabase = function(){
         s.databaseEngine = require('knex')(s.databaseOptions)
     }
+    function currentTimestamp(){
+        return s.databaseEngine.fn.now()
+    }
+    async function addColumn(tableName,columns){
+        try{
+            for (let i = 0; i < columns.length; i++) {
+                const column = columns[i]
+                if(!column)return;
+                await s.databaseEngine.schema.table(tableName, table => {
+                    const action = table[column.type](column.name,column.length)
+                    if(column.defaultTo !== null && column.defaultTo !== undefined){
+                        action.defaultTo(column.defaultTo)
+                    }
+                })
+            }
+        }catch(err){
+            if(err && err.code !== 'ER_DUP_FIELDNAME'){
+                s.debugLog(err)
+            }
+        }
+    }
+    async function createTable(tableName,columns,onSuccess){
+        try{
+            const exists = await s.databaseEngine.schema.hasTable(tableName)
+            if (!exists) {
+                await s.databaseEngine.schema.createTable(tableName, table => {
+                    columns.forEach((column) => {
+                        if(!column)return;
+                        const action = table[column.type](column.name,column.length)
+                        if(column.defaultTo !== null && column.defaultTo !== undefined){
+                            action.defaultTo(column.defaultTo)
+                        }
+                    })
+                })
+                if(onSuccess)await onSuccess();
+            }
+        }catch(err){
+            if(err && err.code !== 'ER_TABLE_EXISTS_ERROR'){
+                s.debugLog(err)
+            }
+        }
+    }
     return {
         knexQuery: knexQuery,
         knexQueryPromise: knexQueryPromise,
@@ -432,5 +475,9 @@ module.exports = function(s,config){
         sqlQuery: sqlQuery,
         connectDatabase: connectDatabase,
         sqlQueryBetweenTimesWithPermissions: sqlQueryBetweenTimesWithPermissions,
+        currentTimestamp,
+        createTable,
+        addColumn,
+        isMySQL,
     }
 }

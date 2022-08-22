@@ -1,62 +1,10 @@
 module.exports = function(s,config){
-    const isMySQL = config.databaseType === 'mysql';
-    function currentTimestamp(){
-        return s.databaseEngine.fn.now()
-    }
-    async function addColumn(tableName,columns){
-        try{
-            for (let i = 0; i < columns.length; i++) {
-                const column = columns[i]
-                if(!column)return;
-                await s.databaseEngine.schema.table(tableName, table => {
-                    const action = table[column.type](column.name,column.length)
-                    if(column.defaultTo !== null && column.defaultTo !== undefined){
-                        action.defaultTo(column.defaultTo)
-                    }
-                })
-            }
-        }catch(err){
-            if(err && err.code !== 'ER_DUP_FIELDNAME'){
-                s.debugLog(err)
-            }
-        }
-    }
-    async function createTable(tableName,columns,onSuccess){
-        try{
-            const exists = await s.databaseEngine.schema.hasTable(tableName)
-            if (!exists) {
-                await s.databaseEngine.schema.createTable(tableName, table => {
-                    columns.forEach((column) => {
-                        if(!column)return;
-                        const action = table[column.type](column.name,column.length)
-                        if(column.defaultTo !== null && column.defaultTo !== undefined){
-                            action.defaultTo(column.defaultTo)
-                        }
-                    })
-                })
-                if(onSuccess)await onSuccess();
-            }
-        }catch(err){
-            if(err && err.code !== 'ER_TABLE_EXISTS_ERROR'){
-                s.debugLog(err)
-            }
-        }
-    }
-    async function alterTable(tableName,columns){
-        try{
-            await s.databaseEngine.schema.createTable(tableName, table => {
-                columns.forEach((column) => {
-                    if(!column)return;
-                    const action = table[column.type](column.name,column.length)
-                    if(column.defaultTo !== null && column.defaultTo !== undefined){
-                        action.defaultTo(column.defaultTo)
-                    }
-                })
-            })
-        }catch(err){
-            s.debugLog(err)
-        }
-    }
+    const {
+        currentTimestamp,
+        createTable,
+        addColumn,
+        isMySQL,
+    } = require('./utils.js')(s,config)
     s.preQueries = async function(){
         await createTable('Files',[
             isMySQL ? {name: 'utf8', type: 'charset'} : null,
@@ -233,24 +181,7 @@ module.exports = function(s,config){
         ]);
 
         // additional requirements for older installs
-        await addColumn('Videos',[
-            {name: 'archive', length: 1, type: 'tinyint', defaultTo: 0},
-            {name: 'objects', type: 'string'},
-            {name: 'saveDir', length: 255, type: 'string'},
-        ])
-        await addColumn('Monitors',[
-            {name: 'saveDir', length: 255, type: 'string'},
-        ])
-        await addColumn('Timelapse Frames',[
-            {name: 'archive', length: 1, type: 'tinyint', defaultTo: 0},
-            {name: 'saveDir', length: 255, type: 'string'},
-        ])
-        await addColumn('Events',[
-            {name: 'archive', length: 1, type: 'tinyint', defaultTo: 0},
-        ])
-        await addColumn('Files',[
-            {name: 'archive', length: 1, type: 'tinyint', defaultTo: 0},
-        ])
+        await require('./migrate/2022-08-22.js')(s,config)
         delete(s.preQueries)
     }
 }
