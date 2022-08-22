@@ -12,6 +12,7 @@ module.exports = function(s,config,lang,getSnapshot){
                 const username = options.username || ''
                 const password = options.password || ''
                 const subKey = options.subKey
+                const pubKey = options.pubKey
                 const groupKey = options.ke
                 const onData = options.onData || function(){}
                 function mqttUserLog(type,data){
@@ -40,7 +41,7 @@ module.exports = function(s,config,lang,getSnapshot){
                 client.on('error', (e) => mqttUserLog(`MQTT Error`,e))
                 client.on('connect', function () {
                     mqttUserLog('Connected! ' + mqttEndpoint)
-                    client.subscribe(subKey, function (err) {
+                    client.subscribe(pubKey, function (err) {
                         if (err) {
                             s.debugLog(err)
                             s.userLog({
