@@ -225,6 +225,18 @@ function loadVideoMiniList(monitorId){
         })
     })
 }
+function updateLiveGridElementHeightWidth(monitorId){
+    var liveGridElement = liveGridElements[monitorId]
+    var streamElement = liveGridElement.streamElement
+    liveGridElement.width = streamElement.width()
+    liveGridElement.height = streamElement.height()
+    console.log(liveGridElement.width,liveGridElement.height)
+}
+function updateAllLiveGridElementsHeightWidth(monitorId){
+    $.each(liveGridElements,function(monitorId){
+        updateLiveGridElementHeightWidth(monitorId)
+    })
+}
 function drawLiveGridBlock(monitorConfig,subStreamChannel){
     var monitorId = monitorConfig.mid
     if($('#monitor_live_' + monitorId).length === 0){
@@ -957,6 +969,9 @@ $(document).ready(function(e){
     })
     onInitWebsocket(function (d){
         loadPreviouslyOpenedLiveGridBlocks()
+    })
+    onToggleSideBarMenuHide(function (isHidden){
+        setTimeout(updateAllLiveGridElementsHeightWidth,2000)
     })
     onWebSocketEvent(function (d){
         switch(d.f){
