@@ -8233,6 +8233,17 @@ module.exports = function(s,config,lang){
                         ]
                      },
                      {
+                        "fieldType": "btn-group",
+                        "btns": [
+                            {
+                                "fieldType": "btn",
+                                "class": `btn-success fill refresh-data`,
+                                "icon": `refresh`,
+                                "btnContent": `${lang['Refresh']}`,
+                            },
+                        ],
+                     },
+                     {
                          "fieldType": "div",
                          "id": "videosTable_preview_area",
                          "divContent": ""

@@ -274,6 +274,11 @@ $(document).ready(function(e){
         drawPreviewVideo(href)
         return false;
     })
+    .on('click','.refresh-data',function(e){
+        e.preventDefault()
+        drawVideosTableViewElements()
+        return false;
+    })
     .on('click','.open-snapshot',function(e){
         e.preventDefault()
         var href = $(this).parents('.video-thumbnail').find('img').click()
