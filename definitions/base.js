@@ -7875,7 +7875,7 @@ module.exports = function(s,config,lang){
                                  info: [
                                      {
                                          "fieldType": "indicatorBar",
-                                         "icon": "hdd",
+                                         "icon": "hdd-o",
                                          "name": "disk",
                                          "bars": 3,
                                          "color0": "info",
