@@ -14,7 +14,7 @@ fi
 echo "============="
 echo " Detecting Ubuntu Version"
 echo "============="
-declare -i getubuntuversion=$(lsb_release -r | awk '{print $2}' | cut -d . -f1)
+getubuntuversion=$(lsb_release -r | awk '{print $2}' | cut -d . -f1)
 echo "============="
 echo " Ubuntu Version: $getubuntuversion"
 echo "============="
