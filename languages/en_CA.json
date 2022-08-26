@@ -1705,5 +1705,6 @@
    "fieldTextChannelSvf": "Place FFMPEG video filters in this box to affect the streaming portion. No spaces.",
    "Last Updated": "Last Updated",
    "Z-Wave Manager": "Z-Wave Manager",
-   "Z-Wave": "Z-Wave"
+   "Z-Wave": "Z-Wave",
+   "Primary":"Primary"
 }
