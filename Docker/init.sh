@@ -59,11 +59,6 @@ if [ "$DB_DISABLE_INCLUDED" = "false" ]; then
         done
     fi
 
-    echo "Setting up MySQL database if it does not exists ..."
-
-    echo "Create database schema if it does not exists ..."
-    mysql -e "source /home/Shinobi/sql/framework1.sql" || true
-
     echo "Create database user if it does not exists ..."
     mysql -e "source /home/Shinobi/sql/user.sql" || true
 
