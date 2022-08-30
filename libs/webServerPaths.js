@@ -316,6 +316,7 @@ module.exports = function(s,config,lang,app,io){
                         $user: userInfo,
                         lang: userInfo.lang,
                         define: s.getDefinitonFile(userInfo.details.lang),
+                        __dirname: s.mainDirectory,
                         customAutoLoad: s.customAutoLoadTree
                     })
                 break;
@@ -325,6 +326,7 @@ module.exports = function(s,config,lang,app,io){
                         $user: userInfo,
                         lang: userInfo.lang,
                         define: s.getDefinitonFile(userInfo.details.lang),
+                        __dirname: s.mainDirectory,
                         customAutoLoad: s.customAutoLoadTree
                     })
                 break;
