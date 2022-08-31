@@ -50,7 +50,7 @@ $(document).ready(function(e){
         $.getJSON(apiURL + '?' + queryString.join('&'),function(data){
             $.each(data.videos,function(n,v){
                 if(v.status !== 0){
-                    loadedVideosInMemory[v.filename] = Object.assign({},v)
+                    loadedVideosInMemory[`${v.mid}${v.time}`] = Object.assign({},v)
                     var loadedMonitor = loadedMonitors[v.mid]
                     if(loadedMonitor){
                         v.title = loadedMonitor.name+' - '+(parseInt(v.size)/1048576).toFixed(2)+'mb';
@@ -77,7 +77,7 @@ $(document).ready(function(e){
                 eventLimit: true,
                 events: calendarData,
                 eventClick: function(v){
-                    var video = loadedVideosInMemory[v.filename]
+                    var video = loadedVideosInMemory[`${v.mid}${v.time}`]
                     createVideoPlayerTab(video)
                     $(this).css('border-color', 'red');
                 }
@@ -92,6 +92,12 @@ $(document).ready(function(e){
         openTab(`calendarView`,{},null)
         monitorsList.val(monitorId).change()
     })
+    theEnclosure
+    .on('click','.refresh-data',function(e){
+        e.preventDefault()
+        drawCalendarViewElements()
+        return false;
+    })
     addOnTabOpen('calendarView', function () {
         drawMonitorListToSelector(monitorsList)
         drawCalendarViewElements()
@@ -100,5 +106,6 @@ $(document).ready(function(e){
         var theSelected = `${monitorsList.val()}`
         drawMonitorListToSelector(monitorsList)
         monitorsList.val(theSelected)
+        drawCalendarViewElements()
     })
 })

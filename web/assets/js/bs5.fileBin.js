@@ -135,6 +135,11 @@ $(document).ready(function(e){
         return false;
     });
     theEnclosure
+    .on('click','.refresh-data',function(e){
+        e.preventDefault()
+        drawFileBinViewElements()
+        return false;
+    })
     .on('click','.preview-video',function(e){
         e.preventDefault()
         var href = $(this).attr('href')

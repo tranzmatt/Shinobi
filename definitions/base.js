@@ -8134,6 +8134,17 @@ module.exports = function(s,config,lang){
                      {
                          "class": "date_selector",
                          "field": lang.Date,
+                     },
+                     {
+                        "fieldType": "btn-group",
+                        "btns": [
+                            {
+                                "fieldType": "btn",
+                                "class": `btn-success fill refresh-data mb-3`,
+                                "icon": `refresh`,
+                                "btnContent": `${lang['Refresh']}`,
+                            },
+                        ],
                      }
                 ]
             },
@@ -8167,6 +8178,17 @@ module.exports = function(s,config,lang){
                      {
                          "class": "date_selector",
                          "field": lang.Date,
+                     },
+                     {
+                        "fieldType": "btn-group",
+                        "btns": [
+                            {
+                                "fieldType": "btn",
+                                "class": `btn-success fill refresh-data mb-3`,
+                                "icon": `refresh`,
+                                "btnContent": `${lang['Refresh']}`,
+                            },
+                        ],
                      },
                      {
                          "fieldType": "div",
@@ -8237,7 +8259,7 @@ module.exports = function(s,config,lang){
                         "btns": [
                             {
                                 "fieldType": "btn",
-                                "class": `btn-success fill refresh-data`,
+                                "class": `btn-success fill refresh-data mb-3`,
                                 "icon": `refresh`,
                                 "btnContent": `${lang['Refresh']}`,
                             },
