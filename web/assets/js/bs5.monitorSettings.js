@@ -766,6 +766,13 @@ editorForm.submit(function(e){
     }
     var monitorConfig = validation.monitorConfig
     $.post(getApiPrefix()+'/configureMonitor/'+$user.ke+'/'+monitorConfig.mid,{data:JSON.stringify(monitorConfig)},function(d){
+        if(d.ok === false){
+            new PNotify({
+                title: lang['Action Failed'],
+                text: d.msg,
+                type: 'danger'
+            })
+        }
         debugLog(d)
     })
     //

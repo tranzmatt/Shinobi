@@ -1086,6 +1086,7 @@
    "For Group": "For Group",
    "Basic Authentication": "Basic Authentication",
    "Superuser Logs": "Superuser Logs",
+   "Action Failed": "Action Failed",
    "Authentication Failed": "Authentication Failed",
    "Max Number of Cameras": "Max Number of Cameras",
    "Can edit Max Storage": "Can edit Max Storage",
