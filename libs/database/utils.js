@@ -331,7 +331,10 @@ module.exports = function(s,config){
         var endTimeOperator = options.endTimeOperator
         var startTime = options.startTime
         var limitString = `${options.limit}`
-        const monitorRestrictions = s.getMonitorRestrictions(options.user.details,monitorId)
+        const {
+            monitorPermissions,
+            monitorRestrictions,
+        } = s.getMonitorsPermitted(user.details,monitorId)
         getDatabaseRows({
             monitorRestrictions: monitorRestrictions,
             table: theTableSelected,
