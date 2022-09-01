@@ -9,7 +9,6 @@ $(document).ready(function(e){
     var regionEditorMonitorsList = $('#region_editor_monitors')
     var regionEditorLiveView = $('#region_editor_live')
     var regionEditorGridOverlay = regionEditorWindow.find('.grid')
-    var useRegionStillImage = false
     var getRegionEditorCanvas = function(){
         return regionEditorWindow.find('canvas')
     }
@@ -134,7 +133,7 @@ $(document).ready(function(e){
             }else{
                 regionEditorGridOverlay.hide()
             }
-            if(useRegionStillImage){
+            if(getRegionStillImageSwitch()){
                 apiPoint = 'jpeg'
             }else{
                 apiPoint = 'embed'
@@ -199,7 +198,16 @@ $(document).ready(function(e){
     }
     function getRegionStillImageSwitch(){
         var dashboardSwitches = dashboardOptions().switches || {}
-        return dashboardSwitches.regionStillImage || '0'
+        return dashboardSwitches.regionStillImage == 1;
+    }
+    function toggleRegionStillImage(){
+        var dashboardSwitches = dashboardOptions().switches || {}
+        if(dashboardSwitches.regionStillImage !== 1){
+            dashboardSwitches.regionStillImage = 1
+        }else{
+            dashboardSwitches.regionStillImage = "0"
+        }
+        dashboardOptions('switches',dashboardSwitches)
     }
     regionEditorRegionsList.change(function(e){
         initCanvas(true);
@@ -283,14 +291,7 @@ $(document).ready(function(e){
         return false;
     })
     regionStillImage.click(function(e){
-        var dashboardSwitches = dashboardOptions().switches || {}
-        if(useRegionStillImage){
-            dashboardSwitches.regionStillImage = 1
-        }else{
-            dashboardSwitches.regionStillImage = "0"
-        }
-        dashboardOptions('switches',dashboardSwitches)
-        useRegionStillImage = !useRegionStillImage
+        toggleRegionStillImage()
         initLiveStream()
     })
     $('body')
@@ -310,7 +311,6 @@ $(document).ready(function(e){
         }
     })
     addOnTabOpen('regionEditor', function () {
-        useRegionStillImage = getRegionStillImageSwitch() === 1;
         if(!regionEditorMonitorsList.val()){
             drawMonitorListToSelector(regionEditorMonitorsList,true)
         }
