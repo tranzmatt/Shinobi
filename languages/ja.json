@@ -714,7 +714,7 @@
   "Input": "入力",
   "InputText1": "このセクションでは、Shinobiにストリームの消費方法を説明します。最適なパフォーマンスを得るには、カメラの内部設定を調整してみてください。カメラを見つけるには、Shinobiの<b>内蔵ONVIFスキャナー</b>を使用できます。 ONVIFスキャナーを開くには、左上のユーザー名をクリックしてからONVIFをクリックします",
   "InputText2": "カメラの構成と調整については、<a target='_blank'href='https//shinobi.video/docs/configure'>こちら</a>をご覧ください。",
-  "InputText3": "カメラの入力タイプを特定するためのサポートが必要な場合は、<a href=\"http//shinobi.video/docs/cameras\"target=\"_blank\">カメラURLリスト<をご覧ください。 /a>Shinobiのウェブサイト。",
+  "InputText3": "カメラの入力タイプを特定するためのサポートが必要な場合は、<a href=\"http//shinobi.video/docs/cameras\"target=\"_blank\">カメラURLリスト<をご覧ください。 /a>Shinobiのウェブサイト</a>。",
   "Invalid Data": "無効なデータ",
   "Invalid JSON": "無効なJSON",
   "Invalid Settings": "無効な設定",
