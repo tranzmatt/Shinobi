@@ -34,7 +34,7 @@ $(document).ready(function(e){
             const endDate = el.attr('data-end')
             const imgBlock = el.find('.video-thumbnail-img-block')
             const href = await getSnapshotFromVideoTimeFrame(monitorId,startDate,endDate)
-            imgBlock.html(`<img class="pop-image cursor-pointer" src="${href}">`)
+            imgBlock.find('img').attr('src',href)
         })
     }
     function openVideosTableView(monitorId,startDate,endDate){
@@ -161,6 +161,7 @@ $(document).ready(function(e){
                 return {
                     image: `<div class="video-thumbnail" data-mid="${file.mid}" data-ke="${file.ke}" data-time="${file.time}" data-end="${file.end}" data-filename="${file.filename}">
                         <div class="video-thumbnail-img-block">
+                            <img class="pop-image cursor-pointer" src="${href}" style="min-width: 100px;min-height: 75px;">
                         </div>
                         <div class="video-thumbnail-buttons d-flex">
                             <a class="video-thumbnail-button-cell open-snapshot p-3">

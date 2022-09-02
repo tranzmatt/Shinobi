@@ -938,6 +938,14 @@ $(document).ready(function(){
     // })
     .on('click','.pop-image',function(){
         var imageSrc = $(this).attr('src')
+        if(!imageSrc){
+            new PNotify({
+                title: lang['Action Failed'],
+                text: lang['No Image'],
+                type: 'warning'
+            })
+            return;
+        };
         popImage(imageSrc)
     })
     .on('click','.popped-image',function(){
