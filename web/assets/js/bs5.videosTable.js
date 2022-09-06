@@ -379,8 +379,8 @@ $(document).ready(function(e){
     onWebSocketEvent((data) => {
         switch(data.f){
             case'video_delete':
-                if(tabTree.name === 'videosTableView' && monitorsList.val() === data.mid){
-                    var videoIndexToRemove = loadedVideosTable.findIndex(row => new Date(row.time).getTime() === new Date(data.time).getTime())
+                if(tabTree.name === 'videosTableView'){
+                    var videoIndexToRemove = loadedVideosTable.findIndex(row => data.mid === row.mid && new Date(row.time).getTime() === new Date(data.time).getTime())
                     if(videoIndexToRemove !== -1){
                         loadedVideosTable.splice(videoIndexToRemove, 1);
                         delete(loadedVideosInMemory[`${data.mid}${data.time}`])
