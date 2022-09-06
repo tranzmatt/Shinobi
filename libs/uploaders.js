@@ -15,6 +15,6 @@ module.exports = function(s,config,lang,app,io){
     Object.keys(loadedLibraries).forEach((key) => {
         var loadedLib = loadedLibraries[key](s,config,lang,app,io)
         loadedLib.isFormGroupGroup = true
-        s.uploaderFields.push(loadedLib)
+        s.definitions["Account Settings"].blocks["Uploaders"].info.push(loadedLib)
     })
 }

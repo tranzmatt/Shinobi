@@ -1,0 +1,16 @@
+<main class="page-tab pt-3" id="tab-fileBinView">
+    <div class="row <%- define.Theme.isDark ? `dark` : '' %>">
+        <%
+          var drawBlock
+          var buildOptions
+        %>
+        <%
+            include fieldBuilders.ejs
+        %>
+        <% Object.keys(define['FileBin'].blocks).forEach(function(blockKey){
+              var theBlock = define['FileBin'].blocks[blockKey]
+              drawBlock(theBlock)
+          }) %>
+    </div>
+    <script src="<%-window.libURL%>assets/js/bs5.fileBin.js"></script>
+</main>

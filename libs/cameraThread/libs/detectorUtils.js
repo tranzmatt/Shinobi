@@ -1,5 +1,8 @@
 const P2P = require('pipe2pam')
 let PamDiff = require('pam-diff')
+const {
+    makeBigMatricesFromSmallOnes,
+} = require('./tileCutter.js')
 module.exports = function(jsonData,pamDiffResponder,alternatePamDiff){
     if(alternatePamDiff)PamDiff = alternatePamDiff;
     const noiseFilterArray = {};
@@ -7,6 +10,7 @@ module.exports = function(jsonData,pamDiffResponder,alternatePamDiff){
     const completeMonitorConfig = jsonData.rawMonitorConfig
     const groupKey = completeMonitorConfig.ke
     const monitorId = completeMonitorConfig.mid
+    const monitorName = completeMonitorConfig.name
     const monitorDetails = completeMonitorConfig.details
     const triggerTimer = {}
     let regionJson
@@ -71,12 +75,12 @@ module.exports = function(jsonData,pamDiffResponder,alternatePamDiff){
         pamDiffResponder(detectorObject)
       }
     }else{
-      var sendDetectedData = function(detectorObject){
-        pamDiffResponder.write(Buffer.from(JSON.stringify(detectorObject)))
-      }
+        var sendDetectedData = function(detectorObject){
+            pamDiffResponder.write(Buffer.from(JSON.stringify(detectorObject)))
+        }
     }
     function logData(...args){
-        process.logData(JSON.stringify(args))
+        process.logData(args)
     }
     function getRegionsWithMinimumChange(data){
         try{
@@ -240,6 +244,28 @@ module.exports = function(jsonData,pamDiffResponder,alternatePamDiff){
         pamDiff.on('diff',pamAnalyzer)
         cameraProcess.stdio[3].pipe(p2p).pipe(pamDiff)
     }
+    function getTileMotionEvent(){
+        let pamAnalyzer = function(){}
+        if(monitorDetails.detector_noise_filter === '1'){
+            pamAnalyzer = async (data) => {
+                const acceptedTriggers = getAcceptedTriggers(data.trigger)
+                const passedFilter = await filterTheNoiseFromMultipleRegions(acceptedTriggers)
+                if(passedFilter){
+                    const mergedTriggers = mergePamTriggers(acceptedTriggers)
+                    mergedTriggers.matrices = makeBigMatricesFromSmallOnes(mergedTriggers.matrices)
+                    buildTriggerEvent(mergedTriggers)
+                }
+            }
+        }else{
+            pamAnalyzer = (data) => {
+                const acceptedTriggers = getAcceptedTriggers(data.trigger)
+                const mergedTriggers = mergePamTriggers(acceptedTriggers)
+                mergedTriggers.matrices = makeBigMatricesFromSmallOnes(mergedTriggers.matrices)
+                buildTriggerEvent(mergedTriggers)
+            }
+        }
+        return pamAnalyzer
+    }
     function createPamDiffRegionArray(regions,globalColorThreshold,globalSensitivity,fullFrame){
         var pamDiffCompliantArray = [],
             arrayForOtherStuff = [],
@@ -256,6 +282,7 @@ module.exports = function(jsonData,pamDiffResponder,alternatePamDiff){
             if(!region)return false;
             region.polygon = [];
             region.points.forEach(function(points){
+                if(!points || isNaN(points[0]) || isNaN(points[1]))return;
                 var x = parseFloat(points[0]);
                 var y = parseFloat(points[1]);
                 if(x < 0)x = 0;
@@ -265,6 +292,7 @@ module.exports = function(jsonData,pamDiffResponder,alternatePamDiff){
                     y: y
                 })
             })
+            if(region.polygon.length < 4)return logData(`Failed to Create Region : ${monitorName} : ${region.name}`,region.points);
             if(region.sensitivity===''){
                 region.sensitivity = globalSensitivity
             }else{
@@ -369,6 +397,7 @@ module.exports = function(jsonData,pamDiffResponder,alternatePamDiff){
         getPropertiesFromBlob,
         createMatricesFromBlobs,
         logData,
+        getTileMotionEvent,
         // parameters
         pamDetectorIsEnabled,
         noiseFilterArray,

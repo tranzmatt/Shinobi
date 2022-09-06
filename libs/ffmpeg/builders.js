@@ -9,6 +9,8 @@ module.exports = (s,config,lang) => {
     const {
         validateDimensions,
     } = require('./utils.js')(s,config,lang)
+    if(!config.outputsWithAudio)config.outputsWithAudio = ['hls','flv','mp4','rtmp'];
+    if(!config.outputsNotCapableOfPresets)config.outputsNotCapableOfPresets = [];
     const hasCudaEnabled = (monitor) => {
         return monitor.details.accelerator === '1' && monitor.details.hwaccel === 'cuvid' && monitor.details.hwaccel_vcodec === ('h264_cuvid' || 'hevc_cuvid' || 'mjpeg_cuvid' || 'mpeg4_cuvid')
     }
@@ -183,7 +185,7 @@ module.exports = (s,config,lang) => {
     const createStreamChannel = function(e,number,channel){
         //`e` is the monitor object
         //`x` is an object used to contain temporary values.
-        const channelStreamDirectory = !isNaN(parseInt(number)) ? `${e.sdir}channel${number}/` : e.sdir
+        const channelStreamDirectory = !isNaN(parseInt(number)) ? `${e.sdir || s.getStreamsDirectory(e)}channel${number}/` : e.sdir
         if(channelStreamDirectory !== e.sdir && !fs.existsSync(channelStreamDirectory)){
             try{
                 fs.mkdirSync(channelStreamDirectory)
@@ -203,7 +205,7 @@ module.exports = (s,config,lang) => {
         const streamType = channel.stream_type ? channel.stream_type : 'hls'
         const videoFps = !isNaN(parseFloat(channel.stream_fps)) && channel.stream_fps !== '0' ? parseFloat(channel.stream_fps) : streamType === 'rtmp' ? '30' : null
         const inputMap = buildInputMap(e,e.details.input_map_choices[`stream_channel-${channelNumber}`])
-        const outputCanHaveAudio = (streamType === 'hls' || streamType === 'mp4' || streamType === 'flv' || streamType === 'h265' || streamType === 'rtmp')
+        const outputCanHaveAudio = config.outputsWithAudio.indexOf(streamType) > -1;
         const outputRequiresEncoding = streamType === 'mjpeg' || streamType === 'b64'
         const outputIsPresetCapable = outputCanHaveAudio
         const { videoWidth, videoHeight } = validateDimensions(channel.stream_scale_x,channel.stream_scale_y)
@@ -246,7 +248,7 @@ module.exports = (s,config,lang) => {
             streamFilters.push(channel.stream_vf)
         }
         if(outputIsPresetCapable){
-            const streamPreset = streamType !== 'h265' && channel.preset_stream ? channel.preset_stream : null
+            const streamPreset = config.outputsNotCapableOfPresets.indexOf(streamType) === -1 && channel.preset_stream ? channel.preset_stream : null
             if(streamPreset){
                 streamFlags.push(`-preset ${streamPreset}`)
             }
@@ -287,18 +289,18 @@ module.exports = (s,config,lang) => {
                         streamFlags.push(`-g 1`)
                     }
                 }
-                streamFlags.push(`-f hls -hls_time ${hlsTime} -hls_list_size ${hlsListSize} -start_number 0 -hls_allow_cache 0 -hls_flags +delete_segments+omit_endlist "${channelStreamDirectory}s.m3u8"`)
+                streamFlags.push(`-f hls -hls_time ${hlsTime} -hls_list_size ${hlsListSize} -start_number 0 -hls_allow_cache 0 -hls_flags +delete_segments+omit_endlist+discont_start "${channelStreamDirectory}s.m3u8"`)
             break;
             case'mjpeg':
                 streamFlags.push(`-an -c:v mjpeg -f mpjpeg -boundary_tag shinobi pipe:${number}`)
-            break;
-            case'h265':
-                streamFlags.push(`-movflags +frag_keyframe+empty_moov+default_base_moof -metadata title="Shinobi H.265 Stream" -reset_timestamps 1 -f hevc pipe:${number}`)
             break;
             case'b64':case'':case undefined:case null://base64
                 streamFlags.push(`-an -c:v mjpeg -f image2pipe pipe:${number}`)
             break;
         }
+        s.onFfmpegBuildStreamChannelExtensions.forEach(function(extender){
+            extender(streamType,streamFlags,number,e)
+        });
         return ' ' + streamFlags.join(' ')
     }
     const buildMainInput = function(e){
@@ -375,7 +377,7 @@ module.exports = (s,config,lang) => {
         //x = temporary values
         const streamFlags = []
         const streamType = e.details.stream_type ? e.details.stream_type : 'hls'
-        if(streamType !== 'jpeg'){
+        if(streamType !== 'jpeg' && streamType !== 'useSubstream'){
             const isCudaEnabled = hasCudaEnabled(e)
             const streamFilters = []
             const videoCodecisCopy = e.details.stream_vcodec === 'copy'
@@ -384,7 +386,7 @@ module.exports = (s,config,lang) => {
             const videoQuality = e.details.stream_quality ? e.details.stream_quality : '1'
             const videoFps = !isNaN(parseFloat(e.details.stream_fps)) && e.details.stream_fps !== '0' ? parseFloat(e.details.stream_fps) : null
             const inputMap = buildInputMap(e,e.details.input_map_choices.stream)
-            const outputCanHaveAudio = (streamType === 'hls' || streamType === 'mp4' || streamType === 'flv' || streamType === 'h265')
+            const outputCanHaveAudio = config.outputsWithAudio.indexOf(streamType) > -1;
             const outputRequiresEncoding = streamType === 'mjpeg' || streamType === 'b64'
             const outputIsPresetCapable = outputCanHaveAudio
             const { videoWidth, videoHeight } = validateDimensions(e.details.stream_scale_x,e.details.stream_scale_y)
@@ -429,7 +431,7 @@ module.exports = (s,config,lang) => {
                 streamFilters.push(e.details.stream_vf)
             }
             if(outputIsPresetCapable){
-                const streamPreset = streamType !== 'h265' && e.details.preset_stream ? e.details.preset_stream : null
+                const streamPreset = config.outputsNotCapableOfPresets.indexOf(streamType) === -1 && e.details.preset_stream ? e.details.preset_stream : null
                 if(streamPreset){
                     streamFlags.push(`-preset ${streamPreset}`)
                 }
@@ -460,18 +462,18 @@ module.exports = (s,config,lang) => {
                             streamFlags.push(`-g 1`)
                         }
                     }
-                    streamFlags.push(`-f hls -hls_time ${hlsTime} -hls_list_size ${hlsListSize} -start_number 0 -hls_allow_cache 0 -hls_flags +delete_segments+omit_endlist "${e.sdir}s.m3u8"`)
+                    streamFlags.push(`-f hls -hls_time ${hlsTime} -hls_list_size ${hlsListSize} -start_number 0 -hls_allow_cache 0 -hls_flags +delete_segments+omit_endlist+discont_start "${e.sdir}s.m3u8"`)
                 break;
                 case'mjpeg':
                     streamFlags.push(`-an -c:v mjpeg -f mpjpeg -boundary_tag shinobi pipe:1`)
-                break;
-                case'h265':
-                    streamFlags.push(`-movflags +frag_keyframe+empty_moov+default_base_moof -metadata title="Shinobi H.265 Stream" -reset_timestamps 1 -f hevc pipe:1`)
                 break;
                 case'b64':case'':case undefined:case null://base64
                     streamFlags.push(`-an -c:v mjpeg -f image2pipe pipe:1`)
                 break;
             }
+            s.onFfmpegBuildMainStreamExtensions.forEach(function(extender){
+                extender(streamType,streamFlags,e)
+            });
             if(e.details.custom_output){
                 streamFlags.push(e.details.custom_output)
             }
@@ -652,20 +654,20 @@ module.exports = (s,config,lang) => {
                     if(objectDetectorOutputIsEnabled){
                         addObjectDetectorInputMap()
                         addObjectDetectValues()
-                        detectorFlags.push('-an -f singlejpeg pipe:4')
+                        detectorFlags.push('-an -f mjpeg pipe:4')
                     }
                 }else if(sendFramesToObjectDetector){
                     addObjectDetectorInputMap()
                     addObjectDetectValues()
-                    detectorFlags.push('-an -f singlejpeg pipe:4')
+                    detectorFlags.push('-an -f mjpeg pipe:4')
                 }else{
                     addInputMap()
-                    detectorFlags.push('-an -f singlejpeg pipe:4')
+                    detectorFlags.push('-an -f mjpeg pipe:4')
                 }
             }else if(sendFramesToObjectDetector){
                 addObjectDetectorInputMap()
                 addObjectDetectValues()
-                detectorFlags.push('-an -f singlejpeg pipe:4')
+                detectorFlags.push('-an -f mjpeg pipe:4')
             }
             return detectorFlags.join(' ')
         }
@@ -677,13 +679,17 @@ module.exports = (s,config,lang) => {
             const isCudaEnabled = hasCudaEnabled(e)
             const outputFilters = []
             var videoCodec = e.details.detector_buffer_vcodec
+            var liveStartIndex = e.details.detector_buffer_live_start_index || '-3'
             var audioCodec = e.details.detector_buffer_acodec ? e.details.detector_buffer_acodec : 'no'
             const videoCodecisCopy = videoCodec === 'copy'
             const videoFps = !isNaN(parseFloat(e.details.stream_fps)) && e.details.stream_fps !== '0' ? parseFloat(e.details.stream_fps) : null
             const inputMap = buildInputMap(e,e.details.input_map_choices.detector_sip_buffer)
             const { videoWidth, videoHeight } = validateDimensions(e.details.event_record_scale_x,e.details.event_record_scale_y)
             const hlsTime = !isNaN(parseInt(e.details.detector_buffer_hls_time)) ? `${parseInt(e.details.detector_buffer_hls_time)}` : '2'
-            const hlsListSize = !isNaN(parseInt(e.details.detector_buffer_hls_list_size)) ? `${parseInt(e.details.detector_buffer_hls_list_size)}` : '4'
+            // const hlsListSize = !isNaN(parseInt(e.details.detector_buffer_hls_list_size)) ? `${parseInt(e.details.detector_buffer_hls_list_size)}` : '4'
+            const secondsBefore = parseInt(e.details.detector_buffer_seconds_before) || 5
+            let hlsListSize = parseInt(secondsBefore * 0.6)
+            hlsListSize = hlsListSize < 3 ? 3 : hlsListSize;
             if(inputMap)outputFlags.push(inputMap)
             if(e.details.cust_sip_record)outputFlags.push(e.details.cust_sip_record)
             if(videoCodec === 'auto'){
@@ -737,7 +743,7 @@ module.exports = (s,config,lang) => {
                     outputFlags.push(`-g 1`)
                 }
             }
-            outputFlags.push(`-f hls -live_start_index -3 -hls_time ${hlsTime} -hls_list_size ${hlsListSize} -start_number 0 -hls_allow_cache 0 -hls_flags +delete_segments+omit_endlist "${e.sdir}detectorStream.m3u8"`)
+            outputFlags.push(`-f hls -live_start_index -3 -hls_time ${hlsTime} -hls_list_size ${hlsListSize} -start_number 0 -hls_allow_cache 0 -hls_flags +delete_segments+omit_endlist+discont_start "${e.sdir}detectorStream.m3u8"`)
         }
         return outputFlags.join(' ')
     }
@@ -757,10 +763,62 @@ module.exports = (s,config,lang) => {
             if(videoFilters.length > 0){
                 videoFlags.push(`-vf "${videoFilters.join(',')}"`)
             }
-            videoFlags.push(`-f singlejpeg -an -q:v 1 pipe:7`)
+            videoFlags.push(`-f mjpeg -an -q:v 1 pipe:7`)
             return videoFlags.join(' ')
         }
         return ``
+    }
+    const getDefaultSubstreamFields = function(monitor){
+        const subStreamFields = s.parseJSON(monitor.details.substream || {input:{},output:{}})
+        const inputAndConnectionFields = Object.assign({
+           "type":"h264",
+           "fulladdress":"",
+           "sfps":"",
+           "aduration":"",
+           "probesize":"",
+           "stream_loop":"0",
+           "rtsp_transport":"",
+           "accelerator":"0",
+           "hwaccel":"",
+           "hwaccel_vcodec":"auto",
+           "hwaccel_device":"",
+           "cust_input":""
+       },subStreamFields.input);
+       const outputFields = Object.assign({
+           "stream_type":"hls",
+           "rtmp_server_url":"",
+           "rtmp_stream_key":"",
+           "stream_mjpeg_clients":"",
+           "stream_vcodec":"copy",
+           "stream_acodec":"no",
+           "stream_fps":"",
+           "hls_time":"",
+           "preset_stream":"",
+           "hls_list_size":"",
+           "stream_quality":"",
+           "stream_v_br":"",
+           "stream_a_br":"",
+           "stream_scale_x":"",
+           "stream_scale_y":"",
+           "rotate_stream":"no",
+           "svf":"",
+           "cust_stream":""
+       },subStreamFields.output);
+       return {
+           inputAndConnectionFields,
+           outputFields,
+       }
+    }
+    const buildSubstreamString = function(channelNumber,monitor){
+        let ffmpegParts = []
+        const {
+            inputAndConnectionFields,
+            outputFields,
+        } = getDefaultSubstreamFields(monitor)
+        ffmpegParts.push(`-loglevel ${monitor.details.loglevel || 'warning'}`)
+        ffmpegParts.push(createInputMap(monitor,channelNumber,inputAndConnectionFields))
+        ffmpegParts.push(createStreamChannel(monitor,channelNumber,outputFields))
+        return ffmpegParts.join(' ')
     }
     return {
         createStreamChannel: createStreamChannel,
@@ -772,5 +830,7 @@ module.exports = (s,config,lang) => {
         buildMainDetector: buildMainDetector,
         buildEventRecordingOutput: buildEventRecordingOutput,
         buildTimelapseOutput: buildTimelapseOutput,
+        getDefaultSubstreamFields: getDefaultSubstreamFields,
+        buildSubstreamString: buildSubstreamString,
     }
 }

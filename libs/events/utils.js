@@ -3,7 +3,6 @@ const moment = require('moment');
 const execSync = require('child_process').execSync;
 const exec = require('child_process').exec;
 const spawn = require('child_process').spawn;
-const request = require('request');
 const imageSaveEventLock = {};
 // Matrix In Region Libs >
 const SAT = require('sat')
@@ -12,6 +11,9 @@ const P = SAT.Polygon;
 const B = SAT.Box;
 // Matrix In Region Libs />
 module.exports = (s,config,lang,app,io) => {
+    // Event Filters >
+    const acceptableOperators = ['indexOf','!indexOf','===','!==','>=','>','<','<=']
+    // Event Filters />
     const {
         splitForFFPMEG
     } = require('../ffmpeg/utils.js')(s,config,lang)
@@ -19,8 +21,13 @@ module.exports = (s,config,lang,app,io) => {
         moveCameraPtzToMatrix
     } = require('../control/ptz.js')(s,config,lang)
     const {
-        cutVideoLength
+        cutVideoLength,
+        reEncodeVideoAndBinOriginalAddToQueue
     } = require('../video/utils.js')(s,config,lang)
+    const {
+        isEven,
+        fetchTimeout,
+    } = require('../basic/utils.js')(process.cwd(),config)
     async function saveImageFromEvent(options,frameBuffer){
         const monitorId = options.mid || options.id
         const groupKey = options.ke
@@ -64,6 +71,9 @@ module.exports = (s,config,lang,app,io) => {
         var newString = string + ''
         var d = Object.assign(eventData,addOps)
         var detailString = s.stringJSON(d.details)
+        var tag = detailString.matrices
+            && detailString.matrices[0]
+            && detailString.matrices[0].tag;
         newString = newString
             .replace(/{{TIME}}/g,d.currentTimestamp)
             .replace(/{{REGION_NAME}}/g,d.details.name)
@@ -71,7 +81,10 @@ module.exports = (s,config,lang,app,io) => {
             .replace(/{{MONITOR_ID}}/g,d.id)
             .replace(/{{MONITOR_NAME}}/g,s.group[d.ke].rawMonitorConfigurations[d.id].name)
             .replace(/{{GROUP_KEY}}/g,d.ke)
-            .replace(/{{DETAILS}}/g,detailString)
+            .replace(/{{DETAILS}}/g,detailString);
+        if(tag){
+            newString = newString.replace(/{{TAG}}/g,tag)
+        }
         if(d.details.confidence){
             newString = newString
             .replace(/{{CONFIDENCE}}/g,d.details.confidence)
@@ -146,7 +159,6 @@ module.exports = (s,config,lang,app,io) => {
     }
     const addToEventCounter = (eventData) => {
         const eventsCounted = s.group[eventData.ke].activeMonitors[eventData.id].detector_motion_count
-        s.debugLog(`addToEventCounter`,eventData,eventsCounted.length)
         eventsCounted.push(eventData)
     }
     const clearEventCounter = (groupKey,monitorId) => {
@@ -187,8 +199,20 @@ module.exports = (s,config,lang,app,io) => {
             Object.keys(filters).forEach(function(key){
                 var conditionChain = {}
                 var dFilter = filters[key]
+                if(dFilter.enabled === '0')return;
+                var numberOfOpenAndCloseBrackets = 0
                 dFilter.where.forEach(function(condition,place){
-                    conditionChain[place] = {ok:false,next:condition.p4,matrixCount:0}
+                    const hasOpenBracket = condition.openBracket === '1';
+                    const hasCloseBracket = condition.closeBracket === '1';
+                    conditionChain[place] = {
+                        ok: false,
+                        next: condition.p4,
+                        matrixCount: 0,
+                        openBracket: hasOpenBracket,
+                        closeBracket: hasCloseBracket,
+                    }
+                    if(hasOpenBracket)++numberOfOpenAndCloseBrackets;
+                    if(hasCloseBracket)++numberOfOpenAndCloseBrackets;
                     if(d.details.matrices)conditionChain[place].matrixCount = d.details.matrices.length
                     var modifyFilters = function(toCheck,matrixPosition){
                         var param = toCheck[condition.p1]
@@ -210,7 +234,12 @@ module.exports = (s,config,lang,app,io) => {
                                     pass()
                                 }
                             break;
-                            default:
+                            case'===':
+                            case'!==':
+                            case'>=':
+                            case'>':
+                            case'<':
+                            case'<=':
                                 if(eval('param '+condition.p2+' "'+condition.p3.replace(/"/g,'\\"')+'"')){
                                     pass()
                                 }
@@ -243,7 +272,7 @@ module.exports = (s,config,lang,app,io) => {
                                 var atSecond = parseInt(doAtTime[2]) - 1 || timeNow.getSeconds()
                                 var nowAddedInSeconds = atHourNow * 60 * 60 + atMinuteNow * 60 + atSecondNow
                                 var conditionAddedInSeconds = atHour * 60 * 60 + atMinute * 60 + atSecond
-                                if(eval('nowAddedInSeconds '+condition.p2+' conditionAddedInSeconds')){
+                                if(acceptableOperators.indexOf(condition.p2) > -1 && eval('nowAddedInSeconds '+condition.p2+' conditionAddedInSeconds')){
                                     conditionChain[place].ok = true
                                 }
                             }
@@ -254,20 +283,29 @@ module.exports = (s,config,lang,app,io) => {
                     }
                 })
                 var conditionArray = Object.values(conditionChain)
-                var validationString = ''
+                var validationString = []
+                var allowBrackets = false;
+                if (numberOfOpenAndCloseBrackets === 0 || isEven(numberOfOpenAndCloseBrackets)){
+                    allowBrackets = true;
+                }else{
+                    s.userLog(d,{type:lang["Event Filter Error"],msg:lang.eventFilterErrorBrackets})
+                }
                 conditionArray.forEach(function(condition,number){
-                    validationString += condition.ok+' '
+                    validationString.push(`${allowBrackets && condition.openBracket ? '(' : ''}${condition.ok}${allowBrackets && condition.closeBracket ? ')' : ''}`);
                     if(conditionArray.length-1 !== number){
-                        validationString += condition.next+' '
+                        validationString.push(condition.next)
                     }
                 })
-                if(eval(validationString)){
+                if(eval(validationString.join(' '))){
                     if(dFilter.actions.halt !== '1'){
                         delete(dFilter.actions.halt)
                         Object.keys(dFilter.actions).forEach(function(key){
                             var value = dFilter.actions[key]
                             filter[key] = parseValue(key,value)
                         })
+                        if(dFilter.actions.record === '1'){
+                            filter.forceRecord = true
+                        }
                     }else{
                         filter.halt = true
                     }
@@ -362,7 +400,7 @@ module.exports = (s,config,lang,app,io) => {
                 matrices: eventDetails.matrices || [],
             },d.frame)
         }
-        if(forceSave || (filter.save && monitorDetails.detector_save === '1')){
+        if(forceSave || (filter.save || monitorDetails.detector_save === '1')){
             s.knexQuery({
                 action: "insert",
                 table: "Events",
@@ -370,7 +408,7 @@ module.exports = (s,config,lang,app,io) => {
                     ke: d.ke,
                     mid: d.id,
                     details: detailString,
-                    time: eventTime,
+                    time: s.formattedTime(eventTime),
                 }
             })
         }
@@ -384,12 +422,12 @@ module.exports = (s,config,lang,app,io) => {
             detector_timeout = parseFloat(monitorDetails.detector_timeout)
         }
         if(
-            filter.record &&
+            (filter.forceRecord || (filter.record && monitorDetails.detector_trigger === '1')) &&
             monitorConfig.mode === 'start' &&
-            monitorDetails.detector_trigger === '1' &&
             (monitorDetails.detector_record_method === 'sip' || monitorDetails.detector_record_method === 'hot')
         ){
-            createEventBasedRecording(d,moment(eventTime).subtract(5,'seconds').format('YYYY-MM-DDTHH-mm-ss'))
+            const secondBefore = (parseInt(monitorDetails.detector_buffer_seconds_before) || 5) + 1
+            createEventBasedRecording(d,moment(eventTime).subtract(secondBefore,'seconds').format('YYYY-MM-DDTHH-mm-ss'))
         }
         d.currentTime = eventTime
         d.currentTimestamp = s.timeObject(d.currentTime).format()
@@ -401,14 +439,17 @@ module.exports = (s,config,lang,app,io) => {
             var detector_webhook_url = addEventDetailsToString(d,monitorDetails.detector_webhook_url)
             var webhookMethod = monitorDetails.detector_webhook_method
             if(!webhookMethod || webhookMethod === '')webhookMethod = 'GET'
-            request(detector_webhook_url,{method: webhookMethod,encoding:null},function(err,data){
-                if(err){
-                    s.userLog(d,{type:lang["Event Webhook Error"],msg:{error:err,data:data}})
-                }
+            fetchTimeout(detector_webhook_url,10000,{
+                method: webhookMethod
+            }).catch((err) => {
+                s.userLog(d,{type:lang["Event Webhook Error"],msg:{error:err,data:data}})
             })
         }
 
-        if(filter.command && monitorDetails.detector_command_enable === '1' && !s.group[d.ke].activeMonitors[d.id].detector_command){
+        if(
+            filter.command ||
+            (monitorDetails.detector_command_enable === '1' && !s.group[d.ke].activeMonitors[d.id].detector_command)
+        ){
             s.group[d.ke].activeMonitors[d.id].detector_command = s.createTimeout('detector_command',s.group[d.ke].activeMonitors[d.id],monitorDetails.detector_command_timeout,10)
             var detector_command = addEventDetailsToString(d,monitorDetails.detector_command)
             if(detector_command === '')return
@@ -431,23 +472,27 @@ module.exports = (s,config,lang,app,io) => {
             if(activeMonitor && activeMonitor.eventBasedRecording && activeMonitor.eventBasedRecording.process){
                 const eventBasedRecording = activeMonitor.eventBasedRecording
                 const monitorConfig = s.group[groupKey].rawMonitorConfigurations[monitorId]
-                const videoLength = monitorConfig.details.detector_send_video_length
+                const videoLength = parseInt(monitorConfig.details.detector_send_video_length) || 10
                 const recordingDirectory = s.getVideoDirectory(monitorConfig)
                 const fileTime = eventBasedRecording.lastFileTime
                 const filename = `${fileTime}.mp4`
                 response.filename = `${filename}`
                 response.filePath = `${recordingDirectory}${filename}`
-                eventBasedRecording.process.on('close',function(){
+                eventBasedRecording.process.on('exit',function(){
                     setTimeout(async () => {
                         if(!isNaN(videoLength)){
                             const cutResponse = await cutVideoLength({
                                 ke: groupKey,
                                 mid: monitorId,
                                 filePath: response.filePath,
-                                cutLength: parseInt(videoLength),
+                                cutLength: videoLength,
                             })
-                            response.filename = cutResponse.filename
-                            response.filePath = cutResponse.filePath
+                            if(cutResponse.ok){
+                                response.filename = cutResponse.filename
+                                response.filePath = cutResponse.filePath
+                            }else{
+                                s.debugLog('cutResponse',cutResponse)
+                            }
                         }
                         resolve(response)
                     },1000)
@@ -489,14 +534,26 @@ module.exports = (s,config,lang,app,io) => {
                 var ffmpegError = ''
                 var error
                 var filename = fileTime + '.mp4'
+                let outputMap = `-map 0:0 `
+                const analyzeDuration = parseInt(monitorDetails.event_record_aduration) || 1000
+                const probeSize = parseInt(monitorDetails.event_record_probesize) || 32
                 s.userLog(d,{
                     type: logTitleText,
                     msg: lang["Started"]
                 })
                 //-t 00:'+s.timeObject(new Date(detector_timeout * 1000 * 60)).format('mm:ss')+'
+                if(
+                    monitorDetails.detector_buffer_acodec &&
+                    monitorDetails.detector_buffer_acodec !== 'no' &&
+                    monitorDetails.detector_buffer_acodec !== 'auto'
+                ){
+                    outputMap += `-map 0:1 `
+                }
+                const ffmpegCommand = `-loglevel warning -live_start_index -99999 -analyzeduration ${analyzeDuration} -probesize ${probeSize} -re -i "${s.dir.streams+d.ke+'/'+d.id}/detectorStream.m3u8" ${outputMap}-movflags faststart+frag_keyframe+empty_moov -fflags +igndts -c:v copy -c:a aac -strict -2 -strftime 1 -y "${s.getVideoDirectory(monitorConfig) + filename}"`
+                s.debugLog(ffmpegCommand)
                 activeMonitor.eventBasedRecording.process = spawn(
                     config.ffmpegDir,
-                    splitForFFPMEG(('-loglevel warning -analyzeduration 1000000 -probesize 1000000 -re -i "'+s.dir.streams+d.ke+'/'+d.id+'/detectorStream.m3u8" -movflags faststart+frag_keyframe+empty_moov -fflags +igndts -c:v copy -strftime 1 "'+s.getVideoDirectory(monitorConfig) + filename + '"'))
+                    splitForFFPMEG(ffmpegCommand)
                 )
                 activeMonitor.eventBasedRecording.process.stderr.on('data',function(data){
                     s.userLog(d,{
@@ -515,7 +572,24 @@ module.exports = (s,config,lang,app,io) => {
                     }
                     s.insertCompletedVideo(monitorConfig,{
                         file : filename,
-                    })
+                    },function(err,response){
+                        const autoCompressionEnabled = monitorDetails.auto_compress_videos === '1';
+                        if(autoCompressionEnabled){
+                            reEncodeVideoAndBinOriginalAddToQueue({
+                                video: response.insertQuery,
+                                targetVideoCodec: 'vp9',
+                                targetAudioCodec: 'libopus',
+                                targetQuality: '-q:v 1 -q:a 1',
+                                targetExtension: 'webm',
+                                doSlowly: false,
+                                automated: true,
+                            }).then((encodeResponse) => {
+                                s.debugLog('Complete Automatic Compression',encodeResponse)
+                            }).catch((err) => {
+                                console.log(err)
+                            })
+                        }
+                    });
                     s.userLog(d,{
                         type: logTitleText,
                         msg: lang["Detector Recording Complete"]
@@ -594,12 +668,13 @@ module.exports = (s,config,lang,app,io) => {
             halt : false,
             addToMotionCounter : true,
             useLock : true,
-            save : true,
-            webhook : true,
-            command : true,
+            save : false,
+            webhook : false,
+            command : false,
             record : true,
+            forceRecord : false,
             indifference : false,
-            countObjects : true
+            countObjects : false
         }
         if(!s.group[d.ke] || !s.group[d.ke].activeMonitors[d.id]){
             return s.systemLog(lang['No Monitor Found, Ignoring Request'])
@@ -608,14 +683,14 @@ module.exports = (s,config,lang,app,io) => {
         if(!monitorConfig){
             return s.systemLog(lang['No Monitor Found, Ignoring Request'])
         }
+        const activeMonitor = s.group[d.ke].activeMonitors[d.id]
         const monitorDetails = monitorConfig.details
         s.onEventTriggerBeforeFilterExtensions.forEach(function(extender){
             extender(d,filter)
         })
         const eventDetails = d.details
-        const passedEventFilters = checkEventFilters(d,monitorDetails,filter)
-        if(!passedEventFilters)return
-        const detailString = JSON.stringify(eventDetails)
+        const passedEventFilters = checkEventFilters(d,activeMonitor.details,filter)
+        if(!passedEventFilters)return;
         const eventTime = new Date()
         if(
             filter.addToMotionCounter &&
@@ -638,8 +713,7 @@ module.exports = (s,config,lang,app,io) => {
             addToEventCounter(d)
         }
         if(
-            filter.countObjects &&
-            monitorDetails.detector_obj_count === '1' &&
+            (filter.countObjects || monitorDetails.detector_obj_count === '1') &&
             monitorDetails.detector_obj_count_in_region !== '1'
         ){
             didCountingAlready = true

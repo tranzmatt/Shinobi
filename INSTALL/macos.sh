@@ -10,7 +10,7 @@ echo "Shinobi - Do you want to Install Node.js?"
 echo "(y)es or (N)o"
 read -r nodejsinstall
 if [ "$nodejsinstall" = "y" ]; then
-    curl -o node-installer.pkg https://nodejs.org/dist/v11.9.0/node-v11.9.0.pkg
+    curl -o node-installer.pkg https://nodejs.org/dist/v16.15.0/node-v16.15.0.pkg
     sudo installer -pkg node-installer.pkg -target /
     rm node-installer.pkg
     sudo ln -s /usr/local/bin/node /usr/bin/nodejs
@@ -34,18 +34,13 @@ if [ "$ffmpeginstall" = "y" ]; then
     sudo chmod +x /usr/local/bin/ffserver
 fi
 echo "============="
-if [ ! -e "./shinobi.sqlite" ]; then
-    sudo npm install jsonfile
-    sudo cp sql/shinobi.sample.sqlite shinobi.sqlite
-    sudo node tools/modifyConfiguration.js databaseType=sqlite3
-fi
 echo "Shinobi - Install NPM Libraries"
 sudo npm i npm -g
 sudo npm install --unsafe-perm
 # sudo npm audit fix --unsafe-perm
 echo "============="
 echo "Shinobi - Install PM2"
-sudo npm install pm2@3.0.0 -g
+sudo npm install pm2@latest -g
 if [ ! -e "./conf.json" ]; then
     sudo cp conf.sample.json conf.json
 fi

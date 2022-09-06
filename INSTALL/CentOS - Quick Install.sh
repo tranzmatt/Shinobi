@@ -85,7 +85,7 @@ echo "========================================================="
 #Check if Node.js is installed
 if ! [ -x "$(command -v node)" ]; then
     echo "Node.js not found, installing..."
-    sudo curl --silent --location https://rpm.nodesource.com/setup_12.x | sudo bash -
+    sudo curl --silent --location https://rpm.nodesource.com/setup_16.x | sudo bash -
 	sudo "$pkgmgr" install nodejs -y -q -e 0
 else
     echo "Node.js is already installed..."

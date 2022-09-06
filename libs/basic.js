@@ -57,12 +57,15 @@ module.exports = function(s,config){
         splitted[1] = user + ':' + pass + '@' + splitted[1]
         return splitted.join('://')
     }
-    s.checkCorrectPathEnding = function(x){
-        var length=x.length
-        if(x.charAt(length-1)!=='/'){
-            x=x+'/'
+    s.checkCorrectPathEnding = function(x,reverse){
+        var newString = `${x}`
+        var length = x.length
+        if(reverse && x.charAt(length-1) === '/'){
+            newString = x.slice(0, -1)
+        }else if(x.charAt(length-1) !== '/'){
+            newString = x + '/'
         }
-        return x.replace('__DIR__',s.mainDirectory)
+        return newString.replace('__DIR__',s.mainDirectory)
     }
     s.mergeDeep = function(...objects) {
       const isObject = obj => obj && typeof obj === 'object';

@@ -11,3 +11,4 @@ npm-debug.log
 shinobi.sqlite
 dist
 ._*
+generatedLanguageFiles

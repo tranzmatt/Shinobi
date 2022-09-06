@@ -142,7 +142,6 @@ module.exports = (s,config,lang) => {
         const groupKey = options.groupKey
         const err = options.err
         const files = options.files
-        const storageIndex = options.storageIndex
         var whereGroup = []
         var whereQuery = [
             ['ke','=',groupKey],
@@ -151,7 +150,9 @@ module.exports = (s,config,lang) => {
         var completedCheck = 0
         if(files){
             files.forEach(function(file){
+
                 var dir = s.getFileBinDirectory(file)
+                s.debugLog(`deleting FileBin File`,`${file}`,dir)
                 var fileLocationMid = `${dir}` + file.name
                 const queryGroup = {
                     mid: file.mid,
@@ -180,14 +181,7 @@ module.exports = (s,config,lang) => {
                         })
                     }
                 })
-                if(storageIndex){
-                    s.setDiskUsedForGroupAddStorage(groupKey,{
-                        size: -(file.size/1048576),
-                        storageIndex: storageIndex
-                    },'fileBin')
-                }else{
-                    s.setDiskUsedForGroup(groupKey,-(file.size/1048576),'fileBin')
-                }
+                s.setDiskUsedForGroup(groupKey,-(file.size/1048576),'fileBin')
             })
         }else{
             console.log(err)
@@ -227,7 +221,7 @@ module.exports = (s,config,lang) => {
                         where: [
                             ['ke','=',groupKey],
                             ['status','!=','0'],
-                            ['details','NOT LIKE',`%"archived":"1"%`],
+                            ['archive','!=',`1`],
                             ['details','LIKE',`%"dir":"${storage.value}"%`],
                         ],
                         orderBy: ['time','asc'],
@@ -272,7 +266,7 @@ module.exports = (s,config,lang) => {
                 where: [
                     ['ke','=',groupKey],
                     ['status','!=','0'],
-                    ['details','NOT LIKE',`%"archived":"1"%`],
+                    ['archive','!=',`1`],
                     ['details','NOT LIKE',`%"dir"%`],
                 ],
                 orderBy: ['time','asc'],
@@ -294,14 +288,17 @@ module.exports = (s,config,lang) => {
     }
     const deleteTimelapseFrames = function(groupKey,callback){
         //run purge command
-        if(s.group[groupKey].usedSpaceTimelapseFrames > (s.group[groupKey].sizeLimit * (s.group[groupKey].sizeLimitTimelapseFramesPercent / 100) * config.cron.deleteOverMaxOffset)){
+        const maxSize = (s.group[groupKey].sizeLimit * (s.group[groupKey].sizeLimitTimelapseFramesPercent / 100) * config.cron.deleteOverMaxOffset);
+        const currentlyUsedSize = s.group[groupKey].usedSpaceTimelapseFrames
+        s.debugLog(`deleteTimelapseFrames`,`${currentlyUsedSize}/${maxSize}`)
+        if(currentlyUsedSize > maxSize){
             s.knexQuery({
                 action: "select",
                 columns: "*",
                 table: "Timelapse Frames",
                 where: [
                     ['ke','=',groupKey],
-                    ['details','NOT LIKE',`%"archived":"1"%`],
+                    ['archive','!=',`1`],
                 ],
                 orderBy: ['time','asc'],
                 limit: 3
@@ -319,14 +316,17 @@ module.exports = (s,config,lang) => {
     }
     const deleteFileBinFiles = function(groupKey,callback){
         if(config.deleteFileBinsOverMax === true){
-            //run purge command
-            if(s.group[groupKey].usedSpaceFileBin > (s.group[groupKey].sizeLimit * (s.group[groupKey].sizeLimitFileBinPercent / 100) * config.cron.deleteOverMaxOffset)){
+            const maxSize = (s.group[groupKey].sizeLimit * (s.group[groupKey].sizeLimitFileBinPercent / 100) * config.cron.deleteOverMaxOffset);
+            const currentlyUsedSize = s.group[groupKey].usedSpaceFilebin
+            s.debugLog(`deleteFileBinFiles`,`${currentlyUsedSize}/${maxSize}`)
+            if(currentlyUsedSize > maxSize){
                 s.knexQuery({
                     action: "select",
                     columns: "*",
                     table: "Files",
                     where: [
                         ['ke','=',groupKey],
+                        ['archive','!=',`1`],
                     ],
                     orderBy: ['time','asc'],
                     limit: 1
@@ -335,7 +335,6 @@ module.exports = (s,config,lang) => {
                         groupKey: groupKey,
                         err: err,
                         files: files,
-                        storageIndex: null
                     },callback)
                 })
             }else{
@@ -410,7 +409,6 @@ module.exports = (s,config,lang) => {
                 table: "Cloud Timelapse Frames",
                 where: [
                     ['ke','=',groupKey],
-                    ['details','NOT LIKE',`%"archived":"1"%`],
                 ],
                 orderBy: ['time','asc'],
                 limit: 3
@@ -451,6 +449,61 @@ module.exports = (s,config,lang) => {
             callback()
         }
     }
+    function resetAllStorageCounters(groupKey){
+        var storageIndexes = Object.keys(s.group[groupKey].addStorageUse)
+        storageIndexes.forEach((storageIndex) => {
+            s.setDiskUsedForGroupAddStorage(groupKey,{
+                size: 0,
+                storageIndex: storageIndex
+            })
+        })
+        s.setDiskUsedForGroup(groupKey,0)
+    }
+    function createAdminUser(user){
+        return new Promise((resolve,reject) => {
+            const detailsColumn = Object.assign({
+                "factorAuth":"0",
+                "size": user.diskLimit || user.size || '',
+                "days":"",
+                "event_days":"",
+                "log_days":"",
+                "max_camera": user.cameraLimit || user.max_camera || '',
+                "permissions":"all",
+                "edit_size":"1",
+                "edit_days":"1",
+                "edit_event_days":"1",
+                "edit_log_days":"1",
+                "use_admin":"1",
+                "use_aws_s3":"1",
+                "use_whcs":"1",
+                "use_sftp":"1",
+                "use_webdav":"1",
+                "use_discordbot":"1",
+                "use_ldap":"1",
+                "aws_use_global":"0",
+                "b2_use_global":"0",
+                "webdav_use_global":"0"
+            },s.parseJSON(user.details) || {});
+            const insertQuery = {
+                ke: user.ke || s.gid(7),
+                uid: user.uid || s.gid(6),
+                mail: user.mail,
+                pass: s.createHash(user.initialPassword || user.pass || s.gid()),
+                details: JSON.stringify(detailsColumn)
+            }
+            s.knexQuery({
+                action: "insert",
+                table: "Users",
+                insert: insertQuery
+            },function(err,users) {
+                resolve({
+                    ok: !err,
+                    inserted: !err ? insertQuery : undefined,
+                    err: err
+                })
+            })
+        })
+    }
     return {
         deleteSetOfVideos: deleteSetOfVideos,
         deleteSetOfTimelapseFrames: deleteSetOfTimelapseFrames,
@@ -461,5 +514,7 @@ module.exports = (s,config,lang) => {
         deleteFileBinFiles: deleteFileBinFiles,
         deleteCloudVideos: deleteCloudVideos,
         deleteCloudTimelapseFrames: deleteCloudTimelapseFrames,
+        resetAllStorageCounters: resetAllStorageCounters,
+        createAdminUser: createAdminUser,
     }
 }

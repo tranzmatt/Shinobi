@@ -29,22 +29,22 @@ module.exports = function(s,config,lang,getSnapshot){
                     ]
                 },(err,r) => {
                     r = r[0]
-                        var mailOptions = {
-                            from: config.mail.from, // sender address
-                            to: checkEmail(r.mail), // list of receivers
-                            subject: lang.NoMotionEmailText1+' '+e.name+' ('+e.id+')', // Subject line
-                            html: '<i>'+lang.NoMotionEmailText2+' ' + (e.details.detector_notrigger_timeout || 10) + ' '+lang.minutes+'.</i>',
+                    var mailOptions = {
+                        from: config.mail.from, // sender address
+                        to: checkEmail(r.mail), // list of receivers
+                        subject: lang.NoMotionEmailText1+' '+e.name+' ('+e.id+')', // Subject line
+                        html: '<i>'+lang.NoMotionEmailText2+' ' + (e.details.detector_notrigger_timeout || 10) + ' '+lang.minutes+'.</i>',
+                    }
+                    mailOptions.html+='<div><b>'+lang['Monitor Name']+' </b> : '+e.name+'</div>'
+                    mailOptions.html+='<div><b>'+lang['Monitor ID']+' </b> : '+e.id+'</div>'
+                    sendMessage(mailOptions, (error, info) => {
+                        if (error) {
+                            s.systemLog('detector:notrigger:sendMail',error)
+                            s.tx({f:'error',ff:'detector_notrigger_mail',id:e.id,ke:e.ke,error:error},'GRP_'+e.ke);
+                            return ;
                         }
-                        mailOptions.html+='<div><b>'+lang['Monitor Name']+' </b> : '+e.name+'</div>'
-                        mailOptions.html+='<div><b>'+lang['Monitor ID']+' </b> : '+e.id+'</div>'
-                        sendMessage(mailOptions, (error, info) => {
-                            if (error) {
-                                s.systemLog('detector:notrigger:sendMail',error)
-                                s.tx({f:'error',ff:'detector_notrigger_mail',id:e.id,ke:e.ke,error:error},'GRP_'+e.ke);
-                                return ;
-                            }
-                            s.tx({f:'detector_notrigger_mail',id:e.id,ke:e.ke,info:info},'GRP_'+e.ke);
-                        })
+                        s.tx({f:'detector_notrigger_mail',id:e.id,ke:e.ke,info:info},'GRP_'+e.ke);
+                    })
                 })
             }
         }
@@ -94,16 +94,11 @@ module.exports = function(s,config,lang,getSnapshot){
             }
         }
         const onEventTriggerBeforeFilterForEmail = function(d,filter){
-            const monitorConfig = s.group[d.ke].rawMonitorConfigurations[d.id]
-            if(monitorConfig.details.detector_mail === '1'){
-                filter.mail = true
-            }else{
-                filter.mail = false
-            }
+            filter.mail = false
         }
         const onEventTriggerForEmail = async (d,filter) => {
             const monitorConfig = s.group[d.ke].rawMonitorConfigurations[d.id]
-            if(filter.mail && config.mail && !s.group[d.ke].activeMonitors[d.id].detector_mail){
+            if((filter.mail || monitorConfig.details.detector_mail === '1') && config.mail && !s.group[d.ke].activeMonitors[d.id].detector_mail){
                 s.knexQuery({
                     action: "select",
                     columns: "mail",
@@ -154,6 +149,13 @@ module.exports = function(s,config,lang,getSnapshot){
                             }
                         })
                     }
+                    await getSnapshot(d,monitorConfig)
+                    sendMail([
+                        {
+                            filename: d.screenshotName + '.jpg',
+                            content: d.screenshotBuffer
+                        }
+                    ])
                     if(monitorConfig.details.detector_mail_send_video === '1'){
                         let videoPath = null
                         let videoName = null
@@ -193,13 +195,6 @@ module.exports = function(s,config,lang,getSnapshot){
                             })
                         }
                     }
-                    await getSnapshot(d,monitorConfig)
-                    sendMail([
-                        {
-                            filename: d.screenshotName + '.jpg',
-                            content: d.screenshotBuffer
-                        }
-                    ])
                 })
             }
         }
@@ -245,6 +240,112 @@ module.exports = function(s,config,lang,getSnapshot){
         s.onFilterEvent(onFilterEventForEmail)
         s.onDetectorNoTriggerTimeout(onDetectorNoTriggerTimeoutForEmail)
         s.onMonitorUnexpectedExit(onMonitorUnexpectedExitForEmail)
+        s.definitions['Account Settings'].blocks['2-Factor Authentication'].info.push(                   {
+           "name": "detail=factor_mail",
+           "field": `${lang.Email} (${lang['System Level']})`,
+           "description": "Send 2-Factor Authentication codes to the email address of the account.",
+           "default": "1",
+           "example": "",
+           "fieldType": "select",
+           "possible": [
+              {
+                 "name": lang.No,
+                 "value": "0"
+              },
+              {
+                 "name": lang.Yes,
+                 "value": "1"
+              }
+           ]
+        });
+        s.definitions["Event Filters"].blocks["Action for Selected"].info.push(                    {
+          "name": "actions=mail",
+          "field": `${lang['Email on Trigger']} (${lang['System Level']})`,
+          "fieldType": "select",
+          "form-group-class": "actions-row",
+          "default": "",
+          "example": "1",
+          "possible": [
+             {
+                "name": lang['Original Choice'],
+                "value": "",
+                "selected": true
+             },
+             {
+                "name": lang.Yes,
+                "value": "1",
+             }
+          ]
+        })
+        s.definitions['Monitor Settings'].blocks['Notifications'].info[0].info.push(
+            {
+              "name": "detail=notify_email",
+              "field": `${lang.Email} (${lang['System Level']})`,
+              "default": "0",
+              "fieldType": "select",
+              "possible": [
+                 {
+                    "name": lang.No,
+                    "value": "0"
+                 },
+                 {
+                    "name": lang.Yes,
+                    "value": "1"
+                 }
+              ]
+           },
+        )
+        s.definitions['Monitor Settings'].blocks['Notifications'].info.push(
+            {
+                isFormGroupGroup: true,
+                name: `${lang.Email} (${lang['System Level']})`,
+                color: 'blue',
+                'section-class': 'h_det_input h_det_1',
+                info: [
+                    {
+                       "name": "detail=detector_mail",
+                       "field": lang['Email on Trigger'],
+                       "description": "Recieve an email of an image during a motion event to the master account for the camera group. You must setup SMTP details in conf.json.",
+                       "default": "0",
+                       "selector": "h_det_email",
+                       "fieldType": "select",
+                       "possible": [
+                          {
+                             "name": lang.No,
+                             "value": "0"
+                          },
+                          {
+                             "name": lang.Yes,
+                             "value": "1"
+                          }
+                       ]
+                    },
+                    {
+                       "name": "detail=detector_mail_timeout",
+                       "field": lang['Allow Next Email'],
+                       "description": "The amount of time until a trigger is allowed to send another email with motion details and another image.",
+                       "default": "10",
+                    },
+                    {
+                       "name": "detail=detector_notrigger_mail",
+                       "field": lang['No Trigger'],
+                       "description": "If motion has not been detected after the timeout period you will recieve an email.",
+                       "default": "0",
+                       "fieldType": "select",
+                       "possible": [
+                          {
+                             "name": lang.No,
+                             "value": "0"
+                          },
+                          {
+                             "name": lang.Yes,
+                             "value": "1"
+                          }
+                       ]
+                    },
+                ],
+            }
+        );
     }catch(err){
         console.log(err)
     }
