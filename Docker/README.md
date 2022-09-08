@@ -1,22 +1,28 @@
 # Install Shinobi with Docker
 
-### There are three ways!
+**Warning :** It is recommended that you have a dedicated machine for Shinobi even if you intend to use Docker. If you are willing to install directly on the operating system please consider installing Ubuntu 22.04 and using the Ninja Way.
 
-## Docker Ninja Way
+We recommend that your Host OS is one of the following :
 
-> This method uses `docker-compose` and has the ability to quick install the TensorFlow Object Detection plugin. This will build your container from the images hosted on Gitlab.
-
-> **We no longer use Docker Hub** and will not in the foreseeable future.
+- Ubuntu 22.04
+- CentOS 8
+- MacOS 10.7
 
 Docker Image Used : `registry.gitlab.com/shinobi-systems/shinobi:dev`
+
+## Ninja Way - Docker Edition
+
+> This method uses `docker-compose`. This will build your container from the images hosted on Gitlab. We no longer use Docker Hub and will not in the foreseeable future.
 
 ```
 bash <(curl -s https://gitlab.com/Shinobi-Systems/Shinobi-Installer/raw/master/shinobi-docker.sh)
 ```
 
-## Docker Ninja Way - Version 2
+Once complete open port `8080` of your Docker host in a web browser.
 
-#### Installing Shinobi
+## Run Way
+
+**Installing Shinobi**
 
 > Please remember to check out the Environment Variables table further down this README.
 
@@ -24,8 +30,8 @@ bash <(curl -s https://gitlab.com/Shinobi-Systems/Shinobi-Installer/raw/master/s
 docker run -d --name='Shinobi' -p '8080:8080/tcp' -v "/dev/shm/Shinobi/streams":'/dev/shm/streams':'rw' -v "$HOME/Shinobi/config":'/config':'rw' -v "$HOME/Shinobi/customAutoLoad":'/home/Shinobi/libs/customAutoLoad':'rw' -v "$HOME/Shinobi/database":'/var/lib/mysql':'rw' -v "$HOME/Shinobi/videos":'/home/Shinobi/videos':'rw' -v "$HOME/Shinobi/plugins":'/home/Shinobi/plugins':'rw' -v '/etc/localtime':'/etc/localtime':'ro' registry.gitlab.com/shinobi-systems/shinobi:dev
 ```
 
-#### Installing Object Detection (TensorFlow.js)
-**DEPRECATED, UPDATED IMAGE COMING SOON**
+**Installing Object Detection (TensorFlow.js)**
+*Updated Image only works with Dashboard v3*
 
 > This requires that you add the plugin key to the Shinobi container. This key is generated and displayed in the startup logs of the Object Detection docker container.
 
