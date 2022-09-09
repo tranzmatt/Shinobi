@@ -72,13 +72,14 @@ $(document).ready(function(e){
                     right: 'month,agendaWeek,agendaDay,listWeek'
                 },
                 defaultDate: moment(startDate).format('YYYY-MM-DD'),
-                locale: $user.details.lang.substring(0, 2),
+                locale: ($user.details.lang || '').substring(0, 2) || undefined,
                 navLinks: true,
                 eventLimit: true,
                 events: calendarData,
                 eventClick: function(v){
                     var video = loadedVideosInMemory[`${v.mid}${v.time}`]
-                    createVideoPlayerTab(video)
+                    var href = getFullOrigin(true) + video.href
+                    createVideoPlayerTab(Object.assign({},video,{href: href}))
                     $(this).css('border-color', 'red');
                 }
             });
