@@ -853,5 +853,6 @@
    "Alert Sound Delay":"Zpoždění zvukového upozornění",
    "powerVideoEventLimit":"You have set a high event limit. Are you sure you want to make this request?",
    "There are no monitors that you can view with this account.":"There are no monitory that you can view with this account.",
-   "Use Built-In":"Použít vestavěné"
+   "Use Built-In":"Použít vestavěné",
+   "Primary":"Hlavní"
 }

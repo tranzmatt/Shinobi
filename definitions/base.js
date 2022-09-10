@@ -7884,7 +7884,7 @@ module.exports = function(s,config,lang){
                                          "title1": lang["Timelapse Frames Share"],
                                          "color2": "warning",
                                          "title2": lang["FileBin Share"],
-                                         "label": `<span class="diskUsed" style="letter-spacing:2px;font-weight:100"></span>`,
+                                         "label": `<span class="diskUsed" style="text-transform:capitalize">${lang.Primary}</span> : <span class="value"></span>`,
                                      },
                                  ]
                              },

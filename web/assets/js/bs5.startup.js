@@ -7,7 +7,7 @@ var ramIndicatorUsed = ramIndicator.find('.used')
 var ramIndicatorPercentText = ramIndicator.find('.indicator-percent')
 var diskIndicator = $('#indicator-disk')
 var diskIndicatorBar = diskIndicator.find('.progress-bar')
-var diskIndicatorBarUsed = diskIndicator.find('.diskUsed')
+var diskIndicatorBarUsed = diskIndicator.find('.value')
 var diskIndicatorPercentText = diskIndicator.find('.indicator-percent')
 var loadedIndicators = {}
 function loadHiddenSectionsInForms(){
