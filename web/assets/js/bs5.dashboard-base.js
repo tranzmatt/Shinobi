@@ -859,6 +859,15 @@ function downloadFile(downloadUrl,fileName){
     a.download = fileName
     a.click()
 }
+function notifyIfActionFailed(data){
+    if(data.ok === false){
+        new PNotify({
+            title: lang['Action Failed'],
+            text: data.msg,
+            type: 'danger'
+        })
+    }
+}
 function convertKbToHumanSize(theNumber){
     var amount = theNumber / 1048576
     var unit = amount / 1000 >= 1000 ? 'TB' : amount >= 1000 ? 'GB' : 'MB'

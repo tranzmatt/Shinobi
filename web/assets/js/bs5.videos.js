@@ -506,6 +506,7 @@ function deleteVideo(video,callback){
     return new Promise((resolve,reject) => {
         var videoEndpoint = getApiPrefix(`videos`) + '/' + video.mid + '/' + video.filename
         $.getJSON(videoEndpoint + '/delete',function(data){
+            notifyIfActionFailed(data)
             if(callback)callback(data)
             resolve(data)
         })

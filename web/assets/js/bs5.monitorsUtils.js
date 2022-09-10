@@ -529,7 +529,7 @@ function deleteMonitors(monitorsSelected,afterDelete){
                 callback:function(){
                     $.each(monitorsSelected,function(n,monitor){
                         $.getJSON(`${getApiPrefix(`configureMonitor`)}/${monitor.mid}/delete`,function(data){
-                            console.log(data)
+                            notifyIfActionFailed(data)
                             if(monitorsSelected.length === n + 1){
                                 //last
                                 if(afterDelete)afterDelete(monitorsSelected)
@@ -544,7 +544,7 @@ function deleteMonitors(monitorsSelected,afterDelete){
                 callback:function(){
                     $.each(monitorsSelected,function(n,monitor){
                         $.getJSON(`${getApiPrefix(`configureMonitor`)}/${monitor.mid}/delete?deleteFiles=true`,function(data){
-                            console.log(data)
+                            notifyIfActionFailed(data)
                             if(monitorsSelected.length === n + 1){
                                 //last
                                 if(afterDelete)afterDelete(monitorsSelected)
