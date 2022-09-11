@@ -429,7 +429,7 @@ module.exports = (s,config,lang,app,io) => {
             monitorConfig.mode === 'start' &&
             (monitorDetails.detector_record_method === 'sip' || monitorDetails.detector_record_method === 'hot')
         ){
-            const secondBefore = (parseInt(monitorDetails.detector_buffer_seconds_before) || 5) + 1
+            const secondBefore = (roundNearest5(parseInt(monitorDetails.detector_buffer_seconds_before)) || 5) + 1
             createEventBasedRecording(d,moment(eventTime).subtract(secondBefore,'seconds').format('YYYY-MM-DDTHH-mm-ss'))
         }
         d.currentTime = eventTime
