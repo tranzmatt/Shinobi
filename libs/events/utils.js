@@ -574,6 +574,7 @@ module.exports = (s,config,lang,app,io) => {
                     }
                     s.insertCompletedVideo(monitorConfig,{
                         file : filename,
+                        endTime: moment(new Date()).subtract(secondBefore,'seconds')._d,
                     },function(err,response){
                         const autoCompressionEnabled = monitorDetails.auto_compress_videos === '1';
                         if(autoCompressionEnabled){
