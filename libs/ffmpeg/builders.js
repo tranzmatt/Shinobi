@@ -9,6 +9,9 @@ module.exports = (s,config,lang) => {
     const {
         validateDimensions,
     } = require('./utils.js')(s,config,lang)
+    const {
+        roundNearest5,
+    } = require('../basic/utils.js')(process.cwd(),config)
     if(!config.outputsWithAudio)config.outputsWithAudio = ['hls','flv','mp4','rtmp'];
     if(!config.outputsNotCapableOfPresets)config.outputsNotCapableOfPresets = [];
     const hasCudaEnabled = (monitor) => {
@@ -33,9 +36,6 @@ module.exports = (s,config,lang) => {
             break;
         }
     }
-    const {
-        roundNearest5,
-    } = require('../basic/utils.js')(process.cwd(),config)
     const buildConnectionFlagsFromConfiguration = (monitor) => {
         const url = s.buildMonitorUrl(monitor);
         switch(monitor.type){
