@@ -33,6 +33,9 @@ module.exports = (s,config,lang) => {
             break;
         }
     }
+    const {
+        roundNearest5,
+    } = require('../basic/utils.js')(process.cwd(),config)
     const buildConnectionFlagsFromConfiguration = (monitor) => {
         const url = s.buildMonitorUrl(monitor);
         switch(monitor.type){
@@ -687,8 +690,8 @@ module.exports = (s,config,lang) => {
             const { videoWidth, videoHeight } = validateDimensions(e.details.event_record_scale_x,e.details.event_record_scale_y)
             const hlsTime = !isNaN(parseInt(e.details.detector_buffer_hls_time)) ? `${parseInt(e.details.detector_buffer_hls_time)}` : '5'
             // const hlsListSize = !isNaN(parseInt(e.details.detector_buffer_hls_list_size)) ? `${parseInt(e.details.detector_buffer_hls_list_size)}` : '4'
-            const secondsBefore = parseInt(e.details.detector_buffer_seconds_before) || 5
-            let hlsListSize = parseInt(secondsBefore / 5 + 2)
+            const secondsBefore = roundNearest5(parseInt(monitorDetails.detector_buffer_seconds_before)) || 5
+            let hlsListSize = parseInt(secondsBefore / 5 + 3)
             // hlsListSize = hlsListSize < 5 ? 5 : hlsListSize;
             if(inputMap)outputFlags.push(inputMap)
             if(e.details.cust_sip_record)outputFlags.push(e.details.cust_sip_record)
