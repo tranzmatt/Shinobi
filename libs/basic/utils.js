@@ -222,6 +222,9 @@ module.exports = (processCwd,config) => {
 
         return s;
     }
+    function roundNearest5(num) {
+      return Math.round(num / 5) * 5;
+    }
     return {
         parseJSON: parseJSON,
         stringJSON: stringJSON,
@@ -242,5 +245,6 @@ module.exports = (processCwd,config) => {
         asyncSetTimeout: asyncSetTimeout,
         copyFile: copyFile,
         hmsToSeconds,
+        roundNearest5,
     }
 }
