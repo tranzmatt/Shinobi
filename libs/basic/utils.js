@@ -242,6 +242,5 @@ module.exports = (processCwd,config) => {
         asyncSetTimeout: asyncSetTimeout,
         copyFile: copyFile,
         hmsToSeconds,
-        roundNearest5,
     }
 }
