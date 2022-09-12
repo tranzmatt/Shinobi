@@ -575,7 +575,7 @@ module.exports = (s,config,lang,app,io) => {
                         runRecord()
                         return
                     }
-                    const secondBefore = (parseInt(monitorDetails.detector_buffer_seconds_before) || 5) + 1
+                    const secondBefore = (roundNearest5(parseInt(monitorDetails.detector_buffer_seconds_before)) || 5) + 1
                     s.insertCompletedVideo(monitorConfig,{
                         file : filename,
                         endTime: moment(new Date()).subtract(secondBefore,'seconds')._d,
