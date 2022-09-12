@@ -78,7 +78,7 @@ $(document).ready(function(e){
                 events: calendarData,
                 eventClick: function(v){
                     var video = loadedVideosInMemory[`${v.mid}${v.time}`]
-                    var href = getFullOrigin(true) + video.href
+                    var href = video.href
                     createVideoPlayerTab(Object.assign({},video,{href: href}))
                     $(this).css('border-color', 'red');
                 }

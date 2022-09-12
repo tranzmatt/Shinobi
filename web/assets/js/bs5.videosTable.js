@@ -156,7 +156,7 @@ $(document).ready(function(e){
                   }
             ],
             data: loadedVideosTable.map((file) => {
-                var href = getFullOrigin(true) + file.href
+                var href = file.href
                 var loadedMonitor = loadedMonitors[file.mid]
                 return {
                     image: `<div class="video-thumbnail" data-mid="${file.mid}" data-ke="${file.ke}" data-time="${file.time}" data-end="${file.end}" data-filename="${file.filename}">

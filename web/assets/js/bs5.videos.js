@@ -463,7 +463,11 @@ function getVideos(options,callback){
             requestQueries.push(`archived=1`)
         }
         $.getJSON(`${getApiPrefix(customVideoSet ? customVideoSet : searchQuery ? `videosByEventTag` : `videos`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`noLimit=1`]).join('&')}`,function(data){
-            var videos = data.videos
+            var videos = data.videos.map((video) => {
+                return Object.assign({},video,{
+                    href: getFullOrigin(true) + video.href
+                })
+            })
             $.getJSON(`${getApiPrefix(`timelapse`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`noLimit=1`]).join('&')}`,function(timelapseFrames){
                 $.getJSON(`${getApiPrefix(`events`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`limit=${limit}`]).join('&')}`,function(eventData){
                     var newVideos = applyDataListToVideos(videos,eventData)
