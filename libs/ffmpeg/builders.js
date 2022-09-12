@@ -685,7 +685,7 @@ module.exports = (s,config,lang) => {
             const videoFps = !isNaN(parseFloat(e.details.stream_fps)) && e.details.stream_fps !== '0' ? parseFloat(e.details.stream_fps) : null
             const inputMap = buildInputMap(e,e.details.input_map_choices.detector_sip_buffer)
             const { videoWidth, videoHeight } = validateDimensions(e.details.event_record_scale_x,e.details.event_record_scale_y)
-            const hlsTime = !isNaN(parseInt(e.details.detector_buffer_hls_time)) ? `${parseInt(e.details.detector_buffer_hls_time)}` : '5'
+            const hlsTime = !isNaN(parseInt(e.details.detector_buffer_hls_time)) ? `${parseInt(e.details.detector_buffer_hls_time)}` : '2'
             // const hlsListSize = !isNaN(parseInt(e.details.detector_buffer_hls_list_size)) ? `${parseInt(e.details.detector_buffer_hls_list_size)}` : '4'
             const secondsBefore = parseInt(e.details.detector_buffer_seconds_before) || 5
             let hlsListSize = parseInt(secondsBefore / 2 + 3)
