@@ -12,8 +12,8 @@ module.exports = function (s, config, lang, getSnapshot) {
                     s.userLog(
                         { ke: groupKey, mid: '$USER' },
                         {
-                            type: lang.NotifyErrorText,
-                            msg: lang.DiscordNotEnabledText,
+                            type: lang.PushoverNotifyErrorText,
+                            msg: lang.PushoverNotEnabledText,
                         }
                     );
                     return;
@@ -112,9 +112,8 @@ module.exports = function (s, config, lang, getSnapshot) {
                     s.group[d.ke].rawMonitorConfigurations[d.id];
                 // d = event object
                 if (
-                    filter.pushover &&
                     s.group[d.ke].pushover &&
-                    monitorConfig.details.notify_pushover === '1' &&
+                    (filter.pushover || monitorConfig.details.notify_pushover === '1') &&
                     !s.group[d.ke].activeMonitors[d.id].detector_pushover
                 ) {
                     var detector_pushover_timeout;
@@ -163,7 +162,7 @@ module.exports = function (s, config, lang, getSnapshot) {
             };
 
             const onEventTriggerBeforeFilterForPushover = function (d, filter) {
-                filter.pushover = true;
+                filter.pushover = false;
             };
 
             const onDetectorNoTriggerTimeoutForPushover = function (e) {
@@ -339,6 +338,25 @@ module.exports = function (s, config, lang, getSnapshot) {
                     },
                 ],
             };
+            s.definitions["Event Filters"].blocks["Action for Selected"].info.push({
+                 "name": "actions=pushover",
+                 "field": lang['Pushover'],
+                 "fieldType": "select",
+                 "form-group-class": "actions-row",
+                 "default": "",
+                 "example": "1",
+                 "possible": [
+                    {
+                       "name": lang['Original Choice'],
+                       "value": "",
+                       "selected": true
+                    },
+                    {
+                       "name": lang.Yes,
+                       "value": "1",
+                    }
+                 ]
+            })
         } catch (err) {
             console.log(err);
             console.log(

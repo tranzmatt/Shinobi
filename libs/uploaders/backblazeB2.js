@@ -57,6 +57,10 @@ module.exports = function(s,config,lang){
                         b2.listBuckets().then(function(resp){
                             var buckets = resp.buckets
                             var bucketN = -2
+                            if(!buckets){
+                                s.userLog({mid:'$USER',ke:e.ke},{type: lang['Backblaze Error'],msg: lang['Not Authorized']})
+                                return
+                            }
                             buckets.forEach(function(item,n){
                                 if(item.bucketName === userDetails.bb_b2_bucket){
                                     bucketN = n

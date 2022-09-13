@@ -22,7 +22,7 @@ if [ "$disableIpv6" = "y" ] || [ "$disableIpv6" = "Y" ]; then
     sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1
     sudo sysctl -w net.ipv6.conf.lo.disable_ipv6=1
 fi
-if [ "$getubuntuversion" = "18" ] || [ "$getubuntuversion" > "18" ]; then
+if [ "$getubuntuversion" = "18" ] || [ "$getubuntuversion" -gt "18" ]; then
     apt install sudo wget -y
     sudo apt install -y software-properties-common
     sudo add-apt-repository universe -y
@@ -53,25 +53,20 @@ if ! [ -x "$(command -v ifconfig)" ]; then
     echo "Shinobi - Installing Net-Tools"
     sudo apt install net-tools -y
 fi
-if ! [ -x "$(command -v node)" ]; then
-    echo "============="
-    echo "Shinobi - Installing Node.js"
-    wget https://deb.nodesource.com/setup_12.x
-    chmod +x setup_12.x
-    ./setup_12.x
-    sudo apt install nodejs -y
-    sudo apt install node-pre-gyp -y
-    rm setup_12.x
-else
-    echo "Node.js Found..."
-    echo "Version : $(node -v)"
-fi
+echo "============="
+echo "Shinobi - Installing Node.js"
+wget https://deb.nodesource.com/setup_16.x
+chmod +x setup_16.x
+./setup_16.x
+sudo apt install nodejs -y
+sudo apt install node-pre-gyp -y
+rm setup_16.x
 if ! [ -x "$(command -v npm)" ]; then
     sudo apt install npm -y
 fi
 sudo apt install make zip -y
 if ! [ -x "$(command -v ffmpeg)" ]; then
-    if [ "$getubuntuversion" = "16" ] || [ "$getubuntuversion" < "16" ]; then
+    if [ "$getubuntuversion" = "16" ] || [ "$getubuntuversion" -le "16" ]; then
         echo "============="
         echo "Shinobi - Get FFMPEG 3.x from ppa:jonathonf/ffmpeg-3"
         sudo add-apt-repository ppa:jonathonf/ffmpeg-3 -y
@@ -105,7 +100,7 @@ sudo npm install --unsafe-perm
 # sudo npm audit fix --force
 echo "============="
 echo "Shinobi - Install PM2"
-sudo npm install pm2@3.0.0 -g
+sudo npm install pm2@latest -g
 echo "Shinobi - Finished"
 sudo chmod -R 755 .
 touch INSTALL/installed.txt

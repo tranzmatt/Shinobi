@@ -1,7 +1,10 @@
-var fs = require('fs')
-var request = require('request')
+const fs = require('fs')
+const fetch = require('node-fetch')
 module.exports = function(s,config,lang,app,io){
     if(config.shinobiHubEndpoint === undefined){config.shinobiHubEndpoint = `https://hub.shinobi.video/`}else{config.shinobiHubEndpoint = s.checkCorrectPathEnding(config.shinobiHubEndpoint)}
+    const {
+        fetchWithAuthentication,
+    } = require('./basic/utils.js')(process.cwd(),config)
     var stripUsernameAndPassword = function(string,username,password){
         if(username)string = string.split(username).join('_USERNAME_')
         if(password)string = string.split(password).join('_PASSWORD_')
@@ -53,20 +56,27 @@ module.exports = function(s,config,lang,app,io){
             json: JSON.stringify(monitorConfig)
         })
         if(validated.ok === true){
-            request.post({
-                url: `${config.shinobiHubEndpoint}api/${shinobiHubApiKey}/postConfiguration`,
-                form: {
-                    "type": type,
-                    "brand": monitorConfig.ke,
-                    "name": monitorConfig.name,
-                    "description": "Backup at " + (new Date()),
-                    "json": validated.json,
-                    "details": JSON.stringify({
-                        // maybe ip address?
-                    })
+            fetchWithAuthentication(
+                `${config.shinobiHubEndpoint}api/${shinobiHubApiKey}/postConfiguration`,
+                {
+                    method: 'POST',
+                    postData: {
+                        "type": type,
+                        "brand": monitorConfig.ke,
+                        "name": monitorConfig.name,
+                        "description": "Backup at " + (new Date()),
+                        "json": validated.json,
+                        "details": JSON.stringify({
+                            // maybe ip address?
+                        })
+                    }
                 }
-            }, function(err,httpResponse,body){
-                callback(err,s.parseJSON(body) || {ok: false})
+            ).then(res => res.text())
+            .then((data) => {
+                callback(null,s.parseJSON(data) || {ok: false})
+            })
+            .catch((err) => {
+                callback(err,{ok: false})
             })
         }else{
             callback(new Error(validated.msg),{ok: false})
@@ -78,7 +88,7 @@ module.exports = function(s,config,lang,app,io){
                 // s.userLog({ke:monitorConfig.ke,mid:'$USER'},{type:lang['Websocket Connected'],msg:{for:lang['Superuser'],id:cn.mail,ip:cn.ip}})
             })
         }
-        if(s.group[monitorConfig.ke] && s.group[monitorConfig.ke].init.shinobihub === '1'){
+        if(s.group[monitorConfig.ke] && s.group[monitorConfig.ke].init && s.group[monitorConfig.ke].init.shinobihub === '1'){
             uploadConfiguration(s.group[monitorConfig.ke].init.shinobihub_key,'cam',monitorConfig,() => {
                 // s.userLog({ke:monitorConfig.ke,mid:'$USER'},{type:lang['Websocket Connected'],msg:{for:lang['Superuser'],id:cn.mail,ip:cn.ip}})
             })
@@ -100,7 +110,11 @@ module.exports = function(s,config,lang,app,io){
                         queryString.push(key + '=' + value)
                     })
                 }
-                request(`${config.shinobiHubEndpoint}api/${shinobiHubApiKey}/getConfiguration/${req.params.type}${req.params.id ? '/' + req.params.id : ''}${queryString.length > 0 ? '?' + queryString.join('&') : ''}`).pipe(res)
+                const configUrl = `${config.shinobiHubEndpoint}api/${shinobiHubApiKey}/getConfiguration/${req.params.type}${req.params.id ? '/' + req.params.id : ''}${queryString.length > 0 ? '?' + queryString.join('&') : ''}`
+                fetch(configUrl).then(actual => {
+                    actual.headers.forEach((v, n) => res.setHeader(n, v));
+                    actual.body.pipe(res);
+                })
             }else{
                 s.closeJsonResponse(res,{
                     ok: false,

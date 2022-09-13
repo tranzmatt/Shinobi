@@ -87,11 +87,11 @@ module.exports = function(s,config){
     const knexError = (dbQuery,options,err) => {
         console.error('knexError----------------------------------- START')
         if(config.debugLogVerbose && config.debugLog === true){
-            s.debugLog('s.knexQuery QUERY',JSON.stringify(options,null,3))
             s.debugLog('STACK TRACE, NOT AN ',new Error())
         }
         console.error(err)
-        console.error(dbQuery.toString())
+        // CANNOT USE `dbQuery.toString()` because it breaks the query
+        console.error(options)
         console.error('knexError----------------------------------- END')
     }
     const knexQuery = (options,callback) => {
@@ -140,7 +140,7 @@ module.exports = function(s,config){
             if(options.groupBy){
                 dbQuery.groupBy(options.groupBy)
             }
-            if(options.limit){
+            if(options.limit && options.limit !== '0'){
                 if(`${options.limit}`.indexOf(',') === -1){
                     dbQuery.limit(options.limit)
                 }else{
@@ -149,7 +149,8 @@ module.exports = function(s,config){
                 }
             }
             if(config.debugLog === true){
-                console.log(dbQuery.toString())
+                // CANNOT USE `dbQuery.toString()` because it breaks the query
+                console.log(options)
             }
             if(callback || options.update || options.insert || options.action === 'delete'){
                 dbQuery.asCallback(function(err,r) {
@@ -177,6 +178,7 @@ module.exports = function(s,config){
        ]
        const monitorRestrictions = options.monitorRestrictions
        var frameLimit = options.limit
+       const noLimit = options.noLimit === '1'
        const endIsStartTo = options.endIsStartTo
        const chosenDate = options.date
        const startDate = options.startDate ? stringToSqlTime(options.startDate) : null
@@ -211,12 +213,13 @@ module.exports = function(s,config){
            whereQuery.push(monitorRestrictions)
        }
        if(options.archived){
-           whereQuery.push(['details','LIKE',`%"archived":"1"%`])
+           whereQuery.push(['archive','=',`1`])
        }
        if(options.filename){
            whereQuery.push(['filename','=',options.filename])
            frameLimit = "1";
        }
+       if(noLimit)frameLimit = '0';
        options.orderBy = options.orderBy ? options.orderBy : ['time','desc']
        if(options.count)options.groupBy = options.groupBy ? options.groupBy : options.orderBy[0]
        knexQuery({
@@ -328,7 +331,10 @@ module.exports = function(s,config){
         var endTimeOperator = options.endTimeOperator
         var startTime = options.startTime
         var limitString = `${options.limit}`
-        const monitorRestrictions = s.getMonitorRestrictions(options.user.details,monitorId)
+        const {
+            monitorPermissions,
+            monitorRestrictions,
+        } = s.getMonitorsPermitted(user.details,monitorId)
         getDatabaseRows({
             monitorRestrictions: monitorRestrictions,
             table: theTableSelected,
@@ -337,7 +343,7 @@ module.exports = function(s,config){
             endDate: endTime,
             startOperator: startTimeOperator,
             endOperator: endTimeOperator,
-            limit: options.limit,
+            limit: options.noLimit === '1' ? '0' : options.limit,
             archived: archived,
             rowType: rowName,
             endIsStartTo: endIsStartTo

@@ -4,10 +4,11 @@ echo "-- Installing CUDA Toolkit and CUDA DNN --"
 echo "------------------------------------------"
 # Install CUDA Drivers and Toolkit
 if [ -x "$(command -v apt)" ]; then
-    wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/cuda-repo-ubuntu1804_10.0.130-1_amd64.deb
-    sudo dpkg -i --force-overwrite cuda-repo-ubuntu1804_10.0.130-1_amd64.deb
-    sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/7fa2af80.pub
-
+    wget https://cdn.shinobi.video/installers/cuda-repo-ubuntu1804-10-0-local-10.0.130-410.48_1.0-1_amd64.deb -O cuda.deb
+    dpkg -i cuda.deb
+    sudo apt-key add /var/cuda-repo-10-0-local-10.0.130-410.48/7fa2af80.pub
+    sudo apt-get update
+    sudo apt install cuda-toolkit-10-0
     sudo apt-get update -y
 
     sudo apt-get -o Dpkg::Options::="--force-overwrite" install cuda-toolkit-10-0 -y --no-install-recommends

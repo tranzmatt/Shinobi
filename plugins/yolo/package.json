@@ -4,11 +4,13 @@
   "description": "YoloV3 plugin for Shinobi that uses C++ functions for detection.",
   "main": "shinobi-yolo.js",
   "dependencies": {
-    "socket.io-client": "^1.7.4",
-    "express": "^4.16.2",
-    "moment": "^2.19.2",
-    "socket.io": "^2.0.4",
     "imagickal": "^4.0.0",
+    "moment": "^2.29.1",
+    "dotenv": "^8.2.0",
+    "cws": "^2.0.0",
+    "express": "^4.16.4",
+    "socket.io": "^4.4.1",
+    "socket.io-client": "^4.4.1",
     "node-yolo-shinobi": "^2.0.3"
   },
   "devDependencies": {},
