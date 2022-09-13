@@ -259,7 +259,7 @@ function compileConnectUrl(options){
         porty = ':' + options.port
     }
     var url = options.protocol + '://' + options.host + porty
-    return options.url
+    return url
 }
 
 function jsonToHtmlBlock(target){
