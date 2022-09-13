@@ -1,10 +1,10 @@
 const fs = require('fs-extra');
 const express = require('express')
-const request = require('request')
 const unzipper = require('unzipper')
 const fetch = require("node-fetch")
 const spawn = require('child_process').spawn
 module.exports = async (s,config,lang,app,io) => {
+    const { fetchDownloadAndWrite } = require('./basic/utils.js')(process.cwd(),config)
     s.debugLog(`+++++++++++CustomAutoLoad Modules++++++++++++`)
     const runningInstallProcesses = {}
     const modulesBasePath = __dirname + '/customAutoLoad/'
@@ -18,7 +18,7 @@ module.exports = async (s,config,lang,app,io) => {
     }
     const getModule = (moduleName) => {
         s.debugLog(`+++++++++++++++++++++++`)
-        s.debugLog(`Loading : ${moduleName}`)
+        s.debugLog(`Getting Module : ${moduleName}`)
         const modulePath = modulesBasePath + moduleName
         const stats = fs.lstatSync(modulePath)
         const isDirectory = stats.isDirectory()
@@ -65,10 +65,9 @@ module.exports = async (s,config,lang,app,io) => {
         fs.mkdirSync(downloadPath)
         return new Promise(async (resolve, reject) => {
             fs.mkdir(downloadPath, () => {
-                request(downloadUrl).pipe(fs.createWriteStream(downloadPath + '.zip'))
-                .on('finish',() => {
-                    zip = fs.createReadStream(downloadPath + '.zip')
-                    .pipe(unzipper.Parse())
+                fetchDownloadAndWrite(downloadUrl,downloadPath + '.zip', 1)
+                .then((readStream) => {
+                    readStream.pipe(unzipper.Parse())
                     .on('entry', async (file) => {
                         if(file.type === 'Directory'){
                             try{
@@ -176,7 +175,9 @@ module.exports = async (s,config,lang,app,io) => {
         }
     }
     const loadModule = (shinobiModule) => {
+        s.debugLog(`+++++++++++++++++++++++`)
         const moduleName = shinobiModule.name
+        s.debugLog(`Loading Module : ${moduleName}`)
         s.customAutoLoadModules[moduleName] = {}
         var customModulePath = modulesBasePath + '/' + moduleName
         s.debugLog(customModulePath)
@@ -208,8 +209,13 @@ module.exports = async (s,config,lang,app,io) => {
                                                         app.use('/libs',express.static(webFolder + '/libs'))
                                                     }
                                                     app.use(s.checkCorrectPathEnding(config.webPaths.home)+'libs',express.static(webFolder + '/libs'))
-                                                    app.use(s.checkCorrectPathEnding(config.webPaths.admin)+'libs',express.static(webFolder + '/libs'))
                                                     app.use(s.checkCorrectPathEnding(config.webPaths.super)+'libs',express.static(webFolder + '/libs'))
+                                                }else if(name === 'assets'){
+                                                    if(config.webPaths.home !== '/'){
+                                                        app.use('/assets',express.static(webFolder + '/assets'))
+                                                    }
+                                                    app.use(s.checkCorrectPathEnding(config.webPaths.home)+'assets',express.static(webFolder + '/assets'))
+                                                    app.use(s.checkCorrectPathEnding(config.webPaths.super)+'assets',express.static(webFolder + '/assets'))
                                                 }
                                                 var libFolder = webFolder + name + '/'
                                                 fs.readdir(libFolder,function(err,webFolderContents){
@@ -225,23 +231,34 @@ module.exports = async (s,config,lang,app,io) => {
                                                                         var fullPath = thirdLevelName + '/' + filename
                                                                         var blockPrefix = ''
                                                                         switch(true){
-                                                                            case filename.contains('super.'):
+                                                                            case filename.indexOf('super.') > -1:
                                                                                 blockPrefix = 'super'
                                                                             break;
-                                                                            case filename.contains('admin.'):
-                                                                                blockPrefix = 'admin'
-                                                                            break;
                                                                         }
-                                                                        switch(libName){
-                                                                            case'js':
-                                                                                s.customAutoLoadTree[blockPrefix + 'LibsJs'].push(filename)
-                                                                            break;
-                                                                            case'css':
-                                                                                s.customAutoLoadTree[blockPrefix + 'LibsCss'].push(filename)
-                                                                            break;
-                                                                            case'blocks':
-                                                                                s.customAutoLoadTree[blockPrefix + 'PageBlocks'].push(fullPath)
-                                                                            break;
+                                                                        if(name === 'libs'){
+                                                                            switch(libName){
+                                                                                case'js':
+                                                                                    s.customAutoLoadTree[blockPrefix + 'LibsJs'].push(filename)
+                                                                                break;
+                                                                                case'css':
+                                                                                    s.customAutoLoadTree[blockPrefix + 'LibsCss'].push(filename)
+                                                                                break;
+                                                                                case'blocks':
+                                                                                    s.customAutoLoadTree[blockPrefix + 'PageBlocks'].push(fullPath)
+                                                                                break;
+                                                                            }
+                                                                        }else if(name === 'assets'){
+                                                                            switch(libName){
+                                                                                case'js':
+                                                                                    s.customAutoLoadTree[blockPrefix + 'AssetsJs'].push(filename)
+                                                                                break;
+                                                                                case'css':
+                                                                                    s.customAutoLoadTree[blockPrefix + 'AssetsCss'].push(filename)
+                                                                                break;
+                                                                                case'blocks':
+                                                                                    s.customAutoLoadTree[blockPrefix + 'PageBlocks'].push(fullPath)
+                                                                                break;
+                                                                            }
                                                                         }
                                                                     })
                                                                 })
@@ -278,22 +295,24 @@ module.exports = async (s,config,lang,app,io) => {
                                 })
                             break;
                             case'definitions':
-                                var definitionsFolder = s.checkCorrectPathEnding(customModulePath) + 'definitions/'
-                                fs.readdir(definitionsFolder,function(err,files){
-                                    if(err)return console.log(err);
-                                    files.forEach(function(filename){
-                                        var fileData = require(definitionsFolder + filename)
-                                        var rule = filename.replace('.json','').replace('.js','')
-                                        if(config.language === rule){
-                                            s.definitions = s.mergeDeep(s.definitions,fileData)
-                                        }
-                                        if(s.loadedDefinitons[rule]){
-                                            s.loadedDefinitons[rule] = s.mergeDeep(s.loadedDefinitons[rule],fileData)
-                                        }else{
-                                            s.loadedDefinitons[rule] = s.mergeDeep(s.copySystemDefaultDefinitions(),fileData)
-                                        }
-                                    })
-                                })
+                                console.error('This Method has been deprecated. Could not load : ', customModulePath + 'defintions/')
+                                console.error('Make your module\'s index.js file make the changes directly.')
+                                // var definitionsFolder = s.checkCorrectPathEnding(customModulePath) + 'definitions/'
+                                // fs.readdir(definitionsFolder,function(err,files){
+                                //     if(err)return console.log(err);
+                                //     files.forEach(function(filename){
+                                //         var fileData = require(definitionsFolder + filename)
+                                //         var rule = filename.replace('.json','').replace('.js','')
+                                //         if(config.language === rule){
+                                //             s.definitions = s.mergeDeep(s.definitions,fileData)
+                                //         }
+                                //         if(s.loadedDefinitons[rule]){
+                                //             s.loadedDefinitons[rule] = s.mergeDeep(s.loadedDefinitons[rule],fileData)
+                                //         }else{
+                                //             s.loadedDefinitons[rule] = s.mergeDeep(s.copySystemDefaultDefinitions(),fileData)
+                                //         }
+                                //     })
+                                // })
                             break;
                         }
                     })
@@ -327,13 +346,14 @@ module.exports = async (s,config,lang,app,io) => {
             PageBlocks: [],
             LibsJs: [],
             LibsCss: [],
-            adminPageBlocks: [],
-            adminLibsJs: [],
-            adminLibsCss: [],
+            AssetsJs: [],
+            AssetsCss: [],
             superPageBlocks: [],
             superLibsJs: [],
             superRawJs: [],
-            superLibsCss: []
+            superLibsCss: [],
+            superAssetsJs: [],
+            superAssetsCss: []
         }
         fs.readdir(modulesBasePath,function(err,folderContents){
             if(!err && folderContents.length > 0){
@@ -342,6 +362,8 @@ module.exports = async (s,config,lang,app,io) => {
                         return;
                     }
                     loadModule(shinobiModule)
+                    s.reloadLanguages()
+                    s.reloadDefinitions()
                 })
             }else{
                 fs.mkdir(modulesBasePath,() => {})

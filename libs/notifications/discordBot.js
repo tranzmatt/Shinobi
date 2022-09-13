@@ -48,14 +48,14 @@ module.exports = function(s,config,lang,getSnapshot){
                 }
             }
             const onEventTriggerBeforeFilterForDiscord = function(d,filter){
-                filter.discord = true
+                filter.discord = false
             }
             const onEventTriggerForDiscord = async (d,filter) => {
                 const monitorConfig = s.group[d.ke].rawMonitorConfigurations[d.id]
                 // d = event object
                 //discord bot
-                const isEnabled = monitorConfig.details.detector_discordbot === '1' || monitorConfig.details.notify_discord === '1'
-                if(filter.discord && s.group[d.ke].discordBot && isEnabled && !s.group[d.ke].activeMonitors[d.id].detector_discordbot){
+                const isEnabled = filter.discord || monitorConfig.details.detector_discordbot === '1' || monitorConfig.details.notify_discord === '1'
+                if(s.group[d.ke].discordBot && isEnabled && !s.group[d.ke].activeMonitors[d.id].detector_discordbot){
                     var detector_discordbot_timeout
                     if(!monitorConfig.details.detector_discordbot_timeout||monitorConfig.details.detector_discordbot_timeout===''){
                         detector_discordbot_timeout = 1000 * 60 * 10;
@@ -66,6 +66,28 @@ module.exports = function(s,config,lang,getSnapshot){
                         clearTimeout(s.group[d.ke].activeMonitors[d.id].detector_discordbot);
                         s.group[d.ke].activeMonitors[d.id].detector_discordbot = null
                     },detector_discordbot_timeout)
+                    await getSnapshot(d,monitorConfig)
+                    if(d.screenshotBuffer){
+                        sendMessage({
+                            author: {
+                              name: s.group[d.ke].rawMonitorConfigurations[d.id].name,
+                              icon_url: config.iconURL
+                            },
+                            title: lang.Event+' - '+d.screenshotName,
+                            description: lang.EventText1+' '+d.currentTimestamp,
+                            fields: [],
+                            timestamp: d.currentTime,
+                            footer: {
+                              icon_url: config.iconURL,
+                              text: "Shinobi Systems"
+                            }
+                        },[
+                            {
+                                attachment: d.screenshotBuffer,
+                                name: d.screenshotName+'.jpg'
+                            }
+                        ],d.ke)
+                    }
                     if(monitorConfig.details.detector_discordbot_send_video === '1'){
                         let videoPath = null
                         let videoName = null
@@ -101,28 +123,6 @@ module.exports = function(s,config,lang,getSnapshot){
                                 }
                             ],d.ke)
                         }
-                    }
-                    await getSnapshot(d,monitorConfig)
-                    if(d.screenshotBuffer){
-                        sendMessage({
-                            author: {
-                              name: s.group[d.ke].rawMonitorConfigurations[d.id].name,
-                              icon_url: config.iconURL
-                            },
-                            title: lang.Event+' - '+d.screenshotName,
-                            description: lang.EventText1+' '+d.currentTimestamp,
-                            fields: [],
-                            timestamp: d.currentTime,
-                            footer: {
-                              icon_url: config.iconURL,
-                              text: "Shinobi Systems"
-                            }
-                        },[
-                            {
-                                attachment: d.screenshotBuffer,
-                                name: d.screenshotName+'.jpg'
-                            }
-                        ],d.ke)
                     }
                 }
             }
@@ -366,6 +366,25 @@ module.exports = function(s,config,lang,getSnapshot){
                    }
                ]
             }
+            s.definitions["Event Filters"].blocks["Action for Selected"].info.push({
+                 "name": "actions=discord",
+                 "field": lang['Discord'],
+                 "fieldType": "select",
+                 "form-group-class": "actions-row",
+                 "default": "",
+                 "example": "1",
+                 "possible": [
+                    {
+                       "name": lang['Original Choice'],
+                       "value": "",
+                       "selected": true
+                    },
+                    {
+                       "name": lang.Yes,
+                       "value": "1",
+                    }
+                 ]
+            })
         }catch(err){
             console.log(err)
             console.log('Could not start Discord bot, please run "npm install discord.js" inside the Shinobi folder.')

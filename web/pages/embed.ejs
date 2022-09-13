@@ -16,11 +16,10 @@ if(data.url.charAt(data.url.length - 1) !== '/'){
     data.url += '/'
 }
 %>
-<script src="<%=data.url%>libs/js/socket.io.js"></script>
-<script src="<%=data.url%>libs/js/poseidon.js"></script>
-<script src="<%=data.url%>libs/js/hls.min.js"></script>
-<script src="<%=data.url%>libs/js/flv.min.js"></script>
-<script src="<%=data.url%>libs/js/libde265.min.js"></script>
+<script src="<%=data.url%>assets/vendor/js/socket.io.min.js"></script>
+<script src="<%=data.url%>assets/vendor/js/poseidon.js"></script>
+<script src="<%=data.url%>assets/vendor/js/hls.min.js"></script>
+<script src="<%=data.url%>assets/vendor/js/flv.min.js"></script>
 <% if(data.addon){
     var ar={}
     decodeURI(data.addon).split('|').forEach(function(v){
@@ -32,7 +31,7 @@ if(data.url.charAt(data.url.length - 1) !== '/'){
     if(!ar.width){ar.width=640;}
     if(!ar.height){ar.height=480;}
     if(data.addon.indexOf('jquery')>-1){ %>
-<script src="<%=data.url%>libs/js/jquery.min.js"></script>
+<script src="<%=data.url%>assets/vendor/js/jquery.min.js"></script>
 <% };
 if(data.addon.indexOf('gui')>-1){ %>
 <style>
@@ -177,15 +176,6 @@ $(document).ready(function(){
                   if($.shinobi.mon[d.id].Poseidon){
                       $.shinobi.mon[d.id].Poseidon.stop()
                   }
-                  if ($.shinobi.mon[d.id].h265Player) {
-                      $.shinobi.mon[d.id].h265Player.stop()
-                  }
-                  if($.shinobi.mon[d.id].h265Socket && $.shinobi.mon[d.id].h265Socket.connected){
-                      $.shinobi.mon[d.id].h265Socket.disconnect()
-                  }
-                  if($.shinobi.mon[d.id].h265HttpStream && $.shinobi.mon[d.id].abort){
-                      $.shinobi.mon[d.id].h265HttpStream.abort()
-                  }
                   if($.shinobi.mon[d.id].flv){
                       $.shinobi.mon[d.id].flv.destroy()
                   }
@@ -283,36 +273,6 @@ $(document).ready(function(){
                             stream.attr('src','<%=data.url%><%=data.auth%>/mp4/'+d.ke+'/'+d.id+'/s.mp4')
                         }
                     break;
-                    case'h265':
-                        var player = $.shinobi.mon[d.id].h265Player
-                        var video = $('#SHINOBI_'+d.ke+'_'+d.id+' .stream-element')[0]
-                        player = new libde265.RawPlayer(video)
-                        player.set_status_callback(function(msg, fps) {
-                        })
-                        player.launch()
-                        if($.shinobi.mon[d.id].details.stream_flv_type==='ws'){
-                          $.shinobi.mon[d.id].h265Socket = io(url,{transports: ['websocket'], forceNew: false})
-                          var ws = $.shinobi.mon[d.id].h265Socket
-                          ws.on('diconnect',function(){
-                              console.log('h265Socket Stream Disconnected')
-                          })
-                          ws.on('connect',function(){
-                              ws.emit('h265',{
-                                auth:'<%=data.auth%>',
-                                ke:d.ke,
-                                uid:'<%=data.uid%>',
-                                id:d.id,
-                                url: '<%=data.url%>'
-  //                                channel: channel
-                              })
-                              ws.on('data',function(imageData){
-                                  player._handle_onChunk(imageData)
-                              })
-                          })
-                        }else{
-                          $.shinobi.mon[d.id].h265HttpStream = player.createHttpStream('<%=data.url%><%=data.auth%>/h265/'+d.ke+'/'+d.id+'/s.hevc')
-                        }
-                    break;
                     case'flv':
                         if (flvjs.isSupported()) {
                             var options = {};
@@ -374,7 +334,9 @@ $(document).ready(function(){
                         $.shinobi.mon[d.id].hls.loadSource(d.url);
                         $.shinobi.mon[d.id].hls.attachMedia(video);
                         $.shinobi.mon[d.id].hls.on(Hls.Events.MANIFEST_PARSED,function() {
-                          video.play();
+                            setTimeout(function(){
+                                video.play();
+                            },1000)
                         });
                     }
                     break;

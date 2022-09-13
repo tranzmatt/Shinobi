@@ -14,48 +14,63 @@ module.exports = (s,config,lang) => {
         var endData = {ok: false, result: {}}
         if(!url){
             endData.error = 'Missing URL'
-            callback(endData)
-            return
+            if(callback)callback(endData)
+            return {
+                result: {
+                    format: {
+                        duration: 1
+                    }
+                }
+            }
         }
         if(!forceOverlap && activeProbes[auth]){
             endData.error = 'Account is already probing'
-            callback(endData)
-            return
-        }
-        activeProbes[auth] = 1
-        var stderr = ''
-        var stdout = ''
-        const probeCommand = splitForFFPMEG(`${customInput ? customInput + ' ' : ''}-analyzeduration 10000 -probesize 10000 -v quiet -print_format json -show_format -show_streams -i "${url}"`)
-        var processTimeout = null
-        var ffprobeLocation = config.ffmpegDir.split('/')
-        ffprobeLocation[ffprobeLocation.length - 1] = 'ffprobe'
-        ffprobeLocation = ffprobeLocation.join('/')
-        const probeProcess = spawn(ffprobeLocation, probeCommand)
-        const finishReponse = () => {
-            delete(activeProbes[auth])
-            if(!stdout){
-                endData.error = stderr
-            }else{
-                endData.ok = true
-                endData.result = s.parseJSON(stdout)
+            if(callback)callback(endData)
+            return {
+                result: {
+                    format: {
+                        duration: 1
+                    }
+                }
             }
-            endData.probe = probeCommand
-            callback(endData)
         }
-        probeProcess.stderr.on('data',function(data){
-            stderr += data.toString()
+        return new Promise((resolve) => {
+            activeProbes[auth] = 1
+            var stderr = ''
+            var stdout = ''
+            const probeCommand = splitForFFPMEG(`${customInput ? customInput + ' ' : ''}-analyzeduration 10000 -probesize 10000 -v quiet -print_format json -show_format -show_streams -i "${url}"`)
+            var processTimeout = null
+            var ffprobeLocation = config.ffmpegDir.split('/')
+            ffprobeLocation[ffprobeLocation.length - 1] = 'ffprobe'
+            ffprobeLocation = ffprobeLocation.join('/')
+            const probeProcess = spawn(ffprobeLocation, probeCommand)
+            const finishReponse = () => {
+                delete(activeProbes[auth])
+                if(!stdout){
+                    endData.error = stderr
+                }else{
+                    endData.ok = true
+                    endData.result = s.parseJSON(stdout)
+                }
+                endData.probe = probeCommand
+                if(callback)callback(endData)
+                resolve(endData)
+            }
+            probeProcess.stderr.on('data',function(data){
+                stderr += data.toString()
+            })
+            probeProcess.stdout.on('data',function(data){
+                stdout += data.toString()
+            })
+            probeProcess.on('close',function(){
+                clearTimeout(processTimeout)
+                finishReponse()
+            })
+            processTimeout = setTimeout(() => {
+                treekill(probeProcess.pid)
+                finishReponse()
+            },4000)
         })
-        probeProcess.stdout.on('data',function(data){
-            stdout += data.toString()
-        })
-        probeProcess.on('close',function(){
-            clearTimeout(processTimeout)
-            finishReponse()
-        })
-        processTimeout = setTimeout(() => {
-            treekill(probeProcess.pid)
-            finishReponse()
-        },4000)
     }
     const probeMonitor = (monitor,timeoutAmount,forceOverlap) => {
         return new Promise((resolve,reject) => {
@@ -130,7 +145,11 @@ module.exports = (s,config,lang) => {
             }else{
                 const details = s.parseJSON(configPartial.details)
                 Object.keys(details).forEach((key) => {
-                    activeMonitor.details[key] = details[key]
+                    try{
+                        activeMonitor.details[key] = details[key]
+                    }catch(err){
+                        console.log(err)
+                    }
                 })
             }
         })
@@ -155,11 +174,11 @@ module.exports = (s,config,lang) => {
         }
         return sanitizedCmd
     }
-    const createPipeArray = function(e){
+    const createPipeArray = function(e, amountToAdd){
         const stdioPipes = [];
-        var times = config.pipeAddition;
-        if(e.details.stream_channels){
-            times+=e.details.stream_channels.length
+        var times = amountToAdd ? amountToAdd + config.pipeAddition : config.pipeAddition;
+        if(e.details && e.details.stream_channels){
+            times += e.details.stream_channels.length
         }
         for(var i=0; i < times; i++){
             stdioPipes.push('pipe')

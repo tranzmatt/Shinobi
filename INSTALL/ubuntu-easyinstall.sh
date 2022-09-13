@@ -14,11 +14,11 @@ fi
 echo "============="
 echo " Detecting Ubuntu Version"
 echo "============="
-declare -i getubuntuversion=$(lsb_release -r | awk '{print $2}' | cut -d . -f1)
+getubuntuversion=$(lsb_release -r | awk '{print $2}' | cut -d . -f1)
 echo "============="
 echo " Ubuntu Version: $getubuntuversion"
 echo "============="
-if [[ "$getubuntuversion" == "16" || "$getubuntuversion" < "16" ]]; then
+if [[ "$getubuntuversion" == "16" || "$getubuntuversion" -le "16" ]]; then
     echo "============="
     echo "Shinobi - Get FFMPEG 3.x from ppa:jonathonf/ffmpeg-3"
     sudo add-apt-repository ppa:jonathonf/ffmpeg-3 -y
@@ -154,7 +154,7 @@ echo "============="
 
 #Install PM2
 echo "Shinobi - Install PM2"
-sudo npm install pm2@3.0.0 -g
+sudo npm install pm2@latest -g
 if [ ! -e "./conf.json" ]; then
     cp conf.sample.json conf.json
 fi

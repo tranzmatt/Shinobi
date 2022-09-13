@@ -31,8 +31,8 @@ module.exports = function(s){
     if(config.cron.deleteOverMaxOffset === undefined)config.cron.deleteOverMaxOffset=0.9;
     if(config.cron.deleteLogs === undefined)config.cron.deleteLogs=true;
     if(config.cron.deleteEvents === undefined)config.cron.deleteEvents=true;
-    if(config.cron.deleteFileBinsOverMax === undefined)config.cron.deleteFileBins=true;
-    if(config.deleteFileBins === undefined)config.deleteFileBinsOverMax=true;
+    if(config.cron.deleteFileBins === undefined)config.cron.deleteFileBins=true;
+    if(config.deleteFileBinsOverMax === undefined)config.deleteFileBinsOverMax=true;
     if(config.cron.interval === undefined)config.cron.interval=1;
     if(config.databaseType === undefined){config.databaseType='mysql'}
     if(config.pluginKeys === undefined)config.pluginKeys={};
@@ -45,6 +45,7 @@ module.exports = function(s){
     if(config.orphanedVideoCheckMax === undefined){config.orphanedVideoCheckMax = 2}
     if(config.detectorMergePamRegionTriggers === undefined){config.detectorMergePamRegionTriggers = false}
     if(config.probeMonitorOnStart === undefined){config.probeMonitorOnStart = true}
+    if(config.showLoginTypeSelector === undefined){config.showLoginTypeSelector = true}
     //Child Nodes
     if(config.childNodes === undefined)config.childNodes = {};
         //enabled
@@ -214,13 +215,6 @@ module.exports = function(s){
                   "value": 840
                }
         ]
-    }
-    if(config.cron.key === 'change_this_to_something_very_random__just_anything_other_than_this'){
-        console.error('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-        console.error('!! Change your cron key in your conf.json.                     !!')
-        console.error(`!! If you're running Shinobi remotely you should do this now.  !!`)
-        console.error('!! You can do this in the Super User panel or from terminal.   !!')
-        console.error('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
     }
     return config
 }
