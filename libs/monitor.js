@@ -1075,12 +1075,25 @@ module.exports = function(s,config,lang){
                         fatalError(e,'Connection timed out');
                     },1000)
                 break;
-                // case checkLog(d,'Immediate exit requested'):
+                case checkLog(d,'Immediate exit requested'):
+                    cameraDestroy(e)
+                    setTimeout(() => {
+                        launchMonitorProcesses(e)
+                    },15000)
+                break;
                 case checkLog(d,'mjpeg_decode_dc'):
                 case checkLog(d,'bad vlc'):
                 case checkLog(d,'error dc'):
+                    cameraDestroy(e)
+                    setTimeout(() => {
+                        launchMonitorProcesses(e)
+                    },15000)
+                break;
                 case checkLog(d,'No route to host'):
-                    launchMonitorProcesses(e)
+                    cameraDestroy(e)
+                    setTimeout(() => {
+                        launchMonitorProcesses(e)
+                    },60000)
                 break;
             }
             s.userLog(e,{type:"FFMPEG STDERR",msg:d})
