@@ -28,9 +28,6 @@ module.exports = (s,config,lang,app,io) => {
         isEven,
         fetchTimeout,
     } = require('../basic/utils.js')(process.cwd(),config)
-    const {
-        roundNearest5,
-    } = require('../basic/utils.js')(process.cwd(),config)
     async function saveImageFromEvent(options,frameBuffer){
         const monitorId = options.mid || options.id
         const groupKey = options.ke
@@ -429,7 +426,7 @@ module.exports = (s,config,lang,app,io) => {
             monitorConfig.mode === 'start' &&
             (monitorDetails.detector_record_method === 'sip' || monitorDetails.detector_record_method === 'hot')
         ){
-            const secondBefore = (roundNearest5(parseInt(monitorDetails.detector_buffer_seconds_before)) || 5) + 1
+            const secondBefore = (parseInt(monitorDetails.detector_buffer_seconds_before) || 5) + 1
             createEventBasedRecording(d,moment(eventTime).subtract(secondBefore,'seconds').format('YYYY-MM-DDTHH-mm-ss'))
         }
         d.currentTime = eventTime
@@ -552,8 +549,8 @@ module.exports = (s,config,lang,app,io) => {
                 ){
                     outputMap += `-map 0:1 `
                 }
-                const secondsBefore = roundNearest5(parseInt(monitorDetails.detector_buffer_seconds_before)) || 5
-                let LiveStartIndex = parseInt(secondsBefore / 5)
+                const secondsBefore = parseInt(monitorDetails.detector_buffer_seconds_before) || 5
+                let LiveStartIndex = parseInt(secondsBefore / 2 + 1)
                 const ffmpegCommand = `-loglevel warning -live_start_index -${LiveStartIndex} -analyzeduration ${analyzeDuration} -probesize ${probeSize} -re -i "${s.dir.streams+d.ke+'/'+d.id}/detectorStream.m3u8" ${outputMap}-movflags faststart+frag_keyframe+empty_moov -fflags +igndts -c:v copy -c:a aac -strict -2 -strftime 1 -y "${s.getVideoDirectory(monitorConfig) + filename}"`
                 s.debugLog(ffmpegCommand)
                 activeMonitor.eventBasedRecording.process = spawn(
@@ -575,7 +572,7 @@ module.exports = (s,config,lang,app,io) => {
                         runRecord()
                         return
                     }
-                    const secondBefore = (roundNearest5(parseInt(monitorDetails.detector_buffer_seconds_before)) || 5) + 1
+                    const secondBefore = (parseInt(monitorDetails.detector_buffer_seconds_before) || 5) + 1
                     s.insertCompletedVideo(monitorConfig,{
                         file : filename,
                         endTime: moment(new Date()).subtract(secondBefore,'seconds')._d,
