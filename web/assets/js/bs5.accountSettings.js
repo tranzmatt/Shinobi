@@ -17,7 +17,7 @@ $(document).ready(function(){
                 }
                 html += `<div class="form-group">
                             <div class="mb-2"><span>${lang['Max Storage Amount']} : ${storage.name}</span></div>
-                            <div><input class="form-control" placeholder="${$user.details.size || 10000}" addStorageLimit="${storage.path}" value="${limit}"></div>
+                            <div><input class="form-control" placeholder="10000" addStorageLimit="${storage.path}" value="${limit}"></div>
                         </div>`
             })
             addStorageMaxAmounts.html(html)
