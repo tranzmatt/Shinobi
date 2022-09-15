@@ -161,12 +161,13 @@ module.exports = function(s,config,lang){
         return new Promise((resolve,reject) => {
             options = options instanceof Object ? options : {flags: ''}
             s.checkDetails(monitor)
+            let isDetectorStream = false
             var inputOptions = []
             var outputOptions = []
             var streamDir = s.dir.streams + monitor.ke + '/' + monitor.mid + '/'
             var url = options.url
             var secondsInward = options.secondsInward || '0'
-            if(secondsInward.length === 1)secondsInward = '0' + secondsInward
+            if(secondsInward.length === 1 && !isNaN(secondsInward))secondsInward = '0' + secondsInward
 	    var dynamicTimeout = (secondsInward * 1000) + 5000
             if(options.flags)outputOptions.push(options.flags)
             const checkExists = function(streamDir,callback){
@@ -202,7 +203,7 @@ module.exports = function(s,config,lang){
                         var snapBuffer = []
                         var temporaryImageFile = streamDir + s.gid(5) + '.jpg'
                         var iconImageFile = streamDir + 'icon.jpg'
-                        var ffmpegCmd = splitForFFPMEG(`-y -loglevel warning -re ${inputOptions.join(' ')} -i "${url}" ${outputOptions.join(' ')} -f image2 -an -frames:v 1 "${temporaryImageFile}"`)
+                        var ffmpegCmd = splitForFFPMEG(`-y -loglevel warning ${isDetectorStream ? '-live_start_index 2' : ''} -re ${inputOptions.join(' ')} -i "${url}" ${outputOptions.join(' ')} -f image2 -an -frames:v 1 "${temporaryImageFile}"`)
                         checkExists(streamDir, function(success) {
                             if (success === false) {
                                 fs.mkdirSync(streamDir, {recursive: true}, (err) => {s.debugLog(err)})
@@ -270,6 +271,7 @@ module.exports = function(s,config,lang){
                                         runExtraction()
                                     })
                                 }else{
+                                    isDetectorStream = true
                                     outputOptions.push(`-ss 00:00:${secondsInward}`)
                                     url = streamDir + 'detectorStream.m3u8'
                                     runExtraction()
