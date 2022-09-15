@@ -7453,7 +7453,7 @@ module.exports = function(s,config,lang){
                   "label": lang['Monitor Settings'],
                   "class": "default open-monitor-settings",
                   "icon": "wrench",
-                  eval: `isSubAccount && permissionCheck('monitor_edit',monitorId)`,
+                  eval: `!isSubAccount || isSubAccount && permissionCheck('monitor_edit',monitorId)`,
                },
                "Toggle Substream": {
                   "label": lang['Toggle Substream'],
@@ -7469,7 +7469,7 @@ module.exports = function(s,config,lang){
                   "label": lang['Videos List'],
                   "class": "default open-videosTable",
                   "icon": "film",
-                  eval: `isSubAccount && permissionCheck('video_view',monitorId)`,
+                  eval: `!isSubAccount || isSubAccount && permissionCheck('video_view',monitorId)`,
                },
                "Reconnect Stream": {
                   "label": lang['Reconnect Stream'],
@@ -7554,7 +7554,7 @@ module.exports = function(s,config,lang){
                  "attr": `monitor="timelapseJpeg"`,
                  "class": "default",
                  "icon": "angle-double-right",
-                 eval: `isSubAccount && permissionCheck('video_view',monitorId)`,
+                 eval: `!isSubAccount || isSubAccount && permissionCheck('video_view',monitorId)`,
               },
               // "Video Grid": {
               //    "label": "Video Grid",
@@ -7566,13 +7566,13 @@ module.exports = function(s,config,lang){
                  "label": lang['Videos List'],
                  "class": "default open-videosTable",
                  "icon": "film",
-                 eval: `isSubAccount && permissionCheck('video_view',monitorId)`,
+                 eval: `!isSubAccount || isSubAccount && permissionCheck('video_view',monitorId)`,
               },
               "Monitor Settings": {
                  "label": lang['Monitor Settings'],
                  "class": "default open-monitor-settings",
                  "icon": "wrench",
-                 eval: `isSubAccount && permissionCheck('monitor_edit',monitorId)`,
+                 eval: `!isSubAccount || isSubAccount && permissionCheck('monitor_edit',monitorId)`,
               },
               "Fullscreen": {
                  "label": lang['Fullscreen'],
