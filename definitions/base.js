@@ -4319,6 +4319,23 @@ module.exports = function(s,config,lang){
                       ]
                    },
                    {
+                      "field": lang['Regions'],
+                      "fieldType": "select",
+                      "attribute": `copy="field=detail=cords"`,
+                      "form-group-class": "h_copy_settings_input h_copy_settings_1",
+                      "form-group-class-pre-layer": "col-md-6",
+                      "possible": [
+                         {
+                            "name": lang.No,
+                            "value": "0"
+                         },
+                         {
+                            "name": lang.Yes,
+                            "value": "1"
+                         }
+                      ]
+                   },
+                   {
                       "field": lang['Control'],
                       "description": "",
                       "default": "0",
