@@ -1054,10 +1054,10 @@ module.exports = function(s,config,lang){
                 case checkLog(d,'error while decoding'):
                     s.userLog(e,{type:lang['Error While Decoding'],msg:lang.ErrorWhileDecodingText});
                 break;
+                case checkLog(d,'pkt->duration = 0'):
                 case checkLog(d,'[hls @'):
                 case checkLog(d,'Past duration'):
                 case checkLog(d,'Last message repeated'):
-                case checkLog(d,'pkt->duration = 0'):
                 case checkLog(d,'Non-monotonous DTS'):
                 case checkLog(d,'NULL @'):
                 case checkLog(d,'RTP: missed'):
