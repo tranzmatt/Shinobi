@@ -9,6 +9,9 @@ module.exports = (s,config,lang) => {
     const {
         validateDimensions,
     } = require('./utils.js')(s,config,lang)
+    const {
+        parseJSON,
+    } = require('../basic/utils.js')(process.cwd(),config)
     if(!config.outputsWithAudio)config.outputsWithAudio = ['hls','flv','mp4','rtmp'];
     if(!config.outputsNotCapableOfPresets)config.outputsNotCapableOfPresets = [];
     const hasCudaEnabled = (monitor) => {
@@ -769,7 +772,7 @@ module.exports = (s,config,lang) => {
         return ``
     }
     const getDefaultSubstreamFields = function(monitor){
-        const subStreamFields = s.parseJSON(monitor.details.substream || {input:{},output:{}})
+        const subStreamFields = parseJSON(monitor.details.substream || {input:{},output:{}})
         const inputAndConnectionFields = Object.assign({
            "type":"h264",
            "fulladdress":"",
