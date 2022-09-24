@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const moment = require('moment');
 const fetch  = require('node-fetch');
+const FormData = require('form-data');
 const { AbortController } = require('node-abort-controller')
 const DigestFetch = require('digest-fetch')
 module.exports = (processCwd,config) => {
@@ -113,7 +114,7 @@ module.exports = (processCwd,config) => {
             method : options.method || 'GET'
         }
         if(typeof options.postData === 'object'){
-            const formData = new fetch.FormData()
+            const formData =  new FormData()
             const formKeys = Object.keys(options.postData)
             formKeys.forEach(function(key){
                 const value = formKeys[key]
