@@ -691,8 +691,8 @@ module.exports = (s,config,lang) => {
             const hlsTime = !isNaN(parseInt(e.details.detector_buffer_hls_time)) ? `${parseInt(e.details.detector_buffer_hls_time)}` : '2'
             // const hlsListSize = !isNaN(parseInt(e.details.detector_buffer_hls_list_size)) ? `${parseInt(e.details.detector_buffer_hls_list_size)}` : '4'
             const secondsBefore = parseInt(e.details.detector_buffer_seconds_before) || 5
-            let hlsListSize = parseInt(secondsBefore * 0.6)
-            hlsListSize = hlsListSize < 3 ? 3 : hlsListSize;
+            let hlsListSize = parseInt(secondsBefore / 2 + 3)
+            // hlsListSize = hlsListSize < 5 ? 5 : hlsListSize;
             if(inputMap)outputFlags.push(inputMap)
             if(e.details.cust_sip_record)outputFlags.push(e.details.cust_sip_record)
             if(videoCodec === 'auto'){
