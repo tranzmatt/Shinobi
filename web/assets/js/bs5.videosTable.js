@@ -161,7 +161,7 @@ $(document).ready(function(e){
                 return {
                     image: `<div class="video-thumbnail" data-mid="${file.mid}" data-ke="${file.ke}" data-time="${file.time}" data-end="${file.end}" data-filename="${file.filename}">
                         <div class="video-thumbnail-img-block">
-                            <img class="pop-image cursor-pointer" src="${href}" style="min-width: 100px;min-height: 75px;">
+                            <img class="pop-image cursor-pointer" style="min-width: 100px;min-height: 75px;">
                         </div>
                         <div class="video-thumbnail-buttons d-flex">
                             <a class="video-thumbnail-button-cell open-snapshot p-3">
@@ -177,7 +177,7 @@ $(document).ready(function(e){
                     time: formattedTime(file.time, 'DD-MM-YYYY hh:mm:ss AA'),
                     end: formattedTime(file.end, 'DD-MM-YYYY hh:mm:ss AA'),
                     tags: `
-                        <span class="badge badge-${file.ext ==='webm' ? `primary` : 'danger'}">${file.ext}</span>
+                        ${file.ext ? `<span class="badge badge-${file.ext ==='webm' ? `primary` : 'danger'}">${file.ext}</span>` : ''}
                     `,
                     objects: file.objects,
                     size: convertKbToHumanSize(file.size),
