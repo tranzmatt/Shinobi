@@ -1388,7 +1388,7 @@ module.exports = function(s,config,lang,app,io){
                         onGetVideoData(r).then((dataPipe) => {
                             dataPipe.pipe(res)
                         }).catch((err) => {
-                            console.log(err)
+                            console.error('onGetVideoData ERROR',err,videoDetails)
                             res.end(user.lang['File Not Found in Database'])
                         })
                     }else{
