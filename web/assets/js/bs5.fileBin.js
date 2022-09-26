@@ -98,6 +98,7 @@ $(document).ready(function(e){
                                 <a class="btn btn-sm btn-primary" href="${href}" download title="${lang.Download}"><i class="fa fa-download"></i></a>
                                 ${isVideo ? `<a class="btn btn-sm btn-primary preview-video" href="${href}" title="${lang.Play}"><i class="fa fa-play"></i></a>` : ``}
                                 ${permissionCheck('video_delete',file.mid) ? `<a class="btn btn-sm btn-${file.archive === 1 ? `success status-archived` : `default`} archive-file" title="${lang.Archive}"><i class="fa fa-${file.archive === 1 ? `lock` : `unlock-alt`}"></i></a>` : ''}
+                                ${permissionCheck('video_delete',file.mid) ? `<a class="btn btn-sm btn-danger delete-file" title="${lang.Delete}"><i class="fa fa-trash-o"></i></a>` : ''}
                             </div>
                         `,
                     }
@@ -124,6 +125,22 @@ $(document).ready(function(e){
         for (let i = 0; i < videos.length; i++) {
             var video = videos[i];
             await unarchiveFile(video)
+        }
+    }
+    function deleteFile(video,callback){
+        return new Promise((resolve,reject) => {
+            var videoEndpoint = getApiPrefix(`fileBin`) + '/' + video.mid + '/' + video.name
+            $.getJSON(videoEndpoint + '/delete',function(data){
+                notifyIfActionFailed(data)
+                if(callback)callback(data)
+                resolve(data)
+            })
+        })
+    }
+    async function deleteFiles(videos){
+        for (let i = 0; i < videos.length; i++) {
+            var video = videos[i];
+            await deleteFile(video)
         }
     }
     $('body')
@@ -159,6 +176,30 @@ $(document).ready(function(e){
         }else{
             archiveFile(file)
         }
+        return false;
+    })
+    .on('click','.delete-file',function(e){
+        e.preventDefault()
+        var el = $(this).parents('[data-mid]')
+        var monitorId = el.attr('data-mid')
+        var filename = el.attr('data-name')
+        var file = loadedFilesInMemory[`${monitorId}${filename}`]
+        if(!file)return console.log(`No File`,monitorId,filename,unarchive,file);
+        $.confirm.create({
+            title: lang["Delete"] + ' : ' + file.name,
+            body: `${lang.DeleteThisMsg}`,
+            clickOptions: {
+                title: '<i class="fa fa-trash-o"></i> ' + lang.Delete,
+                class: 'btn-danger btn-sm'
+            },
+            clickCallback: function(){
+                deleteFile(file).then(function(data){
+                    if(data.ok){
+                        drawFileBinViewElements()
+                    }
+                })
+            }
+        });
         return false;
     })
     addOnTabOpen('fileBinView', function () {

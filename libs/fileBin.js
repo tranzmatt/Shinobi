@@ -339,7 +339,7 @@ module.exports = function(s,config,lang,app,io){
                         break;
                         case'delete':
                             response.ok = true;
-                            await s.deleteFileBinEntry(file)
+                            await deleteFileBinEntry(file)
                         break;
                         default:
                             response.msg = user.lang.modifyVideoText1;
