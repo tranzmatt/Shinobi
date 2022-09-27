@@ -1345,13 +1345,15 @@ module.exports = function(s,config,lang){
             console.log(err)
         }
     }
-    const fatalError = function(e,errorMessage){
+    function fatalError(e,errorMessage){
         const activeMonitor = s.group[e.ke].activeMonitors[e.id]
+        const monitorDetails = s.group[e.ke].rawMonitorConfigurations[e.id].details
+        const maxCount = isNaN(monitorDetails.fatal_max) ? 0 : parseFloat(monitorDetails.fatal_max)
         clearTimeout(activeMonitor.err_fatal_timeout);
         ++activeMonitor.errorFatalCount;
         if(activeMonitor.isStarted === true){
             activeMonitor.err_fatal_timeout = setTimeout(function(){
-                if(e.details.fatal_max !== 0 && activeMonitor.errorFatalCount > e.details.fatal_max){
+                if(maxCount !== 0 && activeMonitor.errorFatalCount > maxCount){
                     s.camera('stop',{id:e.id,ke:e.ke})
                 }else{
                     launchMonitorProcesses(s.cleanMonitorObject(e))
@@ -1365,7 +1367,7 @@ module.exports = function(s,config,lang){
             ke: e.ke,
             status: lang.Died,
             code: 7
-        })
+        });
         clearTimeout(activeMonitor.onMonitorStartTimer)
         s.onMonitorDiedExtensions.forEach(function(extender){
             extender(Object.assign(s.group[e.ke].rawMonitorConfigurations[e.id],{}),e)
@@ -1532,7 +1534,7 @@ module.exports = function(s,config,lang){
                 s.sendMonitorStatus({
                     id: e.id,
                     ke: e.ke,
-                    status: 'Restarting',
+                    status: lang.Restarting,
                     code: 4,
                 });
                 s.camera('stop',e)
@@ -1662,11 +1664,6 @@ module.exports = function(s,config,lang){
                     activeMonitor.isRecording = false
                 }
                 //set up fatal error handler
-                if(e.details.fatal_max === ''){
-                    e.details.fatal_max = 0
-                }else{
-                    e.details.fatal_max = parseFloat(e.details.fatal_max)
-                }
                 activeMonitor.errorFatalCount = 0;
                 //start drawing files
                 delete(activeMonitor.childNode)
