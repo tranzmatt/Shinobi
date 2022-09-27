@@ -898,6 +898,8 @@
    "Simple": "Simple",
    "Advanced": "Advanced",
    "Error Connecting": "Error Connecting",
+   "Fatal Error": "Fatal Error",
+   "onFatalErrorExit": "This monitor has failed too many times with high severity errors. It will now be stopped to prevent performance issues on your system.",
    "DB Lost.. Retrying..": "Database Lost.. Retrying..",
    "Retrying...": "Retrying...",
    "Filter Matches": "Filter Matches",

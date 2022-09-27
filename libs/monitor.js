@@ -1348,12 +1348,13 @@ module.exports = function(s,config,lang){
     function fatalError(e,errorMessage){
         const activeMonitor = s.group[e.ke].activeMonitors[e.id]
         const monitorDetails = s.group[e.ke].rawMonitorConfigurations[e.id].details
-        const maxCount = isNaN(monitorDetails.fatal_max) ? 0 : parseFloat(monitorDetails.fatal_max)
+        const maxCount = !monitorDetails.fatal_max || isNaN(monitorDetails.fatal_max) ? 0 : parseFloat(monitorDetails.fatal_max);
         clearTimeout(activeMonitor.err_fatal_timeout);
         ++activeMonitor.errorFatalCount;
         if(activeMonitor.isStarted === true){
             activeMonitor.err_fatal_timeout = setTimeout(function(){
                 if(maxCount !== 0 && activeMonitor.errorFatalCount > maxCount){
+                    s.userLog(e,{type:lang["Fatal Error"],msg:lang.onFatalErrorExit});
                     s.camera('stop',{id:e.id,ke:e.ke})
                 }else{
                     launchMonitorProcesses(s.cleanMonitorObject(e))

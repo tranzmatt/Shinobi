@@ -441,9 +441,7 @@ module.exports = function(s,config,lang){
                        "name": "detail=fatal_max",
                        "field": lang['Retry Connection'],
                        "description": lang["fieldTextFatalMax"],
-                       "default": "10",
-                       "example": "",
-                       "possible": "",
+                       "example": "10",
                     },
                     {
                        "name": "detail=skip_ping",
