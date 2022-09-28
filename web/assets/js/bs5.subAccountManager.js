@@ -198,7 +198,7 @@ $(document).ready(function(){
     var writePermissionsFromFieldsToString = function(){
         var foundSelected = {}
         var detailsElement = theWindowForm.find('[name="details"]')
-        var details = JSON.parse(detailsElement.val())
+        var details = safeJsonParse(detailsElement.val())
         details = details ? details : {sub: 1, allmonitors: "1"}
         // base privileges
         permissionsSection.find('[detail]').each(function(n,v){
