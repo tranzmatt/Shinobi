@@ -150,7 +150,7 @@ module.exports = function(s,config){
             }
             if(config.debugLog === true){
                 // CANNOT USE `dbQuery.toString()` because it breaks the query
-                console.log(options)
+                console.log(JSON.stringify(options,null,3))
             }
             if(callback || options.update || options.insert || options.action === 'delete'){
                 dbQuery.asCallback(function(err,r) {
@@ -331,10 +331,7 @@ module.exports = function(s,config){
         var endTimeOperator = options.endTimeOperator
         var startTime = options.startTime
         var limitString = `${options.limit}`
-        const {
-            monitorPermissions,
-            monitorRestrictions,
-        } = s.getMonitorsPermitted(user.details,monitorId)
+        const  monitorRestrictions = options.monitorRestrictions || s.getMonitorsPermitted(user.details,monitorId).monitorRestrictions
         getDatabaseRows({
             monitorRestrictions: monitorRestrictions,
             table: theTableSelected,

@@ -974,7 +974,7 @@ module.exports = function(s,config,lang,app,io){
             const {
                 monitorPermissions,
                 monitorRestrictions,
-            } = s.getMonitorsPermitted(user.details,monitorId)
+            } = s.getMonitorsPermitted(user.details,monitorId,'video_view')
             const {
                 isRestricted,
                 isRestrictedApiKey,
@@ -1014,6 +1014,7 @@ module.exports = function(s,config,lang,app,io){
                 endIsStartTo: !!req.query.endIsStartTo,
                 parseRowDetails: false,
                 rowName: 'videos',
+                monitorRestrictions: monitorRestrictions,
                 preliminaryValidationFailed: false
             },(response) => {
                 if(response && response.videos){

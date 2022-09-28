@@ -1866,9 +1866,12 @@ module.exports = function(s,config,lang){
         });
         return response
     }
-    s.getMonitorsPermitted = (userDetails,monitorId) => {
+    s.getMonitorsPermitted = (userDetails,monitorId,permissionTarget) => {
         const monitorRestrictions = []
         const monitors = {}
+        permissionTarget = permissionTarget || 'monitors'
+        const permissionSet = s.parseJSON(userDetails[permissionTarget]) || []
+        // const viewOnlyCheck = permissionTarget === 'monitors'
         function setMonitorPermissions(mid){
             // monitors : Can View Monitor
             // monitor_edit : Can Edit Monitor (Delete as well)
@@ -1894,12 +1897,11 @@ module.exports = function(s,config,lang){
         if(
             !monitorId &&
             userDetails.sub &&
-            userDetails.monitors &&
+            permissionSet &&
             userDetails.allmonitors !== '1'
         ){
             try{
-                userDetails.monitors = s.parseJSON(userDetails.monitors)
-                userDetails.monitors.forEach(function(v,n){
+                permissionSet.forEach(function(v,n){
                     setMonitorPermissions(v)
                     addToQuery(v,n)
                 })
@@ -1910,7 +1912,7 @@ module.exports = function(s,config,lang){
             monitorId && (
                 !userDetails.sub ||
                 userDetails.allmonitors !== '0' ||
-                userDetails.monitors.indexOf(monitorId) >- 1
+                permissionSet.indexOf(monitorId) >- 1
             )
         ){
             setMonitorPermissions(monitorId)
