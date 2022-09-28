@@ -8,6 +8,7 @@ $(document).ready(function(e){
     var powerVideoEventLimitElement = $('#powerVideoEventLimit')
     var powerVideoSet = $('#powerVideoSet')
     var powerVideoMuteIcon = powerVideoWindow.find('[powerVideo-control="toggleMute"] i')
+    var objectTagSearchField = $('#powerVideo_tag_search')
     var powerVideoLoadedVideos = {}
     var powerVideoLoadedEvents = {}
     var powerVideoLoadedChartData = {}
@@ -43,8 +44,8 @@ $(document).ready(function(e){
     },function(start, end, label){
         // $.pwrvid.drawTimeline()
         powerVideoDateRangeElement.focus()
-        $.each(lastPowerVideoSelectedMonitors,function(n,monitorId){
-            requestTableData(monitorId)
+        $.each(lastPowerVideoSelectedMonitors,async function(n,monitorId){
+            await requestTableData(monitorId)
         })
     });
     // fix utc/localtime translation (use timelapseJpeg as guide, it works as expected) />
@@ -74,23 +75,43 @@ $(document).ready(function(e){
         })
         powerVideoMonitorsListElement.html(html)
     }
-    function requestTableData(monitorId,user){
-        if(!user)user = $user
-        var dateData = powerVideoDateRangeElement.data('daterangepicker')
-        var newRequest = {
-            f: 'monitor',
-            ff: 'get',
-            fff: 'videos&events',
-            videoSet: powerVideoSet.val() || '',
-            videoLimit: parseInt(powerVideoVideoLimitElement.val()) || 0,
-            eventLimit: parseInt(powerVideoEventLimitElement.val()) || 500,
-            startDate: dateData.startDate.clone().utc().format('YYYY-MM-DDTHH:mm:ss'),
-            endDate: dateData.endDate.clone().utc().format('YYYY-MM-DDTHH:mm:ss'),
-            ke: user.ke,
-            mid: monitorId
+    function getSelectedTime(asUtc){
+        var dateRange = powerVideoDateRangeElement.data('daterangepicker')
+        var startDate = dateRange.startDate.clone()
+        var endDate = dateRange.endDate.clone()
+        if(asUtc){
+            startDate = startDate.utc()
+            endDate = endDate.utc()
         }
-        console.log(newRequest)
-        mainSocket.f(newRequest)
+        startDate = startDate.format('YYYY-MM-DDTHH:mm:ss')
+        endDate = endDate.format('YYYY-MM-DDTHH:mm:ss')
+        return {
+            startDate: startDate,
+            endDate: endDate
+        }
+    }
+    async function requestTableData(monitorId){
+        var dateRange = getSelectedTime(false)
+        var searchQuery = objectTagSearchField.val() || null
+        var startDate = dateRange.startDate
+        var endDate = dateRange.endDate
+        // var wantsArchivedVideo = getVideoSetSelected() === 'archive'
+        var videos = (await getVideos({
+            monitorId,
+            startDate,
+            endDate,
+            searchQuery,
+            // archived: wantsArchivedVideo,
+            customVideoSet: powerVideoSet.val() || null,
+        })).videos;
+        var events = (await getEvents({
+            monitorId,
+            startDate,
+            endDate,
+            customVideoSet: powerVideoSet.val() || null,
+        }));
+        loadVideosToTimeLineMemory(monitorId,videos,events)
+        drawLoadedTableData()
     }
     function unloadTableData(monitorId,user){
         if(!user)user = $user
@@ -671,24 +692,11 @@ $(document).ready(function(e){
         lastPowerVideoSelectedMonitors.forEach((monitorId) => {
             unloadTableData(monitorId)
         })
-        monitorIdsSelectedNow.forEach((monitorId) => {
-            requestTableData(monitorId)
+        monitorIdsSelectedNow.forEach(async (monitorId) => {
+            await requestTableData(monitorId)
         })
         lastPowerVideoSelectedMonitors = ([]).concat(monitorIdsSelectedNow || [])
     }
-    onWebSocketEvent(function (d){
-        switch(d.f){
-            case'videos&events':
-                console.log('videos&events',d)
-                if(tabTree.name === 'powerVideo'){
-                    var videos = d.videos.videos
-                    var events = d.events
-                    loadVideosToTimeLineMemory(d.id,videos,events)
-                    drawLoadedTableData()
-                }
-            break;
-        }
-    })
     powerVideoMonitorsListElement.on('change','input',onPowerVideoSettingsChange);
     powerVideoVideoLimitElement.change(onPowerVideoSettingsChange);
     powerVideoEventLimitElement.change(onPowerVideoSettingsChange);

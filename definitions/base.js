@@ -8086,6 +8086,11 @@ module.exports = function(s,config,lang){
                       "style": "overflow-y:auto;max-height:200px;",
                   },
                   {
+                     "id": "powerVideo_tag_search",
+                     "field": lang["Search Object Tags"],
+                     "example": "person",
+                  },
+                  {
                      "id": "powerVideoDateRange",
                      "field": lang['Date Range'],
                   },
@@ -8107,11 +8112,15 @@ module.exports = function(s,config,lang){
                       possible:[
                         {
                             "name": lang.Local,
-                           "value": "local"
+                           "value": ""
                         },
                         {
                            "name": lang.Cloud,
                            "value": "cloud"
+                        },
+                        {
+                           "name": lang.Cloud,
+                           "value": "archive"
                         },
                      ]
                   },
