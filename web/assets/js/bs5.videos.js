@@ -470,8 +470,8 @@ function getVideos(options,callback){
             })
             $.getJSON(`${getApiPrefix(`timelapse`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`noLimit=1`]).join('&')}`,function(timelapseFrames){
                 $.getJSON(`${getApiPrefix(`events`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`limit=${limit}`]).join('&')}`,function(eventData){
-                    var newVideos = applyDataListToVideos(videos,eventData)
-                    newVideos = applyTimelapseFramesListToVideos(newVideos,timelapseFrames,'timelapseFrames',true)
+                    var newVideos = applyDataListToVideos(videos,eventData.events || eventData)
+                    newVideos = applyTimelapseFramesListToVideos(newVideos,timelapseFrames.frames || timelapseFrames,'timelapseFrames',true)
                     $.each(newVideos,function(n,video){
                         loadVideoData(video)
                     })
@@ -483,27 +483,31 @@ function getVideos(options,callback){
     })
 }
 function getEvents(options,callback){
-    options = options ? options : {}
-    var requestQueries = []
-    var monitorId = options.monitorId
-    var limit = options.limit || 5000
-    var eventStartTime
-    var eventEndTime
-    // var startDate = options.startDate
-    // var endDate = options.endDate
-    if(options.startDate){
-        eventStartTime = formattedTimeForFilename(options.startDate,false)
-        requestQueries.push(`start=${eventStartTime}`)
-    }
-    if(options.endDate){
-        eventEndTime = formattedTimeForFilename(options.endDate,false)
-        requestQueries.push(`end=${eventEndTime}`)
-    }
-    if(options.onlyCount){
-        requestQueries.push(`onlyCount=1`)
-    }
-    $.getJSON(`${getApiPrefix(`events`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.join('&')}`,function(eventData){
-        callback(eventData)
+    return new Promise((resolve,reject) => {
+        options = options ? options : {}
+        var requestQueries = []
+        var monitorId = options.monitorId
+        var limit = options.limit || 5000
+        var eventStartTime
+        var eventEndTime
+        // var startDate = options.startDate
+        // var endDate = options.endDate
+        if(options.startDate){
+            eventStartTime = formattedTimeForFilename(options.startDate,false)
+            requestQueries.push(`start=${eventStartTime}`)
+        }
+        if(options.endDate){
+            eventEndTime = formattedTimeForFilename(options.endDate,false)
+            requestQueries.push(`end=${eventEndTime}`)
+        }
+        if(options.onlyCount){
+            requestQueries.push(`onlyCount=1`)
+        }
+        $.getJSON(`${getApiPrefix(`events`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.join('&')}`,function(eventData){
+            var theEvents = eventData.events || eventData
+            if(callback)callback(theEvents)
+            resolve(theEvents)
+        })
     })
 }
 function deleteVideo(video,callback){

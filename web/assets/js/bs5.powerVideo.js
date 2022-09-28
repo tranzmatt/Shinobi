@@ -104,12 +104,7 @@ $(document).ready(function(e){
             // archived: wantsArchivedVideo,
             customVideoSet: powerVideoSet.val() || null,
         })).videos;
-        var events = (await getEvents({
-            monitorId,
-            startDate,
-            endDate,
-            customVideoSet: powerVideoSet.val() || null,
-        }));
+        var events = ([]).concat(...videos.map(row => row.events || []));
         loadVideosToTimeLineMemory(monitorId,videos,events)
         drawLoadedTableData()
     }
@@ -279,7 +274,7 @@ $(document).ready(function(e){
                 var name = mon.name;
                 groups.push({
                     id: groupId,
-                    content: name + " | " + monitorId
+                    content: name + " | " + lang.Videos
                 })
                 groupId += 1
                 groups.push({
@@ -292,7 +287,6 @@ $(document).ready(function(e){
             })
             groupsDataSet.add(groups)
             var chartData = getAllChartDataForLoadedVideos()
-            console.log(chartData)
             if(chartData.length > 0){
                 var items = new vis.DataSet(chartData)
                 var options = {
@@ -498,7 +492,7 @@ $(document).ready(function(e){
         var videoContainer = powerVideoMonitorViewsElement.find(`.videoPlayer[data-mid=${video.mid}] .videoPlayer-buffers`)
         if(videoContainer.length === 0){
             if(!monitorSlotPlaySpeeds)monitorSlotPlaySpeeds[video.mid] = {}
-            powerVideoMonitorViewsElement.append(`<div class="videoPlayer" style="width:${widthOfBlock}%" data-mid="${video.mid}">
+            powerVideoMonitorViewsElement.append(`<div class="videoPlayer" style="width:${widthOfBlock}%;max-width:500px" data-mid="${video.mid}">
                 <div class="videoPlayer-detection-info">
                     <canvas style="height:400px"></canvas>
                 </div>
