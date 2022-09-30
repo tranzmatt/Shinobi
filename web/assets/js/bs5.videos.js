@@ -340,13 +340,17 @@ function getAllDays(videos,frames){
     })
     videos.forEach(function(video){
         var videoTime = new Date(video.time)
+        var monitorId = video.mid
         var theDayKey = `${videoTime.getDate()}-${videoTime.getMonth()}-${videoTime.getFullYear()}`
-        listOfDays[video.mid][theDayKey] = []
+        if(!listOfDays[monitorId])listOfDays[monitorId] = {};
+        listOfDays[monitorId][theDayKey] = []
     })
     frames.forEach(function(frame){
         var frameTime = new Date(frame.time)
+        var monitorId = frame.mid
         var theDayKey = `${frameTime.getDate()}-${frameTime.getMonth()}-${frameTime.getFullYear()}`
-        listOfDays[frame.mid][theDayKey] = []
+        if(!listOfDays[monitorId])listOfDays[monitorId] = {};
+        listOfDays[monitorId][theDayKey] = []
     })
     return listOfDays
 }
