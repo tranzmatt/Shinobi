@@ -8141,6 +8141,71 @@ module.exports = function(s,config,lang){
           },
          }
       },
+      "Studio": {
+           "section": lang["Studio"],
+           "blocks": {
+            "Video Playback": {
+                id: "studioVideoPlayback",
+                noHeader: true,
+                noDefaultSectionClasses: true,
+               "color": "green",
+               "section-pre-class": "col-md-8 search-parent",
+               "info": [
+                   {
+                      "id": "studioMonitorViews",
+                      "fieldType": "div",
+                   },
+                   {
+                       "id": "studioMonitorControls",
+                       "color": "blue",
+                       noHeader: true,
+                       isSection: true,
+                       isFormGroupGroup: true,
+                       'section-class': 'text-center',
+                       "info": [
+                           {
+                              "fieldType": "btn-group",
+                              "normalWidth": true,
+                              "btns": [
+                                  {
+                                      "fieldType": "btn",
+                                      "class": `btn-default btn-sm slice-video`,
+                                      "attribute": `title="${lang['Slice']}"`,
+                                      "btnContent": `<i class="fa fa-scissors"></i>`,
+                                  },
+                              ],
+                           },
+                       ]
+                   },
+               ]
+           },
+           "Container2": {
+               id: "studioTabs",
+               noHeader: true,
+              "section-pre-class": "col-md-4",
+              attribute: `tab-chooser-parent`,
+              "info": [
+
+              ]
+          },
+           "Time Strip": {
+               id: "studioTimelineStripsContainer",
+               noHeader: true,
+              "color": "bg-gradient-blue text-white",
+              "section-pre-class": "col-md-12",
+              "info": [
+                  {
+                     "id": "studioTimelineStrip",
+                     "fieldType": "div",
+                     "divContent": `
+                         <div id="studio-time-ticks"></div>
+                         <div id="studio-slice-selection"></div>
+                     `,
+                  },
+              ]
+          },
+         }
+      },
       "Calendar": {
           "section": "Calendar",
           "blocks": {
