@@ -6,20 +6,29 @@ $(document).ready(function(){
     var completedVideosList = $('#studio-completed-videos')
     var timelineStripTimeTicksContainer = $('#studio-time-ticks')
     var timelineStripSliceSelection = $('#studio-slice-selection')
+    var stripWidth = timelineStrip.width()
     var loadedVideoForSlicer = null
     var loadedVideoElement = null
     var timelineStripMousemoveX = 0
     var timelineStripMousemoveY = 0
     var userInvokedPlayState = false
     var slicerQueue = {}
+    var changeTimeout
+    function setMoveTimeout(){
+        clearTimeout(changeTimeout)
+        changeTimeout = setTimeout(function(){
+            changeTimeout = null
+        },500)
+    }
     function initStudio(){
         var lastStartTime = 0
         var lastEndTime = 0
         function onChange(){
+            setMoveTimeout()
             var data = getSliceSelection()
             var startTime = data.startTimeSeconds
             var endTime = data.endTimeSeconds
-            if(lastStartTime === startTime){
+            if(lastStartTime === startTime && lastEndTime !== endTime){
                 setSeekPosition(endTime)
             }else{
                 setSeekPosition(startTime)
@@ -32,18 +41,28 @@ $(document).ready(function(){
             containment: '#studioTimelineStrip',
             handles: "e,w",
         });
-        timelineStripSliceSelection.resize(onChange)
+        timelineStripSliceSelection.resize(function(){
+            setMoveTimeout()
+            onChange()
+        })
         timelineStripSliceSelection.draggable({
             containment: '#studioTimelineStrip',
             axis: "x",
+            start: function(){
+                changeTimeout = true
+            },
             drag: onChange,
+            stop: function(){
+                changeTimeout = null
+            }
         });
     }
     function validateTimeSlot(timeValue){
         var roundedValue = Math.round(timeValue)
         return `${roundedValue}`.length === 1 ? `0${roundedValue}` :  roundedValue
     }
-    function getTimeInfo(timePx,stripWidth,timeDifference){
+    function getTimeInfo(timePx){
+        var timeDifference = loadedVideoForSlicer.amountOfSecondsBetween
         var timePercent = timePx / stripWidth * 100
         var timeSeconds = (timeDifference * (timePercent / 100))
         // var timeMinutes = parseInt(timeSeconds / 60)
@@ -58,16 +77,13 @@ $(document).ready(function(){
         }
     }
     function getSliceSelection(){
-        var startTime = new Date(loadedVideoForSlicer.time)
-        var endTime = new Date(loadedVideoForSlicer.end)
-        var timeDifference = (endTime - startTime) / 1000
-        var stripWidth = timelineStrip.width()
+        var amountOfSecondsBetween = loadedVideoForSlicer.amountOfSecondsBetween
         //
         var startTimePx = timelineStripSliceSelection.position().left
-        var startTimeInfo = getTimeInfo(startTimePx,stripWidth,timeDifference)
+        var startTimeInfo = getTimeInfo(startTimePx)
         //
         var endTimePx = startTimePx + timelineStripSliceSelection.width()
-        var endTimeInfo = getTimeInfo(endTimePx,stripWidth,timeDifference)
+        var endTimeInfo = getTimeInfo(endTimePx)
         return {
             // startTimestamp: startTimeInfo.timestamp,
             // endTimestamp: endTimeInfo.timestamp,
@@ -137,13 +153,17 @@ $(document).ready(function(){
         loadedVideoElement.pause()
         togglePlayPauseIcon()
     }
+    function playVideo(){
+        userInvokedPlayState = true
+        loadedVideoElement.play()
+        togglePlayPauseIcon()
+    }
     function togglePlayPause(){
         try{
             if(userInvokedPlayState){
                 pauseVideo()
             }else{
-                userInvokedPlayState = true
-                loadedVideoElement.play()
+                playVideo()
             }
         }catch(err){
             console.log(err)
@@ -169,9 +189,9 @@ $(document).ready(function(){
     }
     function loadVideoIntoSlicer(video){
         loadedVideoForSlicer = Object.assign({},video)
-        var startTime = moment(video.time)
-        var endTime = moment(video.end)
-        loadedVideoForSlicer.amountOfSecondsBetween = moment.duration(endTime.diff(startTime)).asSeconds();
+        var startTime = new Date(loadedVideoForSlicer.time)
+        var endTime = new Date(loadedVideoForSlicer.end)
+        loadedVideoForSlicer.amountOfSecondsBetween = (endTime - startTime) / 1000
         drawTimeTicks(video)
         createVideoElement(video)
     }
@@ -192,6 +212,18 @@ $(document).ready(function(){
         </div>`
         completedVideosList.append(html)
     }
+    function seekByTimelineClick(e){
+        if(!changeTimeout){
+            var currentlyPlaying = !!userInvokedPlayState
+            var leftOffset = e.pageX - timelineStripSliceSelection.offset().left
+            var tickPx = timelineStripSliceSelection.position().left + leftOffset
+            var timeSeconds = getTimeInfo(tickPx).timeSeconds
+            setSeekPosition(timeSeconds)
+            if(currentlyPlaying){
+                playVideo()
+            }
+        }
+    }
     onWebSocketEvent(function(data){
         switch(data.f){
             case'fileBin_item_added':
@@ -207,6 +239,10 @@ $(document).ready(function(){
     $(window).resize(function(){
         drawTimeTicks(loadedVideoForSlicer)
     })
+    timelineStrip.resize(function(){
+        stripWidth = timelineStrip.width()
+    })
+    timelineStripSliceSelection.mousedown(seekByTimelineClick)
     $('body')
     .on('click','.open-video-studio',function(e){
         e.preventDefault()
