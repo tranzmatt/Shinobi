@@ -25,12 +25,22 @@
     height: 100%;
 
 }
-#studio-time-ticks .tick{
+#studio-time-ticks .tick {
     position: absolute;
     border-left:1px solid rgba(0,0,0,0.1);
     height: 100%;
 }
-#studio-time-ticks .tick span{
+#studio-seek-tick {
+    position: absolute;
+    border-left: 2px solid #fffc00;
+    border-radius: 5px;
+    transition: none;
+    z-index: 10;
+    height: 80%;
+    top: 10%;
+    left: 10%;
+}
+#studio-time-ticks .tick span {
     left: -50%;
     position: relative;
     font-size: 80%;

@@ -2,6 +2,7 @@ $(document).ready(function(){
     var theEnclosure = $('#tab-studio')
     var viewingCanvas = $('#studioViewingCanvas')
     var timelineStrip = $('#studioTimelineStrip')
+    var seekTick = $('#studio-seek-tick')
     var timelineStripTimeTicksContainer = $('#studio-time-ticks')
     var timelineStripSliceSelection = $('#studio-slice-selection')
     var loadedVideoForSlicer = null
@@ -84,9 +85,7 @@ $(document).ready(function(){
         })
     }
     function drawTimeTicks(video){
-        var startTime = moment(video.time)
-        var endTime = moment(video.end)
-        var amountOfSecondsBetween = moment.duration(endTime.diff(startTime)).asSeconds();
+        var amountOfSecondsBetween = loadedVideoForSlicer.amountOfSecondsBetween
         var numberOfTicks = amountOfSecondsBetween / 20
         var tickStripWidth = timelineStripTimeTicksContainer.width()
         var tickSpacingWidth = tickStripWidth / numberOfTicks
@@ -106,16 +105,22 @@ $(document).ready(function(){
         var videoElement = theEnclosure.find('video')
         loadedVideoElement = videoElement[0]
     }
+    function updateSeekTickPosition(){
+        const percentMoved = loadedVideoElement.currentTime / loadedVideoForSlicer.amountOfSecondsBetween * 100
+        seekTick.css('left',`${percentMoved}%`)
+    }
     function setSeekRestraintOnVideo(){
         var data = getSliceSelection()
         var startTime = data.startTimeSeconds
         var endTime = data.endTimeSeconds
         console.log(data)
         if(!userInvokedPlayState){
-            loadedVideoElement.ontimeupdate = () => {}
+            loadedVideoElement.ontimeupdate = () => {
+                updateSeekTickPosition()
+            }
         }else{
             loadedVideoElement.ontimeupdate = (event) => {
-                console.log(loadedVideoElement.currentTime,event)
+                updateSeekTickPosition()
                 if(loadedVideoElement.currentTime <= startTime){
                     loadedVideoElement.currentTime = startTime
                 }else if(loadedVideoElement.currentTime >= endTime){
@@ -162,6 +167,9 @@ $(document).ready(function(){
     }
     function loadVideoIntoSlicer(video){
         loadedVideoForSlicer = Object.assign({},video)
+        var startTime = moment(video.time)
+        var endTime = moment(video.end)
+        loadedVideoForSlicer.amountOfSecondsBetween = moment.duration(endTime.diff(startTime)).asSeconds();
         drawTimeTicks(video)
         createVideoElement(video)
     }

@@ -8205,6 +8205,7 @@ module.exports = function(s,config,lang){
                      "fieldType": "div",
                      "divContent": `
                          <div id="studio-time-ticks"></div>
+                         <div id="studio-seek-tick"></div>
                          <div id="studio-slice-selection"></div>
                      `,
                   },
