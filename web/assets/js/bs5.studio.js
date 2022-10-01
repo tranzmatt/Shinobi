@@ -194,6 +194,7 @@ $(document).ready(function(){
         loadedVideoForSlicer.amountOfSecondsBetween = (endTime - startTime) / 1000
         drawTimeTicks(video)
         createVideoElement(video)
+        completedVideosList.empty()
     }
     function drawCompletedVideoRow(file){
         var videoEndpoint = getApiPrefix(`fileBin`) + '/' + file.mid + '/' + file.name
