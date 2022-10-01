@@ -87,7 +87,8 @@ $(document).ready(function(){
     }
     function drawTimeTicks(video){
         var amountOfSecondsBetween = loadedVideoForSlicer.amountOfSecondsBetween
-        var numberOfTicks = amountOfSecondsBetween / 20
+        var tickDivisor = amountOfSecondsBetween > 60 * 60 ? 500 : amountOfSecondsBetween > 60 ? 100 : amountOfSecondsBetween > 30 ? 20 : 2
+        var numberOfTicks = amountOfSecondsBetween / tickDivisor
         var tickStripWidth = timelineStripTimeTicksContainer.width()
         var tickSpacingWidth = tickStripWidth / numberOfTicks
         var tickSpacingPercent = tickSpacingWidth / tickStripWidth * 100
