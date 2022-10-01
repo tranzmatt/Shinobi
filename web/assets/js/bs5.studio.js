@@ -1,15 +1,30 @@
 $(document).ready(function(){
     var theEnclosure = $('#tab-studio')
+    var viewingCanvas = $('#studioViewingCanvas')
     var timelineStrip = $('#studioTimelineStrip')
     var timelineStripTimeTicksContainer = $('#studio-time-ticks')
     var timelineStripSliceSelection = $('#studio-slice-selection')
     var loadedVideoForSlicer = null
+    var loadedVideoElement = null
     var timelineStripMousemoveX = 0
     var timelineStripMousemoveY = 0
+    var userInvokedPlayState = false
     var slicerQueue = {}
     function initStudio(){
+        var lastStartTime = 0
+        var lastEndTime = 0
         function onChange(){
-            console.log(getSliceSelection())
+            var data = getSliceSelection()
+            var startTime = data.startTimeSeconds
+            var endTime = data.endTimeSeconds
+            if(lastStartTime === startTime){
+                setSeekPosition(endTime)
+            }else{
+                setSeekPosition(startTime)
+            }
+            lastStartTime = parseFloat(startTime)
+            lastEndTime = parseFloat(endTime)
+            setSeekRestraintOnVideo()
         }
         timelineStripSliceSelection.resizable({
             containment: '#studioTimelineStrip',
@@ -85,10 +100,74 @@ $(document).ready(function(){
         }
         timelineStripTimeTicksContainer.html(tickHtml)
     }
+    function createVideoElement(video){
+        var html = `<video class="video_video" src="${video.href}"></video>`
+        viewingCanvas.html(html)
+        var videoElement = theEnclosure.find('video')
+        loadedVideoElement = videoElement[0]
+    }
+    function setSeekRestraintOnVideo(){
+        var data = getSliceSelection()
+        var startTime = data.startTimeSeconds
+        var endTime = data.endTimeSeconds
+        console.log(data)
+        if(!userInvokedPlayState){
+            loadedVideoElement.ontimeupdate = () => {}
+        }else{
+            loadedVideoElement.ontimeupdate = (event) => {
+                console.log(loadedVideoElement.currentTime,event)
+                if(loadedVideoElement.currentTime <= startTime){
+                    loadedVideoElement.currentTime = startTime
+                }else if(loadedVideoElement.currentTime >= endTime){
+                    loadedVideoElement.currentTime = startTime
+                    pauseVideo()
+                }
+            };
+        }
+    }
+    function pauseVideo(){
+        userInvokedPlayState = false
+        loadedVideoElement.pause()
+        togglePlayPauseIcon()
+    }
+    function togglePlayPause(){
+        try{
+            if(userInvokedPlayState){
+                pauseVideo()
+            }else{
+                userInvokedPlayState = true
+                loadedVideoElement.play()
+            }
+        }catch(err){
+            console.log(err)
+        }
+        setSeekRestraintOnVideo()
+    }
+    function togglePlayPauseIcon(){
+        var iconEl = theEnclosure.find('.play-preview i')
+        if(!userInvokedPlayState){
+            iconEl.addClass('fa-play').removeClass('fa-pause')
+        }else{
+            iconEl.addClass('fa-pause').removeClass('fa-play')
+        }
+    }
+    function setSeekPosition(secondsIn){
+        loadedVideoElement.currentTime = parseFloat(secondsIn) || 1
+        try{
+            loadedVideoElement.play()
+        }catch(err){
+
+        }
+        pauseVideo()
+    }
     function loadVideoIntoSlicer(video){
         loadedVideoForSlicer = Object.assign({},video)
         drawTimeTicks(video)
+        createVideoElement(video)
     }
+    addOnTabAway('studio', function () {
+        loadedVideoElement.pause()
+    })
     $(window).resize(function(){
         drawTimeTicks(loadedVideoForSlicer)
     })
@@ -106,6 +185,15 @@ $(document).ready(function(){
     theEnclosure
     .on('click','.slice-video',function(){
         sliceVideo()
+    })
+    .on('click','.play-preview',function(){
+        togglePlayPause()
+        togglePlayPauseIcon()
+    })
+    .on('mouseup','.ui-resizable-handle.ui-resizable-e',function(){
+        var data = getSliceSelection()
+        var startTime = data.startTimeSeconds
+        setSeekPosition(startTime)
     });
     initStudio()
 })

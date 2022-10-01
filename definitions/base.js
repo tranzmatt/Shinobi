@@ -8152,7 +8152,7 @@ module.exports = function(s,config,lang){
                "section-pre-class": "col-md-8 search-parent",
                "info": [
                    {
-                      "id": "studioMonitorViews",
+                      "id": "studioViewingCanvas",
                       "fieldType": "div",
                    },
                    {
@@ -8167,6 +8167,12 @@ module.exports = function(s,config,lang){
                               "fieldType": "btn-group",
                               "normalWidth": true,
                               "btns": [
+                                  {
+                                      "fieldType": "btn",
+                                      "class": `btn-default btn-sm play-preview`,
+                                      "attribute": `title="${lang['Play']}"`,
+                                      "btnContent": `<i class="fa fa-play"></i>`,
+                                  },
                                   {
                                       "fieldType": "btn",
                                       "class": `btn-default btn-sm slice-video`,
