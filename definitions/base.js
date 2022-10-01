@@ -8183,34 +8183,37 @@ module.exports = function(s,config,lang){
                            },
                        ]
                    },
+                   {
+                       "color": "bg-gradient-blue text-white",
+                       noHeader: true,
+                       isSection: true,
+                       isFormGroupGroup: true,
+                       'section-class': 'text-center',
+                       "info": [
+                           {
+                              "id": "studioTimelineStrip",
+                              "fieldType": "div",
+                              "divContent": `
+                                  <div id="studio-time-ticks"></div>
+                                  <div id="studio-seek-tick"></div>
+                                  <div id="studio-slice-selection"></div>
+                              `,
+                           },
+                       ]
+                   },
                ]
            },
            "Container2": {
-               id: "studioTabs",
                noHeader: true,
               "section-pre-class": "col-md-4",
-              attribute: `tab-chooser-parent`,
-              "info": [
-
-              ]
-          },
-           "Time Strip": {
-               id: "studioTimelineStripsContainer",
-               noHeader: true,
-              "color": "bg-gradient-blue text-white",
-              "section-pre-class": "col-md-12",
+              "noDefaultSectionClasses": true,
               "info": [
                   {
-                     "id": "studioTimelineStrip",
+                     "id": "studio-completed-videos",
                      "fieldType": "div",
-                     "divContent": `
-                         <div id="studio-time-ticks"></div>
-                         <div id="studio-seek-tick"></div>
-                         <div id="studio-slice-selection"></div>
-                     `,
                   },
               ]
-          },
+          }
          }
       },
       "Calendar": {

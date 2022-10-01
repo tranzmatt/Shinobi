@@ -3,6 +3,7 @@ $(document).ready(function(){
     var viewingCanvas = $('#studioViewingCanvas')
     var timelineStrip = $('#studioTimelineStrip')
     var seekTick = $('#studio-seek-tick')
+    var completedVideosList = $('#studio-completed-videos')
     var timelineStripTimeTicksContainer = $('#studio-time-ticks')
     var timelineStripSliceSelection = $('#studio-slice-selection')
     var loadedVideoForSlicer = null
@@ -125,7 +126,7 @@ $(document).ready(function(){
                     loadedVideoElement.currentTime = startTime
                 }else if(loadedVideoElement.currentTime >= endTime){
                     loadedVideoElement.currentTime = startTime
-                    pauseVideo()
+                    // pauseVideo()
                 }
             };
         }
@@ -173,6 +174,32 @@ $(document).ready(function(){
         drawTimeTicks(video)
         createVideoElement(video)
     }
+    function drawCompletedVideoRow(file){
+        var videoEndpoint = getApiPrefix(`fileBin`) + '/' + file.mid + '/' + file.name
+        var html = `<div class="card bg-dark mb-3" data-mid="${file.mid}" data-ke="${file.ke}" data-filename="${file.name}">
+            <div class="card-body">
+                <div class="d-flex flex-row">
+                    <div class="flex-grow-1 text-white">
+                        ${file.name}
+                    </div>
+                    <div>
+                        <a class="btn btn-sm btn-primary open-fileBin-video" href="${videoEndpoint}" title="${lang.Play}"><i class="fa fa-play"></i></a>
+                        <a class="btn btn-sm btn-success" href="${videoEndpoint}" title="${lang.Download}" download><i class="fa fa-download"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>`
+        completedVideosList.append(html)
+    }
+    onWebSocketEvent(function(data){
+        switch(data.f){
+            case'fileBin_item_added':
+                if(data.slicedVideo){
+                    drawCompletedVideoRow(data)
+                }
+            break;
+        }
+    })
     addOnTabAway('studio', function () {
         loadedVideoElement.pause()
     })

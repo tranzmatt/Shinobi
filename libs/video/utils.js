@@ -582,6 +582,10 @@ module.exports = (s,config,lang) => {
                 time: video.time,
             }
             await s.insertFileBinEntry(fileBinInsertQuery)
+            s.tx(Object.assign({
+                f: 'fileBin_item_added',
+                slicedVideo: true,
+            },fileBinInsertQuery),'GRP_'+video.ke);
             response.ok = true
         }catch(err){
             response.err = err
