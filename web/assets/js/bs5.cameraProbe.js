@@ -160,8 +160,7 @@ $(document).ready(function(e){
         submit: function(url,show){
             probeWindow.find('[name="url"]').val(url)
             probeForm.submit()
-            // if(show)probeWindow.modal('show')
-            alert('open Prober')
+            openTab('cameraProbe')
         },
     }
 })

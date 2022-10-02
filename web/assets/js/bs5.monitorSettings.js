@@ -900,9 +900,9 @@ var buildMonitorURL = function(){
             host: host,
             protocol: protocol,
             port: port,
-            path: path,
+            path: encodeURIComponent(path),
             type: type,
-        }) + path;
+        });
     }
     return url
 }
@@ -983,7 +983,7 @@ monitorEditorWindow.on('change','[channel-detail]',function(){
     monitorStreamChannelsave()
 })
 monitorEditorWindow.find('.probe-monitor-settings').click(function(){
-    $.pB.submit(buildMonitorURL(),true)
+    $.pB.submit(buildMonitorURL())
 })
 monitorEditorWindow.find('.save_config').click(function(e){
     //export monior config in view
@@ -1467,8 +1467,10 @@ editorForm.find('[name="type"]').change(function(e){
             monitorId = el.attr('data-mid')
         }
         openMonitorEditorPage(doNew === 'true' ? null : monitorId)
-    })
-
+    });
+    monitorEditorWindow.find('.probe_config').click(function(){
+        $.pB.submit(buildMonitorURL(),true)
+    });
     mainSocket.on('f',function (d){
         //     new PNotify({
         //         title: lang['Settings Changed'],

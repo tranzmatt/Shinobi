@@ -258,7 +258,7 @@ function compileConnectUrl(options){
     if(options.port && options.port !== ''){
         porty = ':' + options.port
     }
-    var url = options.protocol + '://' + options.host + porty
+    var url = options.protocol + '://' + options.host + porty + options.path
     return url
 }
 
