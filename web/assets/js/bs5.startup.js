@@ -20,14 +20,17 @@ function loadHiddenSectionsInForms(){
 }
 function loadSwitchStates(){
     var theSwitches = dashboardOptions().switches;
-    if(theSwitches){
-        $.each(theSwitches,function(systemSwitch,toggleState){
-            setSwitchUIState(systemSwitch,toggleState)
-            runDashboardSwitchCallback(systemSwitch)
-        })
-    }else{
-        dashboardOptions('switches',{notifyHide:0})
+    if(!theSwitches){
+        theSwitches = {
+            notifyHide: 0,
+            monitorMuteAudio: 1,
+        }
+        dashboardOptions('switches',theSwitches)
     }
+    $.each(theSwitches,function(systemSwitch,toggleState){
+        setSwitchUIState(systemSwitch,toggleState)
+        runDashboardSwitchCallback(systemSwitch)
+    })
 }
 function loadClassToggleStates(){
     var theClassToggles = dashboardOptions().class_toggle;
