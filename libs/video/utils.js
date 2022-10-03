@@ -193,12 +193,13 @@ module.exports = (s,config,lang) => {
             const groupKey = options.ke
             const cutLength = options.cutLength || 10
             const startTime = options.startTime
+            const forceEncode = options.encode
             const tempDirectory = s.getStreamsDirectory(options)
             let fileExt = inputFilePath.split('.')
             fileExt = fileExt[fileExt.length -1]
             const filename = `${s.gid(10)}.${fileExt}`
             const videoOutPath = `${tempDirectory}${filename}`
-            const ffmpegCmd = ['-loglevel','warning','-i', inputFilePath, '-c','copy','-t',`${cutLength}`,videoOutPath]
+            const ffmpegCmd = ['-loglevel','warning','-i', inputFilePath, '-c:v', forceEncode ? 'libx264' : 'copy', '-c:a', forceEncode ? 'aac' : 'copy','-t',`${cutLength}`,videoOutPath]
             if(startTime){
                 ffmpegCmd.splice(2, 0, "-ss")
                 ffmpegCmd.splice(3, 0, `${startTime}`)
@@ -544,6 +545,7 @@ module.exports = (s,config,lang) => {
     async function sliceVideo(video,{
         startTime,
         endTime,
+        encode,
     }){
         const response = {ok: false}
         if(!startTime || !endTime){
@@ -566,6 +568,7 @@ module.exports = (s,config,lang) => {
                 mid: monitorId,
                 cutLength,
                 startTime,
+                encode,
                 filePath: inputFilePath,
             });
             s.debugLog(`sliceVideo cutProcessResponse`,cutProcessResponse)

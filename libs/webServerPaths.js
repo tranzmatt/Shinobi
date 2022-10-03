@@ -1820,9 +1820,11 @@ module.exports = function(s,config,lang,app,io){
                         case'slice':
                             const startTime = s.getPostData(req,'startTime');
                             const endTime = s.getPostData(req,'endTime');
+                            const encode = s.getPostData(req,'encode') == '1';
                             const sliceResponse = await sliceVideo(r,{
                                 startTime: startTime,
                                 endTime: endTime,
+                                encode: encode,
                             });
                             response = sliceResponse
                         break;

@@ -91,13 +91,13 @@ $(document).ready(function(){
             endTimeSeconds: endTimeInfo.timeSeconds
         }
     }
-    function sliceVideo(){
+    function sliceVideo(forceEncode){
         var video = Object.assign({},loadedVideoForSlicer)
         var monitorId = video.mid
         var filename = video.filename
         var groupKey = video.ke
         const sliceInfo = getSliceSelection()
-        $.get(`${getApiPrefix('videos')}/${monitorId}/${filename}/slice?startTime=${sliceInfo.startTimeSeconds}&endTime=${sliceInfo.endTimeSeconds}`,function(data){
+        $.get(`${getApiPrefix('videos')}/${monitorId}/${filename}/slice?startTime=${sliceInfo.startTimeSeconds}&endTime=${sliceInfo.endTimeSeconds}${forceEncode ? `&encode=1` : ''}`,function(data){
             console.log('sliceVideo',data)
         })
     }
@@ -256,6 +256,9 @@ $(document).ready(function(){
     theEnclosure
     .on('click','.slice-video',function(){
         sliceVideo()
+    })
+    .on('click','.slice-video-encoded',function(){
+        sliceVideo(true)
     })
     .on('click','.play-preview',function(){
         togglePlayPause()

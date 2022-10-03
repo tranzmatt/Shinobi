@@ -8179,6 +8179,12 @@ module.exports = function(s,config,lang){
                                       "attribute": `title="${lang['Slice']}"`,
                                       "btnContent": `<i class="fa fa-scissors"></i>`,
                                   },
+                                  {
+                                      "fieldType": "btn",
+                                      "class": `btn-default btn-sm slice-video-encoded`,
+                                      "attribute": `title="${lang['Slice & Encode']}"`,
+                                      "btnContent": `<i class="fa fa-cubes"></i>`,
+                                  },
                               ],
                            },
                        ]
