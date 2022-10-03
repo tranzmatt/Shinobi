@@ -7,7 +7,7 @@ module.exports = function(s,config,lang){
     const sliceUrlAuth = (url) => {
         return /^(.+?\/\/)(?:.+?:.+?@)?(.+)$/.exec(url).slice(1).join('')
     }
-    function getGenericControlParameters(optionsm,urlType){
+    function getGenericControlParameters(options,urlType){
         const monitorConfig = s.group[options.ke].rawMonitorConfigurations[options.id]
         const controlUrlMethod = monitorConfig.details.control_url_method || 'GET'
         const controlBaseUrl = monitorConfig.details.control_base_url || s.buildMonitorUrl(monitorConfig, true)
