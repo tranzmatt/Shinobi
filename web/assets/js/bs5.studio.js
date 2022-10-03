@@ -118,7 +118,7 @@ $(document).ready(function(){
         timelineStripTimeTicksContainer.html(tickHtml)
     }
     function createVideoElement(video){
-        var html = `<video class="video_video" src="${video.href}"></video>`
+        var html = `<video class="video_video" controls src="${video.href}"></video>`
         viewingCanvas.html(html)
         var videoElement = theEnclosure.find('video')
         loadedVideoElement = videoElement[0]
@@ -132,31 +132,30 @@ $(document).ready(function(){
         var startTime = data.startTimeSeconds
         var endTime = data.endTimeSeconds
         console.log(data)
-        if(!userInvokedPlayState){
-            loadedVideoElement.ontimeupdate = () => {
-                updateSeekTickPosition()
+
+        loadedVideoElement.ontimeupdate = (event) => {
+            updateSeekTickPosition()
+            if(loadedVideoElement.currentTime <= startTime){
+                loadedVideoElement.currentTime = startTime
+            }else if(loadedVideoElement.currentTime >= endTime){
+                loadedVideoElement.currentTime = startTime
+                // pauseVideo()
             }
-        }else{
-            loadedVideoElement.ontimeupdate = (event) => {
-                updateSeekTickPosition()
-                if(loadedVideoElement.currentTime <= startTime){
-                    loadedVideoElement.currentTime = startTime
-                }else if(loadedVideoElement.currentTime >= endTime){
-                    loadedVideoElement.currentTime = startTime
-                    // pauseVideo()
-                }
-            };
+        };
+        loadedVideoElement.onplay = (event) => {
+            userInvokedPlayState = true
+            togglePlayPauseIcon()
+        }
+        loadedVideoElement.onpause = (event) => {
+            userInvokedPlayState = false
+            togglePlayPauseIcon()
         }
     }
     function pauseVideo(){
-        userInvokedPlayState = false
         loadedVideoElement.pause()
-        togglePlayPauseIcon()
     }
     function playVideo(){
-        userInvokedPlayState = true
         loadedVideoElement.play()
-        togglePlayPauseIcon()
     }
     function togglePlayPause(){
         try{
@@ -168,7 +167,6 @@ $(document).ready(function(){
         }catch(err){
             console.log(err)
         }
-        setSeekRestraintOnVideo()
     }
     function togglePlayPauseIcon(){
         var iconEl = theEnclosure.find('.play-preview i')
@@ -195,6 +193,7 @@ $(document).ready(function(){
         drawTimeTicks(video)
         createVideoElement(video)
         completedVideosList.empty()
+        setSeekRestraintOnVideo()
     }
     function drawCompletedVideoRow(file){
         var videoEndpoint = getApiPrefix(`fileBin`) + '/' + file.mid + '/' + file.name
