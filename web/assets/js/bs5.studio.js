@@ -62,7 +62,7 @@ $(document).ready(function(){
         return `${roundedValue}`.length === 1 ? `0${roundedValue}` :  roundedValue
     }
     function getTimeInfo(timePx){
-        var timeDifference = loadedVideoForSlicer.amountOfSecondsBetween
+        var timeDifference = loadedVideoElement.duration
         var timePercent = timePx / stripWidth * 100
         var timeSeconds = (timeDifference * (timePercent / 100))
         // var timeMinutes = parseInt(timeSeconds / 60)
@@ -77,7 +77,7 @@ $(document).ready(function(){
         }
     }
     function getSliceSelection(){
-        var amountOfSecondsBetween = loadedVideoForSlicer.amountOfSecondsBetween
+        var amountOfSecondsBetween = loadedVideoElement.duration
         //
         var startTimePx = timelineStripSliceSelection.position().left
         var startTimeInfo = getTimeInfo(startTimePx)
@@ -102,7 +102,7 @@ $(document).ready(function(){
         })
     }
     function drawTimeTicks(video){
-        var amountOfSecondsBetween = loadedVideoForSlicer.amountOfSecondsBetween
+        var amountOfSecondsBetween = loadedVideoElement.duration
         var tickDivisor = amountOfSecondsBetween > 60 * 60 ? 500 : amountOfSecondsBetween > 60 ? 100 : amountOfSecondsBetween > 30 ? 20 : 2
         var numberOfTicks = amountOfSecondsBetween / tickDivisor
         var tickStripWidth = timelineStripTimeTicksContainer.width()
@@ -124,7 +124,7 @@ $(document).ready(function(){
         loadedVideoElement = videoElement[0]
     }
     function updateSeekTickPosition(){
-        const percentMoved = loadedVideoElement.currentTime / loadedVideoForSlicer.amountOfSecondsBetween * 100
+        const percentMoved = loadedVideoElement.currentTime / loadedVideoElement.duration * 100
         seekTick.css('left',`${percentMoved}%`)
     }
     function setSeekRestraintOnVideo(){
@@ -189,9 +189,8 @@ $(document).ready(function(){
         loadedVideoForSlicer = Object.assign({},video)
         var startTime = new Date(loadedVideoForSlicer.time)
         var endTime = new Date(loadedVideoForSlicer.end)
-        loadedVideoForSlicer.amountOfSecondsBetween = (endTime - startTime) / 1000
-        drawTimeTicks(video)
         createVideoElement(video)
+        drawTimeTicks(video)
         completedVideosList.empty()
         setSeekRestraintOnVideo()
     }
