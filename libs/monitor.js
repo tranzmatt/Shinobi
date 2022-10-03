@@ -1079,10 +1079,10 @@ module.exports = function(s,config,lang){
                     },1000)
                 break;
                 case checkLog(d,'Immediate exit requested'):
-                    cameraDestroy(e)
                     activeMonitor.timeoutToRestart = setTimeout(() => {
                         launchMonitorProcesses(e)
                     },15000)
+                    cameraDestroy(e)
                 break;
                 case checkLog(d,'mjpeg_decode_dc'):
                 case checkLog(d,'bad vlc'):
