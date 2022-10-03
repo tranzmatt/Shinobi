@@ -1038,11 +1038,12 @@ module.exports = function(s,config,lang){
     }
     const cameraFilterFfmpegLog = function(e){
         var checkLog = function(d,x){return d.indexOf(x)>-1}
-        s.group[e.ke].activeMonitors[e.id].spawn.stderr.on('data',function(d){
+        const activeMonitor = s.group[e.ke].activeMonitors[e.id]
+        activeMonitor.spawn.stderr.on('data',function(d){
             d=d.toString();
             switch(true){
                 case checkLog(d,'Not Enough Bandwidth'):
-                    s.group[e.ke].activeMonitors[e.id].criticalErrors['453'] = true
+                    activeMonitor.criticalErrors['453'] = true
                 break;
                 case checkLog(d,'No space left on device'):
                     s.checkUserPurgeLock(e.ke)
@@ -1072,14 +1073,14 @@ module.exports = function(s,config,lang){
                 case checkLog(d,'Connection refused'):
                 case checkLog(d,'Connection timed out'):
                     //restart
-                    setTimeout(function(){
+                    activeMonitor.timeoutToRestart = setTimeout(function(){
                         s.userLog(e,{type:lang['Connection timed out'],msg:lang['Retrying...']});
                         fatalError(e,'Connection timed out');
                     },1000)
                 break;
                 case checkLog(d,'Immediate exit requested'):
                     cameraDestroy(e)
-                    setTimeout(() => {
+                    activeMonitor.timeoutToRestart = setTimeout(() => {
                         launchMonitorProcesses(e)
                     },15000)
                 break;
@@ -1087,13 +1088,13 @@ module.exports = function(s,config,lang){
                 case checkLog(d,'bad vlc'):
                 case checkLog(d,'error dc'):
                     cameraDestroy(e)
-                    setTimeout(() => {
+                    activeMonitor.timeoutToRestart = setTimeout(() => {
                         launchMonitorProcesses(e)
                     },15000)
                 break;
                 case checkLog(d,'No route to host'):
                     cameraDestroy(e)
-                    setTimeout(() => {
+                    activeMonitor.timeoutToRestart = setTimeout(() => {
                         launchMonitorProcesses(e)
                     },60000)
                 break;

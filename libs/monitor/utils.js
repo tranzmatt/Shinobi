@@ -100,6 +100,7 @@ module.exports = (s,config,lang) => {
             clearTimeout(activeMonitor.recordingSnapper);
             clearInterval(activeMonitor.getMonitorCpuUsage);
             clearInterval(activeMonitor.objectCountIntervals);
+            clearTimeout(activeMonitor.timeoutToRestart)
             delete(activeMonitor.onvifConnection)
             if(activeMonitor.onChildNodeExit){
                 activeMonitor.onChildNodeExit()
