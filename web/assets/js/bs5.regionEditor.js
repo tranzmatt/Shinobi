@@ -323,7 +323,7 @@ $(document).ready(function(e){
         regionEditorMonitorsList.val(theSelected)
     })
     addOnTabAway('regionEditor', function () {
-        regionEditorLiveView.find('iframe,img').remove()
+        regionEditorLiveView.find('iframe,img').attr('src','about:blank')
     })
     drawSubMenuItems('regionEditor',definitions['Region Editor'])
 })
