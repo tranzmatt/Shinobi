@@ -39,6 +39,8 @@ module.exports = function(s,config,lang,app){
     app.get([config.webPaths.apiPrefix+':auth/embed/:ke/:id',config.webPaths.apiPrefix+':auth/embed/:ke/:id/:addon'], function (req,res){
         req.params.protocol=req.protocol;
         s.auth(req.params,function(user){
+            const authKey = req.params.auth
+            const groupKey = req.params.ke
             const monitorId = req.params.id
             if(cantLiveStreamPermission(user,monitorId)){
                 s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
@@ -52,7 +54,21 @@ module.exports = function(s,config,lang,app){
             if(s.group[req.params.ke]&&s.group[req.params.ke].activeMonitors[req.params.id]){
                 if(s.group[req.params.ke].activeMonitors[req.params.id].isStarted === true){
                     req.params.uid=user.uid;
-                    s.renderPage(req,res,config.renderPaths.embed,{data:req.params,baseUrl:req.protocol+'://'+req.hostname,config: s.getConfigWithBranding(req.hostname),lang:user.lang,mon:Object.assign(s.group[req.params.ke].rawMonitorConfigurations[req.params.id],{}),originalURL:s.getOriginalUrl(req)});
+                    s.renderPage(req,res,config.renderPaths.embed,{
+                        data: req.params,
+                        baseUrl: req.protocol+'://'+req.hostname,
+                        config: s.getConfigWithBranding(req.hostname),
+                        define: s.getDefinitonFile(user.details ? user.details.lang : config.lang),
+                        $user: {
+                            auth_token: authKey,
+                            ke: groupKey,
+                            uid: user.uid,
+                            mail: user.mail,
+                            details: {},
+                        },
+                        mon: Object.assign(s.group[req.params.ke].rawMonitorConfigurations[req.params.id],{}),
+                        originalURL: s.getOriginalUrl(req)
+                    });
                     res.end()
                 }else{
                     res.end(user.lang['Cannot watch a monitor that isn\'t running.'])
