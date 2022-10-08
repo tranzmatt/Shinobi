@@ -180,7 +180,7 @@ $(document).ready(function(e){
         var monitorId = video.mid
         var labels = []
         var chartData = []
-        var events = video.detections
+        var events = video.detections || video.events
         $.each(events,function(n,v){
             if(!v.details.confidence){v.details.confidence=0}
             var time = moment(v.time).format('MM/DD/YYYY HH:mm:ss')
