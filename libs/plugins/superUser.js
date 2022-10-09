@@ -74,9 +74,6 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
                     name: moduleName
                 }
             }
-            if(newModule.properties.disabled === undefined){
-                newModule.properties.disabled = true
-            }
             //conf.json
             newModule.config = getModuleConfiguration(moduleName)
             newModule.hasInstaller = hasInstaller
@@ -176,18 +173,10 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
     const disableModule = (name,status) => {
         // set status to `false` to enable
         const modulePath = getModulePath(name)
-        const properties = getModuleProperties(name);
-        const propertiesPath = modulePath + 'package.json'
-        var packageJson = {
-            name: name
-        }
-        try{
-            packageJson = JSON.parse(fs.readFileSync(propertiesPath))
-        }catch(err){
-
-        }
-        packageJson.disabled = status;
-        fs.writeFileSync(propertiesPath,s.prettyPrint(packageJson))
+        const confJson = getModuleConfiguration(name)
+        const confPath = modulePath + 'conf.json'
+        confJson.enabled = status;
+        fs.writeFileSync(confPath,s.prettyPrint(confJson))
     }
     const deleteModule = (name) => {
         // requires restart for changes to take effect
@@ -288,7 +277,7 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
             if(!err && folderContents.length > 0){
                 var moduleList = getModules(true)
                 moduleList.forEach((shinobiModule) => {
-                    if(!shinobiModule || shinobiModule.properties.disabled || shinobiModule.properties.disabled === undefined){
+                    if(!shinobiModule || !shinobiModule.config.enabled){
                         return;
                     }
                     loadModule(shinobiModule)

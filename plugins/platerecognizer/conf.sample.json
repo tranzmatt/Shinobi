@@ -6,5 +6,6 @@
     "hostPort": 58084,
     "key": "1234567890",
     "mode": "client",
-    "type": "detector"
+    "type": "detector",
+    "enabled": false
 }
