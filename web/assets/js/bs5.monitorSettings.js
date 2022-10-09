@@ -19,6 +19,7 @@ var fieldsLoaded = {}
 var sections = {}
 var loadedPresets = {}
 function generateDefaultMonitorSettings(){
+    var eventFilterId = generateId(5)
     return {
        "mode": "start",
        "mid": generateId(),
@@ -153,10 +154,46 @@ function generateDefaultMonitorSettings(){
            "detector_discordbot": null,
            "detector_discordbot_send_video": null,
            "detector_discordbot_timeout": "",
-           "use_detector_filters": null,
-           "use_detector_filters_object": null,
+           "use_detector_filters": "0",
+           "use_detector_filters_object": "1",
            "cords": "[]",
-           "detector_filters": "",
+           "detector_filters": {
+              [eventFilterId]: {
+                "id": eventFilterId,
+                "enabled": "1",
+                "filter_name": "Standard Object Detection Filter",
+                "where": [
+                  {
+                    "p1": "tag",
+                    "p2": "!indexOf",
+                    "p3": "person",
+                    "p4": "&&"
+                  },
+                  {
+                    "p1": "tag",
+                    "p2": "!indexOf",
+                    "p3": "car",
+                    "p4": "&&"
+                  },
+                  {
+                    "p1": "tag",
+                    "p2": "!indexOf",
+                    "p3": "truck",
+                    "p4": "&&"
+                  }
+                ],
+                "actions": {
+                  "halt": "1",
+                  "save": "",
+                  "indifference": "",
+                  "webhook": "",
+                  "command": "",
+                  "record": "",
+                  "emailClient": "",
+                  "global_webhook": ""
+                }
+              }
+           },
            "detector_pam": "1",
            "detector_show_matrix": null,
            "detector_sensitivity": "",
