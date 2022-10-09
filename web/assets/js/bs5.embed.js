@@ -608,13 +608,7 @@ $(document).ready(function(e){
                 closeLiveGridPlayer(monitorId,(d.f === 'monitor_watch_off'))
             break;
             case'monitor_status':
-                if(
-                    tabTree.name === 'liveGrid' &&
-                    (
-                        d.code === 2 ||
-                        d.code === 3
-                    )
-                ){
+                if(d.code === 2 || d.code === 3){
                     var monitorId = d.mid || d.id
                     setTimeout(function(){
                         callMonitorToLiveGrid(loadedMonitors[monitorId])
