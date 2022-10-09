@@ -1508,7 +1508,7 @@ editorForm.find('[name="type"]').change(function(e){
     monitorEditorWindow.find('.probe_config').click(function(){
         $.pB.submit(buildMonitorURL(),true)
     });
-    mainSocket.on('f',function (d){
+    onWebSocketEvent(function (d){
         //     new PNotify({
         //         title: lang['Settings Changed'],
         //         text: lang.SettingsChangedText,

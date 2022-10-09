@@ -143,7 +143,7 @@ $(document).ready(function(e){
             setAsLoading(false)
         })
     })
-    mainSocket.on('f',function(d){
+    onWebSocketEvent(function (d){
         switch(d.f){
             case'ffprobe_stop':
                 setAsLoading(false)

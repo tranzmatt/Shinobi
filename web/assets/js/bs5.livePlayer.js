@@ -347,7 +347,7 @@ function startJpegStream(monitorId){
 }
 
 $(document).ready(function(e){
-    mainSocket.on('f',function (d){
+    onWebSocketEvent(function (d){
         switch(d.f){
             case'monitor_watch_off':case'monitor_stopping':
                 // // FOR GRID/MONTAGE

@@ -170,7 +170,7 @@ $(document).ready(function(){
     fillFormFields()
     drawAddStorageFields()
     drawSubMenuItems('accountSettings',definitions['Account Settings'])
-    mainSocket.on('f',function (d){
+    onWebSocketEvent(function (d){
         switch(d.f){
             case'user_settings_change':
                 new PNotify({
