@@ -925,6 +925,24 @@ $(document).ready(function(e){
         var monitorId = el.parents('[data-mid]').attr('data-mid')
         runTestDetectionTrigger(monitorId)
     })
+    .on('click','.run-monitor-detection-trigger-test-motion',function(){
+        var el = $(this)
+        var monitorId = el.parents('[data-mid]').attr('data-mid')
+        runTestDetectionTrigger(monitorId,{
+            "name":"Test Motion",
+            "reason":"motion",
+            matrices: [
+                {
+                    x: 5,
+                    y: 5,
+                    width: 150,
+                    height: 150,
+                    tag: 'Motion Test',
+                    confidence: 100,
+                }
+            ]
+        });
+    })
     $('.open-all-monitors').click(function(){
         $.each(loadedMonitors,function(monitorId,monitor){
             mainSocket.f({

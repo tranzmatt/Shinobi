@@ -171,10 +171,30 @@ function runPtzMove(monitorId,switchChosen,doMove){
         ke: $user.ke
     })
 }
-function runTestDetectionTrigger(monitorId,callback){
-    $.getJSON(getApiPrefix() + '/motion/'+$user.ke+'/'+monitorId+'/?data={"plug":"manual_trigger","name":"Manual Trigger","reason":"Manual","confidence":100}',function(d){
-        debugLog(d)
-        if(callback)callback()
+function runTestDetectionTrigger(monitorId,customData){
+    return new Promise((resolve,reject) => {
+        var detectionData = Object.assign({
+            "plug":"dashboard",
+            "name":"Test Object",
+            "reason":"object",
+            "confidence": 80,
+            imgHeight: 640,
+            imgWidth: 480,
+            matrices: [
+                {
+                    x: 15,
+                    y: 15,
+                    width: 50,
+                    height: 50,
+                    tag: 'Object Test',
+                    confidence: 100,
+                }
+            ]
+        },customData || {});
+        $.getJSON(getApiPrefix() + '/motion/'+$user.ke+'/'+monitorId+'/?data=' + JSON.stringify(detectionData),function(d){
+            debugLog(d)
+            resolve(d)
+        })
     })
 }
 function toggleSubStream(monitorId,callback){
