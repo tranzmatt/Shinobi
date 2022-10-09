@@ -603,13 +603,6 @@ $(document).ready(function(e){
             case'init_success':
                 // loadPreviouslyOpenedLiveGridBlocks()
             break;
-            case'video_build_success':
-                d.status = 1
-                d.mid = d.id || d.mid
-                var monitorId = d.mid
-                var videoTime = d.time
-                loadedVideosInMemory[`${monitorId}${videoTime}`] = d
-            break;
             case'monitor_watch_off':case'monitor_stopping':
                 var monitorId = d.mid || d.id
                 closeLiveGridPlayer(monitorId,(d.f === 'monitor_watch_off'))
@@ -665,6 +658,7 @@ $(document).ready(function(e){
                 $('body').addClass('jpegMode')
             break;
             case'detector_trigger':
+                console.log(d)
                 var monitorId = d.id
                 var liveGridElement = liveGridElements[monitorId]
                 if(!window.dontShowDetection && liveGridElement){
@@ -698,19 +692,6 @@ $(document).ready(function(e){
                         monitorElement.removeClass('detector_triggered');
                         liveGridElement.eventObjects.find('.stream-detected-object,.stream-detected-point').remove()
                     },800);
-                    playAudioAlert()
-                    var monitorPop = monitorPops[monitorId]
-                    if($user.details.event_mon_pop === '1' && (!monitorPop || monitorPop.closed === true)){
-                        popOutMonitor(monitorId)
-                    }
-                    // console.log({
-                    //     ke: d.ke,
-                    //     mid: monitorId,
-                    //     log: {
-                    //         type: lang['Event Occurred'],
-                    //         msg: d.details,
-                    //     }
-                    // })
                 }
             break;
         }

@@ -57,3 +57,19 @@ function dashboardOptions(r,rr,rrr){
     localStorage.setItem(rrr.n,JSON.stringify(ii.o))
     return ii.o
 }
+function drawMatrices(event,options){
+    var theContainer = options.theContainer
+    var height = options.height
+    var width = options.width
+    var widthRatio = width / event.details.imgWidth
+    var heightRatio = height / event.details.imgHeight
+    var objectTagGroup = event.details.reason === 'motion' ? 'motion' : event.details.name
+    theContainer.find(`.stream-detected-object[name="${objectTagGroup}"]`).remove()
+    var html = ''
+    $.each(event.details.matrices,function(n,matrix){
+        html += `<div class="stream-detected-object" name="${objectTagGroup}" style="height:${heightRatio * matrix.height}px;width:${widthRatio * matrix.width}px;top:${heightRatio * matrix.y}px;left:${widthRatio * matrix.x}px;">`
+        if(matrix.tag)html += `<span class="tag">${matrix.tag}</span>`
+        html += '</div>'
+    })
+    theContainer.append(html)
+}
