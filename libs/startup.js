@@ -11,6 +11,9 @@ module.exports = function(s,config,lang,io){
     const {
         checkSubscription
     } = require('./basic/utils.js')(process.cwd(),config)
+    const {
+        checkForStaticUsers
+    } = require('./user/startup.js')(s,config,lang,io)
     return new Promise((resolve, reject) => {
         var checkedAdminUsers = {}
         console.log('FFmpeg version : '+s.ffmpegVersion)
@@ -84,7 +87,7 @@ module.exports = function(s,config,lang,io){
                                     status: 'Stopped',
                                     code: 5
                                 });
-                                var monObj = Object.assign(monitor,{id : monitor.mid})
+                                const monObj = Object.assign({},monitor,{id : monitor.mid})
                                 s.camera(monitor.mode,monObj)
                                 checkAnother()
                             },1000)
@@ -262,11 +265,15 @@ module.exports = function(s,config,lang,io){
                 },function(err,frames) {
                     if(frames && frames[0]){
                         frames.forEach(function(frame){
-                            var storageType = JSON.parse(frame.details).type
-                            if(!storageType)storageType = 's3'
-                            var frameSize = frame.size / 1048576
-                            user.cloudDiskUse[storageType].usedSpace += frameSize
-                            user.cloudDiskUse[storageType].usedSpaceTimelapseFrames += frameSize
+                            try{
+                                var storageType = JSON.parse(frame.details).type
+                                if(!storageType)storageType = 's3'
+                                var frameSize = frame.size / 1048576
+                                user.cloudDiskUse[storageType].usedSpace += frameSize
+                                user.cloudDiskUse[storageType].usedSpaceTimelapseFrames += frameSize
+                            }catch(err){
+                                s.debugLog(err)
+                            }
                         })
                     }
                     callback()
@@ -326,9 +333,7 @@ module.exports = function(s,config,lang,io){
                 }
                 if(files && files[0]){
                     files.forEach(function(file){
-                        if(video.details.dir === storage.value){
-                            usedSpaceFilebin += file.size
-                        }
+                        usedSpaceFilebin += file.size
                     })
                 }
                 storageIndex.usedSpace = (usedSpaceVideos + usedSpaceTimelapseFrames + usedSpaceFilebin) / 1048576
@@ -409,7 +414,8 @@ module.exports = function(s,config,lang,io){
             s.databaseEngine = require('knex')(s.databaseOptions)
             //run prerequsite queries
             s.preQueries()
-            setTimeout(() => {
+            setTimeout(async () => {
+                await checkForStaticUsers()
                 //check for subscription
                 checkSubscription(config.subscriptionId,function(hasSubcribed){
                     config.userHasSubscribed = hasSubcribed

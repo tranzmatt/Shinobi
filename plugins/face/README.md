@@ -1,6 +1,4 @@
-#Face Plugin for Shinobi
-
-###Install
+# Facial Recognition
 
 **Ubuntu and CentOS only**
 
@@ -24,7 +22,7 @@ pm2 start shinobi-face.js
 
 Doing this will reveal options in the monitor configuration. Shinobi does not need to be restarted when a plugin is initiated or stopped.
 
-###Train Your Own Faces (Facial Recognition)
+### Train Your Own Faces (Facial Recognition)
 
 > Currently this plugin loads faces upon plugin start
 

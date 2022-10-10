@@ -3,7 +3,7 @@ var fs = require('fs');
 var bodyParser = require('body-parser');
 var os = require('os');
 var moment = require('moment');
-var request = require('request');
+var fetch = require('node-fetch');
 var execSync = require('child_process').execSync;
 var exec = require('child_process').exec;
 var spawn = require('child_process').spawn;
@@ -26,6 +26,16 @@ module.exports = function(s,config,lang,app,io){
         twoFactorVerification,
         ldapLogin,
     } = require('./auth/utils.js')(s,config,lang)
+    const {
+        spawnSubstreamProcess,
+        destroySubstreamProcess,
+    } = require('./monitor/utils.js')(s,config,lang)
+    const {
+        archiveVideo,
+        reEncodeVideoAndReplace,
+        reEncodeVideoAndBinOriginalAddToQueue,
+        getVideosBasedOnTagFoundInMatrixOfAssociatedEvent,
+    } = require('./video/utils.js')(s,config,lang)
     s.renderPage = function(req,res,paths,passables,callback){
         passables.window = {}
         passables.data = req.params
@@ -75,9 +85,14 @@ module.exports = function(s,config,lang,app,io){
     if(config.webPaths.home !== '/'){
         app.use('/libs',express.static(s.mainDirectory + '/web/libs'))
     }
-    app.use(s.checkCorrectPathEnding(config.webPaths.home)+'libs',express.static(s.mainDirectory + '/web/libs'))
-    app.use(s.checkCorrectPathEnding(config.webPaths.admin)+'libs',express.static(s.mainDirectory + '/web/libs'))
-    app.use(s.checkCorrectPathEnding(config.webPaths.super)+'libs',express.static(s.mainDirectory + '/web/libs'))
+    [
+        [config.webPaths.home,'libs','/web/libs'],
+        [config.webPaths.super,'libs','/web/libs'],
+        [config.webPaths.home,'assets','/web/assets'],
+        [config.webPaths.super,'assets','/web/assets'],
+    ].forEach((piece) => {
+        app.use(s.checkCorrectPathEnding(piece[0])+piece[1],express.static(s.mainDirectory + piece[2]))
+    })
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({extended: true}));
     app.use(function (req,res,next){
@@ -120,12 +135,6 @@ module.exports = function(s,config,lang,app,io){
         s.renderPage(req,res,config.renderPaths.index,{lang:lang,config: s.getConfigWithBranding(req.hostname),screen:'dashboard'})
     });
     /**
-    * Page : Administrator Login Screen
-    */
-    app.get(config.webPaths.admin, function (req,res){
-        s.renderPage(req,res,config.renderPaths.index,{lang:lang,config: s.getConfigWithBranding(req.hostname),screen:'admin'})
-    });
-    /**
     * Page : Superuser Login Screen
     */
     app.get(config.webPaths.super, function (req,res){
@@ -155,14 +164,18 @@ module.exports = function(s,config,lang,app,io){
         }
     }
     /**
+    * Page : Admin page redirect to regular page now
+    */
+    app.get(config.webPaths.admin, function (req,res){
+        res.redirect('/');
+    });
+    /**
     * API : Login handler. Dashboard, Streamer, Dashcam Administrator, Superuser
     */
     app.post([
         config.webPaths.home,
-        config.webPaths.admin,
         config.webPaths.super,
         s.checkCorrectPathEnding(config.webPaths.home)+':screen',
-        s.checkCorrectPathEnding(config.webPaths.admin)+':screen',
         s.checkCorrectPathEnding(config.webPaths.super)+':screen',
     ],async function (req,res){
         var response = {ok: false};
@@ -303,6 +316,7 @@ module.exports = function(s,config,lang,app,io){
                         $user: userInfo,
                         lang: userInfo.lang,
                         define: s.getDefinitonFile(userInfo.details.lang),
+                        __dirname: s.mainDirectory,
                         customAutoLoad: s.customAutoLoadTree
                     })
                 break;
@@ -312,10 +326,12 @@ module.exports = function(s,config,lang,app,io){
                         $user: userInfo,
                         lang: userInfo.lang,
                         define: s.getDefinitonFile(userInfo.details.lang),
+                        __dirname: s.mainDirectory,
                         customAutoLoad: s.customAutoLoadTree
                     })
                 break;
                 case'admin':
+                // dash
                 default:
                     var chosenRender = 'home'
                     if(userInfo.details.sub && userInfo.details.landing_page && userInfo.details.landing_page !== '' && config.renderPaths[userInfo.details.landing_page]){
@@ -424,9 +440,12 @@ module.exports = function(s,config,lang,app,io){
                                 $user:{
                                     ke: user.ke,
                                     uid: user.uid,
-                                    mail: user.mail
+                                    mail: user.mail,
+                                    details: {
+                                        sub: user.details.sub
+                                    }
                                 },
-                                lang: user.lang
+                                lang: user.lang,
                             })
                             return;
                         }
@@ -444,12 +463,13 @@ module.exports = function(s,config,lang,app,io){
                     failedAuthentication(req.body.function,req.body.mail)
                 }
             }
-            if(req.body.function === 'super'){
+            if(req.body.function === 'super' && !config.superUserLoginDisabled){
                 const superLoginResponse = await superLogin(req.body.mail,req.body.pass);
                 if(superLoginResponse.ok){
                     renderPage(config.renderPaths.super,{
                         config: config,
                         lang: lang,
+                        define: s.getDefinitonFile(config.language),
                         $user: superLoginResponse.user,
                         customAutoLoad: s.customAutoLoadTree,
                         currentVersion: s.currentVersion,
@@ -631,8 +651,22 @@ module.exports = function(s,config,lang,app,io){
         s.auth(req.params,function(user){
             const groupKey = req.params.ke
             const monitorId = req.params.id
-            const monitorRestrictions = s.getMonitorRestrictions(user.details,monitorId)
-            if(user.details.sub && user.details.allmonitors === '0' && (user.permissions.get_monitors === "0" || monitorRestrictions.length === 0)){
+            const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(user.details,monitorId)
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+            } = s.checkPermission(user)
+            if(
+                isRestrictedApiKey && apiKeyPermissions.get_monitors_disallowed ||
+                isRestricted && (
+                    monitorId && !monitorPermissions[`${monitorId}_monitors`] ||
+                    monitorRestrictions.length === 0
+                )
+            ){
                 s.closeJsonResponse(res,[]);
                 return
             }
@@ -736,8 +770,22 @@ module.exports = function(s,config,lang,app,io){
         s.auth(req.params,(user) => {
             const groupKey = req.params.ke
             const monitorId = req.params.id
-            const monitorRestrictions = s.getMonitorRestrictions(user.details,monitorId)
-            if(user.details.sub && user.details.allmonitors === '0' && (user.permissions.get_monitors === "0" || monitorRestrictions.length === 0)){
+            const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(user.details,monitorId)
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+            } = s.checkPermission(user)
+            if(
+                isRestrictedApiKey && apiKeyPermissions.get_monitors_disallowed ||
+                isRestricted && (
+                    monitorId && !monitorPermissions[`${monitorId}_monitors`] ||
+                    monitorRestrictions.length === 0
+                )
+            ){
                 s.closeJsonResponse(res,[]);
                 return
             }
@@ -757,6 +805,7 @@ module.exports = function(s,config,lang,app,io){
                         r[n].currentCpuUsage = activeMonitor.currentCpuUsage
                         r[n].status = activeMonitor.monitorStatus
                         r[n].code = activeMonitor.monitorStatusCode
+                        r[n].subStreamChannel = activeMonitor.subStreamChannel
                     }
                     var buildStreamURL = function(type,channelNumber){
                         var streamURL
@@ -807,63 +856,108 @@ module.exports = function(s,config,lang,app,io){
         },res,req);
     });
     /**
-    * API : Merge Recorded Videos into one file
+    * API : Toggle Substream Process on and off
      */
-     app.get(config.webPaths.apiPrefix+':auth/videosMerge/:ke', function (req,res){
-         var failed = function(resp){
-             res.setHeader('Content-Type', 'application/json');
-             res.end(s.prettyPrint(resp))
-         }
-         if(req.query.videos && req.query.videos !== ''){
-             s.auth(req.params,function(user){
-                 var videosSelected = JSON.parse(req.query.videos)
-                 const whereQuery = []
-                 var didOne = false
-                 videosSelected.forEach(function(video){
-                     var time = s.nameToTime(video.filename)
-                     if(req.query.isUTC === 'true'){
-                         time = s.utcToLocal(time)
-                     }
-                     if(didOne){
-                         whereQuery.push(['or','ke','=',req.params.ke])
-                     }else{
-                         didOne = true
-                         whereQuery.push(['ke','=',req.params.ke])
-                     }
-                     whereQuery.push(
-                         ['mid','=',video.mid],
-                         ['time','=',time],
-                     )
-
-                 })
-                 s.knexQuery({
-                     action: "select",
-                     columns: "*",
-                     table: "Videos",
-                     where: whereQuery
-                 },(err,r) => {
-                     var resp = {ok: false}
-                     if(r && r[0]){
-                         s.mergeRecordedVideos(r,req.params.ke,function(fullPath,filename){
-                             res.setHeader('Content-Disposition', 'attachment; filename="'+filename+'"')
-                             var file = fs.createReadStream(fullPath)
-                             file.on('close',function(){
-                                 setTimeout(function(){
-                                     s.file('delete',fullPath)
-                                 },1000 * 60 * 3)
-                                 res.end()
-                             })
-                             file.pipe(res)
-                         })
-                     }else{
-                         failed({ok:false,msg:'No Videos Found'})
-                     }
-                 })
-             },res,req);
-         }else{
-             failed({ok:false,msg:'"videos" query variable is missing from request.'})
-         }
-    })
+    app.get(config.webPaths.apiPrefix+':auth/toggleSubstream/:ke/:id', function (req,res){
+        const response = {ok: false};
+        s.auth(req.params,async (user) => {
+            const groupKey = req.params.ke
+            const monitorId = req.params.id
+            const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(user.details,monitorId)
+            const {
+                isRestricted,
+                userPermissions,
+                apiKeyPermissions,
+                isRestrictedApiKey,
+            } = s.checkPermission(user)
+            if(
+                isRestrictedApiKey && apiKeyPermissions.control_monitors_disallowed ||
+                isRestricted && !monitorPermissions[`${monitorId}_monitors`]
+            ){
+                response.msg = user.lang['Not Permitted']
+            }else{
+                const monitorConfig = s.group[groupKey].rawMonitorConfigurations[monitorId]
+                const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
+                const substreamConfig = monitorConfig.details.substream
+                if(
+                    substreamConfig.output
+                ){
+                    if(!activeMonitor.subStreamProcess){
+                        response.ok = true
+                        activeMonitor.allowDestroySubstream = false;
+                        spawnSubstreamProcess(monitorConfig)
+                    }else{
+                        activeMonitor.allowDestroySubstream = true
+                        await destroySubstreamProcess(activeMonitor)
+                    }
+                }else{
+                    response.msg = lang['Invalid Settings']
+                }
+            }
+            s.closeJsonResponse(res,response);
+        },res,req);
+    });
+    // /**
+    // * API : Merge Recorded Videos into one file
+    //  */
+    //  app.get(config.webPaths.apiPrefix+':auth/videosMerge/:ke', function (req,res){
+    //      var failed = function(resp){
+    //          res.setHeader('Content-Type', 'application/json');
+    //          res.end(s.prettyPrint(resp))
+    //      }
+    //      if(req.query.videos && req.query.videos !== ''){
+    //          s.auth(req.params,function(user){
+    //              var videosSelected = JSON.parse(req.query.videos)
+    //              const whereQuery = []
+    //              var didOne = false
+    //              videosSelected.forEach(function(video){
+    //                  var time = s.nameToTime(video.filename)
+    //                  if(req.query.isUTC === 'true'){
+    //                      time = s.utcToLocal(time)
+    //                  }
+    //                  if(didOne){
+    //                      whereQuery.push(['or','ke','=',req.params.ke])
+    //                  }else{
+    //                      didOne = true
+    //                      whereQuery.push(['ke','=',req.params.ke])
+    //                  }
+    //                  whereQuery.push(
+    //                      ['mid','=',video.mid],
+    //                      ['time','=',time],
+    //                  )
+    //
+    //              })
+    //              s.knexQuery({
+    //                  action: "select",
+    //                  columns: "*",
+    //                  table: "Videos",
+    //                  where: whereQuery
+    //              },(err,r) => {
+    //                  var resp = {ok: false}
+    //                  if(r && r[0]){
+    //                      s.mergeRecordedVideos(r,req.params.ke,function(fullPath,filename){
+    //                          res.setHeader('Content-Disposition', 'attachment; filename="'+filename+'"')
+    //                          var file = fs.createReadStream(fullPath)
+    //                          file.on('close',function(){
+    //                              setTimeout(function(){
+    //                                  s.file('delete',fullPath)
+    //                              },1000 * 60 * 3)
+    //                              res.end()
+    //                          })
+    //                          file.pipe(res)
+    //                      })
+    //                  }else{
+    //                      failed({ok:false,msg:'No Videos Found'})
+    //                  }
+    //              })
+    //          },res,req);
+    //      }else{
+    //          failed({ok:false,msg:'"videos" query variable is missing from request.'})
+    //      }
+    // })
     /**
     * API : Get Videos
      */
@@ -875,10 +969,27 @@ module.exports = function(s,config,lang,app,io){
     ], function (req,res){
         res.setHeader('Content-Type', 'application/json');
         s.auth(req.params,function(user){
-            const userDetails = user.details
             const monitorId = req.params.id
             const groupKey = req.params.ke
-            const hasRestrictions = userDetails.sub && userDetails.allmonitors !== '1';
+            const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(user.details,monitorId,'video_view')
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+            } = s.checkPermission(user);
+            if(
+                isRestrictedApiKey && apiKeyPermissions.watch_videos_disallowed ||
+                isRestricted && (
+                    monitorId && !monitorPermissions[`${monitorId}_video_view`] ||
+                    monitorRestrictions.length === 0
+                )
+            ){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized'], videos: []});
+                return
+            }
             var origURL = req.originalUrl.split('/')
             var videoParam = origURL[origURL.indexOf(req.params.auth) + 1]
             var videoSet = 'Videos'
@@ -897,16 +1008,14 @@ module.exports = function(s,config,lang,app,io){
                 endTime: req.query.end,
                 startTimeOperator: req.query.startOperator,
                 endTimeOperator: req.query.endOperator,
+                noLimit: req.query.noLimit,
                 limit: req.query.limit,
                 archived: req.query.archived,
                 endIsStartTo: !!req.query.endIsStartTo,
                 parseRowDetails: false,
                 rowName: 'videos',
-                preliminaryValidationFailed: (
-                    user.permissions.watch_videos === "0" ||
-                    hasRestrictions &&
-                    (!userDetails.video_view || userDetails.video_view.indexOf(monitorId)===-1)
-                )
+                monitorRestrictions: monitorRestrictions,
+                preliminaryValidationFailed: false
             },(response) => {
                 if(response && response.videos){
                     s.buildVideoLinks(response.videos,{
@@ -920,6 +1029,60 @@ module.exports = function(s,config,lang,app,io){
         },res,req);
     });
     /**
+    * API : Get Videos
+     */
+    app.get([
+        config.webPaths.apiPrefix+':auth/videosByEventTag/:ke',
+        config.webPaths.apiPrefix+':auth/videosByEventTag/:ke/:id'
+    ], function (req,res){
+        res.setHeader('Content-Type', 'application/json');
+        s.auth(req.params,function(user){
+            const searchQuery = s.getPostData(req,'search')
+            const startTime = s.getPostData(req,'start')
+            const endTime = s.getPostData(req,'end')
+            const monitorId = req.params.id
+            const groupKey = req.params.ke
+            const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(user.details,monitorId)
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+            } = s.checkPermission(user);
+            if(
+                isRestrictedApiKey && apiKeyPermissions.watch_videos_disallowed ||
+                isRestricted && (
+                    monitorId && !monitorPermissions[`${monitorId}_video_view`] ||
+                    monitorRestrictions.length === 0
+                )
+            ){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized'], videos: []});
+                return
+            }
+            getVideosBasedOnTagFoundInMatrixOfAssociatedEvent({
+                groupKey,
+                monitorId,
+                startTime,
+                endTime,
+                searchQuery,
+                monitorRestrictions,
+            }).then((response) => {
+                if(response && response.rows){
+                    s.buildVideoLinks(response.rows,{
+                        auth : req.params.auth,
+                        videoParam : 'videos',
+                    })
+                }
+                s.closeJsonResponse(res,{
+                    ok: true,
+                    videos: response.rows,
+                })
+            })
+        },res,req);
+    });
+    /**
     * API : Get Events
      */
     app.get([
@@ -928,33 +1091,71 @@ module.exports = function(s,config,lang,app,io){
 	], function (req,res){
         res.setHeader('Content-Type', 'application/json');
         s.auth(req.params,function(user){
-            const userDetails = user.details
             const monitorId = req.params.id
             const groupKey = req.params.ke
-            const hasRestrictions = userDetails.sub && userDetails.allmonitors !== '1';
-            s.sqlQueryBetweenTimesWithPermissions({
-                table: 'Events',
-                user: user,
-                groupKey: req.params.ke,
-                monitorId: req.params.id,
-                startTime: req.query.start,
-                endTime: req.query.end,
-                startTimeOperator: req.query.startOperator,
-                endTimeOperator: req.query.endOperator,
-                limit: req.query.limit,
-                endIsStartTo: true,
-                parseRowDetails: true,
-                noFormat: true,
-                noCount: true,
-                rowName: 'events',
-                preliminaryValidationFailed: (
-                    user.permissions.watch_videos === "0" ||
-                    hasRestrictions &&
-                    (!userDetails.video_view || userDetails.video_view.indexOf(monitorId)===-1)
+            const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(user.details,monitorId)
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+            } = s.checkPermission(user)
+            if(
+                isRestrictedApiKey && apiKeyPermissions.watch_videos_disallowed ||
+                isRestricted && (
+                    monitorId && !monitorPermissions[`${monitorId}_video_view`] ||
+                    monitorRestrictions.length === 0
                 )
-            },(response) => {
-                res.end(s.prettyPrint(response))
-            })
+            ){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized'], events: []});
+                return
+            }
+            if(req.query.onlyCount === '1'){
+                const response = {ok: true}
+                s.knexQuery({
+                    action: "count",
+                    columns: "mid",
+                    table: "Events",
+                    where: [
+                        ['ke','=',groupKey],
+                        ['time','>=',req.query.start],
+                        ['time','<=',req.query.end],
+                        monitorRestrictions
+                    ]
+                },(err,r) => {
+                    if(err){
+                        s.debugLog(err)
+                        response.ok = false
+                    }else{
+                        response.count = r[0]['count(`mid`)']
+                    }
+                    s.closeJsonResponse(res,response)
+                })
+            }else{
+                s.sqlQueryBetweenTimesWithPermissions({
+                    table: 'Events',
+                    user: user,
+                    groupKey: req.params.ke,
+                    monitorId: req.params.id,
+                    startTime: req.query.start,
+                    endTime: req.query.end,
+                    startTimeOperator: req.query.startOperator,
+                    endTimeOperator: req.query.endOperator,
+                    noLimit: req.query.noLimit,
+                    limit: req.query.limit,
+                    archived: req.query.archived,
+                    endIsStartTo: true,
+                    parseRowDetails: true,
+                    noFormat: true,
+                    noCount: true,
+                    rowName: 'events',
+                    preliminaryValidationFailed: false
+                },(response) => {
+                    res.end(s.prettyPrint(response))
+                })
+            }
         })
     })
     /**
@@ -966,10 +1167,21 @@ module.exports = function(s,config,lang,app,io){
     ], function (req,res){
         res.setHeader('Content-Type', 'application/json');
         s.auth(req.params,function(user){
-            const userDetails = user.details
-            const monitorId = req.params.id
             const groupKey = req.params.ke
-            const hasRestrictions = userDetails.sub && userDetails.allmonitors !== '1';
+            const monitorId = req.params.id
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+                userPermissions,
+            } = s.checkPermission(user)
+            if(
+                userPermissions.view_logs_disallowed ||
+                isRestrictedApiKey && apiKeyPermissions.get_logs_disallowed
+            ){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized'], logs: []});
+                return
+            }
             s.sqlQueryBetweenTimesWithPermissions({
                 table: 'Logs',
                 user: user,
@@ -984,9 +1196,7 @@ module.exports = function(s,config,lang,app,io){
                 noFormat: true,
                 noCount: true,
                 rowName: 'logs',
-                preliminaryValidationFailed: (
-                    user.permissions.get_logs === "0" || userDetails.sub && userDetails.view_logs !== '1'
-                )
+                preliminaryValidationFailed: false
             },(response) => {
                 response.forEach(function(v,n){
                     v.info = JSON.parse(v.info)
@@ -996,51 +1206,30 @@ module.exports = function(s,config,lang,app,io){
         },res,req)
     })
     /**
-    * API : Get Monitors Online
-     */
-    app.get(config.webPaths.apiPrefix+':auth/smonitor/:ke', function (req,res){
-        var response = {ok:false};
-        res.setHeader('Content-Type', 'application/json');
-        s.auth(req.params,(user) => {
-            const groupKey = req.params.ke
-            const monitorId = req.params.id
-            const monitorRestrictions = s.getMonitorRestrictions(user.details,monitorId)
-            if(user.details.sub && user.details.allmonitors === '0' && (user.permissions.get_monitors === "0" || monitorRestrictions.length === 0)){
-                s.closeJsonResponse(res,[]);
-                return
-            }
-            s.knexQuery({
-                action: "select",
-                columns: "*",
-                table: "Monitors",
-                where: [
-                    ['ke','=',groupKey],
-                    monitorRestrictions
-                ]
-            },(err,r) => {
-                const startedMonitors = []
-                r.forEach(function(v){
-                    if(
-                        s.group[groupKey] &&
-                        s.group[groupKey].activeMonitors[v.mid] &&
-                        s.group[groupKey].activeMonitors[v.mid].isStarted === true
-                    ){
-                        startedMonitors.push(v)
-                    }
-                })
-                s.closeJsonResponse(res,startedMonitors)
-            })
-        },res,req);
-    });
-    /**
     * API : Monitor Mode Controller
      */
     app.get([config.webPaths.apiPrefix+':auth/monitor/:ke/:id/:f',config.webPaths.apiPrefix+':auth/monitor/:ke/:id/:f/:ff',config.webPaths.apiPrefix+':auth/monitor/:ke/:id/:f/:ff/:fff'], function (req,res){
         var response = {ok:false};
         res.setHeader('Content-Type', 'application/json');
         s.auth(req.params,function(user){
-            if(user.permissions.control_monitors==="0"||user.details.sub&&user.details.allmonitors!=='1'&&user.details.monitor_edit.indexOf(req.params.id)===-1){
-                res.end(user.lang['Not Permitted'])
+            const groupKey = req.params.ke
+            const monitorId = req.params.id
+            const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(user.details,monitorId)
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+                userPermissions,
+            } = s.checkPermission(user)
+            if(
+                userPermissions.monitor_create_disallowed ||
+                isRestrictedApiKey && apiKeyPermissions.control_monitors_disallowed ||
+                isRestricted && !monitorPermissions[`${monitorId}_monitor_edit`]
+            ){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
                 return
             }
             if(req.params.f===''){response.msg = user.lang.monitorGetText1;res.end(s.prettyPrint(response));return}
@@ -1073,10 +1262,6 @@ module.exports = function(s,config,lang,app,io){
                             }
                             r.mode=req.params.f;
                             try{r.details=JSON.parse(r.details);}catch(er){}
-                            if(req.query.fps){
-                                r.fps=parseFloat(r.details.detector_trigger_record_fps)
-                                s.group[r.ke].activeMonitors[r.mid].currentState.detector_trigger_record_fps=r.fps
-                            }
                             r.id=r.mid;
                             s.knexQuery({
                                 action: "update",
@@ -1163,12 +1348,20 @@ module.exports = function(s,config,lang,app,io){
         s.auth(req.params,function(user){
             const groupKey = req.params.ke
             const monitorId = req.params.id
-            const monitorRestrictions = s.getMonitorRestrictions(user.details,monitorId)
-            if(user.details.sub && user.details.allmonitors === '0' && (user.permissions.watch_videos === "0" || monitorRestrictions.length === 0)){
-                s.closeJsonResponse(res,{
-                    ok: false,
-                    msg: lang['Not Permitted']
-                })
+            const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(user.details,monitorId)
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+            } = s.checkPermission(user)
+            if(
+                isRestrictedApiKey && apiKeyPermissions.watch_videos_disallowed ||
+                isRestricted && !monitorPermissions[`${monitorId}_video_view`]
+            ){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
                 return
             }
             var time = s.nameToTime(req.params.file)
@@ -1189,15 +1382,21 @@ module.exports = function(s,config,lang,app,io){
             },(err,r) => {
                 if(r&&r[0]){
                     r = r[0]
-                    if(JSON.parse(r.details).type === 'googd' && s.cloudDiskUseOnGetVideoDataExtensions['googd']){
-                        s.cloudDiskUseOnGetVideoDataExtensions['googd'](r).then((dataPipe) => {
+                    const videoDetails = JSON.parse(r.details)
+                    const storageType = videoDetails.type
+                    const onGetVideoData = s.cloudDiskUseOnGetVideoDataExtensions[storageType]
+                    if(onGetVideoData){
+                        onGetVideoData(r).then((dataPipe) => {
                             dataPipe.pipe(res)
                         }).catch((err) => {
-                            console.log(err)
+                            console.error('onGetVideoData ERROR',err,videoDetails)
                             res.end(user.lang['File Not Found in Database'])
                         })
                     }else{
-                        req.pipe(request(r.href)).pipe(res)
+                        fetch(r.href).then(actual => {
+                            actual.headers.forEach((v, n) => res.setHeader(n, v));
+                            actual.body.pipe(res);
+                        })
                     }
                 }else{
                     res.end(user.lang['File Not Found in Database'])
@@ -1214,12 +1413,20 @@ module.exports = function(s,config,lang,app,io){
         s.auth(req.params,function(user){
             const groupKey = req.params.ke
             const monitorId = req.params.id
-            const monitorRestrictions = s.getMonitorRestrictions(user.details,monitorId)
-            if(user.details.sub && user.details.allmonitors === '0' && (user.permissions.watch_videos === "0" || monitorRestrictions.length === 0)){
-                s.closeJsonResponse(res,{
-                    ok: false,
-                    msg: lang['Not Permitted']
-                })
+            const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(user.details,monitorId)
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+            } = s.checkPermission(user)
+            if(
+                isRestrictedApiKey && apiKeyPermissions.watch_videos_disallowed ||
+                isRestricted && !monitorPermissions[`${monitorId}_video_view`]
+            ){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
                 return
             }
             var time = s.nameToTime(req.params.file)
@@ -1279,23 +1486,35 @@ module.exports = function(s,config,lang,app,io){
      */
      app.get(config.webPaths.apiPrefix+':auth/motion/:ke/:id', function (req,res){
          s.auth(req.params,function(user){
-             const groupKey = req.params.ke
-             const monitorId = req.params.id
-             const monitorRestrictions = s.getMonitorRestrictions(user.details,monitorId)
-             if(user.details.sub && user.details.allmonitors === '0' && monitorRestrictions.length === 0){
-                 s.closeJsonResponse(res,{
-                     ok: false,
-                     msg: lang['Not Permitted']
-                 })
-                 return
-             }
+            const groupKey = req.params.ke
+            const monitorId = req.params.id
+            const monitorConfig = s.group[groupKey].rawMonitorConfigurations[monitorId]
+            const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(user.details,monitorId);
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+            } = s.checkPermission(user);
+            if(
+                !monitorConfig ||
+                isRestrictedApiKey && apiKeyPermissions.control_monitors_disallowed
+            ){
+                s.closeJsonResponse(res,{
+                    ok: false,
+                    msg: !monitorConfig ? user.lang['Monitor or Key does not exist.'] : lang['Not Authorized']
+                });
+                return
+            }
+            let simulatedEvent = {
+                id: req.params.id,
+                ke: req.params.ke
+            }
              if(req.query.data){
                  try{
-                     var d = {
-                         id: req.params.id,
-                         ke: req.params.ke,
-                         details: s.parseJSON(req.query.data)
-                     }
+                     Object.assign(simulatedEvent, {details: s.parseJSON(req.query.data)});
                  }catch(err){
                      s.closeJsonResponse(res,{
                          ok: false,
@@ -1303,58 +1522,46 @@ module.exports = function(s,config,lang,app,io){
                      })
                      return
                  }
-             }else{
+             }
+             // fallback for cameras that doesn't support JSON in query parameters ( i.e Sercom ICamera1000 will fail to save HTTP_Notifications as invalid url)
+             else if(req.query.plug && req.query.name && req.query.reason && req.query.confidence) {
+                 const {
+                     plug,
+                     reason,
+                     confidence,
+                     name,
+                 } = req.query;
+                Object.assign(simulatedEvent,{
+                    details: {
+                        plug,
+                        reason,
+                        confidence,
+                        name,
+                    }
+                });
+             }
+             else{
                  s.closeJsonResponse(res,{
                      ok: false,
                      msg: user.lang['No Data']
                  })
                  return
              }
-             if(!d.ke||!d.id||!s.group[d.ke]){
-                 s.closeJsonResponse(res,{
-                     ok: false,
-                     msg: user.lang['No Group with this key exists']
-                 })
-                 return
-             }
-             if(!s.group[d.ke].rawMonitorConfigurations[d.id]){
-                 s.closeJsonResponse(res,{
-                     ok: false,
-                     msg: user.lang['Monitor or Key does not exist.']
-                 })
-                 return
-             }
-             var details = s.group[d.ke].rawMonitorConfigurations[d.id].details
+             var details = s.group[groupKey].rawMonitorConfigurations[monitorId].details
              var detectorHttpApi = details.detector_http_api
              var detectorOn = (details.detector === '1')
-             switch(detectorHttpApi){
-                 case'0':
-                     s.closeJsonResponse(res,{
-                         ok: false,
-                         msg: user.lang['Trigger Blocked']
-                     })
-                    return
-                 break;
-                 case'2':
-                    if(!detectorOn){
-                        s.closeJsonResponse(res,{
-                            ok: false,
-                            msg: user.lang['Trigger Blocked']
-                        })
-                        return
-                    }
-                 break;
-                 case'2':
-                    if(detectorOn){
-                        s.closeJsonResponse(res,{
-                            ok: false,
-                            msg: user.lang['Trigger Blocked']
-                        })
-                        return
-                    }
-                 break;
+             if(
+                 detectorHttpApi === '0' ||
+                 detectorHttpApi === '2' && !detectorOn ||
+                 detectorHttpApi === '3' && detectorOn
+             ){
+                 s.closeJsonResponse(res,{
+                     ok: false,
+                     msg: user.lang['Trigger Blocked']
+                 })
+                 return;
              }
-             triggerEvent(d)
+             triggerEvent(simulatedEvent)
              s.closeJsonResponse(res,{
                  ok: true,
                  msg: user.lang['Trigger Successful']
@@ -1377,8 +1584,25 @@ module.exports = function(s,config,lang,app,io){
     app.get(config.webPaths.apiPrefix+':auth/eventCountStatus/:ke/:id', function (req,res){
         res.setHeader('Content-Type', 'application/json');
         s.auth(req.params,function(user){
-            if(user.permissions.watch_videos==="0"||user.details.sub&&user.details.allmonitors!=='1'&&user.details.monitors.indexOf(req.params.id)===-1){
-                res.end(user.lang['Not Permitted'])
+            const monitorId = req.params.id
+            const groupKey = req.params.ke
+            const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(user.details,monitorId)
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+            } = s.checkPermission(user);
+            if(
+                isRestrictedApiKey && apiKeyPermissions.watch_videos_disallowed ||
+                isRestricted && (
+                    monitorId && !monitorPermissions[`${monitorId}_video_view`] ||
+                    monitorRestrictions.length === 0
+                )
+            ){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized'], counted: 0, tags: []});
                 return
             }
             var selectedObject = s.group[req.params.ke].activeMonitors[req.params.id].eventsCounted
@@ -1398,10 +1622,27 @@ module.exports = function(s,config,lang,app,io){
     ], function (req,res){
         res.setHeader('Content-Type', 'application/json')
         s.auth(req.params,function(user){
-            const userDetails = user.details
             const monitorId = req.params.id
             const groupKey = req.params.ke
-            var hasRestrictions = userDetails.sub && userDetails.allmonitors !== '1';
+            const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(user.details,monitorId)
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+            } = s.checkPermission(user);
+            if(
+                isRestrictedApiKey && apiKeyPermissions.watch_videos_disallowed ||
+                isRestricted && (
+                    monitorId && !monitorPermissions[`${monitorId}_video_view`] ||
+                    monitorRestrictions.length === 0
+                )
+            ){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized'], videos: []});
+                return
+            }
             s.sqlQueryBetweenTimesWithPermissions({
                 table: 'Events Counts',
                 user: user,
@@ -1417,11 +1658,7 @@ module.exports = function(s,config,lang,app,io){
                 endIsStartTo: !!req.query.endIsStartTo,
                 parseRowDetails: true,
                 rowName: 'counts',
-                preliminaryValidationFailed: (
-                    user.permissions.watch_videos === "0" ||
-                    hasRestrictions &&
-                    (!userDetails.video_view || userDetails.video_view.indexOf(monitorId)===-1)
-                )
+                preliminaryValidationFailed: false
             },(response) => {
                 res.end(s.prettyPrint(response))
             })
@@ -1462,12 +1699,24 @@ module.exports = function(s,config,lang,app,io){
         var response = {ok:false}
         res.setHeader('Content-Type', 'application/json');
         s.auth(req.params,function(user){
-            if(user.permissions.watch_videos==="0"||user.details.sub&&user.details.allmonitors!=='1'&&user.details.video_delete.indexOf(req.params.id)===-1){
-                res.end(user.lang['Not Permitted'])
+            const groupKey = req.params.ke
+            const monitorId = req.params.id
+            const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(user.details,monitorId)
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+            } = s.checkPermission(user)
+            if(
+                isRestrictedApiKey && apiKeyPermissions.delete_videos_disallowed ||
+                isRestricted && !monitorPermissions[`${monitorId}_video_delete`]
+            ){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
                 return
             }
-            var groupKey = req.params.ke
-            var monitorId = req.params.id
             // req.query.overwrite === '1'
             if(s.group[groupKey] && s.group[groupKey].activeMonitors && s.group[groupKey].activeMonitors[monitorId]){
                 var monitor = s.group[groupKey].rawMonitorConfigurations[monitorId]
@@ -1520,17 +1769,28 @@ module.exports = function(s,config,lang,app,io){
         config.webPaths.apiPrefix+':auth/cloudVideos/:ke/:id/:file/:mode',
         config.webPaths.apiPrefix+':auth/cloudVideos/:ke/:id/:file/:mode/:f'
     ], function (req,res){
-        var response = {ok:false};
+        let response = { ok: false };
         res.setHeader('Content-Type', 'application/json');
         s.auth(req.params,function(user){
-            if(user.permissions.watch_videos==="0"||user.details.sub&&user.details.allmonitors!=='1'&&user.details.video_delete.indexOf(req.params.id)===-1){
-                res.end(user.lang['Not Permitted'])
+            const monitorId = req.params.id
+            const groupKey = req.params.ke
+            const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(user.details,monitorId)
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+            } = s.checkPermission(user);
+            if(
+                isRestrictedApiKey && apiKeyPermissions.delete_videos_disallowed ||
+                isRestricted && !monitorPermissions[`${monitorId}_video_delete`]
+            ){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
                 return
             }
             var time = s.nameToTime(req.params.file)
-            if(req.query.isUTC === 'true'){
-                time = s.utcToLocal(time)
-            }
             time = new Date(time)
             var origURL = req.originalUrl.split('/')
             var videoParam = origURL[origURL.indexOf(req.params.auth) + 1]
@@ -1540,8 +1800,6 @@ module.exports = function(s,config,lang,app,io){
                     videoSet = 'Cloud Videos'
                 break;
             }
-            const groupKey = req.params.ke
-            const monitorId = req.params.id
             s.knexQuery({
                 action: "select",
                 columns: "*",
@@ -1552,15 +1810,36 @@ module.exports = function(s,config,lang,app,io){
                     ['time','=',time]
                 ],
                 limit: 1
-            },(err,r) => {
+            },async (err,r) => {
                 if(r && r[0]){
                     r=r[0];
-                    r.filename=s.formattedTime(r.time)+'.'+r.ext;
+                    const originalFileName = `${s.formattedTime(r.time)+'.'+r.ext}`
                     var details = s.parseJSON(r.details) || {}
                     switch(req.params.mode){
+                        case'archive':
+                            response.ok = true
+                            const unarchive = s.getPostData(req,'unarchive') == '1';
+                            const archiveResponse = await archiveVideo(r,unarchive)
+                            response.ok = archiveResponse.ok
+                            response.archived = archiveResponse.archived
+                        break;
                         case'fix':
-                            response.ok = true;
-                            s.video('fix',r)
+                            await reEncodeVideoAndReplace(r)
+                        break;
+                        case'compress':
+                            response.ok = true
+                            reEncodeVideoAndBinOriginalAddToQueue({
+                                video: r,
+                                targetVideoCodec: 'vp9',
+                                targetAudioCodec: 'libopus',
+                                targetQuality: '-q:v 1 -q:a 1',
+                                targetExtension: 'webm',
+                                doSlowly: false
+                            }).then((encodeResponse) => {
+                                s.debugLog('Complete Compression',encodeResponse)
+                            }).catch((err) => {
+                                console.log(err)
+                            })
                         break;
                         case'status':
                             r.f = 'video_edit'

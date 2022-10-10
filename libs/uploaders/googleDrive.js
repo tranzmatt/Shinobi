@@ -118,6 +118,9 @@ module.exports = (s,config,lang,app,io) => {
     var deleteVideoFromGoogleDrive = function(groupKey,video,callback){
         // e = user
         var videoDetails = s.parseJSON(video.details)
+        if(videoDetails.type !== 'googd'){
+            return
+        }
         s.group[groupKey].googleDrive.files.delete({
             fileId: videoDetails.id
         }, function(err, resp){

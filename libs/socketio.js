@@ -8,11 +8,11 @@ const {
 } = require('./common.js')
 module.exports = function(s,config,lang,io){
     const {
-        legacyFilterEvents
-    } = require('./events/utils.js')(s,config,lang)
-    const {
         ptzControl
     } = require('./control/ptz.js')(s,config,lang)
+    const {
+        legacyFilterEvents
+    } = require('./events/utils.js')(s,config,lang)
     s.clientSocketConnection = {}
     //send data to socket client function
     s.tx = function(z,y,x){
@@ -144,39 +144,6 @@ module.exports = function(s,config,lang,io){
     ////socket controller
     io.on('connection', function (cn) {
         var tx;
-        //unique h265 socket stream
-        cn.on('h265',function(d){
-            if(!s.group[d.ke]||!s.group[d.ke].activeMonitors||!s.group[d.ke].activeMonitors[d.id]){
-                cn.disconnect();return;
-            }
-            cn.ip=cn.request.connection.remoteAddress;
-            var toUTC = function(){
-                return new Date().toISOString();
-            }
-            var tx=function(z){cn.emit('data',z);}
-            const onFail = (msg) => {
-                tx({f:'stop_reconnect',msg:msg,token_used:d.auth,ke:d.ke});
-                cn.disconnect();
-            }
-            const onSuccess = (r) => {
-                r = r[0];
-                const Emitter = createStreamEmitter(d,cn)
-                validatedAndBindAuthenticationToSocketConnection(cn,d,true)
-                var contentWriter
-                cn.closeSocketVideoStream = function(){
-                    Emitter.removeListener('data', contentWriter);
-                }
-                Emitter.on('data',contentWriter = function(base64){
-                    tx(base64)
-                })
-             }
-            //check if auth key is user's temporary session key
-            if(s.group[d.ke]&&s.group[d.ke].users&&s.group[d.ke].users[d.auth]){
-                onSuccess(s.group[d.ke].users[d.auth]);
-            }else{
-                streamConnectionAuthentication(d,cn.ip).then(onSuccess).catch(onFail)
-            }
-        })
         //unique Base64 socket stream
         cn.on('Base64',function(d){
             if(!s.group[d.ke]||!s.group[d.ke].activeMonitors||!s.group[d.ke].activeMonitors[d.id]){
@@ -360,7 +327,7 @@ module.exports = function(s,config,lang,io){
                     if(s.group[d.ke].users[d.auth].details.get_server_log!=='0'){
                         cn.join('GRPLOG_'+d.ke)
                     }
-                    s.group[d.ke].users[d.auth].lang=s.getLanguageFile(s.group[d.ke].users[d.auth].details.lang)
+                    s.group[d.ke].users[d.auth].lang = s.getLanguageFile(s.group[d.ke].users[d.auth].details.lang)
                     s.userLog({ke:d.ke,mid:'$USER'},{type:s.group[d.ke].users[d.auth].lang['Websocket Connected'],msg:{mail:r.mail,id:d.uid,ip:cn.ip}})
                     if(!s.group[d.ke].activeMonitors){
                         s.group[d.ke].activeMonitors={}
@@ -369,7 +336,6 @@ module.exports = function(s,config,lang,io){
                     tx({f:'users_online',users:s.group[d.ke].users})
                     s.tx({f:'user_status_change',ke:d.ke,uid:cn.uid,status:1,user:s.group[d.ke].users[d.auth]},'GRP_'+d.ke)
                     s.sendDiskUsedAmountToClients(d.ke)
-                    s.loadGroupApps(d)
                     tx({
                         f:'init_success',
                         users:s.group[d.ke].vid,
@@ -380,7 +346,7 @@ module.exports = function(s,config,lang,io){
                         }
                     })
                     try{
-                        Object.values(s.group[d.ke].rawMonitorConfigurations).forEach((monitor) => {
+                        (s.group[d.ke] ? Object.values(s.group[d.ke].rawMonitorConfigurations) : []).forEach((monitor) => {
                             s.cameraSendSnapshot({
                                 mid: monitor.mid,
                                 ke: monitor.ke,
@@ -400,7 +366,8 @@ module.exports = function(s,config,lang,io){
                 return;
             }
             if((d.id||d.uid||d.mid)&&cn.ke){
-                try{
+            try{
+                d.callbackResponse = {ok: true}
                 switch(d.f){
                     case'monitorOrder':
                         if(d.monitorOrder && d.monitorOrder instanceof Object){
@@ -443,8 +410,18 @@ module.exports = function(s,config,lang,io){
                                 ]
                             },(err,r) => {
                                 if(r && r[0]){
+                                    const monitorListOrder = {}
+                                    const orderKeys = Object.keys(d.monitorListOrder)
                                     details = JSON.parse(r[0].details)
-                                    details.monitorListOrder = d.monitorListOrder
+                                    orderKeys.forEach((orderKey) => {
+                                        const monitorIds = d.monitorListOrder[orderKey]
+                                        const uniqueList = {}
+                                        monitorIds.forEach((monitorId) => {
+                                            uniqueList[monitorId] = 1
+                                        })
+                                        monitorListOrder[orderKey] = Object.keys(uniqueList)
+                                    })
+                                    details.monitorListOrder = monitorListOrder
                                     s.knexQuery({
                                         action: "update",
                                         table: "Users",
@@ -653,12 +630,6 @@ module.exports = function(s,config,lang,io){
                                     break;
                                 }
                             break;
-                            case'control':
-                                ptzControl(d,function(msg){
-                                    s.userLog(d,msg)
-                                    tx({f:'control',response:msg})
-                                })
-                            break;
                             case'jpeg_off':
                               delete(cn.jpeg_on);
                                 if(cn.monitorsCurrentlyWatching){
@@ -692,6 +663,7 @@ module.exports = function(s,config,lang,io){
                                     f: 'monitor_watch_on',
                                     id: d.id,
                                     ke: d.ke,
+                                    subStreamChannel: s.group[d.ke].activeMonitors[d.id].subStreamChannel,
                                     warnings: s.group[d.ke].activeMonitors[d.id].warnings || []
                                 })
                                 s.camera('watch_on',d,cn)
@@ -721,6 +693,18 @@ module.exports = function(s,config,lang,io){
                             break;
                         }
                     break;
+                    default:
+                        s.onOtherWebSocketMessagesExtensions.forEach(function(extender){
+                            extender(d,cn,tx)
+                        })
+                    break;
+                }
+                if(d.callbackId && !d.hasResponded){
+                    tx({
+                        f:'callback',
+                        callbackId: d.callbackId,
+                        args: [d.callbackResponse]
+                    })
                 }
             }catch(er){
                 s.systemLog('ERROR CATCH 1',er)
@@ -959,63 +943,6 @@ module.exports = function(s,config,lang,io){
             }
         })
          //functions for retrieving cron announcements
-         cn.on('cron',function(d){
-             if(d.f==='init'){
-                 if(config.cron.key){
-                     if(config.cron.key===d.cronKey){
-                        s.cron={started:moment(),last_run:moment(),id:cn.id};
-                     }else{
-                         cn.disconnect()
-                     }
-                 }else{
-                     s.cron={started:moment(),last_run:moment(),id:cn.id};
-                 }
-             }else{
-                 if(s.cron&&cn.id===s.cron.id){
-                     delete(d.cronKey)
-                     switch(d.f){
-                         case'filters':
-                             legacyFilterEvents(d.ff,d)
-                         break;
-                         case's.tx':
-                             s.tx(d.data,d.to)
-                         break;
-                         case's.deleteVideo':
-                             s.deleteVideo(d.file)
-                         break;
-                         case's.deleteFileBinEntry':
-                             s.deleteFileBinEntry(d.file)
-                         break;
-                         case's.setDiskUsedForGroup':
-                            function doOnMain(){
-                                s.setDiskUsedForGroup(d.ke,d.size,d.target || undefined)
-                            }
-                            if(d.videoRow){
-                                let storageIndex = s.getVideoStorageIndex(d.videoRow);
-                                if(storageIndex){
-                                    s.setDiskUsedForGroupAddStorage(d.ke,{
-                                        size: d.size,
-                                        storageIndex: storageIndex
-                                    })
-                                }else{
-                                    doOnMain()
-                                }
-                            }else{
-                                doOnMain()
-                            }
-                         break;
-                         case'start':case'end':
-                             d.mid='_cron';s.userLog(d,{type:'cron',msg:d.msg})
-                         break;
-                         default:
-                             s.systemLog('CRON : ',d)
-                         break;
-                     }
-                 }else{
-                     cn.disconnect()
-                 }
-             }
-         })
         cn.on('disconnect', function () {
             if(cn.socketVideoStream){
                 cn.closeSocketVideoStream()
@@ -1050,7 +977,7 @@ module.exports = function(s,config,lang,io){
             delete(s.clientSocketConnection[cn.id])
         })
         s.onWebSocketConnectionExtensions.forEach(function(extender){
-            extender(cn)
+            extender(cn,validatedAndBindAuthenticationToSocketConnection,createStreamEmitter)
         })
     });
 }

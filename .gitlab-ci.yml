@@ -56,7 +56,7 @@ docker-arm32v7-build:
         tag=":arm32v7-$CI_COMMIT_REF_SLUG"
         echo "Running on branch '$CI_COMMIT_BRANCH': tag = $tag"
       fi
-    - docker build --pull -t "$CI_REGISTRY_IMAGE${tag}" . -f Dockerfile.nvidia
+    - docker build --pull -t "$CI_REGISTRY_IMAGE${tag}" . -f Dockerfile.arm32v7
     - docker push "$CI_REGISTRY_IMAGE${tag}"
   # Run this job in a branch where a Dockerfile exists
   rules:

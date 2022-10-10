@@ -1,13 +1,12 @@
 const fs = require('fs-extra');
 const express = require('express')
-const request = require('request')
 const unzipper = require('unzipper')
-const fetch = require("node-fetch")
 const spawn = require('child_process').spawn
 const {
   Worker
 } = require('worker_threads');
 module.exports = async (s,config,lang,app,io,currentUse) => {
+    const { fetchDownloadAndWrite } = require('../basic/utils.js')(process.cwd(),config)
     const {
         currentPluginCpuUsage,
         currentPluginGpuUsage,
@@ -75,9 +74,6 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
                     name: moduleName
                 }
             }
-            if(newModule.properties.disabled === undefined){
-                newModule.properties.disabled = true
-            }
             //conf.json
             newModule.config = getModuleConfiguration(moduleName)
             newModule.hasInstaller = hasInstaller
@@ -96,10 +92,9 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
         fs.mkdirSync(downloadPath)
         return new Promise(async (resolve, reject) => {
             fs.mkdir(downloadPath, () => {
-                request(downloadUrl).pipe(fs.createWriteStream(downloadPath + '.zip'))
-                .on('finish',() => {
-                    zip = fs.createReadStream(downloadPath + '.zip')
-                    .pipe(unzipper.Parse())
+                fetchDownloadAndWrite(downloadUrl,downloadPath + '.zip', 1)
+                .then((readStream) => {
+                    readStream.pipe(unzipper.Parse())
                     .on('entry', async (file) => {
                         if(file.type === 'Directory'){
                             try{
@@ -178,18 +173,10 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
     const disableModule = (name,status) => {
         // set status to `false` to enable
         const modulePath = getModulePath(name)
-        const properties = getModuleProperties(name);
-        const propertiesPath = modulePath + 'package.json'
-        var packageJson = {
-            name: name
-        }
-        try{
-            packageJson = JSON.parse(fs.readFileSync(propertiesPath))
-        }catch(err){
-
-        }
-        packageJson.disabled = status;
-        fs.writeFileSync(propertiesPath,s.prettyPrint(packageJson))
+        const confJson = getModuleConfiguration(name)
+        const confPath = modulePath + 'conf.json'
+        confJson.enabled = status;
+        fs.writeFileSync(confPath,s.prettyPrint(confJson))
     }
     const deleteModule = (name) => {
         // requires restart for changes to take effect
@@ -290,7 +277,7 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
             if(!err && folderContents.length > 0){
                 var moduleList = getModules(true)
                 moduleList.forEach((shinobiModule) => {
-                    if(!shinobiModule || shinobiModule.properties.disabled || shinobiModule.properties.disabled === undefined){
+                    if(!shinobiModule || !shinobiModule.config.enabled){
                         return;
                     }
                     loadModule(shinobiModule)
