@@ -22,12 +22,12 @@ if [[ "$getubuntuversion" == "16" || "$getubuntuversion" -le "16" ]]; then
     echo "============="
     echo "Shinobi - Get FFMPEG 3.x from ppa:jonathonf/ffmpeg-3"
     sudo add-apt-repository ppa:jonathonf/ffmpeg-3 -y
-    sudo apt update -y && sudo apt install ffmpeg libav-tools x264 x265 -y
+    sudo apt update -y && sudo apt install ffmpeg x264 x265 -y
     echo "============="
 else
     echo "============="
     echo "Shinobi - Installing FFMPEG"
-    sudo apt install ffmpeg libav-tools x264 x265 -y
+    sudo apt install ffmpeg x264 x265 -y
     echo "============="
 fi
 
