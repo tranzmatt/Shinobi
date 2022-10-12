@@ -135,6 +135,16 @@ module.exports = function(s,config,lang,getSnapshot){
                 const groupKey = monitorConfig.ke
                 sendToMqttConnections(groupKey,'onMonitorDied',[monitorConfig],true)
             }
+            const onEventBasedRecordingComplete = (response,monitorConfig) => {
+                const groupKey = monitorConfig.ke
+                sendToMqttConnections(groupKey,'onEventBasedRecordingComplete',[monitorConfig],true)
+            }
+            const insertCompletedVideoExtender = (activeMonitor,temp,insertQuery,response) => {
+                const groupKey = insertQuery.ke
+                const monitorId = insertQuery.mid
+                const monitorConfig = s.group[groupKey].rawMonitorConfigurations[monitorId]
+                sendToMqttConnections(groupKey,'insertCompletedVideoExtender',[monitorConfig],true)
+            }
             const onAccountSave = (activeGroup,userDetails,user) => {
                 const groupKey = user.ke
                 sendToMqttConnections(groupKey,'onAccountSave',[activeGroup,userDetails,user])
@@ -187,6 +197,8 @@ module.exports = function(s,config,lang,getSnapshot){
                                 onMonitorStop: lang['Monitor Stop'],
                                 onMonitorDied: lang['Monitor Died'],
                                 onEventTrigger: lang['Event'],
+                                insertCompletedVideoExtender: lang['Recording Complete'],
+                                onEventBasedRecordingComplete: lang['Event-Based Recording'],
                                 onDetectorNoTriggerTimeout: lang['"No Motion" Detector'],
                                 onAccountSave: lang['Account Save'],
                                 onUserLog: lang['User Log'],
@@ -195,6 +207,30 @@ module.exports = function(s,config,lang,getSnapshot){
                             eventsToAttachTo.forEach(function(eventName){
                                 let theAction = function(){}
                                 switch(eventName){
+                                    case'insertCompletedVideoExtender':
+                                        theAction = function(activeMonitor,temp,insertQuery,response){
+                                            sendMessage(msgOptions,{
+                                                title: titleLegend[eventName],
+                                                name: eventName,
+                                                data: insertQuery,
+                                                time: new Date(),
+                                            })
+                                        }
+                                    break;
+                                    case'onEventBasedRecordingComplete':
+                                        theAction = function(response,monitorConfig){
+                                            sendMessage(msgOptions,{
+                                                title: titleLegend[eventName],
+                                                name: eventName,
+                                                data: {
+                                                    ke: monitorConfig.ke,
+                                                    mid: monitorConfig.mid,
+                                                    response: response,
+                                                },
+                                                time: new Date(),
+                                            })
+                                        }
+                                    break;
                                     case'onEventTrigger':
                                         theAction = function(d,filter){
                                             const eventObject = Object.assign({},d)
@@ -307,6 +343,8 @@ module.exports = function(s,config,lang,getSnapshot){
             s.onMonitorStart(onMonitorStart)
             s.onMonitorStop(onMonitorStop)
             s.onMonitorDied(onMonitorDied)
+            s.insertCompletedVideoExtender(insertCompletedVideoExtender)
+            s.onEventBasedRecordingComplete(onEventBasedRecordingComplete)
             s.onUserLog(onUserLog)
             s.definitions["Monitor Settings"].blocks["Notifications"].info[0].info.push(
                 {
