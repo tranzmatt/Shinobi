@@ -571,12 +571,13 @@ module.exports = (s,config,lang) => {
             s.debugLog(`sliceVideo cutProcessResponse`,cutProcessResponse)
             const newFilePath = cutProcessResponse.filePath
             const copyResponse = await copyFile(newFilePath,fileBinFilePath)
+            const fileSize = (await fs.promises.stat(fileBinFilePath)).size
             s.debugLog(`sliceVideo copyResponse`,copyResponse)
             const fileBinInsertQuery = {
                 ke: groupKey,
                 mid: monitorId,
                 name: finalFilename,
-                size: video.size,
+                size: fileSize,
                 details: video.details,
                 status: 1,
                 time: video.time,
