@@ -192,15 +192,22 @@ module.exports = (s,config,lang) => {
             const monitorId = options.mid
             const groupKey = options.ke
             const cutLength = options.cutLength || 10
+            const startTime = options.startTime
             const tempDirectory = s.getStreamsDirectory(options)
             let fileExt = inputFilePath.split('.')
             fileExt = fileExt[fileExt.length -1]
             const filename = `${s.gid(10)}.${fileExt}`
             const videoOutPath = `${tempDirectory}${filename}`
-            const cuttingProcess = spawn(config.ffmpegDir,['-loglevel','warning','-i', inputFilePath, '-c','copy','-t',`${cutLength}`,videoOutPath])
+            const ffmpegCmd = ['-loglevel','warning','-i', inputFilePath, '-c','copy','-t',`${cutLength}`,videoOutPath]
+            if(startTime){
+                ffmpegCmd.splice(2, 0, "-ss")
+                ffmpegCmd.splice(3, 0, `${startTime}`)
+                s.debugLog(`cutVideoLength ffmpegCmd with startTime`,ffmpegCmd)
+            }
+            const cuttingProcess = spawn(config.ffmpegDir,ffmpegCmd)
             cuttingProcess.stderr.on('data',(data) => {
                 const err = data.toString()
-                s.debugLog('cutVideoLength',options,err)
+                s.debugLog('cutVideoLength STDERR',options,err)
             })
             cuttingProcess.on('close',(data) => {
                 fs.stat(videoOutPath,(err) => {
@@ -534,6 +541,58 @@ module.exports = (s,config,lang) => {
             })
         })
     }
+    async function sliceVideo(video,{
+        startTime,
+        endTime,
+    }){
+        const response = {ok: false}
+        if(!startTime || !endTime){
+            response.msg = 'Missing startTime or endTime!'
+            return response
+        }
+        try{
+            const groupKey = video.ke
+            const monitorId = video.mid
+            const filename = s.formattedTime(video.time) + '.' + video.ext
+            const finalFilename = s.formattedTime(video.time) + `-sliced-${s.gid(5)}.` + video.ext
+            const videoFolder = s.getVideoDirectory(video)
+            const fileBinFolder = s.getFileBinDirectory(video)
+            const inputFilePath = `${videoFolder}${filename}`
+            const fileBinFilePath = `${fileBinFolder}${finalFilename}`
+            const cutLength = parseFloat(endTime) - parseFloat(startTime);
+            s.debugLog(`sliceVideo start slice...`)
+            const cutProcessResponse = await cutVideoLength({
+                ke: groupKey,
+                mid: monitorId,
+                cutLength,
+                startTime,
+                filePath: inputFilePath,
+            });
+            s.debugLog(`sliceVideo cutProcessResponse`,cutProcessResponse)
+            const newFilePath = cutProcessResponse.filePath
+            const copyResponse = await copyFile(newFilePath,fileBinFilePath)
+            s.debugLog(`sliceVideo copyResponse`,copyResponse)
+            const fileBinInsertQuery = {
+                ke: groupKey,
+                mid: monitorId,
+                name: finalFilename,
+                size: video.size,
+                details: video.details,
+                status: 1,
+                time: video.time,
+            }
+            await s.insertFileBinEntry(fileBinInsertQuery)
+            s.tx(Object.assign({
+                f: 'fileBin_item_added',
+                slicedVideo: true,
+            },fileBinInsertQuery),'GRP_'+video.ke);
+            response.ok = true
+        }catch(err){
+            response.err = err
+            s.debugLog('sliceVideo ERROR',err)
+        }
+        return response
+    }
     return {
         reEncodeVideoAndReplace,
         stitchMp4Files,
@@ -544,5 +603,6 @@ module.exports = (s,config,lang) => {
         reEncodeVideoAndBinOriginal,
         reEncodeVideoAndBinOriginalAddToQueue,
         archiveVideo,
+        sliceVideo,
     }
 }
