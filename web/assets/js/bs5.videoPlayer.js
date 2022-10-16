@@ -17,7 +17,7 @@ $(document).ready(function(){
             $.each(video.events,function(n,theEvent){
                 loadedEvents[new Date(theEvent.time)] = theEvent
                 var objectsFound = {}
-                eventMatrixHtml += `<div class="d-block tab-videoPlayer-event-row card bg-darker mb-1 p-2" time-index="${theEvent.time}">`
+                eventMatrixHtml += `<div class="d-block tab-videoPlayer-event-row card bg-darker mb-1 p-2" data-mid="${theEvent.mid}" data-time="${theEvent.time}">`
                 eventMatrixHtml += `<div class="d-block">
                     <div class="d-block">${formattedTime(theEvent.time)}</div>
                 </div>`
@@ -150,7 +150,7 @@ $(document).ready(function(){
         var videoEl = parent.find('video')
         var videoData = loadedVideosInMemory[parent.attr('video-id')]
         var videoTime = new Date(videoData.time).getTime() / 1000
-        var timeIndex = new Date(el.attr('time-index')).getTime() / 1000
+        var timeIndex = new Date(el.attr('data-time')).getTime() / 1000
         var newVideoTimeIndex = timeIndex - videoTime
         console.log(newVideoTimeIndex)
         videoEl[0].currentTime = newVideoTimeIndex
