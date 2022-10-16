@@ -8120,7 +8120,7 @@ module.exports = function(s,config,lang){
                            "value": "cloud"
                         },
                         {
-                           "name": lang.Cloud,
+                            "name": lang.Archive,
                            "value": "archive"
                         },
                      ]
