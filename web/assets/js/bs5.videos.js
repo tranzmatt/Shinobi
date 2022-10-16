@@ -637,6 +637,7 @@ function buildDefaultVideoMenuItems(file){
     <li><a class="dropdown-item" href="${href}" download>${lang.Download}</a></li>
     <li><a class="dropdown-item open-video" href="${href}">${lang.Play}</a></li>
     <li><hr class="dropdown-divider"></li>
+    ${permissionCheck('video_delete',file.mid) ? `<li><a class="dropdown-item open-video-studio" href="${href}">${lang.Slice}</a></li>` : ``}
     ${permissionCheck('video_delete',file.mid) ? `<li><a class="dropdown-item delete-video" href="${href}">${lang.Delete}</a></li>` : ``}
     ${permissionCheck('video_delete',file.mid) ? `<li><a class="dropdown-item compress-video" href="${href}">${lang.Compress}</a></li>` : ``}
 `
