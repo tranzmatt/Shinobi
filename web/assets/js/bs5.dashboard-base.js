@@ -201,7 +201,11 @@ function formattedTimeForFilename(time,utcConvert,timeFormat){
     if(utcConvert)theMoment = theMoment.clone().utc()
     return theMoment.format(timeFormat ? timeFormat : 'YYYY-MM-DDTHH:mm:ss')
 }
-
+function setPromiseTimeout(timeoutAmount){
+    return new Promise((resolve) => {
+        setTimeout(resolve,timeoutAmount)
+    })
+}
 function checkCorrectPathEnding(x){
     var length=x.length
     if(x.charAt(length-1)!=='/'){

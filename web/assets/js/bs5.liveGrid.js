@@ -540,7 +540,7 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
             loadedPlayer.signal = setInterval(function(){
                 signalCheckLiveStream({
                     mid: monitorId,
-                    checkSpeed: 1000,
+                    checkSpeed: 3000,
                 })
             },signalCheckInterval);
         }
@@ -736,6 +736,7 @@ function signalCheckLiveStream(options){
         var monitorDetails = monitorConfig.details
         var checkCount = 0
         var base64Data = null;
+        var base64Length = 0;
         var checkSpeed = options.checkSpeed || 1000
         var subStreamChannel = monitorConfig.subStreamChannel
         var streamType = subStreamChannel ? monitorDetails.substream ? monitorDetails.substream.output.stream_type : 'hls' : monitorDetails.stream_type
@@ -760,50 +761,51 @@ function signalCheckLiveStream(options){
                 })
             }
         }
-        function executeCheck(){
-            switch(streamType){
-                case'b64':
-                    monitorItem.resize()
-                break;
-                case'hls':case'flv':case'mp4':
-                    if(monitorItem.find('video')[0].paused){
-                        failedStreamCheck()
-                    }else{
-                        succeededStreamCheck()
-                    }
-                break;
-                default:
-                    if(dashboardOptions().jpeg_on === true){return}
-                    getSnapshot({
-                        monitor: loadedMonitors[monitorId],
-                    },function(url){
-                        base64Data = url;
-                        setTimeout(function(){
-                            getSnapshot({
-                                monitor: loadedMonitors[monitorId],
-                            },function(url){
-                                if(base64Data === url){
-                                    if(checkCount < 3){
-                                        ++checkCount;
-                                        setTimeout(function(){
-                                            executeCheck();
-                                        },checkSpeed)
-                                    }else{
-                                        failedStreamCheck()
-                                    }
-                                }else{
-                                    succeededStreamCheck()
-                                }
-                            });
-                        },checkSpeed)
-                    });
-                break;
+        async function executeCheck(){
+            try{
+                switch(streamType){
+                    case'b64':
+                        monitorItem.resize()
+                    break;
+                    // case'hls':case'flv':case'mp4':
+                    //     if(monitorItem.find('video')[0].paused){
+                    //         failedStreamCheck()
+                    //     }else{
+                    //         succeededStreamCheck()
+                    //     }
+                    // break;
+                    default:
+                        if(dashboardOptions().jpeg_on === true){return}
+                        var firstSnapshot = await getSnapshot({
+                            monitor: loadedMonitors[monitorId],
+                        });
+                        // console.log(firstSnapshot)
+                        base64Data = firstSnapshot.url
+                        base64Length = firstSnapshot.fileSize
+                        await setPromiseTimeout(checkSpeed)
+                        var secondSnapshot = await getSnapshot({
+                            monitor: loadedMonitors[monitorId],
+                        });
+                        // console.log(secondSnapshot)
+                        // console.log('----')
+                        var secondSnapLength = secondSnapshot.fileSize
+                        var hasFailed = base64Data === secondSnapshot.url || base64Length === secondSnapLength;
+                        if(hasFailed){
+                            failedStreamCheck()
+                        }else{
+                            succeededStreamCheck()
+                        }
+                    break;
+                }
+                $.each(onSignalCheckLiveStreamExtensions,function(n,extender){
+                    extender(streamType,monitorItem)
+                })
+            }catch(err){
+                console.log('signal check ERROR', err)
+                failedStreamCheck()
             }
-            $.each(onSignalCheckLiveStreamExtensions,function(n,extender){
-                extender(streamType,monitorItem)
-            })
         }
-        executeCheck();
+        executeCheck()
     }catch(err){
         console.log(err)
         var errorStack = err.stack;
