@@ -82,7 +82,7 @@ $(document).ready(function(e){
                       }
                 ],
                 data: data.files.map((file) => {
-                    var href = getApiPrefix('fileBin') + '/' + selectedMonitor + '/' + file.name
+                    var href = getApiPrefix('fileBin') + '/' + file.mid + '/' + file.name
                     var isVideo = file.name.includes('.mp4') || file.name.includes('.webm')
                     return {
                         monitorName: `<b>${loadedMonitors[file.mid]?.name || file.mid}</b>`,
