@@ -203,12 +203,12 @@ $(document).ready(function(e){
         return false;
     })
     addOnTabOpen('fileBinView', function () {
-        drawMonitorListToSelector(monitorsList)
+        drawMonitorListToSelector(monitorsList,null,null,true)
         drawFileBinViewElements()
     })
     addOnTabReopen('fileBinView', function () {
         var theSelected = `${monitorsList.val()}`
-        drawMonitorListToSelector(monitorsList)
+        drawMonitorListToSelector(monitorsList,null,null,true)
         monitorsList.val(theSelected)
     })
     addOnTabAway('fileBinView', function () {
