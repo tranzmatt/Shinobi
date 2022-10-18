@@ -767,20 +767,19 @@ function signalCheckLiveStream(options){
                     case'b64':
                         monitorItem.resize()
                     break;
-                    // case'hls':case'flv':case'mp4':
-                    //     if(monitorItem.find('video')[0].paused){
-                    //         failedStreamCheck()
-                    //     }else{
-                    //         succeededStreamCheck()
-                    //     }
-                    // break;
+                    case'hls':case'flv':case'mp4':
+                        if(monitorItem.find('video')[0].paused){
+                            failedStreamCheck()
+                        }else{
+                            succeededStreamCheck()
+                        }
+                    break;
                     default:
                         if(dashboardOptions().jpeg_on === true){return}
                         var firstSnapshot = await getSnapshot({
                             monitor: loadedMonitors[monitorId],
                         });
                         // console.log(firstSnapshot)
-                        base64Data = firstSnapshot.url
                         base64Length = firstSnapshot.fileSize
                         await setPromiseTimeout(checkSpeed)
                         var secondSnapshot = await getSnapshot({
@@ -789,7 +788,7 @@ function signalCheckLiveStream(options){
                         // console.log(secondSnapshot)
                         // console.log('----')
                         var secondSnapLength = secondSnapshot.fileSize
-                        var hasFailed = base64Data === secondSnapshot.url || base64Length === secondSnapLength;
+                        var hasFailed = firstSnapshot.url === secondSnapshot.url || base64Length === secondSnapLength;
                         if(hasFailed){
                             failedStreamCheck()
                         }else{
