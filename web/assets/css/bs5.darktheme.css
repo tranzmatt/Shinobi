@@ -9,7 +9,7 @@
 }
 .dark .table-striped>tbody>tr>td{border-color:#222;color:#fff}
 .dark code{color: #c49a68;background-color: #36333d;}
-.dark a:not(.btn){color: #c49a68;}
+.dark a:not(.btn,.dropdown-item){color: #c49a68;}
 
 
 
