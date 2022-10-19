@@ -415,27 +415,28 @@ module.exports = function(s,config,lang,io){
             //sql/database connection with knex
             s.databaseEngine = require('knex')(s.databaseOptions)
             //run prerequsite queries
-            s.preQueries()
-            setTimeout(async () => {
-                await checkForStaticUsers()
-                //check for subscription
-                checkSubscription(config.subscriptionId,function(hasSubcribed){
-                    config.userHasSubscribed = hasSubcribed
-                    //check terminal commander
-                    checkForTerminalCommands(function(){
-                        //load administrators (groups)
-                        loadAdminUsers(function(){
-                            //load monitors (for groups)
-                            loadMonitors(function(){
-                                //check for orphaned videos
-                                checkForOrphanedVideos(async () => {
-                                    s.processReady()
+            s.preQueries().then(() => {
+                setTimeout(async () => {
+                    await checkForStaticUsers()
+                    //check for subscription
+                    checkSubscription(config.subscriptionId,function(hasSubcribed){
+                        config.userHasSubscribed = hasSubcribed
+                        //check terminal commander
+                        checkForTerminalCommands(function(){
+                            //load administrators (groups)
+                            loadAdminUsers(function(){
+                                //load monitors (for groups)
+                                loadMonitors(function(){
+                                    //check for orphaned videos
+                                    checkForOrphanedVideos(async () => {
+                                        s.processReady()
+                                    })
                                 })
                             })
                         })
                     })
-                })
-            },1500)
+                },1500)                
+            })
         }
     })
 }

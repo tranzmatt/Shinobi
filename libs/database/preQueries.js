@@ -11,10 +11,10 @@ module.exports = function(s,config){
             isMySQL ? {name: 'utf8_general_ci', type: 'collate'} : null,
             {name: 'ke', length: 50, type: 'string'},
             {name: 'mid', length: 50, type: 'string'},
-            {name: 'name', length: 50, type: 'tinytext'},
+            {name: 'name', length: 50, type: 'string'},
             {name: 'size', type: 'float', defaultTo: 0},
             {name: 'details', type: 'text'},
-            {name: 'status', type: 'int', length: 1, defaultTo: 0},
+            {name: 'status', type: 'integer', length: 1, defaultTo: 0},
             {name: 'archive', type: 'tinyint', length: 1, defaultTo: 0},
             {name: 'time', type: 'timestamp'},
         ]);
@@ -43,7 +43,7 @@ module.exports = function(s,config){
             {name: 'href', length: 50, type: 'text'},
             {name: 'size', type: 'float', defaultTo: 0},
             {name: 'details', type: 'text'},
-            {name: 'status', type: 'int', length: 1, defaultTo: 0},
+            {name: 'status', type: 'integer', length: 1, defaultTo: 0},
             {name: 'archive', type: 'tinyint', length: 1, defaultTo: 0},
             {name: 'time', type: 'timestamp'},
             {name: 'end', type: 'timestamp'},
@@ -66,7 +66,7 @@ module.exports = function(s,config){
             {name: 'mid', length: 50, type: 'string'},
             {name: 'tag', length: 30, type: 'string'},
             {name: 'details', type: 'text'},
-            {name: 'count', type: 'int', length: 10, defaultTo: 1},
+            {name: 'count', type: 'integer', length: 10, defaultTo: 1},
             {name: 'time', type: 'timestamp'},
             {name: 'end', type: 'timestamp'},
         ]);
@@ -86,7 +86,7 @@ module.exports = function(s,config){
             isMySQL ? {name: 'utf8_general_ci', type: 'collate'} : null,
             {name: 'ke', length: 50, type: 'string'},
             {name: 'uid', length: 50, type: 'string'},
-            {name: 'ip', type: 'tinytext'},
+            {name: 'ip', type: 'string'},
             {name: 'code', length: 100, type: 'string'},
             {name: 'details', type: 'text'},
             {name: 'time', type: 'timestamp'},
@@ -126,11 +126,11 @@ module.exports = function(s,config){
             {name: 'protocol', type: 'string', length: 10, defaultTo: 'rtsp'},
             {name: 'host', type: 'string', length: 100, defaultTo: '0.0.0.0'},
             {name: 'path', type: 'string', length: 100, defaultTo: '/'},
-            {name: 'port', type: 'int', length: 8, defaultTo: 554},
-            {name: 'fps', type: 'int', length: 8},
+            {name: 'port', type: 'integer', length: 8, defaultTo: 554},
+            {name: 'fps', type: 'integer', length: 8},
             {name: 'mode', type: 'string', length: 15},
-            {name: 'width', type: 'int', length: 11},
-            {name: 'height', type: 'int', length: 11},
+            {name: 'width', type: 'integer', length: 11},
+            {name: 'height', type: 'integer', length: 11},
             // KEY `monitors_index` (`ke`,`mode`,`type`,`ext`)
             {name: ['ke', 'mode', 'type', 'ext'], type: 'index', length: 'monitors_index'},
         ]);
@@ -150,7 +150,7 @@ module.exports = function(s,config){
             {name: 'details', type: 'text'},
             {name: 'start', length: 10, type: 'string'},
             {name: 'end', length: 10, type: 'string'},
-            {name: 'enabled', type: 'int', length: 1, defaultTo: 1},
+            {name: 'enabled', type: 'integer', length: 1, defaultTo: 1},
         ]);
         await createTable('Timelapse Frames',[
             isMySQL ? {name: 'utf8', type: 'charset'} : null,
@@ -174,7 +174,7 @@ module.exports = function(s,config){
             {name: 'auth', length: 50, type: 'string'},
             {name: 'mail', length: 100, type: 'string'},
             {name: 'pass', length: 100, type: 'string'},
-            {name: 'accountType', type: 'int', length: 1, defaultTo: 0},
+            {name: 'accountType', type: 'integer', length: 1, defaultTo: 0},
             {name: 'details', type: 'longtext'},
             // UNIQUE KEY `mail` (`mail`)
             {name: 'mail', type: 'unique'},

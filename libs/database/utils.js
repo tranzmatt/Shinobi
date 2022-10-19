@@ -446,7 +446,8 @@ module.exports = function(s,config){
         try{
             const exists = await s.databaseEngine.schema.hasTable(tableName)
             if (!exists) {
-                await s.databaseEngine.schema.createTable(tableName, table => {
+                console.log(`Creating Table "${tableName}"`)
+                await s.databaseEngine.schema.createTable(tableName, (table) => {
                     columns.forEach((column) => {
                         if(!column)return;
                         const action = table[column.type](column.name,column.length)
