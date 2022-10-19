@@ -92,7 +92,6 @@ echo "============="
 echo "Shinobi - Installing Database..."
 sqluser="root"
 sudo mysql -e "source sql/user.sql" || true
-sudo mysql -e "source sql/framework.sql" || true
 echo "============="
 echo "Shinobi - Install NPM Libraries"
 sudo npm i npm -g
