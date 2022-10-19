@@ -132,7 +132,7 @@ module.exports = function(s,config){
             {name: 'width', type: 'integer', length: 11},
             {name: 'height', type: 'integer', length: 11},
             // KEY `monitors_index` (`ke`,`mode`,`type`,`ext`)
-            {name: ['ke', 'mode', 'type', 'ext'], type: 'index', length: 'monitors_index'},
+            {name: ['ke', 'mid', 'mode', 'type', 'ext'], type: 'index', length: 'monitors_index'},
         ]);
         await createTable('Presets',[
             isMySQL ? {name: 'utf8', type: 'charset'} : null,
