@@ -428,14 +428,14 @@ module.exports = function(s,config,lang,io){
                                 //load monitors (for groups)
                                 loadMonitors(function(){
                                     //check for orphaned videos
-                                    checkForOrphanedVideos(async () => {
+                                    checkForOrphanedVideos(() => {
                                         s.processReady()
                                     })
                                 })
                             })
                         })
                     })
-                },1500)                
+                },1500)
             })
         }
     })
