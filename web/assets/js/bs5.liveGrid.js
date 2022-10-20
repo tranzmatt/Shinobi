@@ -99,6 +99,22 @@ function buildStreamElementHtml(streamType){
     }
     return html
 }
+function attachVideoElementErrorHandler(monitorId){
+    var monitor = loadedMonitors[monitorId]
+    var monitorDetails = safeJsonParse(monitor.details)
+    var streamType = subStreamChannel ? monitorDetails.substream ? monitorDetails.substream.output.stream_type : 'hls' : monitorDetails.stream_type
+    if(
+        streamType === 'flv' ||
+        streamType === 'hls'
+    ){
+        var streamBlock = liveGridElements[monitorId].monitorItem.find('video.stream-block')
+        streamBlock[0].onerror = function(){
+            setTimeout(function(){
+                mainSocket.f({f:'monitor',ff:'watch_on',id:monitorId})
+            },2000)
+        }
+    }
+}
 function resetMonitorCanvas(monitorId,initiateAfter,subStreamChannel){
     var monitor = loadedMonitors[monitorId]
     var details = monitor.details
@@ -108,6 +124,7 @@ function resetMonitorCanvas(monitorId,initiateAfter,subStreamChannel){
     closeLiveGridPlayer(monitorId,false)
     streamBlock.find('.stream-element').remove()
     streamBlock.append(buildStreamElementHtml(streamType))
+    attachVideoElementErrorHandler(monitorId)
     if(initiateAfter)initiateLiveGridPlayer(monitor,subStreamChannel)
 }
 function replaceMonitorInfoInHtml(htmlString,monitor){
@@ -278,6 +295,7 @@ function drawLiveGridBlock(monitorConfig,subStreamChannel){
         }catch(re){
             debugLog(re)
         }
+        attachVideoElementErrorHandler(monitorId)
         setCosmeticMonitorInfo(loadedMonitors[monitorId],subStreamChannel)
         setLiveGridOpenCount(1)
     }
@@ -353,9 +371,9 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
             setTimeout(function(){
                 var stream = containerElement.find('.stream-element');
                 var onPoseidonError = function(){
-                    // setTimeout(function(){
-                        // mainSocket.f({f:'monitor',ff:'watch_on',id:monitor.mid})
-                    // },5000)
+                    setTimeout(function(){
+                        mainSocket.f({f:'monitor',ff:'watch_on',id:monitorId})
+                    },2000)
                 }
                 if(!loadedPlayer.PoseidonErrorCount)loadedPlayer.PoseidonErrorCount = 0
                 if(loadedPlayer.PoseidonErrorCount >= 5)return
