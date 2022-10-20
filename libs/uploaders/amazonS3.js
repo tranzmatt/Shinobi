@@ -110,10 +110,9 @@ module.exports = function(s,config,lang){
                             ke: e.ke,
                             time: k.startTime,
                             status: 1,
-                            ext: ext,
                             details: s.s({
                                 type : 's3',
-                                location : saveLocation,
+                                location : saveLocation
                             }),
                             size: k.filesize,
                             end: k.endTime,
@@ -141,6 +140,7 @@ module.exports = function(s,config,lang){
                 Bucket: s.group[e.ke].init.aws_s3_bucket,
                 Key: saveLocation,
                 Body: fileStream,
+                ACL:'public-read',
                 ContentType:'image/jpeg'
             },function(err,data){
                 if(err){
