@@ -102,6 +102,7 @@ function buildStreamElementHtml(streamType){
 function attachVideoElementErrorHandler(monitorId){
     var monitor = loadedMonitors[monitorId]
     var monitorDetails = safeJsonParse(monitor.details)
+    var subStreamChannel = monitor.subStreamChannel
     var streamType = subStreamChannel ? monitorDetails.substream ? monitorDetails.substream.output.stream_type : 'hls' : monitorDetails.stream_type
     if(
         streamType === 'flv' ||
