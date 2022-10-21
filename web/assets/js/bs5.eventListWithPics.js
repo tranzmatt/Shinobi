@@ -2,26 +2,24 @@ $(document).ready(function(){
     var theWindow = $('#tab-eventListWithPics')
     var monitorSelector = $('#eventListWithPics-monitors-list')
     var rowContainer = $('#eventListWithPics-rows')
-    var dateRangeSelector = $('#eventListWithPics-daterange')
+    var dateSelector = $('#eventListWithPics-daterange')
     var theForm = theWindow.find('form')
     var loadedEventsInMemory = {}
-    dateRangeSelector.daterangepicker({
+    loadDateRangePicker(dateSelector,{
         startDate: moment().subtract(moment.duration("5:00:00")),
         endDate: moment().add(moment.duration("24:00:00")),
         timePicker: true,
         timePicker24Hour: true,
         timePickerSeconds: true,
         timePickerIncrement: 30,
-        locale: {
-            format: 'MM/DD/YYYY h:mm A'
+        onChange: function(start, end, label) {
+            drawDataRows()
         }
-    },function(start, end, label){
-        drawDataRows()
     })
     function drawDataRows(){
         var selectedMonitorType = monitorSelector.val()
         selectedMonitorType = selectedMonitorType === 'all' ? '' : selectedMonitorType
-        var currentDateRange = dateRangeSelector.data('daterangepicker');
+        var currentDateRange = dateSelector.data('daterangepicker');
         getEvents({
             monitorId: selectedMonitorType,
             limit: 50,

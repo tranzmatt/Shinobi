@@ -923,6 +923,27 @@ function setInterfaceCounts(monitors){
     count.text(`${activeCameraCount} / ${allCameraCount}`)
     el.find('.progress-bar').css('width', `${percentActive}%`)
 }
+function getSelectedTime(dateSelector){
+    var dateRange = dateSelector.data('daterangepicker')
+    var startDate = dateRange.startDate.clone()
+    var endDate = dateRange.endDate.clone()
+    startDate = startDate.format('YYYY-MM-DDTHH:mm:ss')
+    endDate = endDate.format('YYYY-MM-DDTHH:mm:ss')
+    return {
+        startDate: startDate,
+        endDate: endDate
+    }
+}
+function loadDateRangePicker(dateSelector,options){
+    dateSelector.daterangepicker(Object.assign({
+        startDate: moment().utc().subtract(2, 'days'),
+        endDate: moment().utc(),
+        timePicker: true,
+        locale: {
+            format: 'YYYY/MM/DD hh:mm:ss A'
+        }
+    },options || {},{ onChange: undefined }), options.onChange)
+}
 // on page load
 var readyFunctions = []
 function onDashboardReady(theAction){
