@@ -296,11 +296,11 @@ function drawLiveGridBlock(monitorConfig,subStreamChannel){
         }catch(re){
             debugLog(re)
         }
-        attachVideoElementErrorHandler(monitorId)
         setCosmeticMonitorInfo(loadedMonitors[monitorId],subStreamChannel)
         setLiveGridOpenCount(1)
     }
     initiateLiveGridPlayer(loadedMonitors[monitorId],subStreamChannel)
+    attachVideoElementErrorHandler(monitorId)
 }
 function initiateLiveGridPlayer(monitor,subStreamChannel){
     var livePlayerElement = loadedLiveGrids[monitor.mid]
