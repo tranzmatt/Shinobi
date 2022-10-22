@@ -168,6 +168,7 @@ module.exports = (processCwd,config) => {
             }).catch((err) => {
                 if(err)console.log(err)
                 subscriptionFailed()
+                callback(false)
             })
         }else{
             var i;
