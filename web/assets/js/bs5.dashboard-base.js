@@ -195,11 +195,13 @@ function durationBetweenTimes(start,end){
     var hours = duration.asMinutes().toFixed(0);
     return hours
 }
-
 function formattedTimeForFilename(time,utcConvert,timeFormat){
     var theMoment = moment(time)
     if(utcConvert)theMoment = theMoment.clone().utc()
     return theMoment.format(timeFormat ? timeFormat : 'YYYY-MM-DDTHH:mm:ss')
+}
+function convertTZ(date, tzString) {
+    return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", {timeZone: tzString}));
 }
 function setPromiseTimeout(timeoutAmount){
     return new Promise((resolve) => {
@@ -925,8 +927,8 @@ function setInterfaceCounts(monitors){
 }
 function getSelectedTime(dateSelector){
     var dateRange = dateSelector.data('daterangepicker')
-    var startDate = dateRange.startDate.clone()
-    var endDate = dateRange.endDate.clone()
+    var startDate = moment(convertTZ(dateRange.startDate.clone()._d, serverTimezone))
+    var endDate = moment(convertTZ(dateRange.endDate.clone()._d, serverTimezone))
     startDate = startDate.format('YYYY-MM-DDTHH:mm:ss')
     endDate = endDate.format('YYYY-MM-DDTHH:mm:ss')
     return {

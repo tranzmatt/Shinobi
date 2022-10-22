@@ -46,6 +46,7 @@ module.exports = function(s){
     if(config.detectorMergePamRegionTriggers === undefined){config.detectorMergePamRegionTriggers = false}
     if(config.probeMonitorOnStart === undefined){config.probeMonitorOnStart = true}
     if(config.showLoginTypeSelector === undefined){config.showLoginTypeSelector = true}
+    if(config.timezone === undefined){config.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone}
     //Child Nodes
     if(config.childNodes === undefined)config.childNodes = {};
         //enabled
