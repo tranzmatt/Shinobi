@@ -46,7 +46,6 @@ module.exports = function(s,config,lang,app){
                 s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
                 return;
             }
-            noCache(res)
             if(user.permissions.watch_stream==="0"||user.details.sub&&user.details.allmonitors!=='1'&&user.details.monitors.indexOf(req.params.id)===-1){
                 res.end(user.lang['Not Permitted'])
                 return
@@ -54,22 +53,23 @@ module.exports = function(s,config,lang,app){
             if(s.group[req.params.ke]&&s.group[req.params.ke].activeMonitors[req.params.id]){
                 if(s.group[req.params.ke].activeMonitors[req.params.id].isStarted === true){
                     req.params.uid=user.uid;
+                    var $user = {
+                        auth_token: authKey,
+                        ke: groupKey,
+                        uid: user.uid,
+                        mail: user.mail,
+                        details: {},
+                    };
+                    console.log('$user',$user)
                     s.renderPage(req,res,config.renderPaths.embed,{
                         data: req.params,
                         baseUrl: req.protocol+'://'+req.hostname,
                         config: s.getConfigWithBranding(req.hostname),
                         define: s.getDefinitonFile(user.details ? user.details.lang : config.lang),
-                        $user: {
-                            auth_token: authKey,
-                            ke: groupKey,
-                            uid: user.uid,
-                            mail: user.mail,
-                            details: {},
-                        },
+                        $user: $user,
                         mon: Object.assign(s.group[req.params.ke].rawMonitorConfigurations[req.params.id],{}),
                         originalURL: s.getOriginalUrl(req)
                     });
-                    res.end()
                 }else{
                     res.end(user.lang['Cannot watch a monitor that isn\'t running.'])
                 }
