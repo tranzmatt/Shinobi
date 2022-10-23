@@ -40,31 +40,10 @@ $(document).ready(function(e){
     function openVideosTableView(monitorId,startDate,endDate){
         drawVideosTableViewElements(monitorId,startDate,endDate)
     }
-    function getSelectedTime(asUtc){
-        var dateRange = dateSelector.data('daterangepicker')
-        var startDate = dateRange.startDate.clone()
-        var endDate = dateRange.endDate.clone()
-        if(asUtc){
-            startDate = startDate.utc()
-            endDate = endDate.utc()
+    loadDateRangePicker(dateSelector,{
+        onChange: function(start, end, label) {
+            drawVideosTableViewElements()
         }
-        startDate = startDate.format('YYYY-MM-DDTHH:mm:ss')
-        endDate = endDate.format('YYYY-MM-DDTHH:mm:ss')
-        return {
-            startDate: startDate,
-            endDate: endDate
-        }
-    }
-
-    dateSelector.daterangepicker({
-        startDate: moment().utc().subtract(2, 'days'),
-        endDate: moment().utc(),
-        timePicker: true,
-        locale: {
-            format: 'YYYY/MM/DD hh:mm:ss A'
-        }
-    }, function(start, end, label) {
-        drawVideosTableViewElements()
     })
     monitorsList.change(function(){
         drawVideosTableViewElements()
@@ -76,7 +55,7 @@ $(document).ready(function(e){
         drawVideosTableViewElements()
     })
     async function drawVideosTableViewElements(usePreloadedData){
-        var dateRange = getSelectedTime(false)
+        var dateRange = getSelectedTime(dateSelector)
         var searchQuery = objectTagSearchField.val() || null
         var startDate = dateRange.startDate
         var endDate = dateRange.endDate
