@@ -27,12 +27,12 @@ $(document).ready(function(e){
         var html = ''
         var selectedLogType = logTypeSelector.val()
         selectedLogType = selectedLogType === 'all' ? '' : selectedLogType
-        var currentDateRange = dateSelector.data('daterangepicker');
-        var apiEndpoint = getApiPrefix(`logs`) + '/' + selectedLogType + '?start=' + formattedTimeForFilename(currentDateRange.startDate) + '&end=' + formattedTimeForFilename(currentDateRange.endDate)
+        var dateRange = getSelectedTime(dateSelector)
+        var apiEndpoint = getApiPrefix(`logs`) + '/' + selectedLogType + '?start=' + formattedTimeForFilename(dateRange.startDate) + '&end=' + formattedTimeForFilename(dateRange.endDate)
         $.getJSON(apiEndpoint,function(rows){
             logViewerDataInMemory = {
-                startDate: currentDateRange.startDate,
-                endDate: currentDateRange.endDate,
+                startDate: dateRange.startDate,
+                endDate: dateRange.endDate,
                 url: apiEndpoint,
                 query: selectedLogType,
                 rows: rows,

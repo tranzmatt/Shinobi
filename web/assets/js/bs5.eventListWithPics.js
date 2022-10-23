@@ -19,12 +19,12 @@ $(document).ready(function(){
     function drawDataRows(){
         var selectedMonitorType = monitorSelector.val()
         selectedMonitorType = selectedMonitorType === 'all' ? '' : selectedMonitorType
-        var currentDateRange = dateSelector.data('daterangepicker');
+        var dateRange = getSelectedTime(dateSelector)
         getEvents({
             monitorId: selectedMonitorType,
             limit: 50,
-            startDate: currentDateRange.startDate,
-            endDate: currentDateRange.endDate,
+            startDate: dateRange.startDate,
+            endDate: dateRange.endDate,
         },function(response){
             drawEventRowsToList(rowContainer,response.events)
         })
