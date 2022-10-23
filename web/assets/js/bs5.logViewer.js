@@ -1,24 +1,16 @@
 $(document).ready(function(e){
     var theWindow = $('#tab-logViewer')
     var logTypeSelector = $('#log_monitors')
-    var dateRangeSelector = $('#logs_daterange')
+    var dateSelector = $('#logs_daterange')
     var savedLogRows = $('#saved-logs-rows')
     var theForm = theWindow.find('form')
     var logViewerDataInMemory = {}
     //log viewer
-    dateRangeSelector.daterangepicker({
-        startDate: moment().subtract(moment.duration("5:00:00")),
-        endDate: moment().add(moment.duration("24:00:00")),
-        timePicker: true,
-        timePicker24Hour: true,
-        timePickerSeconds: true,
-        timePickerIncrement: 30,
-        locale: {
-            format: 'MM/DD/YYYY h:mm A'
+    loadDateRangePicker(dateSelector,{
+        onChange: function(start, end, label) {
+            drawLogRows()
         }
-    },function(start, end, label){
-        drawLogRows()
-    });
+    })
     addOnTabOpen('logViewer',function(){
         logTypeSelector.find('optgroup option').remove()
         var html = ''
@@ -35,12 +27,12 @@ $(document).ready(function(e){
         var html = ''
         var selectedLogType = logTypeSelector.val()
         selectedLogType = selectedLogType === 'all' ? '' : selectedLogType
-        var currentDateRange = dateRangeSelector.data('daterangepicker');
-        var apiEndpoint = getApiPrefix(`logs`) + '/' + selectedLogType + '?start=' + formattedTimeForFilename(currentDateRange.startDate) + '&end=' + formattedTimeForFilename(currentDateRange.endDate)
+        var dateRange = getSelectedTime(dateSelector)
+        var apiEndpoint = getApiPrefix(`logs`) + '/' + selectedLogType + '?start=' + formattedTimeForFilename(dateRange.startDate) + '&end=' + formattedTimeForFilename(dateRange.endDate)
         $.getJSON(apiEndpoint,function(rows){
             logViewerDataInMemory = {
-                startDate: currentDateRange.startDate,
-                endDate: currentDateRange.endDate,
+                startDate: dateRange.startDate,
+                endDate: dateRange.endDate,
                 url: apiEndpoint,
                 query: selectedLogType,
                 rows: rows,

@@ -8,31 +8,10 @@ $(document).ready(function(e){
     function openFileBinView(monitorId,startDate,endDate){
         drawFileBinViewElements(monitorId,startDate,endDate)
     }
-    function getSelectedTime(asUtc){
-        var dateRange = dateSelector.data('daterangepicker')
-        var startDate = dateRange.startDate.clone()
-        var endDate = dateRange.endDate.clone()
-        if(asUtc){
-            startDate = startDate.utc()
-            endDate = endDate.utc()
+    loadDateRangePicker(dateSelector,{
+        onChange: function(start, end, label) {
+            drawFileBinViewElements()
         }
-        startDate = startDate.format('YYYY-MM-DDTHH:mm:ss')
-        endDate = endDate.format('YYYY-MM-DDTHH:mm:ss')
-        return {
-            startDate: startDate,
-            endDate: endDate
-        }
-    }
-
-    dateSelector.daterangepicker({
-        startDate: moment().utc().subtract(2, 'days'),
-        endDate: moment().utc(),
-        timePicker: true,
-        locale: {
-            format: 'YYYY/MM/DD hh:mm:ss A'
-        }
-    }, function(start, end, label) {
-        drawFileBinViewElements()
     })
     monitorsList.change(function(){
         drawFileBinViewElements()
@@ -42,7 +21,7 @@ $(document).ready(function(e){
         loadedFilesInMemory[`${video.mid}${video.name}`] = video
     }
     function drawFileBinViewElements(selectedMonitor,startDate,endDate){
-        var dateRange = getSelectedTime(false)
+        var dateRange = getSelectedTime(dateSelector)
         if(!startDate)startDate = dateRange.startDate
         if(!endDate)endDate = dateRange.endDate
         if(!selectedMonitor)selectedMonitor = monitorsList.val()
