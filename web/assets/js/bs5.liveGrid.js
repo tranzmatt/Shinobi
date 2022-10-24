@@ -270,7 +270,7 @@ function drawLiveGridBlock(monitorConfig,subStreamChannel){
         var monitorsPerRow = getMonitorsPerRow()
         var width = monitorsPerRow
         var height = width;
-        var isSmallMobile = isMobile && window.innerWidth <= 812;
+        var isSmallMobile = isMobile || window.innerWidth <= 812;
         var html = buildLiveGridBlock(monitorConfig)
         var monitorOrderEngaged = dashboardOptions().switches.monitorOrder === 1;
         if(monitorOrderEngaged && $user.details.monitorOrder && $user.details.monitorOrder[monitorConfig.ke+''+monitorId]){
@@ -283,7 +283,7 @@ function drawLiveGridBlock(monitorConfig,subStreamChannel){
         liveGridData.addWidget({
             x,
             y,
-            h: isSmallMobile ? 4 :  height,
+            h: isSmallMobile ? 1 :  height,
             w: isSmallMobile ? 4 :  width,// !monitorOrderEngaged
             content: html
         });
