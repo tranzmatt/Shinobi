@@ -495,6 +495,10 @@ module.exports = (s,config,lang,app,io) => {
                             }
                         }
                         resolve(response)
+                        for (var i = 0; i < s.onEventBasedRecordingCompleteExtensions.length; i++) {
+                            const extender = s.onEventBasedRecordingCompleteExtensions[i]
+                            await extender(response,monitorConfig)
+                        }
                     },1000)
                 })
             }else{

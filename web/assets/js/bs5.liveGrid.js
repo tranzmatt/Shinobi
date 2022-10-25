@@ -3,6 +3,7 @@ var monitorPops = {}
 var liveGridElements = {}
 var runningJpegStreams = {}
 var liveGrid = $('#monitors_live')
+var liveGridData = null
 var liveGridOpenCountElements = $('.liveGridOpenCount')
 var liveGridOpenCount = 0
 //
@@ -28,7 +29,7 @@ function setLiveGridOpenCount(addOrRemove){
     liveGridOpenCountElements.text(liveGridOpenCount)
 }
 function getLiveGridData(){
-    return liveGrid.data('gridstack')
+    return liveGridData
 }
 function getMonitorsPerRow(){
     var x
@@ -58,16 +59,18 @@ function getMonitorsPerRow(){
     return x
 }
 function saveLiveGridBlockPositions() {
+    console.log('saveLiveGridBlockPositions')
     var monitors = {}
-    liveGrid.find(" .monitor_item").each(function(n,v){
+    liveGrid.find(".grid-stack-item").each(function(n,v){
         var el = $(v)
+        var monitorItem = el.find('.monitor_item')
         var item = {}
-        item.ke = el.attr('data-ke')
-        item.mid = el.attr('data-mid')
-        item.x = el.attr('data-gs-x')
-        item.y = el.attr('data-gs-y')
-        item.height = el.attr('data-gs-height')
-        item.width = el.attr('data-gs-width')
+        item.ke = monitorItem.attr('data-ke')
+        item.mid = monitorItem.attr('data-mid')
+        item.x = el.attr('gs-x')
+        item.y = el.attr('gs-y')
+        item.height = el.attr('gs-h')
+        item.width = el.attr('gs-w')
         monitors[item.ke+''+item.mid] = item
     })
     $user.details.monitorOrder = monitors;
@@ -99,6 +102,27 @@ function buildStreamElementHtml(streamType){
     }
     return html
 }
+function attachVideoElementErrorHandler(monitorId){
+    try{
+        var monitor = loadedMonitors[monitorId]
+        var monitorDetails = safeJsonParse(monitor.details)
+        var subStreamChannel = monitor.subStreamChannel
+        var streamType = subStreamChannel ? monitorDetails.substream ? monitorDetails.substream.output.stream_type : 'hls' : monitorDetails.stream_type
+        if(
+            streamType === 'flv' ||
+            streamType === 'hls'
+        ){
+            var streamBlock = liveGridElements[monitorId].streamElement
+            streamBlock[0].onerror = function(){
+                setTimeout(function(){
+                    mainSocket.f({f:'monitor',ff:'watch_on',id:monitorId})
+                },2000)
+            }
+        }
+    }catch(err){
+        console.error(`Failed to Set Error Handler for Video Element`,err)
+    }
+}
 function resetMonitorCanvas(monitorId,initiateAfter,subStreamChannel){
     var monitor = loadedMonitors[monitorId]
     var details = monitor.details
@@ -108,6 +132,7 @@ function resetMonitorCanvas(monitorId,initiateAfter,subStreamChannel){
     closeLiveGridPlayer(monitorId,false)
     streamBlock.find('.stream-element').remove()
     streamBlock.append(buildStreamElementHtml(streamType))
+    attachVideoElementErrorHandler(monitorId)
     if(initiateAfter)initiateLiveGridPlayer(monitor,subStreamChannel)
 }
 function replaceMonitorInfoInHtml(htmlString,monitor){
@@ -146,7 +171,7 @@ function buildLiveGridBlock(monitor){
         data-ke="${monitor.ke}"
         data-mid="${monitor.mid}"
         data-mode="${monitor.mode}"
-        class="grid-stack-item monitor_item glM${monitor.mid} ${streamBlockInfo.gridBlockClass || ''}"
+        class="monitor_item glM${monitor.mid} ${streamBlockInfo.gridBlockClass || ''}"
     >
         <div class="grid-stack-item-content ui-draggable-handle">
             <div class="stream-block no-padding mdl-card__media mdl-color-text--grey-50">
@@ -240,12 +265,12 @@ function updateAllLiveGridElementsHeightWidth(monitorId){
 function drawLiveGridBlock(monitorConfig,subStreamChannel){
     var monitorId = monitorConfig.mid
     if($('#monitor_live_' + monitorId).length === 0){
-        var x = 0;
-        var y = 0;
+        var x = null;
+        var y = null;
         var monitorsPerRow = getMonitorsPerRow()
         var width = monitorsPerRow
         var height = width;
-        var isSmallMobile = isMobile && window.innerWidth <= 812;
+        var isSmallMobile = isMobile || window.innerWidth <= 812;
         var html = buildLiveGridBlock(monitorConfig)
         var monitorOrderEngaged = dashboardOptions().switches.monitorOrder === 1;
         if(monitorOrderEngaged && $user.details.monitorOrder && $user.details.monitorOrder[monitorConfig.ke+''+monitorId]){
@@ -255,7 +280,13 @@ function drawLiveGridBlock(monitorConfig,subStreamChannel){
             width = saved.width;
             height = saved.height;
         }
-        liveGrid.data('gridstack').addWidget($(html), x, y, isSmallMobile ? 4 :  height, isSmallMobile ? 4 :  height, !monitorOrderEngaged);
+        liveGridData.addWidget({
+            x,
+            y,
+            h: isSmallMobile ? 1 :  height,
+            w: isSmallMobile ? 4 :  width,// !monitorOrderEngaged
+            content: html
+        });
         var theBlock = $('#monitor_live_' + monitorId);
         var streamElement = theBlock.find('.stream-element')
         liveGridElements[monitorId] = {
@@ -282,6 +313,7 @@ function drawLiveGridBlock(monitorConfig,subStreamChannel){
         setLiveGridOpenCount(1)
     }
     initiateLiveGridPlayer(loadedMonitors[monitorId],subStreamChannel)
+    attachVideoElementErrorHandler(monitorId)
 }
 function initiateLiveGridPlayer(monitor,subStreamChannel){
     var livePlayerElement = loadedLiveGrids[monitor.mid]
@@ -353,9 +385,9 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
             setTimeout(function(){
                 var stream = containerElement.find('.stream-element');
                 var onPoseidonError = function(){
-                    // setTimeout(function(){
-                        // mainSocket.f({f:'monitor',ff:'watch_on',id:monitor.mid})
-                    // },5000)
+                    setTimeout(function(){
+                        mainSocket.f({f:'monitor',ff:'watch_on',id:monitorId})
+                    },2000)
                 }
                 if(!loadedPlayer.PoseidonErrorCount)loadedPlayer.PoseidonErrorCount = 0
                 if(loadedPlayer.PoseidonErrorCount >= 5)return
@@ -540,7 +572,7 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
             loadedPlayer.signal = setInterval(function(){
                 signalCheckLiveStream({
                     mid: monitorId,
-                    checkSpeed: 1000,
+                    checkSpeed: 3000,
                 })
             },signalCheckInterval);
         }
@@ -555,32 +587,35 @@ function revokeVideoPlayerUrl(monitorId){
 }
 function closeLiveGridPlayer(monitorId,killElement){
     try{
-        var livePlayerElement = loadedLiveGrids[monitorId]
-        if(livePlayerElement){
-            if(livePlayerElement.hls){livePlayerElement.hls.destroy()}
-            if(livePlayerElement.Poseidon){livePlayerElement.Poseidon.stop()}
-            if(livePlayerElement.Base64){livePlayerElement.Base64.disconnect()}
-            if(livePlayerElement.dash){livePlayerElement.dash.reset()}
-            if(livePlayerElement.jpegInterval){
+        var loadedPlayer = loadedLiveGrids[monitorId]
+        if(loadedPlayer){
+            if(loadedPlayer.hls){loadedPlayer.hls.destroy()}
+            if(loadedPlayer.Poseidon){loadedPlayer.Poseidon.stop()}
+            if(loadedPlayer.Base64){loadedPlayer.Base64.disconnect()}
+            if(loadedPlayer.dash){loadedPlayer.dash.reset()}
+            if(loadedPlayer.jpegInterval){
                 stopJpegStream(monitorId)
             }
             $.each(onLiveStreamCloseExtensions,function(n,extender){
-                extender(livePlayerElement)
+                extender(loadedPlayer)
             })
         }
         if(liveGridElements[monitorId])revokeVideoPlayerUrl(monitorId)
-        clearInterval(livePlayerElement.signal)
+        clearInterval(loadedPlayer.signal)
     }catch(err){
         console.log(err)
     }
-    if(killElement){
-        var theElement = $('#monitor_live_'+monitorId)
-        if(theElement.length > 0){
-            getLiveGridData().removeWidget(theElement)
+    try{
+        if(killElement){
+            var livePlayerElement = liveGridElements[monitorId]
+            var theElement = livePlayerElement.monitorItem.parents('.grid-stack-item')[0]
+            getLiveGridData().removeWidget(theElement, true)
             setLiveGridOpenCount(-1)
             delete(loadedLiveGrids[monitorId])
             delete(liveGridElements[monitorId])
         }
+    }catch(err){
+        console.log(err)
     }
 }
 function callMonitorToLiveGrid(v){
@@ -736,6 +771,7 @@ function signalCheckLiveStream(options){
         var monitorDetails = monitorConfig.details
         var checkCount = 0
         var base64Data = null;
+        var base64Length = 0;
         var checkSpeed = options.checkSpeed || 1000
         var subStreamChannel = monitorConfig.subStreamChannel
         var streamType = subStreamChannel ? monitorDetails.substream ? monitorDetails.substream.output.stream_type : 'hls' : monitorDetails.stream_type
@@ -760,50 +796,50 @@ function signalCheckLiveStream(options){
                 })
             }
         }
-        function executeCheck(){
-            switch(streamType){
-                case'b64':
-                    monitorItem.resize()
-                break;
-                case'hls':case'flv':case'mp4':
-                    if(monitorItem.find('video')[0].paused){
-                        failedStreamCheck()
-                    }else{
-                        succeededStreamCheck()
-                    }
-                break;
-                default:
-                    if(dashboardOptions().jpeg_on === true){return}
-                    getSnapshot({
-                        monitor: loadedMonitors[monitorId],
-                    },function(url){
-                        base64Data = url;
-                        setTimeout(function(){
-                            getSnapshot({
-                                monitor: loadedMonitors[monitorId],
-                            },function(url){
-                                if(base64Data === url){
-                                    if(checkCount < 3){
-                                        ++checkCount;
-                                        setTimeout(function(){
-                                            executeCheck();
-                                        },checkSpeed)
-                                    }else{
-                                        failedStreamCheck()
-                                    }
-                                }else{
-                                    succeededStreamCheck()
-                                }
-                            });
-                        },checkSpeed)
-                    });
-                break;
+        async function executeCheck(){
+            try{
+                switch(streamType){
+                    case'b64':
+                        monitorItem.resize()
+                    break;
+                    case'hls':case'flv':case'mp4':
+                        if(monitorItem.find('video')[0].paused){
+                            failedStreamCheck()
+                        }else{
+                            succeededStreamCheck()
+                        }
+                    break;
+                    default:
+                        if(dashboardOptions().jpeg_on === true){return}
+                        var firstSnapshot = await getSnapshot({
+                            monitor: loadedMonitors[monitorId],
+                        });
+                        // console.log(firstSnapshot)
+                        base64Length = firstSnapshot.fileSize
+                        await setPromiseTimeout(checkSpeed)
+                        var secondSnapshot = await getSnapshot({
+                            monitor: loadedMonitors[monitorId],
+                        });
+                        // console.log(secondSnapshot)
+                        // console.log('----')
+                        var secondSnapLength = secondSnapshot.fileSize
+                        var hasFailed = firstSnapshot.url === secondSnapshot.url || base64Length === secondSnapLength;
+                        if(hasFailed){
+                            failedStreamCheck()
+                        }else{
+                            succeededStreamCheck()
+                        }
+                    break;
+                }
+                $.each(onSignalCheckLiveStreamExtensions,function(n,extender){
+                    extender(streamType,monitorItem)
+                })
+            }catch(err){
+                console.log('signal check ERROR', err)
+                failedStreamCheck()
             }
-            $.each(onSignalCheckLiveStreamExtensions,function(n,extender){
-                extender(streamType,monitorItem)
-            })
         }
-        executeCheck();
+        executeCheck()
     }catch(err){
         console.log(err)
         var errorStack = err.stack;
@@ -964,18 +1000,15 @@ $(document).ready(function(e){
                 saveLiveGridBlockOpenState(monitorId,$user.ke,0)
             },1000)
         })
-    })
-    liveGrid
-    .gridstack({
-        cellHeight: 80,
-        verticalMargin: 0,
-    })
+    });
+    liveGridData = GridStack.init();
+    liveGridData
     .on('dragstop', function(event,ui){
         setTimeout(function(){
             saveLiveGridBlockPositions()
         },700)
     })
-    .on('gsresizestop', function(){
+    .on('resizestop', function(){
         // resetAllLiveGridDimensionsInMemory()
         saveLiveGridBlockPositions()
     });
@@ -1006,6 +1039,7 @@ $(document).ready(function(e){
             break;
             case'monitor_watch_off':case'monitor_stopping':
                 var monitorId = d.mid || d.id
+                console.log('closeLiveGridPlayer',monitorId)
                 closeLiveGridPlayer(monitorId,(d.f === 'monitor_watch_off'))
             break;
             case'monitor_status':
@@ -1122,9 +1156,9 @@ $(document).ready(function(e){
     })
     dashboardSwitchCallbacks.monitorOrder = function(toggleState){
         if(toggleState !== 1){
-            $('.monitor_item').attr('data-gs-auto-position','yes')
+            $('.monitor_item').attr('gs-auto-position','yes')
         }else{
-            $('.monitor_item').attr('data-gs-auto-position','no')
+            $('.monitor_item').attr('gs-auto-position','no')
         }
     }
     dashboardSwitchCallbacks.dontMonStretch = function(toggleState){

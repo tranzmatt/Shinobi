@@ -34,8 +34,8 @@ $(document).ready(function(){
         var currentDate = new Date()
         var videoRange = parseInt(videoRangeEl.val()) || 1
         options.videoRange = videoRange
-        options.startDate = moment(currentDate).subtract(videoRange, 'hours')._d;
-        options.endDate = moment(currentDate)._d;
+        options.startDate = convertTZ(moment(currentDate).subtract(videoRange, 'hours')._d, serverTimezone);
+        options.endDate = convertTZ(moment(currentDate)._d, serverTimezone);
         function drawVideoData(data){
             var html = ``
             var videos = data.videos || []

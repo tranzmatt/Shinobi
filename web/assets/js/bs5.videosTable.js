@@ -40,31 +40,10 @@ $(document).ready(function(e){
     function openVideosTableView(monitorId,startDate,endDate){
         drawVideosTableViewElements(monitorId,startDate,endDate)
     }
-    function getSelectedTime(asUtc){
-        var dateRange = dateSelector.data('daterangepicker')
-        var startDate = dateRange.startDate.clone()
-        var endDate = dateRange.endDate.clone()
-        if(asUtc){
-            startDate = startDate.utc()
-            endDate = endDate.utc()
+    loadDateRangePicker(dateSelector,{
+        onChange: function(start, end, label) {
+            drawVideosTableViewElements()
         }
-        startDate = startDate.format('YYYY-MM-DDTHH:mm:ss')
-        endDate = endDate.format('YYYY-MM-DDTHH:mm:ss')
-        return {
-            startDate: startDate,
-            endDate: endDate
-        }
-    }
-
-    dateSelector.daterangepicker({
-        startDate: moment().utc().subtract(2, 'days'),
-        endDate: moment().utc(),
-        timePicker: true,
-        locale: {
-            format: 'YYYY/MM/DD hh:mm:ss A'
-        }
-    }, function(start, end, label) {
-        drawVideosTableViewElements()
     })
     monitorsList.change(function(){
         drawVideosTableViewElements()
@@ -76,7 +55,7 @@ $(document).ready(function(e){
         drawVideosTableViewElements()
     })
     async function drawVideosTableViewElements(usePreloadedData){
-        var dateRange = getSelectedTime(false)
+        var dateRange = getSelectedTime(dateSelector)
         var searchQuery = objectTagSearchField.val() || null
         var startDate = dateRange.startDate
         var endDate = dateRange.endDate
@@ -183,11 +162,16 @@ $(document).ready(function(e){
                     size: convertKbToHumanSize(file.size),
                     buttons: `
                     <div class="row-info" data-mid="${file.mid}" data-ke="${file.ke}" data-time="${file.time}" data-filename="${file.filename}">
-                        <a class="btn btn-sm btn-primary" href="${href}" download title="${lang.Download}"><i class="fa fa-download"></i></a>
                         <a class="btn btn-sm btn-default open-video" href="${href}" title="${lang.Play}"><i class="fa fa-play"></i></a>
-                        ${permissionCheck('video_delete',file.mid) ? `<a class="btn btn-sm btn-danger delete-video" href="${href}" title="${lang.Delete}"><i class="fa fa-trash-o"></i></a>` : ''}
-                        ${permissionCheck('video_delete',file.mid) ? `<a class="btn btn-sm btn-warning compress-video" href="${href}" title="${lang.Compress}"><i class="fa fa-compress"></i></a>` : ''}
                         ${permissionCheck('video_delete',file.mid) ? `<a class="btn btn-sm btn-${file.archive === 1 ? `success status-archived` : `default`} archive-video" title="${lang.Archive}"><i class="fa fa-${file.archive === 1 ? `lock` : `unlock-alt`}"></i></a>` : ''}
+                        <div class="dropdown d-inline-block">
+                            <a class="btn btn-sm btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
+                              <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
+                            </a>
+                            <ul class="dropdown-menu ${definitions.Theme.isDark ? 'dropdown-menu-dark bg-dark' : ''} shadow-lg">
+                                ${buildDefaultVideoMenuItems(file)}
+                            </ul>
+                        </div>
                     </div>
                     `,
                 }

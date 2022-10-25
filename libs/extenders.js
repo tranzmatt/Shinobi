@@ -60,6 +60,7 @@ module.exports = function(s,config){
     createExtension(`onHttpRequestUpgrade`,null,true)
     /////// VIDEOS ////////
     createExtension(`insertCompletedVideoExtender`,`insertCompletedVideoExtensions`)
+    createExtension(`onEventBasedRecordingComplete`)
     createExtension(`onBeforeInsertCompletedVideo`)
     /////// TIMELAPSE ////////
     createExtension(`onInsertTimelapseFrame`)

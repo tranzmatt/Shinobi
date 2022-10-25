@@ -31,6 +31,7 @@ module.exports = function(s,config,lang,app,io){
         destroySubstreamProcess,
     } = require('./monitor/utils.js')(s,config,lang)
     const {
+        sliceVideo,
         archiveVideo,
         reEncodeVideoAndReplace,
         reEncodeVideoAndBinOriginalAddToQueue,
@@ -1816,6 +1817,15 @@ module.exports = function(s,config,lang,app,io){
                     const originalFileName = `${s.formattedTime(r.time)+'.'+r.ext}`
                     var details = s.parseJSON(r.details) || {}
                     switch(req.params.mode){
+                        case'slice':
+                            const startTime = s.getPostData(req,'startTime');
+                            const endTime = s.getPostData(req,'endTime');
+                            const sliceResponse = await sliceVideo(r,{
+                                startTime: startTime,
+                                endTime: endTime,
+                            });
+                            response = sliceResponse
+                        break;
                         case'archive':
                             response.ok = true
                             const unarchive = s.getPostData(req,'unarchive') == '1';

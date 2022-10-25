@@ -122,10 +122,6 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
     var websocketPath = checkCorrectPathEnding(location.pathname) + 'socket.io'
     var containerElement = $(`#monitor_live_${monitor.mid}`)
     var streamType = subStreamChannel ? details.substream ? details.substream.output.stream_type : 'hls' : details.stream_type
-    if(location.search === '?p2p=1'){
-        websocketPath = '/socket.io'
-        // websocketQuery.machineId = machineId
-    }
     switch(streamType){
         case'jpeg':
             startJpegStream(monitorId)
@@ -134,7 +130,7 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
             if(loadedPlayer.Base64 && loadedPlayer.Base64.connected){
                 loadedPlayer.Base64.disconnect()
             }
-            loadedPlayer.Base64 = io(location.origin,{ path: websocketPath, query: websocketQuery, transports: ['websocket'], forceNew: false})
+            loadedPlayer.Base64 = io(location.host,{ path: '/socket.io', transports: ['websocket'], forceNew: false})
             var ws = loadedPlayer.Base64
             var buffer
             ws.on('diconnect',function(){
@@ -170,11 +166,9 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
                         var blob = new Blob( [ arrayBufferView ], { type: "image/jpeg" } );
                         loadedPlayer.imageUrl = URL.createObjectURL( blob );
                         loadedPlayer.image.src = loadedPlayer.imageUrl
-                        loadedPlayer.last_frame = 'data:image/jpeg;base64,'+base64ArrayBuffer(imageData)
                     }catch(er){
-                        debugLog('base64 frame')
+                        console.error('base64 frame',er)
                     }
-                    // $.ccio.init('signal',d);
                 })
             })
         break;
@@ -188,34 +182,9 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
                 }
                 if(!loadedPlayer.PoseidonErrorCount)loadedPlayer.PoseidonErrorCount = 0
                 if(loadedPlayer.PoseidonErrorCount >= 5)return
-                if(subStreamChannel ? details.substream.output.stream_flv_type === 'ws' : monitor.details.stream_flv_type === 'ws'){
-                    if(loadedPlayer.Poseidon){
-                        loadedPlayer.Poseidon.stop()
-                        revokeVideoPlayerUrl(monitorId)
-                    }
-                    try{
-                        loadedPlayer.Poseidon = new Poseidon({
-                            video: stream[0],
-                            auth_token: $user.auth_token,
-                            ke: monitor.ke,
-                            uid: $user.uid,
-                            id: monitor.mid,
-                            url: location.origin,
-                            path: websocketPath,
-                            query: websocketQuery,
-                            onError : onPoseidonError,
-                            channel : subStreamChannel
-                        })
-                        loadedPlayer.Poseidon.start();
-                    }catch(err){
-                        // onPoseidonError()
-                        console.log('onTryPoseidonError',err)
-                    }
-                }else{
-                    stream.attr('src',getApiPrefix(`mp4`)+'/'+monitor.mid + (subStreamChannel ? `/${subStreamChannel}` : '')+'/s.mp4?time=' + (new Date()).getTime())
-                    stream[0].onerror = function(err){
-                        console.error(err)
-                    }
+                stream.attr('src',getApiPrefix(`mp4`)+'/'+monitor.mid + (subStreamChannel ? `/${subStreamChannel}` : '')+'/s.mp4?time=' + (new Date()).getTime())
+                stream[0].onerror = function(err){
+                    console.error(err)
                 }
             },1000)
         break;
@@ -225,33 +194,10 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
                     loadedPlayer.flv.destroy()
                     revokeVideoPlayerUrl(monitorId)
                 }
-                var options = {};
-                if(monitor.details.stream_flv_type==='ws'){
-                    if(monitor.details.stream_flv_maxLatency&&monitor.details.stream_flv_maxLatency!==''){
-                        monitor.details.stream_flv_maxLatency = parseInt(monitor.details.stream_flv_maxLatency)
-                    }else{
-                        monitor.details.stream_flv_maxLatency = 20000;
-                    }
-                    options = {
-                        type: 'flv',
-                        isLive: true,
-                        auth_token: $user.auth_token,
-                        ke: monitor.ke,
-                        uid: $user.uid,
-                        id: monitor.mid,
-                        maxLatency: monitor.details.stream_flv_maxLatency,
-                        hasAudio:false,
-                        url: location.origin,
-                        path: websocketPath,
-                        channel : subStreamChannel,
-                        query: websocketQuery
-                    }
-                }else{
-                    options = {
-                        type: 'flv',
-                        isLive: true,
-                        url: getApiPrefix(`flv`)+'/'+monitor.mid + (subStreamChannel ? `/${subStreamChannel}` : '')+'/s.flv'
-                    }
+                var options = {
+                    type: 'flv',
+                    isLive: true,
+                    url: getApiPrefix(`flv`)+'/'+monitor.mid + (subStreamChannel ? `/${subStreamChannel}` : '')+'/s.flv'
                 }
                 loadedPlayer.flv = flvjs.createPlayer(options);
                 loadedPlayer.flv.attachMediaElement(containerElement.find('.stream-element')[0]);

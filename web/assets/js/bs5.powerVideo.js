@@ -3,7 +3,7 @@ $(document).ready(function(e){
     var powerVideoMonitorsListElement = $('#powerVideoMonitorsList')
     var powerVideoMonitorViewsElement = $('#powerVideoMonitorViews')
     var powerVideoTimelineStripsContainer = $('#powerVideoTimelineStrips')
-    var powerVideoDateRangeElement = $('#powerVideoDateRange')
+    var dateSelector = $('#powerVideoDateRange')
     var powerVideoVideoLimitElement = $('#powerVideoVideoLimit')
     var powerVideoEventLimitElement = $('#powerVideoEventLimit')
     var powerVideoSet = $('#powerVideoSet')
@@ -31,23 +31,18 @@ $(document).ready(function(e){
     }
     var activeTimeline = null
     // fix utc/localtime translation (use timelapseJpeg as guide, it works as expected) >
-    powerVideoDateRangeElement.daterangepicker({
+    loadDateRangePicker(dateSelector,{
         startDate: moment().subtract(moment.duration("24:00:00")),
         endDate: moment().add(moment.duration("24:00:00")),
-        timePicker: true,
         timePicker24Hour: true,
         timePickerSeconds: true,
-        timePickerIncrement: 30,
-        locale: {
-            format: 'DD/MM/YYYY h:mm A'
+        onChange: function(start, end, label) {
+            dateSelector.focus()
+            $.each(lastPowerVideoSelectedMonitors,async function(n,monitorId){
+                await requestTableData(monitorId)
+            })
         }
-    },function(start, end, label){
-        // $.pwrvid.drawTimeline()
-        powerVideoDateRangeElement.focus()
-        $.each(lastPowerVideoSelectedMonitors,async function(n,monitorId){
-            await requestTableData(monitorId)
-        })
-    });
+    })
     // fix utc/localtime translation (use timelapseJpeg as guide, it works as expected) />
     function loadVideosToTimeLineMemory(monitorId,videos,events){
         videos.forEach((video) => {
@@ -75,23 +70,8 @@ $(document).ready(function(e){
         })
         powerVideoMonitorsListElement.html(html)
     }
-    function getSelectedTime(asUtc){
-        var dateRange = powerVideoDateRangeElement.data('daterangepicker')
-        var startDate = dateRange.startDate.clone()
-        var endDate = dateRange.endDate.clone()
-        if(asUtc){
-            startDate = startDate.utc()
-            endDate = endDate.utc()
-        }
-        startDate = startDate.format('YYYY-MM-DDTHH:mm:ss')
-        endDate = endDate.format('YYYY-MM-DDTHH:mm:ss')
-        return {
-            startDate: startDate,
-            endDate: endDate
-        }
-    }
     async function requestTableData(monitorId){
-        var dateRange = getSelectedTime(false)
+        var dateRange = getSelectedTime(dateSelector)
         var searchQuery = objectTagSearchField.val() || null
         var startDate = dateRange.startDate
         var endDate = dateRange.endDate
@@ -768,7 +748,7 @@ $(document).ready(function(e){
         monitorListElement: powerVideoMonitorsListElement,
         monitorViewsElement: powerVideoMonitorViewsElement,
         timelineStripsElement: powerVideoTimelineStripsContainer,
-        dateRangeElement: powerVideoDateRangeElement,
+        dateRangeElement: dateSelector,
         loadedVideos: powerVideoLoadedVideos,
         loadedEvents: powerVideoLoadedEvents,
         loadedChartData: powerVideoLoadedChartData,

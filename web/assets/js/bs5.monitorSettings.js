@@ -576,6 +576,7 @@ function drawInputMapSelectorHtml(options,parent){
 }
 function importIntoMonitorEditor(options){
     var monitorConfig = options.values || options
+    var monitorId = monitorConfig.mid
     $.get(getApiPrefix()+'/hls/'+monitorConfig.ke+'/'+monitorConfig.mid+'/detectorStream.m3u8',function(data){
         $('#monEditBufferPreview').html(data)
     })
@@ -1322,6 +1323,7 @@ editorForm.find('[name="type"]').change(function(e){
         monitorEditorSelectedMonitor = monitorConfigToLoad
         importIntoMonitorEditor(monitorConfigToLoad)
         openTab(`monitorSettings`,{},null)
+        monitorsList.val(monitorConfigToLoad.mid || '')
     }
     function onMonitorEdit(d){
         var monitorId = d.mid || d.id
@@ -1503,6 +1505,7 @@ editorForm.find('[name="type"]').change(function(e){
             var el = thisEl.parents('[data-mid]')
             monitorId = el.attr('data-mid')
         }
+        console.log(monitorId)
         openMonitorEditorPage(doNew === 'true' ? null : monitorId)
     });
     monitorEditorWindow.find('.probe_config').click(function(){
@@ -1543,20 +1546,18 @@ editorForm.find('[name="type"]').change(function(e){
             sideMenuCollapsePoint.collapse('show')
         }
     }
+    function onTabMove(){
+        var theSelected = `${monitorsList.val() || ''}`
+        drawMonitorListToSelector(monitorsList.find('optgroup'),false,'host')
+        monitorsList.val(theSelected)
+        checkToOpenSideMenu()
+    }
     addOnTabAway('monitorSettings', function(){
         if(isSideBarMenuCollapsed()){
             sideMenuCollapsePoint.collapse('hide')
         }
     })
-    addOnTabOpen('monitorSettings', function () {
-        drawMonitorListToSelector(monitorsList.find('optgroup'),false,'host')
-        checkToOpenSideMenu()
-    })
-    addOnTabReopen('monitorSettings', function () {
-        var theSelected = `${monitorsList.val()}`
-        drawMonitorListToSelector(monitorsList.find('optgroup'),false,'host')
-        monitorsList.val(theSelected)
-        checkToOpenSideMenu()
-    })
+    addOnTabOpen('monitorSettings', onTabMove)
+    addOnTabReopen('monitorSettings', onTabMove)
     window.generateDefaultMonitorSettings = generateDefaultMonitorSettings
 })

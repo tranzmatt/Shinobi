@@ -1,4 +1,5 @@
 var loadedVideosInMemory = {}
+var loadedEventsInMemory = {}
 var loadedFramesMemory = {}
 var loadedFramesMemoryTimeout = {}
 var loadedFramesLock = {}
@@ -435,9 +436,16 @@ function drawVideoRowsToList(targetElement,rows){
     })
     liveStamp()
 }
-function loadVideoData(video){
-    delete(video.f)
-    loadedVideosInMemory[`${video.mid}${video.time}`] = video
+function loadVideosData(newVideos){
+    $.each(newVideos,function(n,video){
+        delete(video.f)
+        loadedVideosInMemory[`${video.mid}${video.time}`] = video
+    })
+}
+function loadEventsData(videoEvents){
+    videoEvents.forEach((anEvent) => {
+        loadedEventsInMemory[`${anEvent.mid}${anEvent.time}`] = anEvent
+    })
 }
 function getVideos(options,callback){
     return new Promise((resolve,reject) => {
@@ -474,11 +482,11 @@ function getVideos(options,callback){
             })
             $.getJSON(`${getApiPrefix(`timelapse`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`noLimit=1`]).join('&')}`,function(timelapseFrames){
                 $.getJSON(`${getApiPrefix(`events`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`limit=${limit}`]).join('&')}`,function(eventData){
-                    var newVideos = applyDataListToVideos(videos,eventData.events || eventData)
+                    var theEvents = eventData.events || eventData;
+                    var newVideos = applyDataListToVideos(videos,theEvents)
                     newVideos = applyTimelapseFramesListToVideos(newVideos,timelapseFrames.frames || timelapseFrames,'timelapseFrames',true)
-                    $.each(newVideos,function(n,video){
-                        loadVideoData(video)
-                    })
+                    loadEventsData(theEvents)
+                    loadVideosData(newVideos)
                     if(callback)callback({videos: newVideos, frames: timelapseFrames});
                     resolve({videos: newVideos, frames: timelapseFrames})
                 })
@@ -622,6 +630,17 @@ async function unarchiveVideos(videos){
         var video = videos[i];
         await unarchiveVideo(video)
     }
+}
+function buildDefaultVideoMenuItems(file){
+    var href = file.href
+    return `
+    <li><a class="dropdown-item" href="${href}" download>${lang.Download}</a></li>
+    <li><a class="dropdown-item open-video" href="${href}">${lang.Play}</a></li>
+    <li><hr class="dropdown-divider"></li>
+    ${permissionCheck('video_delete',file.mid) ? `<li><a class="dropdown-item open-video-studio" href="${href}">${lang.Slice}</a></li>` : ``}
+    ${permissionCheck('video_delete',file.mid) ? `<li><a class="dropdown-item delete-video" href="${href}">${lang.Delete}</a></li>` : ``}
+    ${permissionCheck('video_delete',file.mid) ? `<li><a class="dropdown-item compress-video" href="${href}">${lang.Compress}</a></li>` : ``}
+`
 }
 onWebSocketEvent(function(d){
     switch(d.f){
