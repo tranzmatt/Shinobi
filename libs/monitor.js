@@ -92,6 +92,7 @@ module.exports = function(s,config,lang){
         })
     }
     s.sendMonitorStatus = function(e){
+        if(!e.status || !e.code)console.error(JSON.stringify(e),new Error());
         s.group[e.ke].activeMonitors[e.id].monitorStatus = `${e.status}`
         s.group[e.ke].activeMonitors[e.id].monitorStatusCode = `${e.code}`
         s.tx(Object.assign(e,{f:'monitor_status'}),'GRP_'+e.ke)
@@ -771,12 +772,6 @@ module.exports = function(s,config,lang){
                 s.group[e.ke].activeMonitors[e.id].spawn = s.ffmpeg(e)
             },3000)
         }
-        s.sendMonitorStatus({
-            id: e.id,
-            ke: e.ke,
-            status: e.wantedStatus,
-            code: e.wantedStatusCode
-        });
         //on unexpected exit restart
         if(s.group[e.ke].activeMonitors[e.id].spawn)attachMainProcessHandlers(e,fatalError)
         return s.group[e.ke].activeMonitors[e.id].spawn
@@ -1141,6 +1136,12 @@ module.exports = function(s,config,lang){
         activeMonitor.resetFatalErrorCountTimer = setTimeout(()=>{
             activeMonitor.errorFatalCount = 0
         },1000 * 60)
+        s.sendMonitorStatus({
+            id: e.id,
+            ke: e.ke,
+            status: lang.Starting,
+            code: 1
+        });
         //create host string without username and password
         var strippedHost = s.stripAuthFromHost(e)
         var doOnThisMachine = function(callback){
@@ -1255,6 +1256,21 @@ module.exports = function(s,config,lang){
                                     ){
                                         catchNewSegmentNames(e)
                                         cameraFilterFfmpegLog(e)
+                                    }
+                                    if(e.mode === 'record'){
+                                        s.sendMonitorStatus({
+                                            id: e.id,
+                                            ke: e.ke,
+                                            status: lang.Recording,
+                                            code: 3
+                                        });
+                                    }else{
+                                        s.sendMonitorStatus({
+                                            id: e.id,
+                                            ke: e.ke,
+                                            status: lang.Watching,
+                                            code: 2
+                                        });
                                     }
                                 }
                                 clearTimeout(activeMonitor.onMonitorStartTimer)
@@ -1656,11 +1672,7 @@ module.exports = function(s,config,lang){
                     activeMonitor.addStorageId = null
                 }
                 //set recording status
-                e.wantedStatus = lang.Watching
-                e.wantedStatusCode = 2
                 if(e.functionMode === 'record'){
-                    e.wantedStatus = lang.Recording
-                    e.wantedStatusCode = 3
                     activeMonitor.isRecording = true
                 }else{
                     activeMonitor.isRecording = false
