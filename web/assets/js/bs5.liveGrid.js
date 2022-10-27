@@ -173,18 +173,16 @@ function buildLiveGridBlock(monitor){
         data-mode="${monitor.mode}"
         class="monitor_item glM${monitor.mid} ${streamBlockInfo.gridBlockClass || ''}"
     >
-        <div class="grid-stack-item-content ui-draggable-handle">
-            <div class="stream-block no-padding mdl-card__media mdl-color-text--grey-50">
-                ${streamBlockInfo.streamBlockPreHtml || ''}
-                <div class="stream-objects"></div>
-                <div class="stream-hud">
-                    ${streamBlockInfo.streamBlockHudHtml || ''}
-                    <div class="controls">
-                        ${streamBlockInfo.streamBlockHudControlsHtml || ''}
-                    </div>
+        <div class="stream-block no-padding mdl-card__media mdl-color-text--grey-50">
+            ${streamBlockInfo.streamBlockPreHtml || ''}
+            <div class="stream-objects"></div>
+            <div class="stream-hud">
+                ${streamBlockInfo.streamBlockHudHtml || ''}
+                <div class="controls">
+                    ${streamBlockInfo.streamBlockHudControlsHtml || ''}
                 </div>
-                ${streamElement}
             </div>
+            ${streamElement}
         </div>
         ${(streamBlockInfo.gridBlockAfterContentHtml || '').replace(`$QUICKLINKS`,quickLinkHtml)}
         <div class="mdl-overlay-menu-backdrop hidden">
