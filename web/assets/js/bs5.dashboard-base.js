@@ -191,7 +191,6 @@ function formattedTime(time,twelveHourClock,utcConvert){
 
 function durationBetweenTimes(start,end){
     var duration = moment.duration(moment(end).diff(moment(start)));
-    console.log(duration)
     var hours = duration.asMinutes().toFixed(0);
     return hours
 }
@@ -929,11 +928,13 @@ function getSelectedTime(dateSelector){
     var dateRange = dateSelector.data('daterangepicker')
     var startDate = moment(convertTZ(dateRange.startDate.clone()._d, serverTimezone))
     var endDate = moment(convertTZ(dateRange.endDate.clone()._d, serverTimezone))
-    startDate = startDate.format('YYYY-MM-DDTHH:mm:ss')
-    endDate = endDate.format('YYYY-MM-DDTHH:mm:ss')
+    var stringStartDate = startDate.format('YYYY-MM-DDTHH:mm:ss')
+    var stringEndDate = endDate.format('YYYY-MM-DDTHH:mm:ss')
     return {
-        startDate: startDate,
-        endDate: endDate
+        startDateMoment: startDate,
+        endDateMoment: endDate,
+        startDate: stringStartDate,
+        endDate: stringEndDate
     }
 }
 function loadDateRangePicker(dateSelector,options){
