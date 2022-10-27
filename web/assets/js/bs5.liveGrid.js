@@ -160,6 +160,7 @@ function buildLiveGridBlock(monitor){
     var streamType = subStreamChannel ? monitorDetails.substream ? monitorDetails.substream.output.stream_type : 'hls' : monitorDetails.stream_type
     var streamElement = buildStreamElementHtml(streamType)
     var streamBlockInfo = definitions['Monitor Stream Window']
+    var wasLiveGridLogStreamOpenBefore = isLiveGridLogStreamOpenBefore(monitorId)
     if(!loadedLiveGrids[monitor.mid])loadedLiveGrids[monitor.mid] = {}
     var quickLinkHtml = ''
     $.each(streamBlockInfo.quickLinks,function(n,button){
@@ -171,18 +172,26 @@ function buildLiveGridBlock(monitor){
         data-ke="${monitor.ke}"
         data-mid="${monitor.mid}"
         data-mode="${monitor.mode}"
-        class="monitor_item glM${monitor.mid} ${streamBlockInfo.gridBlockClass || ''}"
+        class="monitor_item ${wasLiveGridLogStreamOpenBefore ? 'show_data' : ''} glM${monitor.mid} ${streamBlockInfo.gridBlockClass || ''}"
     >
-        <div class="stream-block no-padding mdl-card__media mdl-color-text--grey-50">
-            ${streamBlockInfo.streamBlockPreHtml || ''}
-            <div class="stream-objects"></div>
-            <div class="stream-hud">
-                ${streamBlockInfo.streamBlockHudHtml || ''}
-                <div class="controls">
-                    ${streamBlockInfo.streamBlockHudControlsHtml || ''}
+        <div style="height:100%" class="d-flex">
+            <div class="stream-block no-padding mdl-card__media mdl-color-text--grey-50 ${wasLiveGridLogStreamOpenBefore ? 'col-md-6' : 'col-md-12'}">
+                ${streamBlockInfo.streamBlockPreHtml || ''}
+                <div class="stream-objects"></div>
+                <div class="stream-hud">
+                    ${streamBlockInfo.streamBlockHudHtml || ''}
+                    <div class="controls">
+                        ${streamBlockInfo.streamBlockHudControlsHtml || ''}
+                    </div>
+                </div>
+                ${streamElement}
+            </div>
+            <div class="mdl-data_window ${wasLiveGridLogStreamOpenBefore ? 'col-md-6' : 'col-md-12'}">
+                <div class="d-flex flex-row" style="height: 100%;">
+                    <div class="data-menu col-md-6 p-2 videos-mini scrollable"></div>
+                    <div class="data-menu col-md-6 p-2 logs scrollable"></div>
                 </div>
             </div>
-            ${streamElement}
         </div>
         ${(streamBlockInfo.gridBlockAfterContentHtml || '').replace(`$QUICKLINKS`,quickLinkHtml)}
         <div class="mdl-overlay-menu-backdrop hidden">
@@ -260,6 +269,15 @@ function updateAllLiveGridElementsHeightWidth(monitorId){
         updateLiveGridElementHeightWidth(monitorId)
     })
 }
+function setLiveGridLogStreamOpenStatus(monitorId,toggleOn){
+    var liveGridLogStreams = dashboardOptions().liveGridLogStreams || {}
+    liveGridLogStreams[monitorId] = toggleOn ? true : false
+    dashboardOptions('liveGridLogStreams',liveGridLogStreams)
+}
+function isLiveGridLogStreamOpenBefore(monitorId){
+    var liveGridLogStreams = dashboardOptions().liveGridLogStreams || {}
+    return liveGridLogStreams[monitorId]
+}
 function drawLiveGridBlock(monitorConfig,subStreamChannel){
     var monitorId = monitorConfig.mid
     if($('#monitor_live_' + monitorId).length === 0){
@@ -271,6 +289,7 @@ function drawLiveGridBlock(monitorConfig,subStreamChannel){
         var isSmallMobile = isMobile || window.innerWidth <= 812;
         var html = buildLiveGridBlock(monitorConfig)
         var monitorOrderEngaged = dashboardOptions().switches.monitorOrder === 1;
+        var wasLiveGridLogStreamOpenBefore = isLiveGridLogStreamOpenBefore(monitorId)
         if(monitorOrderEngaged && $user.details.monitorOrder && $user.details.monitorOrder[monitorConfig.ke+''+monitorId]){
             var saved = $user.details.monitorOrder[monitorConfig.ke+''+monitorId];
             x = saved.x;
@@ -312,6 +331,9 @@ function drawLiveGridBlock(monitorConfig,subStreamChannel){
     }
     initiateLiveGridPlayer(loadedMonitors[monitorId],subStreamChannel)
     attachVideoElementErrorHandler(monitorId)
+    if(wasLiveGridLogStreamOpenBefore){
+        loadVideoMiniList(monitorId)
+    }
 }
 function initiateLiveGridPlayer(monitor,subStreamChannel){
     var livePlayerElement = loadedLiveGrids[monitor.mid]
@@ -904,12 +926,14 @@ $(document).ready(function(e){
         var monitorId = monitorItem.attr('data-mid')
         monitorItem.toggleClass('show_data')
         var dataBlocks = monitorItem.find('.stream-block,.mdl-data_window')
-        if(monitorItem.hasClass('show_data')){
+        var openMonitorLogs = monitorItem.hasClass('show_data')
+        if(openMonitorLogs){
             loadVideoMiniList(monitorId)
             dataBlocks.addClass('col-md-6').removeClass('col-md-12')
         }else{
             dataBlocks.addClass('col-md-12').removeClass('col-md-6')
         }
+        setLiveGridLogStreamOpenStatus(monitorId,openMonitorLogs)
     })
     .on('click','.toggle-live-grid-monitor-ptz-controls',function(){
         var monitorItem = $(this).parents('[data-mid]').attr('data-mid')

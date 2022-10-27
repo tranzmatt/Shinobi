@@ -7447,12 +7447,6 @@ module.exports = function(s,config,lang){
                   </div>
                    <div><span class="monitor_name">$MONITOR_NAME</span></div>
                </div>
-           </div>
-           <div class="mdl-data_window pull-right">
-               <div class="d-flex flex-row" style="height: 100%;">
-                   <div class="data-menu col-md-6 p-2 videos-mini scrollable"></div>
-                   <div class="data-menu col-md-6 p-2 logs scrollable"></div>
-               </div>
            </div>`,
            quickLinks: {
                "Options": {
