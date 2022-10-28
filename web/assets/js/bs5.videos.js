@@ -273,7 +273,7 @@ function createVideoRow(row,classOverride){
     if(row.events && row.events.length > 0){
         $.each(row.events,function(n,theEvent){
             var leftPercent = getPercentOfTimePositionFromVideo(row,theEvent)
-            eventMatrixHtml += `<div class="video-time-needle video-time-needle-event" style="left:${leftPercent}%"></div>`
+            eventMatrixHtml += `<div title="Event at ${theEvent.time}" class="video-time-needle video-time-needle-event" style="left:${leftPercent}%"></div>`
         })
     }
     var videoEndpoint = getApiPrefix(`videos`) + '/' + row.mid + '/' + row.filename
@@ -307,7 +307,6 @@ function createVideoRow(row,classOverride){
             </div>
             <div class="video-time-strip card-footer p-0">
                 ${eventMatrixHtml}
-                <div class="video-time-needle video-time-needle-seeker" style="z-index: 2"></div>
             </div>
         </div>
     </div>`
