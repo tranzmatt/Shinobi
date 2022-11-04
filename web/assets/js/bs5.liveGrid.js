@@ -619,20 +619,18 @@ function closeLiveGridPlayer(monitorId,killElement){
             $.each(onLiveStreamCloseExtensions,function(n,extender){
                 extender(loadedPlayer)
             })
+            clearInterval(loadedPlayer.signal)
         }
-        if(liveGridElements[monitorId])revokeVideoPlayerUrl(monitorId)
-        clearInterval(loadedPlayer.signal)
-    }catch(err){
-        console.log(err)
-    }
-    try{
-        if(killElement){
-            var livePlayerElement = liveGridElements[monitorId]
-            var theElement = livePlayerElement.monitorItem.parents('.grid-stack-item')[0]
-            getLiveGridData().removeWidget(theElement, true)
-            setLiveGridOpenCount(-1)
-            delete(loadedLiveGrids[monitorId])
-            delete(liveGridElements[monitorId])
+        if(liveGridElements[monitorId]){
+            revokeVideoPlayerUrl(monitorId)
+            if(killElement){
+                var livePlayerElement = liveGridElements[monitorId]
+                var theElement = livePlayerElement.monitorItem.parents('.grid-stack-item')[0]
+                getLiveGridData().removeWidget(theElement, true)
+                setLiveGridOpenCount(-1)
+                delete(loadedLiveGrids[monitorId])
+                delete(liveGridElements[monitorId])
+            }
         }
     }catch(err){
         console.log(err)
