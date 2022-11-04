@@ -114,9 +114,9 @@ function attachVideoElementErrorHandler(monitorId){
         ){
             var streamBlock = liveGridElements[monitorId].streamElement
             streamBlock[0].onerror = function(){
-                setTimeout(function(){
-                    mainSocket.f({f:'monitor',ff:'watch_on',id:monitorId})
-                },2000)
+                // setTimeout(function(){
+                //     mainSocket.f({f:'monitor',ff:'watch_on',id:monitorId})
+                // },2000)
             }
         }
     }catch(err){
@@ -405,9 +405,9 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
             setTimeout(function(){
                 var stream = containerElement.find('.stream-element');
                 var onPoseidonError = function(){
-                    setTimeout(function(){
-                        mainSocket.f({f:'monitor',ff:'watch_on',id:monitorId})
-                    },2000)
+                    // setTimeout(function(){
+                    //     mainSocket.f({f:'monitor',ff:'watch_on',id:monitorId})
+                    // },2000)
                 }
                 if(!loadedPlayer.PoseidonErrorCount)loadedPlayer.PoseidonErrorCount = 0
                 if(loadedPlayer.PoseidonErrorCount >= 5)return
