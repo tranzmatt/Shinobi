@@ -216,3 +216,8 @@ img.circle-img,div.circle-img{border-radius:50%;height:50px;width:50px}
     inset: 0!important;
     overflow-y: hidden!important;
 }
+
+.detector_triggered {
+    border: 2px solid red;
+    animation: border-pulsate-died 2s infinite;
+}

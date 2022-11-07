@@ -1021,6 +1021,7 @@ $(document).ready(function(e){
             },1000)
         })
     });
+    var dontShowDetectionSelectionOnStart = dashboardOptions().dontShowDetection != 1
     liveGridData = GridStack.init();
     liveGridData
     .on('dragstop', function(event,ui){
@@ -1142,12 +1143,17 @@ $(document).ready(function(e){
                         liveGridElement.motionMeter.css('width',eventConfidence + '%');
                         liveGridElement.motionMeterText[0].innerHtml = d.details.confidence+'% change in <b>'+d.details.name+'</b>'
                     }
-                    monitorElement.addClass('detector_triggered')
                     clearTimeout(livePlayerElement.detector_trigger_timeout);
                     livePlayerElement.detector_trigger_timeout = setTimeout(function(){
-                        monitorElement.removeClass('detector_triggered');
                         liveGridElement.eventObjects.find('.stream-detected-object,.stream-detected-point').remove()
                     },800);
+                    if(dontShowDetectionSelectionOnStart){
+                        monitorElement.addClass('detector_triggered')
+                        clearTimeout(livePlayerElement.detector_trigger_ui_indicator_timeout);
+                        livePlayerElement.detector_trigger_ui_indicator_timeout = setTimeout(function(){
+                            monitorElement.removeClass('detector_triggered');
+                        },1000 * 15);
+                    }
                     playAudioAlert()
                     var monitorPop = monitorPops[monitorId]
                     if($user.details.event_mon_pop === '1' && (!monitorPop || monitorPop.closed === true)){
