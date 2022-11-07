@@ -8282,6 +8282,12 @@ module.exports = function(s,config,lang){
                                 "icon": `refresh`,
                                 "btnContent": `${lang['Refresh']}`,
                             },
+                            {
+                                "fieldType": "btn",
+                                "class": `btn-danger fill delete-selected mb-3`,
+                                "icon": `trash-o`,
+                                "btnContent": `${lang['Delete Selected']}`,
+                            },
                         ],
                      },
                      {
