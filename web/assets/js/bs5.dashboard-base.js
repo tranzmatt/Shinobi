@@ -72,6 +72,11 @@ function base64ArrayBuffer(arrayBuffer) {
 
       return base64
 }
+function stringContains(find,string,toLowerCase){
+    var newString = string + ''
+    if(toLowerCase)newString = newString.toLowerCase()
+    return newString.indexOf(find) > -1
+}
 function getLocationPathName(){
     return location.pathname.endsWith('/') ? location.pathname : location.pathname + '/'
 }
