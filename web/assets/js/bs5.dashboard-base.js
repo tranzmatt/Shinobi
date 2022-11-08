@@ -944,8 +944,8 @@ function getSelectedTime(dateSelector){
 }
 function loadDateRangePicker(dateSelector,options){
     dateSelector.daterangepicker(Object.assign({
-        startDate: moment().utc().subtract(2, 'days'),
-        endDate: moment().utc(),
+        startDate: moment().subtract(moment.duration("24:00:00")),
+        endDate: moment().add(moment.duration("24:00:00")),
         timePicker: true,
         locale: {
             format: 'YYYY/MM/DD hh:mm:ss A'
