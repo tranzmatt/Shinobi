@@ -18,7 +18,7 @@
     "cws": "^2.0.0",
     "express": "^4.16.2",
     "socket.io": "^4.4.1",
-    "socket.io-client": "^4.4.1"
+    "socket.io-client": "^4.5.3"
   },
   "devDependencies": {},
   "bin": "shinobi-tensorflow.js",
