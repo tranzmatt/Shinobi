@@ -7447,12 +7447,6 @@ module.exports = function(s,config,lang){
                   </div>
                    <div><span class="monitor_name">$MONITOR_NAME</span></div>
                </div>
-           </div>
-           <div class="mdl-data_window pull-right">
-               <div class="d-flex flex-row" style="height: 100%;">
-                   <div class="data-menu col-md-6 p-2 videos-mini scrollable"></div>
-                   <div class="data-menu col-md-6 p-2 logs scrollable"></div>
-               </div>
            </div>`,
            quickLinks: {
                "Options": {
@@ -8287,6 +8281,12 @@ module.exports = function(s,config,lang){
                                 "class": `btn-success fill refresh-data mb-3`,
                                 "icon": `refresh`,
                                 "btnContent": `${lang['Refresh']}`,
+                            },
+                            {
+                                "fieldType": "btn",
+                                "class": `btn-danger fill delete-selected mb-3`,
+                                "icon": `trash-o`,
+                                "btnContent": `${lang['Delete Selected']}`,
                             },
                         ],
                      },

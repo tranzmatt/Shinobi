@@ -39,6 +39,16 @@ $(document).ready(function(e){
                 pagination: true,
                 search: true,
                 columns: [
+                    {
+                      field: 'mid',
+                      title: '',
+                      checkbox: true,
+                      formatter: () => {
+                          return {
+                              checked: false
+                          }
+                      },
+                    },
                       {
                         field: 'monitorName',
                         title: lang['Monitor']
@@ -65,6 +75,7 @@ $(document).ready(function(e){
                     var isVideo = file.name.includes('.mp4') || file.name.includes('.webm')
                     return {
                         monitorName: `<b>${loadedMonitors[file.mid]?.name || file.mid}</b>`,
+                        mid: file.mid,
                         name: file.name,
                         time: `
                             <div><b>${lang.Created}</b> ${formattedTime(file.time, 'DD-MM-YYYY hh:mm:ss AA')}</div>
@@ -117,10 +128,28 @@ $(document).ready(function(e){
         })
     }
     async function deleteFiles(videos){
-        for (let i = 0; i < videos.length; i++) {
-            var video = videos[i];
-            await deleteFile(video)
+        try{
+            for (let i = 0; i < videos.length; i++) {
+                var video = videos[i];
+                await deleteFile(video)
+            }
+            return {ok: true}
+        }catch(err){
+            console.err(err)
+            return {ok: false}
         }
+    }
+    function getSelectedRows(){
+        var rowsSelected = []
+        fileBinDrawArea.find('[name="btSelectItem"]:checked').each(function(n,checkbox){
+            var rowInfo = $(checkbox).parents('tr').find('.row-info')
+            var monitorId = rowInfo.attr('data-mid')
+            var groupKey = rowInfo.attr('data-ke')
+            var filename = rowInfo.attr('data-name')
+            var file = loadedFilesInMemory[`${monitorId}${filename}`]
+            if(file)rowsSelected.push(file)
+        })
+        return rowsSelected
     }
     $('body')
     .on('click','.open-fileBin-video',function(e){
@@ -173,6 +202,34 @@ $(document).ready(function(e){
             },
             clickCallback: function(){
                 deleteFile(file).then(function(data){
+                    if(data.ok){
+                        drawFileBinViewElements()
+                    }
+                })
+            }
+        });
+        return false;
+    })
+    .on('click','.delete-selected',function(e){
+        e.preventDefault()
+        var videosSelected = getSelectedRows()
+        if(videosSelected.length === 0){
+            new PNotify({
+                title: lang['Nothing Selected'],
+                text: lang.makeASelection,
+                type: 'error'
+            });
+            return
+        }
+        $.confirm.create({
+            title: lang["Delete Files"],
+            body: `${lang.DeleteTheseMsg}`,
+            clickOptions: {
+                title: '<i class="fa fa-trash-o"></i> ' + lang.Delete,
+                class: 'btn-danger btn-sm'
+            },
+            clickCallback: function(){
+                deleteFiles(videosSelected).then(function(data){
                     if(data.ok){
                         drawFileBinViewElements()
                     }

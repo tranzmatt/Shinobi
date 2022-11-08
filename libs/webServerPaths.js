@@ -222,7 +222,11 @@ module.exports = function(s,config,lang,app,io){
                 delete(s.failedLoginAttempts[req.body.mail])
             }
             if(req.query.json=='true'){
-                delete(data.config)
+                delete(data.config);
+                delete(data.__dirname);
+                delete(data.customAutoLoad);
+                delete(data.fs);
+                data.timezone = config.timezone
                 data.ok = true;
                 res.setHeader('Content-Type', 'application/json');
                 res.end(s.prettyPrint(data))

@@ -72,6 +72,11 @@ function base64ArrayBuffer(arrayBuffer) {
 
       return base64
 }
+function stringContains(find,string,toLowerCase){
+    var newString = string + ''
+    if(toLowerCase)newString = newString.toLowerCase()
+    return newString.indexOf(find) > -1
+}
 function getLocationPathName(){
     return location.pathname.endsWith('/') ? location.pathname : location.pathname + '/'
 }
@@ -191,7 +196,6 @@ function formattedTime(time,twelveHourClock,utcConvert){
 
 function durationBetweenTimes(start,end){
     var duration = moment.duration(moment(end).diff(moment(start)));
-    console.log(duration)
     var hours = duration.asMinutes().toFixed(0);
     return hours
 }
@@ -929,17 +933,19 @@ function getSelectedTime(dateSelector){
     var dateRange = dateSelector.data('daterangepicker')
     var startDate = moment(convertTZ(dateRange.startDate.clone()._d, serverTimezone))
     var endDate = moment(convertTZ(dateRange.endDate.clone()._d, serverTimezone))
-    startDate = startDate.format('YYYY-MM-DDTHH:mm:ss')
-    endDate = endDate.format('YYYY-MM-DDTHH:mm:ss')
+    var stringStartDate = startDate.format('YYYY-MM-DDTHH:mm:ss')
+    var stringEndDate = endDate.format('YYYY-MM-DDTHH:mm:ss')
     return {
-        startDate: startDate,
-        endDate: endDate
+        startDateMoment: startDate,
+        endDateMoment: endDate,
+        startDate: stringStartDate,
+        endDate: stringEndDate
     }
 }
 function loadDateRangePicker(dateSelector,options){
     dateSelector.daterangepicker(Object.assign({
-        startDate: moment().utc().subtract(2, 'days'),
-        endDate: moment().utc(),
+        startDate: moment().subtract(moment.duration("24:00:00")),
+        endDate: moment().add(moment.duration("24:00:00")),
         timePicker: true,
         locale: {
             format: 'YYYY/MM/DD hh:mm:ss A'

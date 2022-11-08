@@ -263,48 +263,50 @@ function getPercentOfTimePositionFromVideo(video,theEvent){
     return percentChanged
 }
 function createVideoRow(row,classOverride){
+    var objectTagsHtml = ``
     var eventMatrixHtml = ``
+    if(row.objects && row.objects.length > 0){
+        $.each(row.objects.split(','),function(n,objectTag){
+            eventMatrixHtml += `<span class="badge badge-primary badge-sm">${objectTag}</span>`
+        })
+    }
     if(row.events && row.events.length > 0){
         $.each(row.events,function(n,theEvent){
             var leftPercent = getPercentOfTimePositionFromVideo(row,theEvent)
-            eventMatrixHtml += `<div class="video-time-needle video-time-needle-event" style="left:${leftPercent}%"></div>`
+            eventMatrixHtml += `<div title="Event at ${theEvent.time}" class="video-time-needle video-time-needle-event" style="left:${leftPercent}%"></div>`
         })
     }
     var videoEndpoint = getApiPrefix(`videos`) + '/' + row.mid + '/' + row.filename
     return `
     <div class="video-row ${classOverride ? classOverride : `col-md-12 col-lg-6 mb-3`} search-row" data-mid="${row.mid}" data-time="${row.time}" data-time-formed="${new Date(row.time)}">
         <div class="video-time-card shadow-lg px-0 btn-default">
-            <div class="card-header d-flex flex-row">
-                <div class="flex-grow-1 ${definitions.Theme.isDark ? 'text-white' : ''}">
-                    ${loadedMonitors[row.mid] ? loadedMonitors[row.mid].name : row.mid}
+            <div class="card-header">
+                <div class="${definitions.Theme.isDark ? 'text-white' : ''}">
+                    ${moment(row.time).fromNow()}
                 </div>
-                <div>
-                    <a class="badge btn btn-primary open-video mr-1" title="${lang['Watch']}"><i class="fa fa-play-circle"></i></a>
+                <small class="text-muted">~${durationBetweenTimes(row.time,row.end)} ${lang.Minutes}</small>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <a class="badge btn btn-primary open-video" title="${lang['Watch']}"><i class="fa fa-play-circle"></i></a>
                     <a class="badge btn btn-success" download href="${videoEndpoint}" title="${lang['Download']}"><i class="fa fa-download"></i></a>
                     <a class="badge btn btn-danger delete-video" title="${lang['Delete']}"><i class="fa fa-trash-o"></i></a>
                 </div>
-            </div>
-            <div class="video-time-img">
-                <div class="card-body">
-                    <div title="${row.time}" class="d-flex flex-row">
-                        <div class="flex-grow-1">
-                            ${moment(row.time).fromNow()}
-                        </div>
-                        <div>
-                            <small class="text-muted">~${durationBetweenTimes(row.time,row.end)} ${lang.Minutes}</small>
-                        </div>
+                <div title="${row.time}" class="border-bottom-dotted border-bottom-dark mb-2">
+                    <div>
+                        <div title="${row.time}"><small class="text-muted">${lang.Started} : ${formattedTime(row.time,true)}</small></div>
+                        <div title="${row.end}"><small class="text-muted">${lang.Ended} : ${formattedTime(row.end,true)}</small></div>
                     </div>
-                    <div title="${row.time}" class="d-flex flex-row border-bottom-dotted border-bottom-dark mb-2">
-                        <div>
-                            <div title="${row.time}"><small class="text-muted">${lang.Started} : ${formattedTime(row.time,true)}</small></div>
-                            <div title="${row.end}"><small class="text-muted">${lang.Ended} : ${formattedTime(row.end,true)}</small></div>
-                        </div>
-                    </div>
+                    <small>
+                        ${loadedMonitors[row.mid] ? loadedMonitors[row.mid].name : row.mid}
+                    </small>
+                </div>
+                <div class="mb-2">
+                    ${objectTagsHtml}
                 </div>
             </div>
             <div class="video-time-strip card-footer p-0">
                 ${eventMatrixHtml}
-                <div class="video-time-needle video-time-needle-seeker" style="z-index: 2"></div>
             </div>
         </div>
     </div>`
@@ -631,11 +633,12 @@ async function unarchiveVideos(videos){
         await unarchiveVideo(video)
     }
 }
-function buildDefaultVideoMenuItems(file){
+function buildDefaultVideoMenuItems(file,options){
     var href = file.href
+    options = options ? options : {play: true}
     return `
     <li><a class="dropdown-item" href="${href}" download>${lang.Download}</a></li>
-    <li><a class="dropdown-item open-video" href="${href}">${lang.Play}</a></li>
+    ${options.play ? `<li><a class="dropdown-item open-video" href="${href}">${lang.Play}</a></li>` : ``}
     <li><hr class="dropdown-divider"></li>
     ${permissionCheck('video_delete',file.mid) ? `<li><a class="dropdown-item open-video-studio" href="${href}">${lang.Slice}</a></li>` : ``}
     ${permissionCheck('video_delete',file.mid) ? `<li><a class="dropdown-item delete-video" href="${href}">${lang.Delete}</a></li>` : ``}

@@ -70,19 +70,23 @@ $(document).ready(function(e){
         })
         powerVideoMonitorsListElement.html(html)
     }
+    function getVideoSetSelected(){
+        return powerVideoSet.val()
+    }
     async function requestTableData(monitorId){
         var dateRange = getSelectedTime(dateSelector)
         var searchQuery = objectTagSearchField.val() || null
         var startDate = dateRange.startDate
         var endDate = dateRange.endDate
-        // var wantsArchivedVideo = getVideoSetSelected() === 'archive'
+        var wantsCloudVideo = getVideoSetSelected() === 'cloud'
+        var wantsArchivedVideo = getVideoSetSelected() === 'archive'
         var videos = (await getVideos({
             monitorId,
             startDate,
             endDate,
             searchQuery,
-            // archived: wantsArchivedVideo,
-            customVideoSet: powerVideoSet.val() || null,
+            archived: wantsArchivedVideo,
+            customVideoSet: wantsCloudVideo ? 'cloudVideos' : 'videos',
         })).videos;
         var events = ([]).concat(...videos.map(row => row.events || []));
         loadVideosToTimeLineMemory(monitorId,videos,events)

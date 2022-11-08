@@ -60,7 +60,16 @@ $(document).ready(function(){
                                   <div class="btn-group btn-group-justified">
                                         <a class="btn btn-sm btn-success" download href="${videoUrl}"><i class="fa fa-download"></i> ${lang.Download}</a>
                                         ${permissionCheck('video_delete',video.mid) ? `<a class="btn btn-sm btn-danger delete-video"><i class="fa fa-trash-o"></i> ${lang.Delete}</a>` : ''}
-                                        ${permissionCheck('video_delete',video.mid) ? `<a class="btn btn-sm btn-${video.archive === 1 ? `success status-archived` : `default`} archive-video" title="${lang.Archive}"><i class="fa fa-${video.archive === 1 ? `lock` : `unlock-alt`}"></i> <span>${video.archive === 1 ? lang.Unarchive : lang.Archive}</span></a>` : ''}
+                                        <div class="dropdown d-inline-block">
+                                            <a class="btn btn-sm btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
+                                              <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
+                                            </a>
+                                            <ul class="dropdown-menu ${definitions.Theme.isDark ? 'dropdown-menu-dark bg-dark' : ''} shadow-lg">
+                                                ${buildDefaultVideoMenuItems(video,{
+                                                    play: false
+                                                })}
+                                            </ul>
+                                        </div>
                                   </div>
                               </div>
                           </div>

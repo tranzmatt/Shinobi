@@ -114,7 +114,7 @@
 .data-menu.logs{list-style:none;}
 .monitor_item .motionVision{display:none}
 
-.monitor_item .grid-stack-item-content{width:100%!important;left:0!important;right:0!important;height:100%;}
+/* .monitor_item .grid-stack-item-content{width:100%!important;left:0!important;right:0!important;height:100%;} */
 .monitor_item .ui-resizable-se {bottom: 10px!important;}
 .monitor_item .stream-block{position: relative;text-align: center}
 .monitor_item .mdl-data_window{overflow-x: auto;background:rgba(0,0,0,0.7);color:#fff;height:100%}
@@ -126,7 +126,7 @@
 .monitor_item .stream-element{border: 0;object-fit: fill;height: 100%;width:100%}
 .monitor_item{position:relative;padding:0;transition:none;background:#000;height:100%;}
 .monitor_item .mdl-card{min-height:auto;border:1px solid #272727;border-radius:0px;overflow:hidden}
-.monitor_item .mdl-card__media{height:100%;position:relative;padding:0!important;display:block!important;background:#000;}
+.monitor_item .mdl-card__media{height:100%;position:relative;padding:0!important;display:inline-block!important;background:#000;}
 .monitor_item.selected .stream-element{height:600px}
 .monitor_item.selected .fa-expand:before{content:"\f066"}
 .monitor_item .mdl-card__supporting-text{background:#222;color:#fff!important;display:block;min-height:auto!important}
@@ -212,6 +212,12 @@ img.circle-img,div.circle-img{border-radius:50%;height:50px;width:50px}
 .dont-stretch-monitors .monitor_item .stream-element {
     object-fit: contain!important;
 }
-.grid-stack-instance-1 > .grid-stack-item > .grid-stack-item-content {
+.grid-stack-item > .grid-stack-item-content {
     inset: 0!important;
+    overflow-y: hidden!important;
+}
+
+.detector_triggered {
+    border: 2px solid red;
+    animation: border-pulsate-died 2s infinite;
 }

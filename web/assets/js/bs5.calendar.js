@@ -5,9 +5,6 @@ $(document).ready(function(e){
     var dateSelector = theEnclosure.find('.date_selector')
     var calendarDrawArea = $('#calendar_draw_area')
     var loadedVideosInMemory = {};
-    var openCalendarView = function(monitorId,startDate,endDate){
-        drawCalendarViewElements(monitorId,startDate,endDate)
-    }
     loadDateRangePicker(dateSelector,{
         onChange: function(start, end, label) {
             drawCalendarViewElements()
@@ -16,7 +13,7 @@ $(document).ready(function(e){
     monitorsList.change(function(){
         drawCalendarViewElements()
     })
-    var drawCalendarViewElements = function(selectedMonitor,startDate,endDate){
+    function drawCalendarViewElements(selectedMonitor,startDate,endDate){
         var dateRange = getSelectedTime(dateSelector)
         if(!startDate)startDate = dateRange.startDate
         if(!endDate)endDate = dateRange.endDate
@@ -50,7 +47,7 @@ $(document).ready(function(e){
                     center: 'title',
                     right: 'month,agendaWeek,agendaDay,listWeek'
                 },
-                defaultDate: moment(startDate).format('YYYY-MM-DD'),
+                defaultDate: dateRange.startDateMoment.format('YYYY-MM-DD'),
                 locale: ($user.details.lang || '').substring(0, 2) || undefined,
                 navLinks: true,
                 eventLimit: true,
