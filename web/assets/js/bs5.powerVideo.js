@@ -131,7 +131,7 @@ $(document).ready(function(e){
             chartData.push({
                 group: loadedTableGroupIds[monitorId],
                 content: `<div timeline-video-file="${video.mid}${video.time}">
-                    ${video.time}
+                    ${formattedTime(video.time, 'hh:mm:ss AA, DD-MM-YYYY')}
                     <div class="progress">
                         <div class="progress-bar progress-bar-danger" role="progressbar" style="width:0%;"><span></span></div>
                     </div>
