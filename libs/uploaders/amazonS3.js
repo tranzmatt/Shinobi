@@ -71,13 +71,18 @@ module.exports = function(s,config,lang){
         if(videoDetails.type !== 's3'){
             return
         }
-        s.group[e.ke].aws_s3.deleteObject({
-            Bucket: s.group[e.ke].init.aws_s3_bucket,
-            Key: videoDetails.location,
-        }, function(err, data) {
-            if (err) console.log(err);
+        try{
+            s.group[video.ke].aws_s3.deleteObject({
+                Bucket: s.group[video.ke].init.aws_s3_bucket,
+                Key: videoDetails.location,
+            }, function(err, data) {
+                if (err) console.log(err);
+                callback()
+            });
+        }catch(err){
+            console.log('Amazon S3 DELETE Error',err)
             callback()
-        });
+        }
     }
     function uploadVideo(e,k){
         //e = video object
