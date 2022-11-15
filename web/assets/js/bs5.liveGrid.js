@@ -304,6 +304,7 @@ function drawLiveGridBlock(monitorConfig,subStreamChannel){
             w: isSmallMobile ? 4 :  width,// !monitorOrderEngaged
             content: html
         });
+        if(isMobile)liveGridData.disable();
         var theBlock = $('#monitor_live_' + monitorId);
         var streamElement = theBlock.find('.stream-element')
         liveGridElements[monitorId] = {
