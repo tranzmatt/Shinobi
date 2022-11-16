@@ -59,7 +59,6 @@ module.exports = function(s,config,lang,app,io){
     const deletePath = (deletionPath,callback) => {
         if(fs.existsSync(deletionPath)){
             fs.rm(deletionPath,() => {
-                s.file('delete',deletionPath)
                 if(callback)callback()
             })
         }else{
@@ -156,7 +155,6 @@ module.exports = function(s,config,lang,app,io){
                 fs.readFile(oldImagePath,(err,data) => {
                     fs.writeFile(newImagePath,data,() => {
                         fs.rm(oldImagePath,() => {
-                            s.file('delete',oldImagePath)
                             if(req.query.websocketResponse){
                                 sendDataToConnectedSuperUsers({
                                     f:'faceManagerImageDeleted',
