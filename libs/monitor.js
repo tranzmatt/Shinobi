@@ -191,7 +191,7 @@ module.exports = function(s,config,lang){
                                  screenShot: buffer,
                                  isStaticFile: false
                              })
-                             fs.unlink(temporaryImageFile,function(){})
+                             fs.rm(temporaryImageFile,function(){})
                          }else{
                              resolve({
                                  screenShot: null,

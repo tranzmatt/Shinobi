@@ -251,7 +251,7 @@ module.exports = function(s,config,lang){
                                 s.systemLog(lang['File Delete Error'] + ' : '+e.ke+' : '+' : '+e.id,err)
                             }
                         })
-                        fs.unlink(e.dir+filename,function(err){
+                        fs.rm(e.dir+filename,function(err){
                             fs.stat(e.dir+filename,function(err){
                                 if(!err){
                                     s.file('delete',e.dir+filename)
@@ -309,7 +309,7 @@ module.exports = function(s,config,lang){
                     }else{
                         s.setDiskUsedForGroup(video.ke,-(video.size / 1048576))
                     }
-                    fs.unlink(video.dir + filename,function(err){
+                    fs.rm(video.dir + filename,function(err){
                         fs.stat(video.dir + filename,function(err){
                             if(!err){
                                 s.file('delete',video.dir + filename)

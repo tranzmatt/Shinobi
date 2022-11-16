@@ -150,7 +150,6 @@ module.exports = (s,config,lang) => {
         var completedCheck = 0
         if(files){
             files.forEach(function(file){
-
                 var dir = s.getFileBinDirectory(file)
                 s.debugLog(`deleting FileBin File`,`${file}`,dir)
                 var fileLocationMid = `${dir}` + file.name

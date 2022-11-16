@@ -59,7 +59,7 @@ module.exports = async (s,config,lang,onFinish) => {
                 //clean the string of spatial impurities and split for spawn()
                 const ffmpegCommandParsed = splitForFFPMEG(ffmpegCommandString)
                 try{
-                    fs.unlinkSync(e.sdir + 'cmd.txt')
+                    fs.rmSync(e.sdir + 'cmd.txt')
                 }catch(err){
 
                 }

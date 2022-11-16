@@ -58,7 +58,7 @@ module.exports = function(s,config,lang,app,io){
     }
     const deletePath = (deletionPath,callback) => {
         if(fs.existsSync(deletionPath)){
-            fs.unlink(deletionPath,() => {
+            fs.rm(deletionPath,() => {
                 s.file('delete',deletionPath)
                 if(callback)callback()
             })
@@ -155,7 +155,7 @@ module.exports = function(s,config,lang,app,io){
             if(fileExists){
                 fs.readFile(oldImagePath,(err,data) => {
                     fs.writeFile(newImagePath,data,() => {
-                        fs.unlink(oldImagePath,() => {
+                        fs.rm(oldImagePath,() => {
                             s.file('delete',oldImagePath)
                             if(req.query.websocketResponse){
                                 sendDataToConnectedSuperUsers({
