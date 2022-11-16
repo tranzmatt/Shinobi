@@ -47,7 +47,7 @@ module.exports = function(s){
     if(config.probeMonitorOnStart === undefined){config.probeMonitorOnStart = true}
     if(config.showLoginTypeSelector === undefined){config.showLoginTypeSelector = true}
     if(config.timezone === undefined){config.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone}
-    if(config.diskSpaceDivisor === undefined){config.diskSpaceDivisor = config.diskSpaceDivisor}
+    if(config.diskSpaceDivisor === undefined){config.diskSpaceDivisor = 1048576}
     //Child Nodes
     if(config.childNodes === undefined)config.childNodes = {};
         //enabled
