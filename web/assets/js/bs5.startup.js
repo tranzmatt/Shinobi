@@ -157,7 +157,7 @@ onWebSocketEvent(function (d){
             var totalRAM = d.os.totalmem
             cpuIndicator.find('.os_cpuCount').text(coreCount)
             cpuIndicator.find('.os_platform').text(operatingSystem)
-            ramIndicatorUsed.attr('title',`Total : ${(totalRAM/1048576).toFixed(2)}`)
+            ramIndicatorUsed.attr('title',`Total : ${(totalRAM / diskSpaceDivisor).toFixed(2)}`)
             if(d.os.cpuCount > 1){
                 cpuIndicator.find('.os_cpuCount_trailer').html('s')
             }

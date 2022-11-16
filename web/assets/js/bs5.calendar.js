@@ -29,7 +29,7 @@ $(document).ready(function(e){
                     loadedVideosInMemory[`${v.mid}${v.time}`] = Object.assign({},v)
                     var loadedMonitor = loadedMonitors[v.mid]
                     if(loadedMonitor){
-                        v.title = loadedMonitor.name+' - '+(parseInt(v.size)/1048576).toFixed(2)+'mb';
+                        v.title = loadedMonitor.name+' - '+(parseInt(v.size) / diskSpaceDivisor).toFixed(2)+'mb';
                     }
                     v.start = moment.utc(v.time).local()
                     v.end = moment.utc(v.end).local()

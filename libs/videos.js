@@ -131,7 +131,7 @@ module.exports = function(s,config,lang){
             k.ext = k.ext || e.ext || k.filename.split('.')[1]
             k.stat = fs.statSync(k.dir+k.file)
             k.filesize = k.stat.size
-            k.filesizeMB = parseFloat((k.filesize/1048576).toFixed(2))
+            k.filesizeMB = parseFloat((k.filesize/config.diskSpaceDivisor).toFixed(2))
             k.startTime = new Date(s.nameToTime(k.file))
             k.endTime = new Date(k.endTime || k.stat.mtime)
             //send event for completed recording
@@ -236,11 +236,11 @@ module.exports = function(s,config,lang){
                         var storageIndex = s.getVideoStorageIndex(e)
                         if(storageIndex){
                             s.setDiskUsedForGroupAddStorage(e.ke,{
-                                size: -(r.size / 1048576),
+                                size: -(r.size / config.diskSpaceDivisor),
                                 storageIndex: storageIndex
                             })
                         }else{
-                            s.setDiskUsedForGroup(e.ke,-(r.size / 1048576))
+                            s.setDiskUsedForGroup(e.ke,-(r.size / config.diskSpaceDivisor))
                         }
                         s.knexQuery({
                             action: "delete",
@@ -303,11 +303,11 @@ module.exports = function(s,config,lang){
                     var storageIndex = s.getVideoStorageIndex(video)
                     if(storageIndex){
                         s.setDiskUsedForGroupAddStorage(video.ke,{
-                            size: -(video.size / 1048576),
+                            size: -(video.size / config.diskSpaceDivisor),
                             storageIndex: storageIndex
                         })
                     }else{
-                        s.setDiskUsedForGroup(video.ke,-(video.size / 1048576))
+                        s.setDiskUsedForGroup(video.ke,-(video.size / config.diskSpaceDivisor))
                     }
                     fs.unlink(video.dir + filename,function(err){
                         fs.stat(video.dir + filename,function(err){

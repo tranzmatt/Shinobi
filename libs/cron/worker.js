@@ -224,7 +224,7 @@ function beginProcessing(){
                 const filename = formattedTime(row.time) + '.' + row.ext
                 try{
                     await fs.promises.unlink(dir + filename)
-                    const fileSizeMB = row.size / 1048576;
+                    const fileSizeMB = row.size / config.diskSpaceDivisor;
                     setDiskUsedForGroup(groupKey,-fileSizeMB,null,row)
                     sendToWebSocket({
                         f: 'video_delete',
@@ -407,7 +407,7 @@ function beginProcessing(){
                     const theDate = filename.split('T')[0]
                     const enclosingFolder = `${dir}/${theDate}/`
                     try{
-                        const fileSizeMB = row.size / 1048576;
+                        const fileSizeMB = row.size / config.diskSpaceDivisor;
                         setDiskUsedForGroup(groupKey,-fileSizeMB,null,row)
                         sendToWebSocket({
                             f: 'timelapse_frame_delete',

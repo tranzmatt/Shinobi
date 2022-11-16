@@ -45,11 +45,11 @@ module.exports = (s,config,lang) => {
                 })
                 if(storageIndex){
                     s.setDiskUsedForGroupAddStorage(groupKey,{
-                        size: -(video.size/1048576),
+                        size: -(video.size/config.diskSpaceDivisor),
                         storageIndex: storageIndex
                     })
                 }else{
-                    s.setDiskUsedForGroup(groupKey,-(video.size/1048576))
+                    s.setDiskUsedForGroup(groupKey,-(video.size/config.diskSpaceDivisor))
                 }
                 s.tx({
                     f: 'video_delete',
@@ -115,11 +115,11 @@ module.exports = (s,config,lang) => {
                 })
                 if(storageIndex){
                     s.setDiskUsedForGroupAddStorage(groupKey,{
-                        size: -(frame.size/1048576),
+                        size: -(frame.size/config.diskSpaceDivisor),
                         storageIndex: storageIndex
                     },'timelapeFrames')
                 }else{
-                    s.setDiskUsedForGroup(groupKey,-(frame.size/1048576),'timelapeFrames')
+                    s.setDiskUsedForGroup(groupKey,-(frame.size/config.diskSpaceDivisor),'timelapeFrames')
                 }
                 // s.tx({
                 //     f: 'timelapse_frame_delete',
@@ -181,7 +181,7 @@ module.exports = (s,config,lang) => {
                         })
                     }
                 })
-                s.setDiskUsedForGroup(groupKey,-(file.size/1048576),'fileBin')
+                s.setDiskUsedForGroup(groupKey,-(file.size/config.diskSpaceDivisor),'fileBin')
             })
         }else{
             console.log(err)
@@ -375,7 +375,7 @@ module.exports = (s,config,lang) => {
                     if(whereGroup.length > 0)queryGroup.__separator = 'or'
                     whereGroup.push(queryGroup)
                     s.setCloudDiskUsedForGroup(groupKey,{
-                        amount : -(video.size/1048576),
+                        amount : -(video.size/config.diskSpaceDivisor),
                         storageType : storageType
                     })
                     s.deleteVideoFromCloudExtensionsRunner(groupKey,storageType,video)
@@ -426,7 +426,7 @@ module.exports = (s,config,lang) => {
                     if(whereGroup.length > 0)queryGroup.__separator = 'or'
                     whereGroup.push(queryGroup)
                     s.setCloudDiskUsedForGroup(groupKey,{
-                        amount : -(frame.size/1048576),
+                        amount : -(frame.size/config.diskSpaceDivisor),
                         storageType : storageType
                     })
                     // s.deleteVideoFromCloudExtensionsRunner(groupKey,storageType,frame)

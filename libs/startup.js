@@ -203,10 +203,10 @@ module.exports = function(s,config,lang,io){
                                 }
                             })
                         }
-                        s.group[user.ke].usedSpace = (usedSpaceVideos + usedSpaceTimelapseFrames + usedSpaceFilebin) / 1048576
-                        s.group[user.ke].usedSpaceVideos = usedSpaceVideos / 1048576
-                        s.group[user.ke].usedSpaceFilebin = usedSpaceFilebin / 1048576
-                        s.group[user.ke].usedSpaceTimelapseFrames = usedSpaceTimelapseFrames / 1048576
+                        s.group[user.ke].usedSpace = (usedSpaceVideos + usedSpaceTimelapseFrames + usedSpaceFilebin) / config.diskSpaceDivisor
+                        s.group[user.ke].usedSpaceVideos = usedSpaceVideos / config.diskSpaceDivisor
+                        s.group[user.ke].usedSpaceFilebin = usedSpaceFilebin / config.diskSpaceDivisor
+                        s.group[user.ke].usedSpaceTimelapseFrames = usedSpaceTimelapseFrames / config.diskSpaceDivisor
                         loadAddStorageDiskUseForUser(user,addStorageData,function(){
                             callback()
                         })
@@ -240,7 +240,7 @@ module.exports = function(s,config,lang,io){
                         videos.forEach(function(video){
                             var storageType = JSON.parse(video.details).type
                             if(!storageType)storageType = 's3'
-                            var videoSize = video.size / 1048576
+                            var videoSize = video.size / config.diskSpaceDivisor
                             user.cloudDiskUse[storageType].usedSpace += videoSize
                             user.cloudDiskUse[storageType].usedSpaceVideos += videoSize
                             ++user.cloudDiskUse[storageType].firstCount
@@ -268,7 +268,7 @@ module.exports = function(s,config,lang,io){
                             try{
                                 var storageType = JSON.parse(frame.details).type
                                 if(!storageType)storageType = 's3'
-                                var frameSize = frame.size / 1048576
+                                var frameSize = frame.size / config.diskSpaceDivisor
                                 user.cloudDiskUse[storageType].usedSpace += frameSize
                                 user.cloudDiskUse[storageType].usedSpaceTimelapseFrames += frameSize
                             }catch(err){
@@ -336,10 +336,10 @@ module.exports = function(s,config,lang,io){
                         usedSpaceFilebin += file.size
                     })
                 }
-                storageIndex.usedSpace = (usedSpaceVideos + usedSpaceTimelapseFrames + usedSpaceFilebin) / 1048576
-                storageIndex.usedSpaceVideos = usedSpaceVideos / 1048576
-                storageIndex.usedSpaceFilebin = usedSpaceFilebin / 1048576
-                storageIndex.usedSpaceTimelapseFrames = usedSpaceTimelapseFrames / 1048576
+                storageIndex.usedSpace = (usedSpaceVideos + usedSpaceTimelapseFrames + usedSpaceFilebin) / config.diskSpaceDivisor
+                storageIndex.usedSpaceVideos = usedSpaceVideos / config.diskSpaceDivisor
+                storageIndex.usedSpaceFilebin = usedSpaceFilebin / config.diskSpaceDivisor
+                storageIndex.usedSpaceTimelapseFrames = usedSpaceTimelapseFrames / config.diskSpaceDivisor
                 s.systemLog(user.mail+' : '+path+' : '+videos.length,storageIndex.usedSpace)
                 ++currentStorageNumber
                 readStorageArray()

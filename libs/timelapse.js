@@ -70,7 +70,7 @@ module.exports = function(s,config,lang,app,io){
             table: "Timelapse Frames",
             insert: queryInfo
         })
-        s.setDiskUsedForGroup(e.ke,queryInfo.size / 1048576,'timelapeFrames')
+        s.setDiskUsedForGroup(e.ke,queryInfo.size / config.diskSpaceDivisor,'timelapeFrames')
         s.purgeDiskForGroup(e.ke)
         s.onInsertTimelapseFrameExtensions.forEach(function(extender){
             extender(e,queryInfo,filePath)
@@ -149,7 +149,7 @@ module.exports = function(s,config,lang,app,io){
                     where: frameSelector,
                     limit: 1
                 },async function(){
-                    s.setDiskUsedForGroup(e.ke,-(r.size / 1048576),'timelapeFrames')
+                    s.setDiskUsedForGroup(e.ke,-(r.size / config.diskSpaceDivisor),'timelapeFrames')
                     s.file('delete',e.fileLocation)
                     const fileDirectory = getFileDirectory(folderPath);
                     const folderIsEmpty = (await fs.promises.readdir(folderPath)).filter(file => file.indexOf('.jpg') > -1).length === 0;
@@ -365,7 +365,7 @@ module.exports = function(s,config,lang,app,io){
                     time: timeNow,
                 }
             })
-            s.setDiskUsedForGroup(ke,fileStats.size / 1048576,'fileBin')
+            s.setDiskUsedForGroup(ke,fileStats.size / config.diskSpaceDivisor,'fileBin')
             s.purgeDiskForGroup(ke)
             s.tx({
                 f: 'fileBin_item_added',

@@ -533,11 +533,11 @@ module.exports = (s,config,lang) => {
                 const storageIndex = s.getVideoStorageIndex(video)
                 if(storageIndex){
                     s.setDiskUsedForGroupAddStorage(video.ke,{
-                        size: -(video.size / 1048576),
+                        size: -(video.size / config.diskSpaceDivisor),
                         storageIndex: storageIndex
                     },storageType)
                 }else{
-                    s.setDiskUsedForGroup(video.ke,-(video.size / 1048576),storageType)
+                    s.setDiskUsedForGroup(video.ke,-(video.size / config.diskSpaceDivisor),storageType)
                 }
             }
         }

@@ -54,7 +54,7 @@ module.exports = function(s,config,lang,app,io){
             port: config.port,
             platform: s.platform,
             coreCount: s.coreCount,
-            totalmem: s.totalmem / 1048576,
+            totalmem: s.totalmem / config.diskSpaceDivisor,
             availableHWAccels: config.availableHWAccels,
             socketKey: config.childNodes.key
         })

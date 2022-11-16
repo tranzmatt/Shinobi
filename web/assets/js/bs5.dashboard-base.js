@@ -879,7 +879,7 @@ function notifyIfActionFailed(data){
     }
 }
 function convertKbToHumanSize(theNumber){
-    var amount = theNumber / 1048576
+    var amount = theNumber / diskSpaceDivisor
     var unit = amount / 1000 >= 1000 ? 'TB' : amount >= 1000 ? 'GB' : 'MB'
     var number = (amount / 1000 >= 1000 ? amount / 1000000  : amount >= 1000 ? amount / 1000 : amount).toFixed(2)
     return `${number} ${unit}`

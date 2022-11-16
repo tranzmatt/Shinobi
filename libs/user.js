@@ -141,7 +141,7 @@ module.exports = function(s,config,lang){
         s.group[e.ke].sizeLimitTimelapseFramesPercent = parseFloat(s.group[e.ke].init.size_timelapse_percent) || 5
         s.group[e.ke].sizeLimitFileBinPercent = parseFloat(s.group[e.ke].init.size_filebin_percent) || 5
         //save global used space as megabyte value
-        s.group[e.ke].usedSpace = s.group[e.ke].usedSpace || ((e.size || 0) / 1048576)
+        s.group[e.ke].usedSpace = s.group[e.ke].usedSpace || ((e.size || 0) / config.diskSpaceDivisor)
         //emit the changes to connected users
         s.sendDiskUsedAmountToClients(e.ke)
     }

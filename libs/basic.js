@@ -294,7 +294,7 @@ module.exports = function(s,config){
     }
     s.kilobyteToMegabyte = function(kb,places){
         if(!places)places = 2
-        return (kb/1048576).toFixed(places)
+        return (kb/config.diskSpaceDivisor).toFixed(places)
     }
     Object.defineProperty(Array.prototype, 'chunk', {
         value: function(chunkSize){

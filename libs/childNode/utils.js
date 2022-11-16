@@ -175,7 +175,7 @@ module.exports = function(s,config,lang,app,io){
                     dir : videoDirectory,
                     file : filename,
                     filename : filename,
-                    filesizeMB : parseFloat((data.filesize/1048576).toFixed(2))
+                    filesizeMB : parseFloat((data.filesize/config.diskSpaceDivisor).toFixed(2))
                 }
                 s.insertDatabaseRow(monitorConfig,insert)
                 s.insertCompletedVideoExtensions.forEach(function(extender){

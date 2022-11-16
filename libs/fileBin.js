@@ -74,8 +74,8 @@ module.exports = function(s,config,lang,app,io){
                     },(err) => {
                         resolve()
                         if(update.size){
-                            s.setDiskUsedForGroup(groupKey,-(fileSize/1048576),'fileBin')
-                            s.setDiskUsedForGroup(groupKey,(update.size/1048576),'fileBin')
+                            s.setDiskUsedForGroup(groupKey,-(fileSize/config.diskSpaceDivisor),'fileBin')
+                            s.setDiskUsedForGroup(groupKey,(update.size/config.diskSpaceDivisor),'fileBin')
                             s.purgeDiskForGroup(groupKey)
                         }
                     })
@@ -107,7 +107,7 @@ module.exports = function(s,config,lang,app,io){
                 },(err,r) => {
                     resolve()
                     s.file('delete',getFileBinDirectory(whereQuery) + filename)
-                    s.setDiskUsedForGroup(groupKey,-(fileSize/1048576),'fileBin')
+                    s.setDiskUsedForGroup(groupKey,-(fileSize/config.diskSpaceDivisor),'fileBin')
                     s.purgeDiskForGroup(groupKey)
                 })
             }
@@ -158,7 +158,7 @@ module.exports = function(s,config,lang,app,io){
                 }
             },(err) => {
                 resolve()
-                s.setDiskUsedForGroup(groupKey,(fileSize/1048576),'fileBin')
+                s.setDiskUsedForGroup(groupKey,(fileSize/config.diskSpaceDivisor),'fileBin')
                 s.purgeDiskForGroup(groupKey)
             })
         })
