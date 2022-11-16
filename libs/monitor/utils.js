@@ -151,7 +151,7 @@ module.exports = (s,config,lang) => {
             }
             const completeRequest = () => {
                 fs.readFile(temporaryImageFile,(err,imageBuffer) => {
-                    fs.unlink(temporaryImageFile,(err) => {
+                    fs.rm(temporaryImageFile,(err) => {
                         if(err){
                             s.debugLog(err)
                         }

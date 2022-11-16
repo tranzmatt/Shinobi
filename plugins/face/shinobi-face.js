@@ -227,7 +227,7 @@ var addAwaitStatements = async function(){
                     if(!err){
                         detectStuff(buffer)
                     }
-                    fs.unlink(frameLocation,function(){
+                    fs.rm(frameLocation,function(){
 
                     })
                 })
