@@ -67,7 +67,7 @@ function createVideoLinks(video,options){
         video.ext = video.href.split('.')
         video.ext = video.ext[video.ext.length - 1]
     }
-    video.filename = formattedTimeForFilename(video.time,null,`YYYY-MM-DDTHH-mm-ss`) + '.' + video.ext;
+    video.filename = formattedTimeForFilename(convertTZ(video.time, serverTimezone),null,`YYYY-MM-DDTHH-mm-ss`) + '.' + video.ext;
     var href = getApiPrefix('videos') + '/'+video.mid+'/'+video.filename;
     video.actionUrl = href
     video.links = {

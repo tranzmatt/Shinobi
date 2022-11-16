@@ -1079,7 +1079,7 @@ module.exports = function(s,config,lang){
                               "value": "1"
                            },
                            {
-                              "name": lang["90 Clockwise and Vertical Flip"],
+                              "name": lang["90 Counter Clockwise"],
                               "value": "2"
                            },
                            {
@@ -1865,7 +1865,7 @@ module.exports = function(s,config,lang){
                                       "value": "1"
                                    },
                                    {
-                                      "name": lang["90 Clockwise and Vertical Flip"],
+                                      "name": lang["90 Counter Clockwise"],
                                       "value": "2"
                                    },
                                    {
@@ -2248,8 +2248,8 @@ module.exports = function(s,config,lang){
                               "value": "1"
                            },
                            {
-                              "name": lang["90 Clockwise and Vertical Flip"],
-                              "value": "2"
+                               "name": lang["90 Counter Clockwise"],
+                               "value": "2"
                            },
                            {
                               "name": lang["90 Clockwise and Vertical Flip"],
@@ -7389,8 +7389,8 @@ module.exports = function(s,config,lang){
                                 "value": "1"
                              },
                              {
-                                "name": lang["90 Clockwise and Vertical Flip"],
-                                "value": "2"
+                                 "name": lang["90 Counter Clockwise"],
+                                 "value": "2"
                              },
                              {
                                 "name": lang["90 Clockwise and Vertical Flip"],

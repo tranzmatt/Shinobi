@@ -236,7 +236,9 @@ $(document).ready(function(){
         loadedVideoElement.pause()
     })
     $(window).resize(function(){
-        drawTimeTicks(loadedVideoForSlicer)
+        if(tabTree.name === 'studio' && loadedVideoElement){
+            drawTimeTicks(loadedVideoForSlicer)
+        }
     })
     timelineStrip.resize(function(){
         stripWidth = timelineStrip.width()

@@ -483,7 +483,7 @@ module.exports = function(s,config,lang,app){
                     }
                 })
                 fs.chmod(s.dir.videos+account.ke,0o777,function(err){
-                    fs.unlink(s.dir.videos+account.ke,function(err){})
+                    fs.rmdir(s.dir.videos+account.ke,function(err){})
                 })
             }
             if(s.getPostData(req,'deleteEvents',false) == '1'){

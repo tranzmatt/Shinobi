@@ -76,7 +76,7 @@ s.detectObject = async function(buffer,d,tx,frameLocation,callback){
                     frame: frame
                 })
             }
-            fs.unlink(frame,function(){
+            fs.rm(frame,function(){
 
             })
         }catch(err){

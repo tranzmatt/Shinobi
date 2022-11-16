@@ -39,7 +39,7 @@ module.exports = function(s,config,lang,app,io){
             var filename = getFileNameFromPath(filePath)
             if(search(filename,'.jpg') || search(filename,'.jpeg')){
                 var snapPath = s.dir.streams + ke + '/' + mid + '/s.jpg'
-                fs.unlink(snapPath,function(err){
+                fs.rm(snapPath,function(err){
                     fs.createReadStream(filePath).pipe(fs.createWriteStream(snapPath))
                     triggerEvent({
                         id: mid,
