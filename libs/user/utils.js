@@ -21,12 +21,12 @@ module.exports = (s,config,lang) => {
                 if(whereGroup.length > 0)queryGroup.__separator = 'or'
                 whereGroup.push(queryGroup)
                 fs.chmod(video.dir,0o777,function(err){
-                    fs.unlink(video.dir,function(err){
+                    fs.rm(video.dir,function(err){
                         ++completedCheck
                         if(err){
                             fs.stat(video.dir,function(err){
                                 if(!err){
-                                    s.file('delete',video.dir)
+                                    fs.unlink(video.dir)
                                 }
                             })
                         }
@@ -92,12 +92,12 @@ module.exports = (s,config,lang) => {
                 }
                 if(whereGroup.length > 0)queryGroup.__separator = 'or'
                 whereGroup.push(queryGroup)
-                fs.unlink(fileLocationMid,function(err){
+                fs.rm(fileLocationMid,function(err){
                     ++completedCheck
                     if(err){
                         fs.stat(fileLocationMid,function(err){
                             if(!err){
-                                s.file('delete',fileLocationMid)
+                                fs.unlink(fileLocationMid)
                             }
                         })
                     }
@@ -160,12 +160,12 @@ module.exports = (s,config,lang) => {
                 }
                 if(whereGroup.length > 0)queryGroup.__separator = 'or'
                 whereGroup.push(queryGroup)
-                fs.unlink(fileLocationMid,function(err){
+                fs.rm(fileLocationMid,function(err){
                     ++completedCheck
                     if(err){
                         fs.stat(fileLocationMid,function(err){
                             if(!err){
-                                s.file('delete',fileLocationMid)
+                                fs.unlink(fileLocationMid)
                             }
                         })
                     }
