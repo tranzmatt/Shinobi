@@ -111,16 +111,18 @@ module.exports = (processCwd,config) => {
         let theRequester;
         const hasUsernameAndPassword = options.username && typeof options.password === 'string'
         const requestOptions = {
-            method : options.method || 'GET'
+            method : options.method || 'GET',
+            headers: {'Content-Type': 'application/json'}
         }
         if(typeof options.postData === 'object'){
-            const formData =  new FormData()
-            const formKeys = Object.keys(options.postData)
-            formKeys.forEach(function(key){
-                const value = formKeys[key]
-                formData.set(key, value)
-            })
-            requestOptions.body = formData
+            requestOptions.body = JSON.stringify(options.postData)
+        } else if(typeof options.postData === 'string'){
+            try{
+                JSON.parse(options.postData)
+                requestOptions.body = options.postData
+            }catch(err){
+                
+            }
         }
         if(hasUsernameAndPassword && hasDigestAuthEnabled){
             theRequester = (new DigestFetch(options.username, options.password)).fetch
