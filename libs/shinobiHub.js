@@ -66,9 +66,9 @@ module.exports = function(s,config,lang,app,io){
                         "name": monitorConfig.name,
                         "description": "Backup at " + (new Date()),
                         "json": validated.json,
-                        "details": JSON.stringify({
+                        "details": {
                             // maybe ip address?
-                        })
+                        }
                     }
                 }
             ).then(res => res.text())
