@@ -5099,7 +5099,6 @@ module.exports = function(s,config,lang){
                   {
                       "field": lang.Themes,
                       "name": "detail=theme",
-                      attribute:'localStorage="showThumbnail"',
                       "description": "",
                       "default": "0",
                       "example": "",
