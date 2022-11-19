@@ -154,7 +154,7 @@ const mergeDeep = function(...objects) {
   }, {});
 }
 function dashboardOptions(r,rr,rrr){
-    if(!rrr){rrr={};};if(typeof rrr === 'string'){rrr={n:rrr}};if(!rrr.n){rrr.n='ShinobiOptions_'+location.host}
+    if(!rrr){rrr={};};if(typeof rrr === 'string'){rrr={n:rrr}};if(!rrr.n){rrr.n='ShinobiOptions_'+location.host+'_'+$user.ke+$user.uid}
     ii={o:localStorage.getItem(rrr.n)};try{ii.o=JSON.parse(ii.o)}catch(e){ii.o={}}
     if(!ii.o){ii.o={}}
     if(r&&rr&&!rrr.x){
