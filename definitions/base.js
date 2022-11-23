@@ -140,38 +140,15 @@ module.exports = function(s,config,lang){
              },
              "Presets": {
                 id: "monSectionPresets",
-               "section-class": "am_notice am_notice_edit",
                "name": lang.Presets,
                "color": "purple",
                 isSection: true,
                "info": [
                    {
-                       "name": lang['Add New'],
-                       "color": "grey",
-                       isFormGroupGroup: true,
-                       "info": [
-                           {
-                              "id": "monitorPresetsName",
-                              "field": lang['Preset Name'],
-                          },
-                           {
-                              "fieldType": "btn",
-                              "class": `btn-success add-new`,
-                              "btnContent": `<i class="fa fa-plus"></i> &nbsp; ${lang['Add']}`,
-                           },
-                       ]
-                   },
-                   {
-                       "fieldType": 'div',
-                       "id": "monitorPresetsSelection",
-                       "style": "max-height:400px;overflow:auto;",
-                       "class": "mdl-list"
-                   },
-                   {
-                      "fieldType": "btn",
-                      "attribute": `page-open="schedules"`,
+                      "fieldType": "a",
+                      "attribute": `page-open="monitorStates"`,
                       "class": `btn-info`,
-                      "btnContent": `<i class="fa fa-clock-o"></i> &nbsp; ${lang['Schedules']}`,
+                      "btnContent": `<i class="fa fa-align-right"></i> &nbsp; ${lang['Monitor States']}`,
                    },
                ],
              },
