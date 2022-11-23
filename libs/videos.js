@@ -304,14 +304,8 @@ module.exports = function(s,config,lang){
                     }else{
                         s.setDiskUsedForGroup(video.ke,-(video.size / 1048576))
                     }
-                    fs.rm(video.dir + filename,function(err){
-                        fs.stat(video.dir + filename,function(err){
-                            if(!err){
-                                s.file('delete',video.dir + filename)
-                            }
-                        })
-                    })
-                })
+                    s.file('delete',video.dir + filename)
+                });
                 const queryGroup = {
                     ke: video.ke,
                     mid: video.mid,
