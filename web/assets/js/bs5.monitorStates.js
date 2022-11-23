@@ -15,10 +15,12 @@ $(document).ready(function(){
             if(callback)callback()
         })
     }
+    addOnTabOpen('monitorStates', function () {
+        loadMonitorStatesPresets()
+    })
     addOnTabReopen('monitorStates', function () {
         if(monitorStatesSelector.val() === '')loadMonitorStatesPresets()
     })
-    loadMonitorStatesPresets()
     var buildOptions = function(field,possiblities,fieldData){
         if(!field)console.error('field',field)
         var fieldElement = ''
