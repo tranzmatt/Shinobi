@@ -204,12 +204,9 @@ module.exports = function(s,config,lang){
             })
         }else if(params.auth && params.ke){
             loginWithApiKey(params,function(err,user,isSessionKey){
-                if(isSessionKey)resetActiveSessionTimer(s.api[params.auth])
+                if(isSessionKey)resetActiveSessionTimer(user)
                 if(user){
-                    createSession(user,{
-                        auth: params.auth
-                    })
-                    onSuccess(s.api[params.auth])
+                    onSuccess(user)
                 }else{
                     onFail()
                 }
