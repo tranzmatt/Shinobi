@@ -1858,7 +1858,7 @@ module.exports = function(s,config,lang){
             'watch_videos',
             'delete_videos',
         ].forEach((key) => {
-            const permissionOff = permissions[key] === '0';
+            const permissionOff = permissions[key] !== '1';
             response.apiKeyPermissions[key] = permissions[key] === '1';
             response.apiKeyPermissions[`${key}_disallowed`] = permissionOff;
             response.isRestrictedApiKey = response.isRestrictedApiKey || permissionOff;
