@@ -1838,6 +1838,7 @@ module.exports = function(s,config,lang){
     s.checkPermission = (user) => {
         // provide "user" object given from "s.auth"
         const isSubAccount = !!user.details.sub
+        const isApiKey = !user.login_type;
         const response = {
             isSubAccount,
             hasAllPermissions: isSubAccount && user.details.allmonitors === '1',
@@ -1858,7 +1859,7 @@ module.exports = function(s,config,lang){
             'watch_videos',
             'delete_videos',
         ].forEach((key) => {
-            const permissionOff = permissions[key] === '0';
+            const permissionOff = isApiKey && permissions[key] !== '1';
             response.apiKeyPermissions[key] = permissions[key] === '1';
             response.apiKeyPermissions[`${key}_disallowed`] = permissionOff;
             response.isRestrictedApiKey = response.isRestrictedApiKey || permissionOff;
