@@ -160,7 +160,7 @@ module.exports = function(s,config,lang){
                 //maybe log
             }
         }
-        var onSuccess = function(user, isApiKey){
+        var onSuccess = function(user){
             var activeSession = s.api[params.auth]
             if(
                 activeSession &&
@@ -173,7 +173,7 @@ module.exports = function(s,config,lang){
                     var details = s.parseJSON(user.details).lang
                     user.lang = s.getLanguageFile(user.details.lang) || s.copySystemDefaultLanguage()
                 }
-                onSuccessComplete(user, isApiKey)
+                onSuccessComplete(user)
             }else{
                 onFail()
             }
@@ -184,10 +184,10 @@ module.exports = function(s,config,lang){
             if(!activeSession.lang){
                 activeSession.lang = s.copySystemDefaultLanguage()
             }
-            onSuccessComplete(activeSession, false)
+            onSuccessComplete(activeSession)
         }else if(s.api[params.auth] && s.api[params.auth].details){
             var activeSession = s.api[params.auth]
-            onSuccess(activeSession, true)
+            onSuccess(activeSession)
             if(activeSession.timeout){
                resetActiveSessionTimer(activeSession)
             }
@@ -197,7 +197,7 @@ module.exports = function(s,config,lang){
                     params.auth = user.auth
                     createSession(user)
                     resetActiveSessionTimer(s.api[params.auth])
-                    onSuccess(user, false)
+                    onSuccess(user)
                 }else{
                     onFail()
                 }
@@ -209,7 +209,7 @@ module.exports = function(s,config,lang){
                     createSession(user,{
                         auth: params.auth
                     })
-                    onSuccess(s.api[params.auth], true)
+                    onSuccess(s.api[params.auth])
                 }else{
                     onFail()
                 }
