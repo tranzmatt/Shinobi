@@ -33,6 +33,10 @@ $(document).ready(function(){
             selectedStates.html(html)
         })
     }
+    addOnTabOpen('schedules',function(loadedTab){
+        loadMonitorStates()
+        loadSchedules()
+    })
     addOnTabReopen('schedules',function(loadedTab){
         loadMonitorStates()
         loadSchedules()
@@ -63,8 +67,8 @@ $(document).ready(function(){
         var namespace = schedulerWindow.find('[name="name"]')
         var deleteButton = schedulerWindow.find('.delete')
         var tzEl = schedulerWindow.find('[name="timezone"]')
-        selectedStates.find('option:selected').removeAttr('selected')
-        selectedDays.find('option:selected').removeAttr('selected')
+        selectedStates.find('option').prop('selected',false)
+        selectedDays.find('option').prop('selected',false)
         if(loaded){
             namespace.val(loaded.name)
             var html = ''
