@@ -141,7 +141,6 @@ $(document).ready(function(){
     var drawMonitor = function(preloadedData){
         var MonitorSettings = definitions['Monitor Settings']
         var html = ''
-        console.log(MonitorSettings)
         Object.keys(MonitorSettings.blocks).forEach(function(blockKey){
             var block = MonitorSettings.blocks[blockKey]
             html += drawBlock(block,preloadedData)
@@ -267,7 +266,7 @@ $(document).ready(function(){
                     monitorJson[name] = value
                 }
             })
-            if(Object.keys(monitorJson).length > 2 || Object.keys(monitorJson.details).length > 2){
+            if(Object.keys(monitorJson).length > 1 || Object.keys(monitorJson.details).length > 0){
                 monitors.push(monitorJson)
             }
         })
