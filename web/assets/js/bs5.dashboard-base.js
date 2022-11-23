@@ -972,11 +972,13 @@ function popImage(imageSrc){
     $('body').append(`<div class="popped-image"><img src="${imageSrc}"></div>`)
 }
 $(document).ready(function(){
-    loadMonitorsIntoMemory(function(data){
-        setInterfaceCounts(data)
-        openTab('initial')
-        onDashboardReadyExecute()
-    })
+    onInitWebsocket(function(){
+        loadMonitorsIntoMemory(function(data){
+            setInterfaceCounts(data)
+            openTab('initial')
+            onDashboardReadyExecute()
+        })
+    });
     $('body')
     // .on('tab-away',function(){
     //

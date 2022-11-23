@@ -42,7 +42,7 @@ module.exports = function(s,config,lang,app){
             const authKey = req.params.auth
             const groupKey = req.params.ke
             const monitorId = req.params.id
-            if(cantLiveStreamPermission(user,monitorId)){
+            if(cantLiveStreamPermission(user,monitorId,'watch_stream')){
                 s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
                 return;
             }
@@ -84,7 +84,7 @@ module.exports = function(s,config,lang,app){
     app.get([config.webPaths.apiPrefix+':auth/mp4/:ke/:id/:channel/s.mp4',config.webPaths.apiPrefix+':auth/mp4/:ke/:id/s.mp4',config.webPaths.apiPrefix+':auth/mp4/:ke/:id/:channel/s.ts',config.webPaths.apiPrefix+':auth/mp4/:ke/:id/s.ts'], function (req, res) {
         s.auth(req.params,function(user){
             const monitorId = req.params.id
-            if(cantLiveStreamPermission(user,monitorId)){
+            if(cantLiveStreamPermission(user,monitorId,'watch_stream')){
                 s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
                 return;
             }
@@ -153,7 +153,7 @@ module.exports = function(s,config,lang,app){
         }else{
             s.auth(req.params,function(user){
                 const monitorId = req.params.id
-                if(cantLiveStreamPermission(user,monitorId)){
+                if(cantLiveStreamPermission(user,monitorId,'watch_stream')){
                     s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
                     return;
                 }
@@ -219,7 +219,7 @@ module.exports = function(s,config,lang,app){
     app.get([config.webPaths.apiPrefix+':auth/hls/:ke/:id/:file',config.webPaths.apiPrefix+':auth/hls/:ke/:id/:channel/:file'], function (req,res){
         s.auth(req.params,function(user){
             const monitorId = req.params.id
-            if(cantLiveStreamPermission(user,monitorId)){
+            if(cantLiveStreamPermission(user,monitorId,'watch_stream')){
                 s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
                 return;
             }
@@ -250,7 +250,7 @@ module.exports = function(s,config,lang,app){
     app.get(config.webPaths.apiPrefix+':auth/jpeg/:ke/:id/s.jpg', function(req,res){
         s.auth(req.params,function(user){
             const monitorId = req.params.id
-            if(cantLiveStreamPermission(user,monitorId)){
+            if(cantLiveStreamPermission(user,monitorId,'watch_snapshot')){
                 s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
                 return;
             }
@@ -305,7 +305,7 @@ module.exports = function(s,config,lang,app){
     */
     app.get([config.webPaths.apiPrefix+':auth/flv/:ke/:id/s.flv',config.webPaths.apiPrefix+':auth/flv/:ke/:id/:channel/s.flv'], function(req,res) {
         s.auth(req.params,function(user){
-            if(cantLiveStreamPermission(user,monitorId)){
+            if(cantLiveStreamPermission(user,monitorId,'watch_stream')){
                 s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
                 return;
             }
@@ -366,7 +366,7 @@ module.exports = function(s,config,lang,app){
         config.webPaths.apiPrefix+':auth/h264/:ke/:id'
     ], function (req, res) {
         s.auth(req.params,function(user){
-            if(cantLiveStreamPermission(user,monitorId)){
+            if(cantLiveStreamPermission(user,monitorId,'watch_stream')){
                 s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
                 return;
             }
