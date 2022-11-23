@@ -204,8 +204,8 @@ function formattedTimeForFilename(time,utcConvert,timeFormat){
     if(utcConvert)theMoment = theMoment.clone().utc()
     return theMoment.format(timeFormat ? timeFormat : 'YYYY-MM-DDTHH:mm:ss')
 }
-function convertTZ(date, tzString) {
-    return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", {timeZone: tzString}));
+function convertTZ(date) {
+    return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", {timeZone: serverTimezone}));
 }
 function setPromiseTimeout(timeoutAmount){
     return new Promise((resolve) => {
@@ -931,10 +931,16 @@ function setInterfaceCounts(monitors){
 }
 function getSelectedTime(dateSelector){
     var dateRange = dateSelector.data('daterangepicker')
-    var startDate = moment(convertTZ(dateRange.startDate.clone()._d, serverTimezone))
-    var endDate = moment(convertTZ(dateRange.endDate.clone()._d, serverTimezone))
+    var clonedStartDate = dateRange.startDate.clone()
+    var clonedEndDate = dateRange.endDate.clone()
+    var isNotValidDate = !clonedStartDate._d || convertTZ(clonedStartDate._d) == 'Invalid Date';
+    var startDate = moment(isNotValidDate ? convertTZ(clonedStartDate) : convertTZ(clonedStartDate._d))
+    var endDate = moment(isNotValidDate ? convertTZ(clonedEndDate) : convertTZ(clonedEndDate._d))
     var stringStartDate = startDate.format('YYYY-MM-DDTHH:mm:ss')
     var stringEndDate = endDate.format('YYYY-MM-DDTHH:mm:ss')
+    if(isNotValidDate){
+        console.error(`isNotValidDate detected, Didn't use ._d`,startDate,endDate,new Error());
+    }
     return {
         startDateMoment: startDate,
         endDateMoment: endDate,
