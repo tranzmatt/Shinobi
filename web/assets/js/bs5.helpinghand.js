@@ -36,7 +36,6 @@ async function playHelpingHandShow(showId){
             handElOffset.top += 30
             handPosCss = handElOffset
         }
-        console.log(handPosCss)
         var cmd = movement.cmd
         helpingHand.css(handPosCss)
         if(cmd){
@@ -52,5 +51,5 @@ async function playHelpingHandShow(showId){
     removeHelpingHand()
 }
 $(document).ready(function(e){
-    playHelpingHandShow("test-show")
+    playHelpingHandShow("motion-preset-pair")
 })
