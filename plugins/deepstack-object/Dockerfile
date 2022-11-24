@@ -1,4 +1,4 @@
-FROM node:12.22.1-buster-slim
+FROM node:16.13-buster-slim
 
 RUN apt update -y
 RUN apt install wget curl net-tools -y
