@@ -96,5 +96,5 @@ require('./libs/ffmpeg.js')(s,config,lang, async () => {
     //cron
     require('./libs/cron.js')(s,config,lang)
     //video browser functions
-    require('./libs/videobrowser.js')(s,config,lang,app,io)
+    require('./libs/videoBrowser.js')(s,config,lang,app,io)
 })

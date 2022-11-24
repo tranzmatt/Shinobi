@@ -1,7 +1,7 @@
 const knex = require('knex');
 const moment = require('moment');
 
-const ENDPOINT_SECTION = "videobrowser";
+const ENDPOINT_SECTION = "videoBrowser";
 
 module.exports = (s, shinobiConfig, lang, app, io) => {
     const instance = {
