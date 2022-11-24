@@ -1,4 +1,4 @@
-FROM arm32v7/node:12.18.3-buster-slim
+FROM arm32v7/node:16-buster-slim
 
 ENV DB_USER=majesticflame \
     DB_PASSWORD='' \
