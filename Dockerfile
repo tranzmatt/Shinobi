@@ -1,4 +1,4 @@
-FROM node:16.13-buster-slim
+FROM node:16-buster-slim
 
 ENV DB_USER=majesticflame \
     DB_PASSWORD='' \
