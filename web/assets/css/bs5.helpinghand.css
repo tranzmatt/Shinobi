@@ -12,3 +12,12 @@
     50%		{ color: yellow;}
     100%	{ color: red;}
 }
+#helping-hand-player {
+    position: fixed;
+    right: 10px;
+    bottom: 70px;
+    z-index: 112;
+    padding: 1rem;
+    border-radius: 10px;
+    background: rgba(0,0,0,0.8);
+}
