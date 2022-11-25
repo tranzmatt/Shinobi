@@ -67,6 +67,8 @@ $(document).ready(function(){
         var namespace = schedulerWindow.find('[name="name"]')
         var deleteButton = schedulerWindow.find('.delete')
         var tzEl = schedulerWindow.find('[name="timezone"]')
+        var startField = schedulerWindow.find('[name="start"]')
+        var endField = schedulerWindow.find('[name="end"]')
         selectedStates.find('option').prop('selected',false)
         selectedDays.find('option').prop('selected',false)
         if(loaded){
@@ -81,11 +83,13 @@ $(document).ready(function(){
             $.each(loaded.details.days,function(n,v){
                 selectedDays.find('option[value="' + v + '"]').prop('selected',true)
             })
-            tzEl.val(loaded.details.timezone || '+0')
+            tzEl.val(loaded.details.timezone || '0')
             deleteButton.show()
         }else{
-            tzEl.val('+0')
+            tzEl.val('0')
             namespace.val('')
+            startField.val('')
+            endField.val('')
             deleteButton.hide()
         }
     })
