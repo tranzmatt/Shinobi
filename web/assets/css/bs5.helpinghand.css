@@ -14,10 +14,16 @@
 }
 #helping-hand-player {
     position: fixed;
+    border: 2px solid yellow;
+    width: 300px;
     right: 10px;
     bottom: 70px;
     z-index: 112;
     padding: 1rem;
     border-radius: 10px;
     background: rgba(0,0,0,0.8);
+}
+#helping-hand-annotation {
+    color: #fff;
+    padding-right: 2rem;
 }

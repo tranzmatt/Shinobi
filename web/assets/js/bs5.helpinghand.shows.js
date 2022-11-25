@@ -3,6 +3,18 @@ var helpingHandShows = {
         name: 'Add a Motion Detection On/Off Preset Pair',
         playlist: [
             {
+                text: 'Select the <b>Monitor States</b> tab in the Main Menu.',
+                time: 0,
+                handPos: {
+                    el: `[page-open="monitorStates"]`
+                },
+                cmd: () => {
+                    var sideMenu = $('#menu-side')
+                    var theButton = sideMenu.find('[page-open="monitorStates"]')
+                    sideMenu.animate({scrollTop: sideMenu.position().top},1000);
+                }
+            },
+            {
                 time: 1,
                 handPos: {
                     el: `[page-open="monitorStates"]`
@@ -12,6 +24,7 @@ var helpingHandShows = {
                 }
             },
             {
+                text: 'Select <b>Add New</b> under Monitor States.',
                 time: 1,
                 handPos: {
                     el: `#monitorStatesSelector`
@@ -22,6 +35,7 @@ var helpingHandShows = {
                 }
             },
             {
+                text: `Set the name for the new Preset.`,
                 time: 1,
                 handPos: {
                     el: `#tab-monitorStates [name="name"]`
@@ -31,6 +45,7 @@ var helpingHandShows = {
                 }
             },
             {
+                text: `Add a Monitor to this new Preset.`,
                 time: 1,
                 handPos: {
                     el: `#tab-monitorStates .add-monitor`
@@ -40,6 +55,7 @@ var helpingHandShows = {
                 }
             },
             {
+                text: `Select the target Monitor.`,
                 time: 1,
                 handPos: {
                     el: `#tab-monitorStates .state-monitor-row .state-monitor-row-select`
@@ -50,6 +66,7 @@ var helpingHandShows = {
                 }
             },
             {
+                text: `Select the options to activate for when this Preset becomes active.`,
                 time: 0.2,
                 handPos: {
                     el: `#tab-monitorStates .state-monitor-row-fields-container`
@@ -81,6 +98,7 @@ var helpingHandShows = {
                 }
             },
             {
+                text: `Save the Preset.`,
                 time: 1,
                 handPos: {
                     el: `#tab-monitorStates .sticky-bar [type="submit"]`
@@ -91,6 +109,7 @@ var helpingHandShows = {
             },
             /// Motion Off
             {
+                text: `For this tutorial we're going to add another one for <b>Motion Detection Off</b>.`,
                 time: 1,
                 handPos: {
                     el: `#monitorStatesSelector`
@@ -170,6 +189,7 @@ var helpingHandShows = {
             },
             /// set schedule, motion ON
             {
+                text: 'Now we set them to activate automatically based on a time frame.',
                 time: 1,
                 handPos: {
                     el: `[page-open="schedules"]`

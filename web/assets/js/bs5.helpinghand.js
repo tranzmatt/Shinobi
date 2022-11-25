@@ -1,15 +1,22 @@
 var helpingHand = null
 var isWatching = false
+var helpingHandAnnotationBox = null
 function drawHelpingHand(){
     if(!helpingHand){
         var html = `
             <div id="helping-hand"><i class="fa fa-3x fa-hand-pointer-o"></i></div>
             <div id="helping-hand-player">
-                <a class="btn btn-sm btn-danger helping-hand-stop" title="${lang.Stop}"><i class="fa fa-square"></i> ${lang.Stop}</a>
+                <div class="d-flex flex-row vertical-center">
+                    <div style="flex:7" id="helping-hand-annotation"></div>
+                    <div style="flex:3">
+                        <a class="btn btn-sm btn-danger helping-hand-stop" title="${lang.Stop}"><i class="fa fa-square"></i> ${lang.Stop}</a>
+                    </div>
+                </div>
             </div>
         `
         $('body').append(html)
         helpingHand = $('#helping-hand')
+        helpingHandAnnotationBox = $('#helping-hand-annotation')
     }
 }
 function removeHelpingHand(){
@@ -41,6 +48,8 @@ async function playHelpingHandShow(showId){
             var movement = playlist[i];
             var waitTime = movement.time * 1000
             await setPromiseTimeout(waitTime);
+            var cmd = movement.cmd
+            var text = movement.text
             var handPos = movement.handPos
             var handPosCss = handPos
             if(handPos.el){
@@ -48,8 +57,8 @@ async function playHelpingHandShow(showId){
                 handElOffset.top += 30
                 handPosCss = handElOffset
             }
-            var cmd = movement.cmd
             helpingHand.css(handPosCss)
+            if(text)helpingHandAnnotationBox[0].innerHTML = text
             if(cmd){
                 await setPromiseTimeout(1500);
                 try{
