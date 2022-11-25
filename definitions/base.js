@@ -8813,6 +8813,7 @@ module.exports = function(s,config,lang){
                 noHeader: true,
                 "color": "blue",
                 "section-pre-class": "col-md-8",
+                "noDefaultSectionClasses": true,
                 "box-wrapper-class": "row",
                 "info": [
                     {
@@ -8965,6 +8966,7 @@ module.exports = function(s,config,lang){
                             "fieldType": "btn",
                             "class": `btn-${btn.color} fill mb-1`,
                             "icon": btn.icon,
+                            "attribute": `href="${btn.href}" target="_blank"`,
                             "btnContent": btn.text,
                         }
                     });
