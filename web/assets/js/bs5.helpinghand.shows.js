@@ -27,7 +27,6 @@ var helpingHandShows = {
                     el: `#tab-monitorStates [name="name"]`
                 },
                 cmd: async () => {
-                    $('#tab-monitorStates [name="name"]').focus().val('');
                     await typeWriteInField('Motion Detection On','#tab-monitorStates [name="name"]');
                 }
             },
@@ -38,6 +37,16 @@ var helpingHandShows = {
                 },
                 cmd: () => {
                     $('#tab-monitorStates .add-monitor').click();
+                }
+            },
+            {
+                time: 1,
+                handPos: {
+                    el: `#tab-monitorStates .state-monitor-row .state-monitor-row-select`
+                },
+                cmd: () => {
+                    var monitorId = getSelectedHelpingHandMonitorTarget();
+                    $(`#tab-monitorStates .state-monitor-row .state-monitor-row-select`).val(monitorId)
                 }
             },
             {
@@ -97,7 +106,6 @@ var helpingHandShows = {
                     el: `#tab-monitorStates [name="name"]`
                 },
                 cmd: async () => {
-                    $('#tab-monitorStates [name="name"]').focus().val('');
                     await typeWriteInField('Motion Detection Off','#tab-monitorStates [name="name"]');
                 }
             },
@@ -108,6 +116,16 @@ var helpingHandShows = {
                 },
                 cmd: () => {
                     $('#tab-monitorStates .add-monitor').click();
+                }
+            },
+            {
+                time: 1,
+                handPos: {
+                    el: `#tab-monitorStates .state-monitor-row .state-monitor-row-select`
+                },
+                cmd: () => {
+                    var monitorId = getSelectedHelpingHandMonitorTarget();
+                    $(`#tab-monitorStates .state-monitor-row .state-monitor-row-select`).val(monitorId)
                 }
             },
             {
@@ -150,7 +168,7 @@ var helpingHandShows = {
                     $('#tab-monitorStates form').submit();
                 }
             },
-            /// set schedule
+            /// set schedule, motion ON
             {
                 time: 1,
                 handPos: {
@@ -158,6 +176,155 @@ var helpingHandShows = {
                 },
                 cmd: () => {
                     openTab('schedules',{})
+                }
+            },
+            {
+                time: 1,
+                handPos: {
+                    el: `#schedulesSelector`
+                },
+                cmd: () => {
+                    $('#schedulesSelector option').prop('selected',false);
+                    $('#schedulesSelector').val('').change();
+                }
+            },
+            {
+                time: 1,
+                handPos: {
+                    el: `#tab-schedules [name="name"]`
+                },
+                cmd: async () => {
+                    await typeWriteInField('Motion Detection On','#tab-schedules [name="name"]');
+                }
+            },
+            {
+                time: 1,
+                handPos: {
+                    el: `#tab-schedules [name="enabled"]`
+                }
+            },
+            {
+                time: 1,
+                handPos: {
+                    el: `#tab-schedules [name="start"]`
+                },
+                cmd: async () => {
+                    await typeWriteInField('00:00','#tab-schedules [name="start"]');
+                }
+            },
+            {
+                time: 1,
+                handPos: {
+                    el: `#tab-schedules [name="end"]`
+                },
+                cmd: async () => {
+                    await typeWriteInField('23:00','#tab-schedules [name="end"]');
+                }
+            },
+            {
+                time: 1,
+                handPos: {
+                    el: `#tab-schedules [name="days"]`
+                },
+                cmd: async () => {
+                    var daysSelector = $('#tab-schedules [name="days"]');
+                    daysSelector.find('option').prop('selected',false)
+                    daysSelector.find('[value="0"],[value="2"],[value="4"],[value="6"]').prop('selected',true)
+                }
+            },
+            {
+                time: 2,
+                handPos: {
+                    el: `#tab-schedules [name="monitorStates"]`
+                },
+                cmd: async () => {
+                    var presetSelector = $('#tab-schedules [name="monitorStates"]');
+                    presetSelector.find('option').prop('selected',false)
+                    presetSelector.find('[value="Motion Detection On"]').prop('selected',true)
+                }
+            },
+            {
+                time: 1,
+                handPos: {
+                    el: `#tab-schedules .sticky-bar [type="submit"]`
+                },
+                cmd: () => {
+                    $('#tab-schedules form').submit();
+                }
+            },
+            /// set schedule, motion OFF
+            {
+                time: 3,
+                handPos: {
+                    el: `#schedulesSelector`
+                },
+                cmd: () => {
+                    $('#schedulesSelector option').prop('selected',false);
+                    $('#schedulesSelector').val('').change();
+                }
+            },
+            {
+                time: 1,
+                handPos: {
+                    el: `#tab-schedules [name="name"]`
+                },
+                cmd: async () => {
+                    await typeWriteInField('Motion Detection Off','#tab-schedules [name="name"]');
+                }
+            },
+            {
+                time: 1,
+                handPos: {
+                    el: `#tab-schedules [name="enabled"]`
+                }
+            },
+            {
+                time: 1,
+                handPos: {
+                    el: `#tab-schedules [name="start"]`
+                },
+                cmd: async () => {
+                    await typeWriteInField('00:00','#tab-schedules [name="start"]');
+                }
+            },
+            {
+                time: 1,
+                handPos: {
+                    el: `#tab-schedules [name="end"]`
+                },
+                cmd: async () => {
+                    await typeWriteInField('23:00','#tab-schedules [name="end"]');
+                }
+            },
+            {
+                time: 1,
+                handPos: {
+                    el: `#tab-schedules [name="days"]`
+                },
+                cmd: async () => {
+                    var daysSelector = $('#tab-schedules [name="days"]');
+                    daysSelector.find('option').prop('selected',false)
+                    daysSelector.find('[value="1"],[value="3"],[value="5"]').prop('selected',true)
+                }
+            },
+            {
+                time: 2,
+                handPos: {
+                    el: `#tab-schedules [name="monitorStates"]`
+                },
+                cmd: async () => {
+                    var presetSelector = $('#tab-schedules [name="monitorStates"]');
+                    presetSelector.find('option').prop('selected',false)
+                    presetSelector.find('[value="Motion Detection Off"]').prop('selected',true)
+                }
+            },
+            {
+                time: 1,
+                handPos: {
+                    el: `#tab-schedules .sticky-bar [type="submit"]`
+                },
+                cmd: () => {
+                    $('#tab-schedules form').submit();
                 }
             },
         ]
