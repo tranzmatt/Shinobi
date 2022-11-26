@@ -1,6 +1,7 @@
 var helpingHandShows = {
     "motion-preset-pair": {
         name: 'Add a Motion Detection On/Off Preset Pair',
+        targetMonitor: true,
         playlist: [
             {
                 text: 'Select the <b>Monitor States</b> tab in the Main Menu.',
@@ -346,6 +347,70 @@ var helpingHandShows = {
                 cmd: () => {
                     $('#tab-schedules form').submit();
                 }
+            },
+        ]
+    },
+    "create-api-key": {
+        name: 'Create API Key',
+        targetMonitor: false,
+        playlist: [
+            {
+                text: 'Select the <b>API Keys</b> tab in the Main Menu.',
+                time: 0,
+                handPos: {
+                    el: `[page-open="apiKeys"]`
+                },
+                cmd: () => {
+                    var sideMenu = $('#menu-side')
+                    var theButton = sideMenu.find('[page-open="apiKeys"]')
+                    sideMenu.animate({scrollTop: sideMenu.position().top},1000);
+                }
+            },
+            {
+                time: 1,
+                handPos: {
+                    el: `[page-open="apiKeys"]`
+                },
+                cmd: () => {
+                    openTab('apiKeys',{})
+                }
+            },
+            {
+                text: `Set the name for the new Preset.`,
+                time: 1,
+                handPos: {
+                    el: `#tab-apiKeys [name="ip"]`
+                },
+                cmd: async () => {
+                    await typeWriteInField('0.0.0.0','#tab-apiKeys [name="ip"]');
+                }
+            },
+            {
+                time: 1,
+                handPos: {
+                    el: `#tab-apiKeys [detail="permissions"]`
+                },
+                cmd: async () => {
+                    var theSelector = $('#tab-apiKeys [detail="permissions"]');
+                    theSelector.find('option').prop('selected',true)
+                }
+            },
+            {
+                text: `Generate the Key.`,
+                time: 1,
+                handPos: {
+                    el: `#apiKeySectionAddNew [type="submit"]`
+                },
+                cmd: () => {
+                    $('#apiKeySectionAddNew').submit();
+                }
+            },
+            {
+                text: `Generate the Key.`,
+                time: 1,
+                handPos: {
+                    el: `#api_list [api_key]:nth-child(1) .copy`
+                },
             },
         ]
     }

@@ -8795,6 +8795,7 @@ module.exports = function(s,config,lang){
                       },
                       {
                           "field": lang["Monitor"],
+                          "form-group-class": "helping-hand-target-monitor",
                           "fieldType": "select",
                           "class": "monitors_list",
                      },

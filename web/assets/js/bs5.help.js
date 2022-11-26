@@ -103,6 +103,16 @@ $(document).ready(function(){
         var selectedShowId = helpingHandSelector.val()
         playHelpingHandShow(selectedShowId)
     })
+    helpingHandSelector.change(function(){
+        var selectedShowId = helpingHandSelector.val()
+        var theShow = helpingHandShows[selectedShowId]
+        var monitorTargetSpecific = theEnclosure.find('.helping-hand-target-monitor')
+        if(theShow.targetMonitor){
+            monitorTargetSpecific.show()
+        }else{
+            monitorTargetSpecific.hide()
+        }
+    })
     initHelpNotice()
     addOnTabOpen('helpWindow', function () {
         loadHelpingHandSelectors()
