@@ -13,7 +13,7 @@ $(document).ready(function(e){
     var frameUrlCacheTimeouts = {}
     async function getSnapshotFromVideoTimeFrame(monitorId,startDate,endDate){
         const frameUrlCacheId = `${monitorId}${startDate}${endDate}`
-        if(frameUrlCache[frameUrlCacheId]){
+        if(typeof frameUrlCache[frameUrlCacheId] === 'string'){
             return frameUrlCache[frameUrlCacheId]
         }else{
             const frame = (await getTimelapseFrames(monitorId,startDate,endDate,1))[0]

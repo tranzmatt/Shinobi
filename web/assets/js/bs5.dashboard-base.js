@@ -154,7 +154,7 @@ const mergeDeep = function(...objects) {
   }, {});
 }
 function dashboardOptions(r,rr,rrr){
-    if(!rrr){rrr={};};if(typeof rrr === 'string'){rrr={n:rrr}};if(!rrr.n){rrr.n='ShinobiOptions_'+location.host}
+    if(!rrr){rrr={};};if(typeof rrr === 'string'){rrr={n:rrr}};if(!rrr.n){rrr.n='ShinobiOptions_'+location.host+'_'+$user.ke+$user.uid}
     ii={o:localStorage.getItem(rrr.n)};try{ii.o=JSON.parse(ii.o)}catch(e){ii.o={}}
     if(!ii.o){ii.o={}}
     if(r&&rr&&!rrr.x){
@@ -204,8 +204,8 @@ function formattedTimeForFilename(time,utcConvert,timeFormat){
     if(utcConvert)theMoment = theMoment.clone().utc()
     return theMoment.format(timeFormat ? timeFormat : 'YYYY-MM-DDTHH:mm:ss')
 }
-function convertTZ(date, tzString) {
-    return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", {timeZone: tzString}));
+function convertTZ(date) {
+    return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", {timeZone: serverTimezone}));
 }
 function setPromiseTimeout(timeoutAmount){
     return new Promise((resolve) => {
@@ -931,10 +931,16 @@ function setInterfaceCounts(monitors){
 }
 function getSelectedTime(dateSelector){
     var dateRange = dateSelector.data('daterangepicker')
-    var startDate = moment(convertTZ(dateRange.startDate.clone()._d, serverTimezone))
-    var endDate = moment(convertTZ(dateRange.endDate.clone()._d, serverTimezone))
+    var clonedStartDate = dateRange.startDate.clone()
+    var clonedEndDate = dateRange.endDate.clone()
+    var isNotValidDate = !clonedStartDate._d || convertTZ(clonedStartDate._d) == 'Invalid Date';
+    var startDate = moment(isNotValidDate ? convertTZ(clonedStartDate) : convertTZ(clonedStartDate._d))
+    var endDate = moment(isNotValidDate ? convertTZ(clonedEndDate) : convertTZ(clonedEndDate._d))
     var stringStartDate = startDate.format('YYYY-MM-DDTHH:mm:ss')
     var stringEndDate = endDate.format('YYYY-MM-DDTHH:mm:ss')
+    if(isNotValidDate){
+        console.error(`isNotValidDate detected, Didn't use ._d`,startDate,endDate,new Error());
+    }
     return {
         startDateMoment: startDate,
         endDateMoment: endDate,
@@ -966,11 +972,13 @@ function popImage(imageSrc){
     $('body').append(`<div class="popped-image"><img src="${imageSrc}"></div>`)
 }
 $(document).ready(function(){
-    loadMonitorsIntoMemory(function(data){
-        setInterfaceCounts(data)
-        openTab('initial')
-        onDashboardReadyExecute()
-    })
+    onInitWebsocket(function(){
+        loadMonitorsIntoMemory(function(data){
+            setInterfaceCounts(data)
+            openTab('initial')
+            onDashboardReadyExecute()
+        })
+    });
     $('body')
     // .on('tab-away',function(){
     //

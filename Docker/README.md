@@ -40,7 +40,7 @@ docker run -d --name='Shinobi' -p '8080:8080/tcp' -v "/dev/shm/Shinobi/streams":
 - `-e PLUGIN_PORT='8080'` Set this as your Shinobi Web Port number.
 
 ```
-docker run -d --name='shinobi-tensorflow' -e PLUGIN_HOST='10.1.103.113' -e PLUGIN_PORT='8080' -v "$HOME/Shinobi/docker-plugins/tensorflow":'/config':'rw' shinobisystems/shinobi-tensorflow:latest
+docker run -d --name='shinobi-tensorflow' -e PLUGIN_HOST='10.1.103.113' -e PLUGIN_PORT='8080' -v "$HOME/Shinobi/docker-plugins/tensorflow":'/config':'rw' registry.gitlab.com/shinobi-systems/docker-plugin-tensorflow.js:master
 ```
 
 More Information about this plugin :

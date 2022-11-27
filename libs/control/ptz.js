@@ -7,12 +7,12 @@ module.exports = function(s,config,lang){
     const sliceUrlAuth = (url) => {
         return /^(.+?\/\/)(?:.+?:.+?@)?(.+)$/.exec(url).slice(1).join('')
     }
-    function getGenericControlParameters(options,urlType){
+    function getGenericControlParameters(options,doStart){
         const monitorConfig = s.group[options.ke].rawMonitorConfigurations[options.id]
         const controlUrlMethod = monitorConfig.details.control_url_method || 'GET'
         const controlBaseUrl = monitorConfig.details.control_base_url || s.buildMonitorUrl(monitorConfig, true)
         let theURL;
-        if(urlType === 'start'){
+        if(doStart){
             theURL = controlBaseUrl + monitorConfig.details[`control_url_${options.direction}`]
         }else{
             theURL = controlBaseUrl + monitorConfig.details[`control_url_${options.direction}_stop`]
@@ -42,7 +42,7 @@ module.exports = function(s,config,lang){
                 controlOptions,
                 hasDigestAuthEnabled,
                 requestUrl,
-            } = getGenericControlParameters(options,'start')
+            } = getGenericControlParameters(options,doStart)
             const response =  {
                 ok: true,
                 type: lang[doStart ? 'Control Triggered' : 'Control Trigger Ended']
@@ -50,7 +50,7 @@ module.exports = function(s,config,lang){
             const theRequest = fetchWithAuthentication(requestUrl,{
                 method: controlUrlMethod || controlOptions.method,
                 digestAuth: hasDigestAuthEnabled,
-                body: controlOptions.postData || null
+                postData: controlOptions.postData || null
             });
             theRequest.then(res => res.text())
             .then((data) => {

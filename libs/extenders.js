@@ -21,7 +21,6 @@ module.exports = function(s,config){
     createExtension(`loadGroupExtender`,`loadGroupExtensions`)
     createExtension(`loadGroupAppExtender`,`loadGroupAppExtensions`)
     createExtension(`unloadGroupAppExtender`,`unloadGroupAppExtensions`)
-    createExtension(`cloudDisksLoader`,`cloudDisksLoaded`)
     createExtension(`onAccountSave`)
     createExtension(`beforeAccountSave`)
     createExtension(`onTwoFactorAuthCodeNotification`)
