@@ -41,6 +41,7 @@ $(document).ready(function(e){
         }
     }
     var loadRegionEditor = function(monitor){
+        regionEditorForm.find('input').prop('disabled',false)
         var theCanvas = getRegionEditorCanvas()
         var monitorDetails = Object.assign({},monitor.details)
         var imageWidth = !isNaN(monitorDetails.detector_scale_x) ? parseInt(monitorDetails.detector_scale_x) : 640
@@ -59,6 +60,13 @@ $(document).ready(function(e){
         }
         regionViewerDetails = monitorDetails;
         initiateRegionList()
+        loadPrimaryFields(monitor)
+    }
+    function loadPrimaryFields(monitor){
+        var monitorDetails = Object.assign({},monitor.details)
+        $.each(monitorDetails,function(n,v){
+            regionEditorForm.find(`[detail="${n}"]`).val(v)
+        })
     }
     var drawPointsTable = function(){
         var currentRegionId = getCurrentlySelectedRegionId()
@@ -90,6 +98,12 @@ $(document).ready(function(e){
         var monitorId = getCurrentlySelectedMonitorId()
         var monitorConfig = Object.assign({},loadedMonitors[monitorId])
         var regionCoordinates = Object.assign({},coorindates || regionViewerDetails.cords instanceof Object ? regionViewerDetails.cords : safeJsonParse(regionViewerDetails.cords) || {});
+        regionEditorForm.find('[detail]').each(function(n,v){
+            var el = $(this);
+            var key = el.attr('detail')
+            var value = el.val()
+            monitorConfig.details[key] = value;
+        });
         monitorConfig.details.cords = JSON.stringify(regionCoordinates)
         monitorConfig.details = JSON.stringify(monitorConfig.details)
         $.post(getApiPrefix(`configureMonitor`)+ '/' + monitorId,{
@@ -311,9 +325,7 @@ $(document).ready(function(e){
         }
     })
     addOnTabOpen('regionEditor', function () {
-        if(!regionEditorMonitorsList.val()){
-            drawMonitorListToSelector(regionEditorMonitorsList,true)
-        }
+        drawMonitorListToSelector(regionEditorMonitorsList,true)
         initLiveStream()
     })
     addOnTabReopen('regionEditor', function () {
