@@ -2650,7 +2650,6 @@ module.exports = function(s,config,lang){
                       ]
                    },
                    {
-                       isAdvanced: true,
                       "name": "detail=use_detector_filters",
                       "field": lang['Event Filters'],
                       "description": lang.fieldTextEventFilters,
@@ -2671,7 +2670,6 @@ module.exports = function(s,config,lang){
                       ]
                    },
                    {
-                       isAdvanced: true,
                       "name": "detail=use_detector_filters_object",
                       "field": lang['Filter for Objects only'],
                       "description": "",
@@ -3860,7 +3858,6 @@ module.exports = function(s,config,lang){
                        ]
                     },
                     {
-                        isAdvanced: true,
                        "name": "detail=detector_ptz_follow_target",
                        "field": lang['PTZ Tracking Target'],
                        "description": "",
