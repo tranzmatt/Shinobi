@@ -338,7 +338,7 @@ const onImageProcessed = (d, tx, err, res, body, imageStream) => {
                             imgWidth: height,
                             time: duration
                         },
-                        frame: imageStream       
+                        frame: imageStream          
                     };
 
                     tx(eventData);
