@@ -60,7 +60,6 @@ module.exports = function(s,config,lang,app){
                         mail: user.mail,
                         details: {},
                     };
-                    console.log('$user',$user)
                     s.renderPage(req,res,config.renderPaths.embed,{
                         data: req.params,
                         baseUrl: req.protocol+'://'+req.hostname,
