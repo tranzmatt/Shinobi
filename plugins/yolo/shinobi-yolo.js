@@ -53,7 +53,7 @@ s.detectObject = async function(buffer,d,tx,frameLocation,callback){
         console.error(`await fs.writeFile`,error);
     }
     try{
-        const detections = await detector.detect(frame)
+        const detections = await detector.detect(fullPath)
         matrices = []
         detections.forEach(function(v){
             matrices.push({
