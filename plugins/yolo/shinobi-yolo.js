@@ -82,7 +82,7 @@ s.detectObject = async function(buffer,d,tx,frameLocation,callback){
                 frame: buffer
             })
         }
-        await fs.rm(frame)
+        await fs.rm(fullPath)
     }catch(error){
         console.error(`await detector.detect`,error);
     }
