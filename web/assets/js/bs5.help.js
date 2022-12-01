@@ -1,5 +1,4 @@
-$(document).ready(function(){
-    var helpWindow = $('#help_window')
+function initHelpNotice(){
     var openMessage = null
     function lessThanOneWeekAgo(date){
         const WEEK = 1000 * 60 * 60 * 24 * 7;
@@ -77,4 +76,51 @@ $(document).ready(function(){
     })
     console.log('Please support the Shinobi development.')
     console.log('https://licenses.shinobi.video/subscribe')
+}
+$(document).ready(function(){
+    var theEnclosure = $('#tab-helpWindow')
+    var helpingHandResults = $('#helpinghand-results')
+    var helpingHandSelector = $('#helpinghand-options')
+    var monitorList = theEnclosure.find('.monitors_list')
+    function loadHelpingHandsOptions(){
+        var html = ``
+        $.each(helpingHandShows,function(showId,show){
+            html += createOptionHtml({
+                label: `${show.name}`,
+                value: showId
+            })
+        })
+        helpingHandSelector.html(html)
+    }
+    window.getSelectedHelpingHandMonitorTarget = function(){
+        return monitorList.val()
+    }
+    function loadHelpingHandSelectors(){
+        loadHelpingHandsOptions()
+        drawMonitorListToSelector(monitorList)
+    }
+    $('.watch-helping-hand').click(function(){
+        var selectedShowId = helpingHandSelector.val()
+        playHelpingHandShow(selectedShowId)
+    })
+    helpingHandSelector.change(function(){
+        var selectedShowId = helpingHandSelector.val()
+        var theShow = helpingHandShows[selectedShowId]
+        var monitorTargetSpecific = theEnclosure.find('.helping-hand-target-monitor')
+        if(theShow.targetMonitor){
+            monitorTargetSpecific.show()
+        }else{
+            monitorTargetSpecific.hide()
+        }
+    })
+    initHelpNotice()
+    addOnTabOpen('helpWindow', function () {
+        loadHelpingHandSelectors()
+    })
+    addOnTabReopen('helpWindow', function () {
+        loadHelpingHandSelectors()
+    })
+    $('body').on('click','.helping-hand-stop',function(){
+        stopHelpingHandShow()
+    })
 })
