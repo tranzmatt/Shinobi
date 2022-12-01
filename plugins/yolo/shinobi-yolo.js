@@ -8,7 +8,7 @@
 // PayPal : paypal@m03.ca
 //
 // Base Init >>
-var fs = require('fs');
+var fs = require('fs').promises;
 var config = require('./conf.json')
 var s
 const {
@@ -45,67 +45,46 @@ var yolo = require('node-yolo-shinobi');//this is @vapi/node-yolo@1.2.4 without 
 var detector = new yolo(__dirname + "/models", "cfg/coco.data", "cfg/yolov3.cfg", "yolov3.weights");
 s.detectObject = async function(buffer,d,tx,frameLocation,callback){
     var timeStart = new Date()
-    var detectStuff = async function(frame){
-        try{
-            const detections = await detector.detect(frame)
-            matrices = []
-            detections.forEach(function(v){
-                matrices.push({
-                  x:v.box.x,
-                  y:v.box.y,
-                  width:v.box.w,
-                  height:v.box.h,
-                  tag:v.className,
-                  confidence:v.probability,
-                })
-            })
-            if(matrices.length > 0){
-                tx({
-                    f:'trigger',
-                    id:d.id,
-                    ke:d.ke,
-                    details:{
-                        plug:config.plug,
-                        name:'yolo',
-                        reason:'object',
-                        matrices:matrices,
-                        imgHeight:parseFloat(d.mon.detector_scale_y),
-                        imgWidth:parseFloat(d.mon.detector_scale_x),
-                        time: (new Date()) - timeStart
-                    },
-                    frame: frame
-                })
-            }
-            fs.rm(frame,function(){
-
-            })
-        }catch(err){
-            console.log(err)
-        }
-        callback()
+    const tempName = s.gid(10)+'.jpg'
+    const fullPath = `${s.dir.streams}${d.ke}/${d.id}${tempName}`
+    try{
+        await fs.writeFile(fullPath,buffer)
+    }catch(error){
+        console.error(`await fs.writeFile`,error);
     }
-    if(frameLocation){
-        detectStuff(frameLocation)
-    }else{
-        d.tmpFile=s.gid(5)+'.jpg'
-        if(!fs.existsSync(s.dir.streams)){
-            fs.mkdirSync(s.dir.streams);
-        }
-        d.dir=s.dir.streams+d.ke+'/'
-        if(!fs.existsSync(d.dir)){
-            fs.mkdirSync(d.dir);
-        }
-        d.dir=s.dir.streams+d.ke+'/'+d.id+'/'
-        if(!fs.existsSync(d.dir)){
-            fs.mkdirSync(d.dir);
-        }
-        fs.writeFile(d.dir+d.tmpFile,buffer,function(err){
-            if(err) return s.systemLog(err);
-            try{
-                detectStuff(d.dir+d.tmpFile)
-            }catch(error){
-                console.error('Catch: ' + error);
-            }
+    try{
+        const detections = await detector.detect(fullPath)
+        matrices = []
+        detections.forEach(function(v){
+            matrices.push({
+              x:v.box.x,
+              y:v.box.y,
+              width:v.box.w,
+              height:v.box.h,
+              tag:v.className,
+              confidence:v.probability,
+            })
         })
+        if(matrices.length > 0){
+            tx({
+                f:'trigger',
+                id:d.id,
+                ke:d.ke,
+                details:{
+                    plug:config.plug,
+                    name:'yolo',
+                    reason:'object',
+                    matrices:matrices,
+                    imgHeight:parseFloat(d.mon.detector_scale_y),
+                    imgWidth:parseFloat(d.mon.detector_scale_x),
+                    time: (new Date()) - timeStart
+                },
+                frame: buffer
+            })
+        }
+        await fs.rm(fullPath)
+    }catch(error){
+        console.error(`await detector.detect`,error);
     }
+    callback()
 }

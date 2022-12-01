@@ -1369,4 +1369,5 @@ editorForm.find('[name="type"]').change(function(e){
     addOnTabOpen('monitorSettings', onTabMove)
     addOnTabReopen('monitorSettings', onTabMove)
     window.generateDefaultMonitorSettings = generateDefaultMonitorSettings
+    window.importIntoMonitorEditor = importIntoMonitorEditor
 })

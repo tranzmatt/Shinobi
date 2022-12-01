@@ -112,7 +112,7 @@ $(document).ready(function(e){
                 // }
             }
 
-            var monitorConfig = mergeDeep($.aM.generateDefaultMonitorSettings(),{
+            var monitorConfig = mergeDeep(generateDefaultMonitorSettings(),{
                 type: selectedType,
                 fps: monitorCaptureRate, //videoRecordRate
                 details: {
@@ -129,10 +129,9 @@ $(document).ready(function(e){
                     detector_buffer_fps: monitorCaptureRate,
                 }
             })
-            $.aM.import(monitorConfig)
-            $.aM.e.find('[detail="auto_host"]').change()
-            $.aM.e.modal('show')
-            probeWindow.modal('hide')
+            openTab('monitorSettings')
+            importIntoMonitorEditor(monitorConfig)
+            $('#tab-monitorSettings').find('[detail="auto_host"]').change()
         }else{
             console.log('No Probe Result Loaded!')
         }

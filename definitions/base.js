@@ -6796,8 +6796,8 @@ module.exports = function(s,config,lang){
                      }
                  ]
              },
-           }
-         },
+         }
+     },
      "Log Viewer": {
           "section": "Log Viewer",
           "blocks": {
@@ -8887,6 +8887,225 @@ module.exports = function(s,config,lang){
                     },
                 ]
             }
+        }
+    },
+    "Help Window": {
+           "section": "Help Window",
+           "blocks": {
+               "Column1": {
+                   "name": lang["Helping Hand"],
+                  "color": "navy",
+                  "blockquote": lang.helpFinderDescription,
+                  "section-pre-class": "col-md-4",
+                  "info": [
+                       {
+                         "id": "helpinghand-options",
+                         "field": lang["Active Tutorial"],
+                         "fieldType": "select",
+                         "possible": [
+                             // {
+                             //    "name": lang['Date Updated'],
+                             //    "value": "dateUpdated"
+                             // },
+                         ]
+                      },
+                      {
+                          "field": lang["Monitor"],
+                          "form-group-class": "helping-hand-target-monitor",
+                          "fieldType": "select",
+                          "class": "monitors_list",
+                     },
+                     {
+                         "fieldType": "btn",
+                         "class": `btn-primary fill watch-helping-hand mb-1`,
+                         "btnContent": lang.Run,
+                     },
+                     {
+                         "id": "helpinghand-results",
+                         "fieldType": "div",
+                     },
+                 ]
+             },
+             "Column2": {
+                noHeader: true,
+                "color": "blue",
+                "section-pre-class": "col-md-8",
+                "noDefaultSectionClasses": true,
+                "box-wrapper-class": "row",
+                "info": [
+                    {
+                        title: "New to Shinobi?",
+                        info: `Try reading over some of these links to get yourself started.`,
+                        buttons: [
+                            {
+                                icon: 'newspaper-o',
+                                color: 'default',
+                                text: 'After Installation Guides',
+                                href: 'https://shinobi.video/docs/configure',
+                                class: ''
+                            },
+                            {
+                                icon: 'plus',
+                                color: 'default',
+                                text: 'Adding an H.264 Camera',
+                                href: 'https://shinobi.video/docs/configure#content-adding-an-h264h265-camera',
+                                class: ''
+                            },
+                            {
+                                icon: 'plus',
+                                color: 'default',
+                                text: 'Adding an MJPEG Camera',
+                                href: 'https://shinobi.video/articles/2018-09-19-how-to-add-an-mjpeg-camera',
+                                class: ''
+                            },
+                            {
+                                icon: 'gears',
+                                color: 'default',
+                                text: 'RTSP Camera Optimization',
+                                href: 'https://shinobi.video/articles/2017-07-29-how-i-optimized-my-rtsp-camera',
+                                class: ''
+                            },
+                            {
+                                icon: 'comments-o',
+                                color: 'info',
+                                text: 'Community Chat',
+                                href: 'https://discord.gg/ehRd8Zz',
+                                class: ''
+                            },
+                            {
+                                icon: 'reddit',
+                                color: 'info',
+                                text: 'Forum on Reddit',
+                                href: 'https://www.reddit.com/r/ShinobiCCTV',
+                                class: ''
+                            },
+                            {
+                                icon: 'file-o',
+                                color: 'primary',
+                                text: 'Documentation',
+                                href: 'http://shinobi.video/docs',
+                                class: ''
+                            }
+                        ]
+                    },
+                    {
+                        bigIcon: "smile-o",
+                        title: "It's a proven fact",
+                        info: `Generosity makes you a happier person, please consider supporting the development.`,
+                        buttons: [
+                            {
+                                icon: 'share-square-o',
+                                color: 'default',
+                                text: 'ShinobiShop Subscriptions',
+                                href: 'https://licenses.shinobi.video/subscribe',
+                                class: ''
+                            },
+                            {
+                                icon: 'paypal',
+                                color: 'default',
+                                text: 'Donate by PayPal',
+                                href: 'https://www.paypal.me/ShinobiCCTV',
+                                class: ''
+                            },
+                            {
+                                icon: 'bank',
+                                color: 'default',
+                                text: 'University of Zurich (UZH)',
+                                href: 'https://www.zora.uzh.ch/id/eprint/139275/',
+                                class: ''
+                            },
+                        ]
+                    },
+                    {
+                        title: "Shinobi Mobile",
+                        info: `Your subscription key can unlock features for <a href="https://cdn.shinobi.video/installers/ShinobiMobile/" target="_blank"><b>Shinobi Mobile</b></a> running on iOS and Android today!`,
+                        buttons: [
+                            {
+                                icon: 'star',
+                                color: 'success',
+                                text: 'Join Public Beta',
+                                href: 'https://shinobi.video/mobile',
+                                class: ''
+                            },
+                            {
+                                icon: 'comments-o',
+                                color: 'primary',
+                                text: '<b>#mobile-client</b> Chat',
+                                href: 'https://discord.gg/ehRd8Zz',
+                                class: ''
+                            },
+                        ]
+                    },
+                    {
+                        title: "Support the Development",
+                        info: `Subscribe to any of the following to boost development! Once subscribed put your Subscription ID in at the Super user panel, then restart Shinobi to Activate your installation, thanks! <i class="fa fa-smile-o"></i>`,
+                        buttons: [
+                            {
+                                icon: 'share-square-o',
+                                color: 'default',
+                                text: 'Shinobi Mobile License ($5/m)',
+                                href: 'https://licenses.shinobi.video/subscribe?planSubscribe=plan_G31AZ9mknNCa6z',
+                                class: ''
+                            },
+                            {
+                                icon: 'share-square-o',
+                                color: 'default',
+                                text: 'Tiny Support Subscription ($10/m)',
+                                href: 'https://licenses.shinobi.video/subscribe?planSubscribe=plan_G42jNgIqXaWmIC',
+                                class: ''
+                            },
+                            {
+                                icon: 'share-square-o',
+                                color: 'default',
+                                text: 'Shinobi Pro License ($75/m)',
+                                href: 'https://licenses.shinobi.video/subscribe?planSubscribe=plan_G3LGdNwA8lSmQy',
+                                class: ''
+                            },
+                        ]
+                    },
+                    {
+                        title: "Donations, One-Time Boost",
+                        info: `Sometimes a subscription isn't practical for people. In which case you may show support through a PayPal donation. And as a thank you for doing so your <b>PayPal Transaction ID</b> can be used as a <code>subscriptionId</code> in your Shinobi configuration file. <br><br>Each 5 USD/EUR or 7 CAD will provide one month of activated usage. <i>Meaning, a $20 USD donation today makes this popup go away (or activates the mobile app) for 4 months.</i>`,
+                        width: 12,
+                        buttons: [
+                            {
+                                icon: 'paypal',
+                                color: 'default',
+                                text: 'Donate by PayPal',
+                                href: 'https://www.paypal.me/ShinobiCCTV',
+                                class: ''
+                            },
+                        ]
+                    },
+                ].map((block) => {
+                    var parsedButtons = block.buttons.map((btn) => {
+                        return {
+                            "fieldType": "btn",
+                            "class": `btn-${btn.color} fill mb-1`,
+                            "icon": btn.icon,
+                            "attribute": `href="${btn.href}" target="_blank"`,
+                            "btnContent": btn.text,
+                        }
+                    });
+                    return {
+                       noHeader: true,
+                       isFormGroupGroup: true,
+                       "section-pre-class": `col-md-${block.width || '6'} mb-3`,
+                       "info": [
+                           {
+                               "fieldType": "div",
+                               divContent: `<h3>${block.title}</h3>`
+                           },
+                           {
+                               "fieldType": "div",
+                               class: 'mb-3',
+                               divContent: block.info
+                           },
+                           ...parsedButtons
+                       ]
+                    }
+                })
+            },
         }
     },
   })
