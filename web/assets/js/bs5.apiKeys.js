@@ -93,6 +93,14 @@ $(document).ready(function(e){
             }
         })
     }
+    function loadApiKeys(){
+        getApiKeys(function(apiKeys){
+            apiKeyTable.empty()
+            $.each(apiKeys,function(n,row){
+                drawApiKeyRow(row)
+            })
+        })
+    }
     theWindowForm.submit(function(e){
         e.preventDefault()
         writePermissionsFromFieldsToString()
@@ -115,10 +123,10 @@ $(document).ready(function(e){
             type: 'success'
         })
     })
-    getApiKeys(function(apiKeys){
-        apiKeyTable.empty()
-        $.each(apiKeys,function(n,row){
-            drawApiKeyRow(row)
-        })
+    addOnTabOpen('apiKeys', function () {
+        loadApiKeys()
+    })
+    addOnTabReopen('apiKeys', function () {
+        loadApiKeys()
     })
 })

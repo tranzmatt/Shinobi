@@ -72,6 +72,11 @@ function base64ArrayBuffer(arrayBuffer) {
 
       return base64
 }
+function stringContains(find,string,toLowerCase){
+    var newString = string + ''
+    if(toLowerCase)newString = newString.toLowerCase()
+    return newString.indexOf(find) > -1
+}
 function getLocationPathName(){
     return location.pathname.endsWith('/') ? location.pathname : location.pathname + '/'
 }
@@ -149,7 +154,7 @@ const mergeDeep = function(...objects) {
   }, {});
 }
 function dashboardOptions(r,rr,rrr){
-    if(!rrr){rrr={};};if(typeof rrr === 'string'){rrr={n:rrr}};if(!rrr.n){rrr.n='ShinobiOptions_'+location.host}
+    if(!rrr){rrr={};};if(typeof rrr === 'string'){rrr={n:rrr}};if(!rrr.n){rrr.n='ShinobiOptions_'+location.host+'_'+$user.ke+$user.uid}
     ii={o:localStorage.getItem(rrr.n)};try{ii.o=JSON.parse(ii.o)}catch(e){ii.o={}}
     if(!ii.o){ii.o={}}
     if(r&&rr&&!rrr.x){
@@ -191,17 +196,22 @@ function formattedTime(time,twelveHourClock,utcConvert){
 
 function durationBetweenTimes(start,end){
     var duration = moment.duration(moment(end).diff(moment(start)));
-    console.log(duration)
     var hours = duration.asMinutes().toFixed(0);
     return hours
 }
-
 function formattedTimeForFilename(time,utcConvert,timeFormat){
     var theMoment = moment(time)
     if(utcConvert)theMoment = theMoment.clone().utc()
     return theMoment.format(timeFormat ? timeFormat : 'YYYY-MM-DDTHH:mm:ss')
 }
-
+function convertTZ(date) {
+    return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", {timeZone: serverTimezone}));
+}
+function setPromiseTimeout(timeoutAmount){
+    return new Promise((resolve) => {
+        setTimeout(resolve,timeoutAmount)
+    })
+}
 function checkCorrectPathEnding(x){
     var length=x.length
     if(x.charAt(length-1)!=='/'){
@@ -258,8 +268,8 @@ function compileConnectUrl(options){
     if(options.port && options.port !== ''){
         porty = ':' + options.port
     }
-    var url = options.protocol + '://' + options.host + porty
-    return options.url
+    var url = options.protocol + '://' + options.host + porty + options.path
+    return url
 }
 
 function jsonToHtmlBlock(target){
@@ -859,6 +869,15 @@ function downloadFile(downloadUrl,fileName){
     a.download = fileName
     a.click()
 }
+function notifyIfActionFailed(data){
+    if(data.ok === false){
+        new PNotify({
+            title: lang['Action Failed'],
+            text: data.msg,
+            type: 'danger'
+        })
+    }
+}
 function convertKbToHumanSize(theNumber){
     var amount = theNumber / 1048576
     var unit = amount / 1000 >= 1000 ? 'TB' : amount >= 1000 ? 'GB' : 'MB'
@@ -910,6 +929,35 @@ function setInterfaceCounts(monitors){
     count.text(`${activeCameraCount} / ${allCameraCount}`)
     el.find('.progress-bar').css('width', `${percentActive}%`)
 }
+function getSelectedTime(dateSelector){
+    var dateRange = dateSelector.data('daterangepicker')
+    var clonedStartDate = dateRange.startDate.clone()
+    var clonedEndDate = dateRange.endDate.clone()
+    var isNotValidDate = !clonedStartDate._d || convertTZ(clonedStartDate._d) == 'Invalid Date';
+    var startDate = moment(isNotValidDate ? convertTZ(clonedStartDate) : convertTZ(clonedStartDate._d))
+    var endDate = moment(isNotValidDate ? convertTZ(clonedEndDate) : convertTZ(clonedEndDate._d))
+    var stringStartDate = startDate.format('YYYY-MM-DDTHH:mm:ss')
+    var stringEndDate = endDate.format('YYYY-MM-DDTHH:mm:ss')
+    if(isNotValidDate){
+        console.error(`isNotValidDate detected, Didn't use ._d`,startDate,endDate,new Error());
+    }
+    return {
+        startDateMoment: startDate,
+        endDateMoment: endDate,
+        startDate: stringStartDate,
+        endDate: stringEndDate
+    }
+}
+function loadDateRangePicker(dateSelector,options){
+    dateSelector.daterangepicker(Object.assign({
+        startDate: moment().subtract(moment.duration("24:00:00")),
+        endDate: moment().add(moment.duration("24:00:00")),
+        timePicker: true,
+        locale: {
+            format: 'YYYY/MM/DD hh:mm:ss A'
+        }
+    },options || {},{ onChange: undefined }), options.onChange)
+}
 // on page load
 var readyFunctions = []
 function onDashboardReady(theAction){
@@ -924,11 +972,13 @@ function popImage(imageSrc){
     $('body').append(`<div class="popped-image"><img src="${imageSrc}"></div>`)
 }
 $(document).ready(function(){
-    loadMonitorsIntoMemory(function(data){
-        setInterfaceCounts(data)
-        openTab('initial')
-        onDashboardReadyExecute()
-    })
+    onInitWebsocket(function(){
+        loadMonitorsIntoMemory(function(data){
+            setInterfaceCounts(data)
+            openTab('initial')
+            onDashboardReadyExecute()
+        })
+    });
     $('body')
     // .on('tab-away',function(){
     //
@@ -938,6 +988,14 @@ $(document).ready(function(){
     // })
     .on('click','.pop-image',function(){
         var imageSrc = $(this).attr('src')
+        if(!imageSrc){
+            new PNotify({
+                title: lang['Action Failed'],
+                text: lang['No Image'],
+                type: 'warning'
+            })
+            return;
+        };
         popImage(imageSrc)
     })
     .on('click','.popped-image',function(){

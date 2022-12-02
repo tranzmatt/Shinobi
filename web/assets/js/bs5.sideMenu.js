@@ -134,6 +134,9 @@ function toggleSideBarMenuHide(){
         floatingHideButton.hide()
         if(tabTree.back)floatingBackButton.show()
     }
+    onToggleSideBarMenuHideExtensions.forEach(function(extender){
+        extender(isHidden)
+    })
 }
 function makeMonitorListSortable(){
     var monitorSideList = $('#monitorSideList')

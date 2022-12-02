@@ -9,6 +9,9 @@ module.exports = (s,config,lang) => {
     const {
         validateDimensions,
     } = require('./utils.js')(s,config,lang)
+    const {
+        parseJSON,
+    } = require('../basic/utils.js')(process.cwd(),config)
     if(!config.outputsWithAudio)config.outputsWithAudio = ['hls','flv','mp4','rtmp'];
     if(!config.outputsNotCapableOfPresets)config.outputsNotCapableOfPresets = [];
     const hasCudaEnabled = (monitor) => {
@@ -688,8 +691,8 @@ module.exports = (s,config,lang) => {
             const hlsTime = !isNaN(parseInt(e.details.detector_buffer_hls_time)) ? `${parseInt(e.details.detector_buffer_hls_time)}` : '2'
             // const hlsListSize = !isNaN(parseInt(e.details.detector_buffer_hls_list_size)) ? `${parseInt(e.details.detector_buffer_hls_list_size)}` : '4'
             const secondsBefore = parseInt(e.details.detector_buffer_seconds_before) || 5
-            let hlsListSize = parseInt(secondsBefore * 0.6)
-            hlsListSize = hlsListSize < 3 ? 3 : hlsListSize;
+            let hlsListSize = parseInt(secondsBefore / 2 + 3)
+            // hlsListSize = hlsListSize < 5 ? 5 : hlsListSize;
             if(inputMap)outputFlags.push(inputMap)
             if(e.details.cust_sip_record)outputFlags.push(e.details.cust_sip_record)
             if(videoCodec === 'auto'){
@@ -769,7 +772,7 @@ module.exports = (s,config,lang) => {
         return ``
     }
     const getDefaultSubstreamFields = function(monitor){
-        const subStreamFields = s.parseJSON(monitor.details.substream || {input:{},output:{}})
+        const subStreamFields = parseJSON(monitor.details.substream || {input:{},output:{}})
         const inputAndConnectionFields = Object.assign({
            "type":"h264",
            "fulladdress":"",

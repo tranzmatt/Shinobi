@@ -51,73 +51,85 @@ function setCosmeticMonitorInfo(monitorConfig){
 }
 
 function getSnapshot(options,cb){
-    var image_data
-    var url
-    var monitor = options.mon || options.monitor || options
-    var targetElement = $(options.targetElement || `[data-mid="${monitor.mid}"].monitor_item .stream-element`)
-    var details = safeJsonParse(monitor.details)
-    var streamType = details.stream_type;
-    if(window.jpegModeOn !== true){
-        function completeAction(image_data,width,height){
-            var len = image_data.length
-            var arraybuffer = new Uint8Array( len )
-            for (var i = 0; i < len; i++)        {
-                arraybuffer[i] = image_data.charCodeAt(i)
-            }
-            try {
-                var blob = new Blob([arraybuffer], {type: 'application/octet-stream'})
-            } catch (e) {
-                var bb = new (window.WebKitBlobBuilder || window.MozBlobBuilder)
-                bb.append(arraybuffer);
-                var blob = bb.getBlob('application/octet-stream');
-            }
-            url = (window.URL || window.webkitURL).createObjectURL(blob)
-            cb(url,image_data,width,height)
-            try{
-                setTimeout(function(){
-                    URL.revokeObjectURL(url)
-                },10000)
-            }catch(er){}
+    return new Promise((resolve,reject) => {
+        function endAction(url,image_data,width,height,fileSize){
+            if(cb)cb(url,image_data,width,height,fileSize);
+            resolve({
+                url,
+                image_data,
+                width,
+                height,
+                fileSize
+            });
         }
-        switch(streamType){
-            case'hls':
-            case'flv':
-            case'mp4':
-                getVideoSnapshot(targetElement[0],function(base64,video_data,width,height){
-                    completeAction(video_data,width,height)
-                })
-            break;
-            case'mjpeg':
-                $('#temp').html('<canvas></canvas>')
-                var c = $('#temp canvas')[0]
-                var img = $('img',targetElement.contents())[0]
-                c.width = img.width
-                c.height = img.height
-                var ctx = c.getContext('2d')
-                ctx.drawImage(img, 0, 0,c.width,c.height)
-                completeAction(atob(c.toDataURL('image/jpeg').split(',')[1]),c.width,c.height)
-            break;
-            case'b64':
-                var c = targetElement[0]
-                var ctx = c.getContext('2d')
-                completeAction(atob(c.toDataURL('image/jpeg').split(',')[1]),c.width,c.height)
-            break;
-            case'jpeg':
-                url = targetElement.attr('src')
-                image_data = new Image()
-                image_data.src = url
-                cb(url,image_data,image_data.width,image_data.height)
-            break;
+        var image_data
+        var url
+        var monitor = options.mon || options.monitor || options
+        var targetElement = $(options.targetElement || `[data-mid="${monitor.mid}"].monitor_item .stream-element`)
+        var details = safeJsonParse(monitor.details)
+        var streamType = details.stream_type;
+        if(window.jpegModeOn !== true){
+            function completeAction(image_data,width,height){
+                var len = image_data.length
+                var arraybuffer = new Uint8Array( len )
+                for (var i = 0; i < len; i++)        {
+                    arraybuffer[i] = image_data.charCodeAt(i)
+                }
+                try {
+                    var blob = new Blob([arraybuffer], {type: 'application/octet-stream'})
+                } catch (e) {
+                    var bb = new (window.WebKitBlobBuilder || window.MozBlobBuilder)
+                    bb.append(arraybuffer);
+                    var blob = bb.getBlob('application/octet-stream');
+                }
+                url = (window.URL || window.webkitURL).createObjectURL(blob)
+                endAction(url,image_data,width,height,arraybuffer.length)
+                try{
+                    setTimeout(function(){
+                        URL.revokeObjectURL(url)
+                    },10000)
+                }catch(er){}
+            }
+            switch(streamType){
+                case'hls':
+                case'flv':
+                case'mp4':
+                    getVideoSnapshot(targetElement[0],function(base64,video_data,width,height){
+                        completeAction(video_data,width,height)
+                    })
+                break;
+                case'mjpeg':
+                    $('#temp').html('<canvas></canvas>')
+                    var c = $('#temp canvas')[0]
+                    var img = $('img',targetElement.contents())[0]
+                    c.width = img.width
+                    c.height = img.height
+                    var ctx = c.getContext('2d')
+                    ctx.drawImage(img, 0, 0,c.width,c.height)
+                    completeAction(atob(c.toDataURL('image/jpeg').split(',')[1]),c.width,c.height)
+                break;
+                case'b64':
+                    var c = targetElement[0]
+                    var ctx = c.getContext('2d')
+                    completeAction(atob(c.toDataURL('image/jpeg').split(',')[1]),c.width,c.height)
+                break;
+                case'jpeg':
+                    url = targetElement.attr('src')
+                    image_data = new Image()
+                    image_data.src = url
+                    endAction(url,image_data,image_data.width,image_data.height,0)
+                break;
+            }
+            $.each(onGetSnapshotByStreamExtensions,function(n,extender){
+                extender(streamType,targetElement,completeAction,cb)
+            })
+        }else{
+            url = targetElement.attr('src')
+            image_data = new Image()
+            image_data.src = url
+            endAction(url,image_data,image_data.width,image_data.height,0)
         }
-        $.each(onGetSnapshotByStreamExtensions,function(n,extender){
-            extender(streamType,targetElement,completeAction,cb)
-        })
-    }else{
-        url = targetElement.attr('src')
-        image_data = new Image()
-        image_data.src = url
-        cb(url,image_data,image_data.width,image_data.height)
-    }
+    })
 }
 function getVideoSnapshot(videoElement,cb){
     var image_data
@@ -171,10 +183,30 @@ function runPtzMove(monitorId,switchChosen,doMove){
         ke: $user.ke
     })
 }
-function runTestDetectionTrigger(monitorId,callback){
-    $.getJSON(getApiPrefix() + '/motion/'+$user.ke+'/'+monitorId+'/?data={"plug":"manual_trigger","name":"Manual Trigger","reason":"Manual","confidence":100}',function(d){
-        debugLog(d)
-        if(callback)callback()
+function runTestDetectionTrigger(monitorId,customData){
+    return new Promise((resolve,reject) => {
+        var detectionData = Object.assign({
+            "plug":"dashboard",
+            "name":"Test Object",
+            "reason":"object",
+            "confidence": 80,
+            imgHeight: 640,
+            imgWidth: 480,
+            matrices: [
+                {
+                    x: 15,
+                    y: 15,
+                    width: 50,
+                    height: 50,
+                    tag: 'Object Test',
+                    confidence: 100,
+                }
+            ]
+        },customData || {});
+        $.getJSON(getApiPrefix() + '/motion/'+$user.ke+'/'+monitorId+'/?data=' + JSON.stringify(detectionData),function(d){
+            debugLog(d)
+            resolve(d)
+        })
     })
 }
 function toggleSubStream(monitorId,callback){
@@ -529,7 +561,7 @@ function deleteMonitors(monitorsSelected,afterDelete){
                 callback:function(){
                     $.each(monitorsSelected,function(n,monitor){
                         $.getJSON(`${getApiPrefix(`configureMonitor`)}/${monitor.mid}/delete`,function(data){
-                            console.log(data)
+                            notifyIfActionFailed(data)
                             if(monitorsSelected.length === n + 1){
                                 //last
                                 if(afterDelete)afterDelete(monitorsSelected)
@@ -544,7 +576,7 @@ function deleteMonitors(monitorsSelected,afterDelete){
                 callback:function(){
                     $.each(monitorsSelected,function(n,monitor){
                         $.getJSON(`${getApiPrefix(`configureMonitor`)}/${monitor.mid}/delete?deleteFiles=true`,function(data){
-                            console.log(data)
+                            notifyIfActionFailed(data)
                             if(monitorsSelected.length === n + 1){
                                 //last
                                 if(afterDelete)afterDelete(monitorsSelected)

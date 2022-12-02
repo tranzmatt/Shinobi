@@ -2,7 +2,7 @@
    "name": "shinobi-deepstack-object",
    "author": "Elad Bar",
    "version": "1.0.0",
-   "description": "Object Detection plugin for DeepStack",
+   "description": "Object Detection plugin for DeepStack / CodeProject AI",
    "main": "shinobi-deepstack-object.js",
    "dependencies": {
       "request": "^2.88.0",

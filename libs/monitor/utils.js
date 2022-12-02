@@ -100,6 +100,7 @@ module.exports = (s,config,lang) => {
             clearTimeout(activeMonitor.recordingSnapper);
             clearInterval(activeMonitor.getMonitorCpuUsage);
             clearInterval(activeMonitor.objectCountIntervals);
+            clearTimeout(activeMonitor.timeoutToRestart)
             delete(activeMonitor.onvifConnection)
             if(activeMonitor.onChildNodeExit){
                 activeMonitor.onChildNodeExit()
@@ -150,7 +151,7 @@ module.exports = (s,config,lang) => {
             }
             const completeRequest = () => {
                 fs.readFile(temporaryImageFile,(err,imageBuffer) => {
-                    fs.unlink(temporaryImageFile,(err) => {
+                    fs.rm(temporaryImageFile,(err) => {
                         if(err){
                             s.debugLog(err)
                         }

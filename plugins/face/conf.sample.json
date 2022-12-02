@@ -6,5 +6,6 @@
   "key":"Face123123",
   "mode":"client",
   "type":"detector",
-  "connectionType":"websocket"
+  "connectionType":"websocket",
+  "enabled": false
 }

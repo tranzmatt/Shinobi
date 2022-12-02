@@ -50,31 +50,10 @@ $(document).ready(function(e){
     var openTimelapseWindow = function(monitorId,startDate,endDate){
         drawTimelapseWindowElements(monitorId,startDate,endDate)
     }
-    var getSelectedTime = function(asUtc){
-        var dateRange = dateSelector.data('daterangepicker')
-        var startDate = dateRange.startDate.clone()
-        var endDate = dateRange.endDate.clone()
-        if(asUtc){
-            startDate = startDate.utc()
-            endDate = endDate.utc()
+    loadDateRangePicker(dateSelector,{
+        onChange: function(start, end, label) {
+            drawTimelapseWindowElements()
         }
-        startDate = startDate.format('YYYY-MM-DDTHH:mm:ss')
-        endDate = endDate.format('YYYY-MM-DDTHH:mm:ss')
-        return {
-            startDate: startDate,
-            endDate: endDate
-        }
-    }
-
-    dateSelector.daterangepicker({
-        startDate: moment().utc().subtract(2, 'days'),
-        endDate: moment().utc(),
-        timePicker: true,
-        locale: {
-            format: 'YYYY/MM/DD hh:mm:ss A'
-        }
-    }, function(start, end, label) {
-        drawTimelapseWindowElements()
     })
     monitorsList.change(function(){
         drawTimelapseWindowElements()
@@ -88,7 +67,7 @@ $(document).ready(function(e){
     }
     function drawTimelapseWindowElements(selectedMonitor,startDate,endDate){
         setDownloadButtonLabel(lang['Build Video'], 'database')
-        var dateRange = getSelectedTime(false)
+        var dateRange = getSelectedTime(dateSelector)
         if(!startDate)startDate = dateRange.startDate
         if(!endDate)endDate = dateRange.endDate
         if(!selectedMonitor)selectedMonitor = monitorsList.val()
@@ -275,7 +254,7 @@ $(document).ready(function(e){
     })
     downloadButton.click(function(){
         var fps = fpsSelector.val()
-        var dateRange = getSelectedTime(false)
+        var dateRange = getSelectedTime(dateSelector)
         var startDate = dateRange.startDate
         var endDate = dateRange.endDate
         var selectedMonitor = monitorsList.val()
@@ -376,18 +355,20 @@ $(document).ready(function(e){
                 window.askedForTimelapseVideoBuild = false
             break;
             case'fileBin_item_added':
-                var saveBuiltVideo = dashboardOptions().switches.timelapseSaveBuiltVideo
-                let statusText = `${lang['Done!']}`
-                onTimelapseVideoBuildComplete(data)
-                if(data.timelapseVideo && saveBuiltVideo === 1){
-                    downloadTimelapseVideo(data)
-                    statusText = lang['Downloaded!']
+                if(data.timelapseVideo){
+                    var saveBuiltVideo = dashboardOptions().switches.timelapseSaveBuiltVideo
+                    let statusText = `${lang['Done!']}`
+                    onTimelapseVideoBuildComplete(data)
+                    if(saveBuiltVideo === 1){
+                        downloadTimelapseVideo(data)
+                        statusText = lang['Downloaded!']
+                    }
+                    setDownloadButtonLabel(statusText, '')
+                    var progressItem = sideLinkListBox.find(`[data-mid="${data.mid}"][data-ke="${data.mid}"][data-name="${data.name}"]`)
+                    progressItem.find('.row-status').text(statusText)
+                    progressItem.find('.dot').removeClass('dot-orange').addClass('dot-green')
+                    progressItem.find('.download-button').show()
                 }
-                setDownloadButtonLabel(statusText, '')
-                var progressItem = sideLinkListBox.find(`[data-mid="${data.mid}"][data-ke="${data.mid}"][data-name="${data.name}"]`)
-                progressItem.find('.row-status').text(statusText)
-                progressItem.find('.dot').removeClass('dot-orange').addClass('dot-green')
-                progressItem.find('.download-button').show()
             break;
             case'timelapse_build_percent':
                 var progressItem = sideLinkListBox.find(`[data-mid="${data.mid}"][data-ke="${data.mid}"][data-name="${data.name}"]`)

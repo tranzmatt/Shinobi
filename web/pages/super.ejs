@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
     <title><%-lang.Superuser%> - <%-lang.Shinobi%></title>
-    <% window.libURL = originalURL + global.s.checkCorrectPathEnding(config.webPaths.super) %>
+    <%
+        if(config.baseURL)window.libURL = config.baseURL;
+        if(!window.libURL)window.libURL = originalURL;
+     %>
     <% include blocks/header-meta.ejs %>
     <% include blocks/header-favicon.ejs %>
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
@@ -27,7 +30,7 @@
     <script src="<%-window.libURL%>assets/js/bs5.confirm.js" type="text/javascript"></script>
 
     <script>
-        var superApiPrefix = location.search === '?p2p=1' ? (location.pathname.endsWith('/') ? location.pathname : location.pathname) : "<%=originalURL%><%=config.webPaths.superApiPrefix%>"
+        var superApiPrefix = location.pathname.indexOf('/s/') > -1 ? (location.pathname.endsWith('/') ? location.pathname : location.pathname + '/') : "<%- `${originalURL}${config.webPaths.superApiPrefix}` %>"
     </script>
     <% customAutoLoad.superLibsCss.forEach(function(lib){ %>
         <link rel="stylesheet" href="<%-window.libURL%>libs/css/<%-lib%>">
@@ -215,15 +218,10 @@ switch($user.lang){
         })
     break;
 }
-if(location.search === '?p2p=1'){
-    $.ccio.ws=io(location.origin,{
-        path : '/socket.io'
-    });
-}else{
-    $.ccio.ws=io(location.origin,{
-        path : tool.checkCorrectPathEnding(location.pathname)+'socket.io'
-    });
-}
+$.ccio.ws = io(`${location.origin.split('/super')[0]}/`,{
+    path : tool.checkCorrectPathEnding(location.pathname)+'socket.io'
+});
+
 $.ccio.cx=function(x){return $.ccio.ws.emit('super',x)}
 $.ccio.ws.on('connect',function(d){
     $.ccio.cx({f:'init',mail:$user.mail,pass:$user.pass,machineId: `<%- config.machineId %>`})

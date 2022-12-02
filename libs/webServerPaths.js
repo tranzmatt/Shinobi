@@ -31,6 +31,7 @@ module.exports = function(s,config,lang,app,io){
         destroySubstreamProcess,
     } = require('./monitor/utils.js')(s,config,lang)
     const {
+        sliceVideo,
         archiveVideo,
         reEncodeVideoAndReplace,
         reEncodeVideoAndBinOriginalAddToQueue,
@@ -221,7 +222,11 @@ module.exports = function(s,config,lang,app,io){
                 delete(s.failedLoginAttempts[req.body.mail])
             }
             if(req.query.json=='true'){
-                delete(data.config)
+                delete(data.config);
+                delete(data.__dirname);
+                delete(data.customAutoLoad);
+                delete(data.fs);
+                data.timezone = config.timezone
                 data.ok = true;
                 res.setHeader('Content-Type', 'application/json');
                 res.end(s.prettyPrint(data))
@@ -316,6 +321,7 @@ module.exports = function(s,config,lang,app,io){
                         $user: userInfo,
                         lang: userInfo.lang,
                         define: s.getDefinitonFile(userInfo.details.lang),
+                        __dirname: s.mainDirectory,
                         customAutoLoad: s.customAutoLoadTree
                     })
                 break;
@@ -325,6 +331,7 @@ module.exports = function(s,config,lang,app,io){
                         $user: userInfo,
                         lang: userInfo.lang,
                         define: s.getDefinitonFile(userInfo.details.lang),
+                        __dirname: s.mainDirectory,
                         customAutoLoad: s.customAutoLoadTree
                     })
                 break;
@@ -972,7 +979,7 @@ module.exports = function(s,config,lang,app,io){
             const {
                 monitorPermissions,
                 monitorRestrictions,
-            } = s.getMonitorsPermitted(user.details,monitorId)
+            } = s.getMonitorsPermitted(user.details,monitorId,'video_view')
             const {
                 isRestricted,
                 isRestrictedApiKey,
@@ -1012,6 +1019,7 @@ module.exports = function(s,config,lang,app,io){
                 endIsStartTo: !!req.query.endIsStartTo,
                 parseRowDetails: false,
                 rowName: 'videos',
+                monitorRestrictions: monitorRestrictions,
                 preliminaryValidationFailed: false
             },(response) => {
                 if(response && response.videos){
@@ -1386,7 +1394,7 @@ module.exports = function(s,config,lang,app,io){
                         onGetVideoData(r).then((dataPipe) => {
                             dataPipe.pipe(res)
                         }).catch((err) => {
-                            console.log(err)
+                            console.error('onGetVideoData ERROR',err,videoDetails)
                             res.end(user.lang['File Not Found in Database'])
                         })
                     }else{
@@ -1813,6 +1821,15 @@ module.exports = function(s,config,lang,app,io){
                     const originalFileName = `${s.formattedTime(r.time)+'.'+r.ext}`
                     var details = s.parseJSON(r.details) || {}
                     switch(req.params.mode){
+                        case'slice':
+                            const startTime = s.getPostData(req,'startTime');
+                            const endTime = s.getPostData(req,'endTime');
+                            const sliceResponse = await sliceVideo(r,{
+                                startTime: startTime,
+                                endTime: endTime,
+                            });
+                            response = sliceResponse
+                        break;
                         case'archive':
                             response.ok = true
                             const unarchive = s.getPostData(req,'unarchive') == '1';

@@ -1,148 +1,412 @@
 //
-// Shinobi - Tensorflow Plugin
-// Copyright (C) 2016-2025 Elad Bar, Moe Alam
+// Shinobi - DeepStack Face Recognition Plugin
+// Copyright (C) 2021 Elad Bar
 //
 // Base Init >>
+const { spawn } = require('child_process');
 const fs = require('fs');
-const config = require('./conf.json')
-const request = require("request")
-var s
+const request = require("request");
+const moment = require('moment');
+const config = require('./conf.json');
+
+let s = null;
+
 const {
 		workerData
 	} = require('worker_threads');
 
-if(workerData && workerData.ok === true){
-	try{
-		s = require('../pluginWorkerBase.js')(__dirname,config)
-	}catch(err){
-		console.log(err)
-		try{
-			s = require('./pluginWorkerBase.js')(__dirname,config)
-		}catch(err){
-			console.log(err)
-			return console.log(config.plug,'WORKER : Plugin start has failed. pluginBase.js was not found.')
-		}
-	}
-}else{
-	try{
-		s = require('../pluginBase.js')(__dirname,config)
-	}catch(err){
-		console.log(err)
-		try{
-			s = require('./pluginBase.js')(__dirname,config)
-		}catch(err){
-			console.log(err)
-			return console.log(config.plug,'Plugin start has failed. pluginBase.js was not found.')
-		}
-	}
-	try{
-		s = require('../pluginBase.js')(__dirname,config)
-	}catch(err){
-		console.log(err)
-		try{
-			const {
-				haltMessage,
-				checkStartTime,
-				setStartTime,
-			} = require('../pluginCheck.js')
+const isWorker = workerData && workerData.ok === true;
+const pluginBasePath = isWorker ? "pluginWorkerBase.js" : "pluginBase.js";
 
-			if(!checkStartTime()){
-				console.log(haltMessage,new Date())
-				s.disconnectWebSocket()
-				return
-			}
-			setStartTime()
-		}catch(err){
-			console.log(`pluginCheck failed`)
-		}
-	}
+for(let i = 0; i < 2; i++) {
+    try {
+		s = require(`../${pluginBasePath}`)(__dirname, config);
 
+	} catch(err) {
+		console.log(err);
+
+        s = null;
+	}
+}
+
+if(s === null) {
+    console.log(config.plug, `Plugin start has failed. ${pluginBasePath} was not found.`);
+} else {
+    if(!isWorker) {
+        const {
+            haltMessage,
+            checkStartTime,
+            setStartTime,
+        } = require('../pluginCheck.js');
+    
+        if(!checkStartTime()) {
+            console.log(haltMessage, new Date());
+            s.disconnectWebSocket();
+        }
+    
+        setStartTime();
+    }
 }
 // Base Init />>
 
-const deepStackHost = config.deepStack["host"]
-const deepStackPort = config.deepStack["port"]
-const deepStackIsSSL = config.deepStack["isSSL"]
-const deepStackApiKey = config.deepStack["apiKey"]
-const deepStackProtocol = deepStackIsSSL ? "https" : "http"
+let detectorSettings = null;
 
-const baseUrl = `${deepStackProtocol}://${deepStackHost}:${deepStackPort}/v1`
+const DETECTOR_TYPE_FACE = 'face';
+const DETECTOR_TYPE_OBJECT = 'object';
 
-function deepStackRequest(requestEndpoint,frameBuffer){
-	const fullEndPointUrl = `${baseUrl}${requestEndpoint || `/vision/detection`}`
-	return new Promise((resolve,reject) => {
-		try{
-			const form = {
-				"image": {
-					value: frameBuffer,
-					options: {
-					  filename: 'frame.jpg'
-					}
-				}
-			}
-			if(deepStackApiKey) {
-				form["api_key"] = deepStackApiKey
-			}
-			request.post({url:fullEndPointUrl, formData:form}, function(err,res,body){
-				let predictions = []
-				try{
-					const response = JSON.parse(body || {predictions: []})
-					predictions = response["predictions"] || []
-				}catch(err){
-					console.log(res)
-					console.log(err)
-					console.log(body)
-				}
-				resolve(predictions);
-			})
-		}catch(err){
-			resolve([])
-			console.log(err)
-		}
-	})
+const FACE_UNKNOWN = 'unknown';
+const DEEPSTACK_API_KEY = 'api_key';
+
+const DETECTOR_CONFIGUTATION = {
+    face: {
+        detectEndpoint: '/vision/face/recognize',
+        startupEndpoint: '/vision/face/list',
+        key: 'userid'
+    },
+    object: {
+        detectEndpoint: '/vision/detection',
+        key: 'label'
+    }
 }
 
-s.detectObject = async function(frameBuffer,d,tx,frameLocation,callback){
-	const timeStart = new Date()
-	const predictions = await deepStackRequest(`/vision/detection`,frameBuffer)
-	if(predictions.length > 0) {
-		const mats = []
-		predictions.forEach(function(v){
-			const label = v["label"]
-			const confidence = v["confidence"]
-			const y_min = v["y_min"]
-			const x_min = v["x_min"]
-			const y_max = v["y_max"]
-			const x_max = v["x_max"]
-			const width = x_max - x_min
-			const height = y_max - y_min
-			mats.push({
-				x: x_min,
-				y: y_min,
-				width: width,
-				height: height,
-				tag: label,
-				confidence: confidence,
-			})
-		})
-		const isObjectDetectionSeparate = d.mon.detector_pam === '1' && d.mon.detector_use_detect_object === '1'
-		const width = parseFloat(isObjectDetectionSeparate  && d.mon.detector_scale_y_object ? d.mon.detector_scale_y_object : d.mon.detector_scale_y)
-		const height = parseFloat(isObjectDetectionSeparate  && d.mon.detector_scale_x_object ? d.mon.detector_scale_x_object : d.mon.detector_scale_x)
+const PROTOCOLS = {
+    true: "https",
+    false: "http"
+};
 
-		tx({
-			f:'trigger',
-			id:d.id,
-			ke:d.ke,
-			details:{
-				plug: config.plug,
-				name: `DeepStack-Object`,
-				reason: 'object',
-				matrices: mats,
-				imgHeight: width,
-				imgWidth: height,
-			},
-			frame: frameBuffer
-		})
+const log = (logger, message) => {
+    logger(`${moment().format()} [${config.plug}] ${message}`);
+}
+
+const logError = (message) => {
+    log(console.error, message);
+};
+
+const logWarn = (message) => {
+    log(console.warn, message);
+};
+
+const logInfo = (message) => {
+    log(console.info, message);
+};
+
+const logDebug = (message) => {
+    log(console.debug, message);
+};
+
+const postMessage = (data) => {
+    const message = JSON.stringify(data);
+
+	logInfo(message);
+};
+
+const initialize = () => {
+    const deepStackProtocol = PROTOCOLS[config.deepStack.isSSL];
+    
+    baseUrl = `${deepStackProtocol}://${config.deepStack.host}:${config.deepStack.port}/v1`;
+    
+    const detectionType = config.plug.split("-")[1].toLowerCase();
+    const detectorConfig = DETECTOR_CONFIGUTATION[detectionType];
+    const detectorConfigKeys = Object.keys(detectorConfig);
+    
+    detectorSettings = {
+        type: detectionType,
+        active: false,
+        baseUrl: baseUrl,
+        apiKey: config.deepStack.apiKey
+	};
+
+    if(detectionType === DETECTOR_TYPE_FACE) {
+        detectorSettings["registeredPersons"] = config.persons === undefined ? [] : config.persons;
+    }
+
+	detectorConfigKeys.forEach(k => detectorSettings[k] = detectorConfig[k]);
+
+    const testRequestData = getFormData(detectorSettings.detectEndpoint);
+    
+    request.post(testRequestData, (err, res, body) => {
+        try {
+            if(err) {
+                throw err;
+            }
+            
+            const response = JSON.parse(body);
+                
+            if(response.error) {
+                detectorSettings.active = !response.error.endsWith('endpoint not activated');
+            } else {
+                detectorSettings.active = response.success;
+            }
+
+            const detectorSettingsKeys = Object.keys(detectorSettings);
+			
+			const pluginMessageHeader = [];
+            pluginMessageHeader.push(`${config.plug} loaded`);
+
+			const configMessage = detectorSettingsKeys.map(k => `${k}: ${detectorSettings[k]}`);
+
+            const fullPluginMessage = pluginMessageHeader.concat(configMessage);
+
+            const pluginMessage = fullPluginMessage.join(", ");
+
+			logInfo(pluginMessage);
+
+            if (detectorSettings.active) {
+                s.detectObject = detectObject;
+
+                if(detectionType === DETECTOR_TYPE_FACE) {
+                    const requestData = getFormData(detectorSettings.startupEndpoint);
+                    const requestTime = getCurrentTimestamp();
+                    
+                    request.post(requestData, (errStartup, resStartup, bodyStartup) => {
+                        if (!!resStartup) {
+                            resStartup.duration = getDuration(requestTime);
+                        }
+
+                        onFaceListResult(errStartup, resStartup, bodyStartup);
+                    });
+                }
+            }            
+        } catch(ex) {
+            logError(`Failed to initialize ${config.plug} plugin, Error: ${ex}`)
+        }
+    });
+};
+
+const processImage = (imageB64, d, tx, frameLocation, callback) => {
+	if(!detectorSettings.active) {
+        return;
+    }
+
+    try{
+        const imageStream = fs.createReadStream(frameLocation);
+        
+        const form = {
+			image: imageStream,
+            min_confidence: 0.7
+		};
+		
+		const requestData = getFormData(detectorSettings.detectEndpoint, form);
+		
+        const requestTime = getCurrentTimestamp();
+
+		request.post(requestData, (err, res, body) => {
+            if (!!res) {
+                res.duration = getDuration(requestTime);
+            }
+
+            onImageProcessed(d, tx, err, res, body, imageB64);
+
+            fs.unlinkSync(frameLocation);
+		});        
+	}catch(ex){
+		logError(`Failed to process image, Error: ${ex}`);
+
+        if(fs.existsSync(frameLocation)) {
+            fs.unlinkSync(frameLocation);
+        }
 	}
-	callback()
-}
+
+	callback();
+};
+
+const detectObject = (frameBuffer, d, tx, frameLocation, callback) => {
+	if(!detectorSettings.active) {
+        return;
+    }
+
+    const dirCreationOptions = {
+        recursive: true
+    };
+
+    d.dir = `${s.dir.streams}${d.ke}/${d.id}/`;
+    
+    frameLocation = `${d.dir}${s.gid(5)}.jpg`;
+
+    if(!fs.existsSync(d.dir)) {
+        fs.mkdirSync(d.dir, dirCreationOptions);
+    }
+    
+    fs.writeFile(frameLocation, frameBuffer, function(err) {
+        if(err) {
+            return s.systemLog(err);
+        }
+    
+        try {
+            const imageB64 = frameBuffer.toString('base64');
+
+            processImage(imageB64, d, tx, frameLocation, callback);
+
+        } catch(ex) {
+            logError(`Detector failed to parse frame, Error: ${ex}`);
+        }
+    });
+};
+
+const getCurrentTimestamp = () => {
+    const currentTime = new Date();
+    const currentTimestamp = currentTime.getTime();
+
+    return currentTimestamp
+};
+
+const getDuration = (requestTime) => {
+    const currentTime = new Date();
+    const currentTimestamp = currentTime.getTime();
+
+    const duration = currentTimestamp - requestTime;
+
+    return duration;
+};
+
+const onFaceListResult = (err, res, body) => {
+    const duration = !!res ? res.duration : 0;
+
+    try {
+        const response = JSON.parse(body);
+
+        const success = response.success;
+        const facesArr = response.faces;
+        const faceStr = facesArr.join(",");
+
+        if(success) {
+            logInfo(`DeepStack loaded with the following faces: ${faceStr}, Response time: ${duration} ms`);
+        } else {
+            logWarn(`Failed to connect to DeepStack server, Error: ${err}, Response time: ${duration} ms`);
+        }
+    } catch(ex) {
+        logError(`Error while connecting to DeepStack server, Error: ${ex} | ${err}, Response time: ${duration} ms`);
+    }
+};
+
+const onImageProcessed = (d, tx, err, res, body, imageStream) => {
+    const duration = !!res ? res.duration : 0;
+
+    let objects = [];
+    
+    try {
+        if(err) {
+            throw err;
+        }
+        
+        const response = JSON.parse(body);
+
+        const success = response.success;
+
+        if(success) {
+            const predictions = response.predictions;
+    
+            if(predictions !== null && predictions.length > 0) {
+                objects = predictions.map(p => getDeepStackObject(p)).filter(p => !!p);
+
+                if(objects.length > 0) {
+                    const identified = objects.filter(p => p.tag !== FACE_UNKNOWN);
+                    const unknownCount = objects.length - identified.length;
+                    
+                    if(unknownCount > 0) {
+                        logInfo(`${d.id} detected ${unknownCount} unknown ${detectorSettings.type}s, Response time: ${duration} ms`);
+                    }
+
+                    if(identified.length > 0) {
+                        const detectedObjectsStrArr = [];
+
+                        if (detectorSettings.type === DETECTOR_TYPE_FACE) {
+                            identified.forEach(f => detectedObjectsStrArr.push(`${f.tag} (${f.person}) [${(f.confidence * 100).toFixed(2)}]`));
+                        } else {
+                            identified.forEach(f => detectedObjectsStrArr.push(`${f.tag} [${(f.confidence * 100).toFixed(2)}]`));
+                        }
+                        
+                        const detectedObjectsStr = detectedObjectsStrArr.join(", ");
+
+                        logInfo(`${d.id} detected ${detectorSettings.type}s: ${detectedObjectsStr}, Response time: ${duration} ms`);
+                    }
+
+                    const isObjectDetectionSeparate = d.mon.detector_pam === '1' && d.mon.detector_use_detect_object === '1';
+                    const width = parseFloat(isObjectDetectionSeparate && d.mon.detector_scale_y_object ? d.mon.detector_scale_y_object : d.mon.detector_scale_y);
+                    const height = parseFloat(isObjectDetectionSeparate && d.mon.detector_scale_x_object ? d.mon.detector_scale_x_object : d.mon.detector_scale_x);
+
+                    const eventData = {
+                        f: 'trigger',
+                        id: d.id,
+                        ke: d.ke,
+                        details: {
+                            plug: config.plug,
+                            name: d.id,
+                            reason: detectorSettings.type,
+                            matrices: objects,
+                            imgHeight: width,
+                            imgWidth: height,
+                            time: duration
+                        },
+                        frame: imageStream       
+                    };
+
+                    tx(eventData);
+                }
+            }
+        }
+    } catch(ex) {
+        logError(`Error while processing image, Error: ${ex} | ${err},, Response time: ${duration} ms, Body: ${body}`);
+    }
+
+    return objects
+};
+
+const getFormData = (endpoint, additionalParameters) => {
+    const formData = {};
+
+    if(detectorSettings.apiKey) {
+        formData[DEEPSTACK_API_KEY] = detectorSettings.apiKey;
+    }
+
+    if(additionalParameters !== undefined && additionalParameters !== null) {
+        const keys = Object.keys(additionalParameters);
+
+        keys.forEach(k => formData[k] = additionalParameters[k]);
+    }
+
+    const requestData = {
+        url: `${detectorSettings.baseUrl}${endpoint}`,
+        time: true,
+        formData: formData
+    };
+
+    return requestData;
+};
+
+const getDeepStackObject = (prediction) => {
+    if(prediction === undefined) {
+        return null;
+    }
+
+    const tag = prediction[detectorSettings.key];
+
+    const confidence = prediction.confidence ?? 0;
+    const y_min = prediction.y_min ?? 0;
+    const x_min = prediction.x_min ?? 0;
+    const y_max = prediction.y_max ?? 0;
+    const x_max = prediction.x_max ?? 0;
+    const width = x_max - x_min;
+    const height = y_max - y_min;
+
+    const obj = {
+        x: x_min,
+        y: y_min,
+        width: width,
+        height: height,
+        tag: tag,
+        confidence: confidence
+    };    
+
+    if (detectorSettings.type === DETECTOR_TYPE_FACE) {
+        const matchingPersons = detectorSettings.registeredPersons.filter(p => tag.startsWith(p))
+        const person = matchingPersons.length > 0 ? matchingPersons[0] : null;
+
+        obj["person"] = person;
+    }
+    
+
+    return obj;
+};
+
+initialize();

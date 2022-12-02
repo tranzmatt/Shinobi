@@ -240,6 +240,13 @@ $(document).ready(function(){
         loadMonitorsFromMemory()
         drawMonitorsListApiKeyList()
     })
+    onWebSocketEvent(function (d){
+        switch(d.f){
+            case'monitor_edit':
+                loadMonitorsFromMemory()
+            break;
+        }
+    })
     // $('#monitors_list_search').keyup(function(){
     //     var monitorBlocks = $('.monitor_block');
     //     var searchTerms = $(this).val().toLowerCase().split(' ')

@@ -202,6 +202,7 @@ module.exports = async (s,config,lang,app,io) => {
                                 fs.readdir(webFolder,function(err,webFolderContents){
                                     webFolderContents.forEach(function(name){
                                         switch(name){
+                                            case'assets':
                                             case'libs':
                                             case'pages':
                                                 if(name === 'libs'){
@@ -238,27 +239,23 @@ module.exports = async (s,config,lang,app,io) => {
                                                                         if(name === 'libs'){
                                                                             switch(libName){
                                                                                 case'js':
-                                                                                    s.customAutoLoadTree[blockPrefix + 'AssetsJs'].push(filename)
-                                                                                break;
-                                                                                case'css':
-                                                                                    s.customAutoLoadTree[blockPrefix + 'AssetsCss'].push(filename)
-                                                                                break;
-                                                                                case'blocks':
-                                                                                    s.customAutoLoadTree[blockPrefix + 'PageBlocks'].push(fullPath)
-                                                                                break;
-                                                                            }
-                                                                        }else if(name === 'assets'){
-                                                                            switch(libName){
-                                                                                case'js':
                                                                                     s.customAutoLoadTree[blockPrefix + 'LibsJs'].push(filename)
                                                                                 break;
                                                                                 case'css':
                                                                                     s.customAutoLoadTree[blockPrefix + 'LibsCss'].push(filename)
                                                                                 break;
-                                                                                case'blocks':
-                                                                                    s.customAutoLoadTree[blockPrefix + 'PageBlocks'].push(fullPath)
+                                                                            }
+                                                                        }else if(name === 'assets'){
+                                                                            switch(libName){
+                                                                                case'js':
+                                                                                    s.customAutoLoadTree[blockPrefix + 'AssetsJs'].push(filename)
+                                                                                break;
+                                                                                case'css':
+                                                                                    s.customAutoLoadTree[blockPrefix + 'AssetsCss'].push(filename)
                                                                                 break;
                                                                             }
+                                                                        }else if(name === 'pages' && libName === 'blocks'){
+                                                                            s.customAutoLoadTree[blockPrefix + 'PageBlocks'].push(fullPath)
                                                                         }
                                                                     })
                                                                 })

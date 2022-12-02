@@ -99,12 +99,13 @@ module.exports = function(s,config,lang){
             }else{
                 getUserBySessionKey(params,function(err,user){
                     if(user){
-                        isSessionKey = true
-                        createSession(apiKey,{
+                        createSession(user,{
+                            auth: params.auth,
                             details: JSON.parse(user.details),
+                            isSessionKey: true,
                             permissions: {}
                         })
-                        callback(err,user,isSessionKey)
+                        callback(err,user,true)
                     }
                 })
             }
@@ -122,7 +123,7 @@ module.exports = function(s,config,lang){
             }
             user.details = s.parseJSON(user.details)
             user.permissions = {}
-            s.api[generatedId] = Object.assign(user,additionalData)
+            s.api[generatedId] = Object.assign({},user,additionalData)
             return generatedId
         }
     }
@@ -206,9 +207,6 @@ module.exports = function(s,config,lang){
             loginWithApiKey(params,function(err,user,isSessionKey){
                 if(isSessionKey)resetActiveSessionTimer(s.api[params.auth])
                 if(user){
-                    createSession(user,{
-                        auth: params.auth
-                    })
                     onSuccess(s.api[params.auth])
                 }else{
                     onFail()

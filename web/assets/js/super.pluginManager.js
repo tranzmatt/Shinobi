@@ -10,7 +10,7 @@ $(document).ready(function(){
         if(listElement.find('[package-name="${module.name}"]').length > 0){
             var existingElement = listElement.find('[package-name="${module.name}"]')
             existingElement.find('.title').text(humanName)
-            existingElement.find('[plugin-manager-action="status"]').text(module.properties.disabled ? lang.Enable : lang.Disable)
+            existingElement.find('[plugin-manager-action="status"]').text(!module.config.enabled ? lang.Enable : lang.Disable)
         }else{
             listElement.append(`
                 <div class="col-md-12">
@@ -24,7 +24,7 @@ $(document).ready(function(){
                                     <a class="btn btn-sm btn-info" plugin-manager-action="install">${lang['Run Installer']}</a>
                                     <a class="btn btn-sm btn-danger" style="display:none" plugin-manager-action="cancelInstall">${lang['Stop']}</a>
                                 ` : ''}
-                                <a class="btn btn-sm btn-default" plugin-manager-action="status">${module.properties.disabled ? lang.Enable : lang.Disable}</a>
+                                <a class="btn btn-sm btn-default" plugin-manager-action="status">${!module.config.enabled ? lang.Enable : lang.Disable}</a>
                                 <a class="btn btn-sm btn-danger" plugin-manager-action="delete">${lang.Delete}</a>
                                 <a class="btn btn-sm btn-warning" plugin-manager-action="editConfig">${lang[`Edit Configuration`]}</a>
                             </div>
@@ -184,10 +184,12 @@ $(document).ready(function(){
                 toggleUsabilityOfYesAndNoButtons(packageName,false)
             break;
             case'status':
-                setModuleStatus(packageName,!!!loadedModules[packageName].properties.disabled,function(data){
+                var currentStatus = !!loadedModules[packageName].config.enabled
+                var newStatus = !currentStatus
+                setModuleStatus(packageName,newStatus,function(data){
                     if(data.ok){
-                        loadedModules[packageName].properties.disabled = !!!loadedModules[packageName].properties.disabled
-                        el.text(loadedModules[packageName].properties.disabled ? lang.Enable : lang.Disable)
+                        loadedModules[packageName].config.enabled = newStatus
+                        el.text(currentStatus ? lang.Enable : lang.Disable)
                     }
                 })
             break;
@@ -236,7 +238,7 @@ $(document).ready(function(){
         downloadModule(form.downloadUrl,form.packageRoot,function(data){
             console.log(data)
             if(data.ok){
-                data.newModule.properties.disabled = true
+                data.newModule.config.enabled = false
                 drawModuleBlock(data.newModule)
             }
         })

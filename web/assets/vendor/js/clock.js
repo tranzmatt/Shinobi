@@ -12,8 +12,9 @@ $(document).ready(function() {
         timeDate.innerHTML = dayNames[newDate.getDay()] + " " + newDate.getDate() + ' ' + monthNames[newDate.getMonth()] + ' ' + newDate.getFullYear();
     }
     if($user.details.clock_date_format){
+        var clockDateFormat = `${$user.details.clock_date_format}`
         updateDate = function(){
-            const newTimeString = $user.details.clock_date_format
+            const newTimeString = clockDateFormat
                 .replaceAll('$DAYNAME',dayNames[newDate.getDay()])
                 .replaceAll('$DAY',newDate.getDate())
                 .replaceAll('$MONTHNAME',monthNames[newDate.getMonth()])
@@ -35,17 +36,29 @@ $(document).ready(function() {
         if(timeHour.classList.contains('twentyfour') && hours > 12)hours = hours - 12;
         timeHour.innerHTML = hours
     }
-    var setAll = function(){
+    function setAll(){
         var theDate = new Date()
+        var currentMinute = theDate.getMinutes()
+        var currentHour = theDate.getHours()
+        var currentDay = theDate.getHours()
         second(theDate)
-        if(currentMinute !== theDate.getMinutes())minute(theDate)
-        if(currentHour !== theDate.getHours())hour(theDate)
-        if(currentDay !== theDate.getDay())updateDate()
+        if(lastMinute !== currentMinute){
+            minute(theDate)
+            lastMinute = currentMinute
+        }
+        if(lastHour !== currentHour){
+            hour(theDate)
+            lastHour = currentHour
+        }
+        if(lastDay !== currentDay){
+            updateDate()
+            lastDay = currentDay
+        }
     }
     setAll()
-    var currentHour = newDate.getHours()
-    var currentMinute = newDate.getMinutes()
-    var currentDay = newDate.getDay()
+    var lastHour = newDate.getHours()
+    var lastMinute = newDate.getMinutes()
+    var lastDay = newDate.getDay()
     setInterval(function(){
         setAll()
     },1000);
@@ -55,9 +68,9 @@ $(document).ready(function() {
     updateDate()
     document.getElementById("clock").onclick = function(){
         timeHour.classList.toggle('twentyfour')
-        currentHour = null
+        lastHour = null
         setAll()
-        currentHour = newDate.getHours()
+        lastHour = newDate.getHours()
         updateDate()
     }
 });

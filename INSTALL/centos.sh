@@ -33,8 +33,8 @@ sudo yum install make zip dos2unix -y
 if ! [ -x "$(command -v node)" ]; then
     echo "============="
     echo "Shinobi - Installing Node.js"
-	#Installs Node.js 10
-    sudo curl --silent --location https://rpm.nodesource.com/setup_12.x | bash -
+	#Installs Node.js 16
+    sudo curl --silent --location https://rpm.nodesource.com/setup_16.x | bash -
     sudo yum install nodejs -y
 else
     echo "Node.js Found..."

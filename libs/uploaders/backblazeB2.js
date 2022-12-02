@@ -1,4 +1,5 @@
-var fs = require('fs');
+const fs = require('fs');
+const { Readable } = require('stream');
 module.exports = function(s,config,lang){
     //Backblaze B2
     var beforeAccountSaveForBackblazeB2 = function(d){
@@ -150,7 +151,7 @@ module.exports = function(s,config,lang){
                                     }),
                                     size: k.filesize,
                                     end: k.endTime,
-                                    href: backblazeDownloadUrl
+                                    href: ''
                                 }
                             })
                             s.setCloudDiskUsedForGroup(e.ke,{
@@ -164,6 +165,28 @@ module.exports = function(s,config,lang){
             })
         }
     }
+    function onGetVideoData(video){
+        const videoDetails = s.parseJSON(video.details)
+        const fileName = videoDetails.fileName
+        const groupKey = video.ke
+        const b2 = s.group[video.ke].bb_b2
+        const bucketName = s.group[groupKey].init.bb_b2_bucket
+        return new Promise((resolve, reject) => {
+            b2.downloadFileByName({
+                bucketName,
+                fileName,
+                responseType: 'stream',
+                onDownloadProgress: (event) => {
+                    s.debugLog(event)
+                },
+            }).then((response) => {
+                const fileStream = Readable.from(response.data);
+                resolve(fileStream)
+            }).catch((err) => {
+                reject(err)
+            });
+        })
+    }
     //backblaze b2
     s.addCloudUploader({
         name: 'b2',
@@ -174,6 +197,7 @@ module.exports = function(s,config,lang){
         cloudDiskUseStartupExtensions: cloudDiskUseStartupForBackblazeB2,
         beforeAccountSave: beforeAccountSaveForBackblazeB2,
         onAccountSave: cloudDiskUseStartupForBackblazeB2,
+        onGetVideoData,
     })
     return {
        "evaluation": "details.use_bb_b2 !== '0'",

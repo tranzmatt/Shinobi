@@ -333,9 +333,7 @@ module.exports = function(s,config,lang,io){
                 }
                 if(files && files[0]){
                     files.forEach(function(file){
-                        if(video.details.dir === storage.value){
-                            usedSpaceFilebin += file.size
-                        }
+                        usedSpaceFilebin += file.size
                     })
                 }
                 storageIndex.usedSpace = (usedSpaceVideos + usedSpaceTimelapseFrames + usedSpaceFilebin) / 1048576

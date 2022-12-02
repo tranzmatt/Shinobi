@@ -15,7 +15,7 @@ echo " Ubuntu Version: $getubuntuversion"
 echo "============="
 apt update -y
 apt update --fix-missing -y
-if [ "$getubuntuversion" = "18" ] || [ "$getubuntuversion" > "18" ]; then
+if [ "$getubuntuversion" = "18" ] || [ "$getubuntuversion" -le "18" ]; then
     apt install sudo wget -y
     sudo apt install -y software-properties-common
     sudo add-apt-repository universe -y
@@ -66,11 +66,11 @@ if ! [ -x "$(command -v npm)" ]; then
 fi
 sudo apt install make zip -y
 if ! [ -x "$(command -v ffmpeg)" ]; then
-    if [ "$getubuntuversion" = "16" ] || [ "$getubuntuversion" < "16" ]; then
+    if [ "$getubuntuversion" = "16" ] || [ "$getubuntuversion" -le "16" ]; then
         echo "============="
         echo "Shinobi - Get FFMPEG 3.x from ppa:jonathonf/ffmpeg-3"
         sudo add-apt-repository ppa:jonathonf/ffmpeg-3 -y
-        sudo apt update -y && sudo apt install ffmpeg libav-tools x264 x265 -y
+        sudo apt update -y && sudo apt install ffmpeg x264 x265 -y
     else
         echo "============="
         echo "Shinobi - Installing FFMPEG"

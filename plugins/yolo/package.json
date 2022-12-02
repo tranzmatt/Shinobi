@@ -10,7 +10,7 @@
     "cws": "^2.0.0",
     "express": "^4.16.4",
     "socket.io": "^4.4.1",
-    "socket.io-client": "^4.4.1",
+    "socket.io-client": "^4.5.3",
     "node-yolo-shinobi": "^2.0.3"
   },
   "devDependencies": {},

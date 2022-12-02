@@ -7,7 +7,7 @@ $(document).ready(function(){
         var newTabId = getVideoPlayerTabId(video)
         var humanStartTime = formattedTime(video.time,true)
         var humanEndTime = formattedTime(video.end,true)
-        var tabLabel = `<b>${lang['Video']}</b> : ${loadedMonitors[video.mid].name} : ${formattedTime(video.time,true)}`
+        var tabLabel = `<b>${lang['Video']}</b> : ${loadedMonitors[video.mid] ? loadedMonitors[video.mid].name : lang['Monitor or Key does not exist.']} : ${formattedTime(video.time,true)}`
         var videoUrl = getLocation() + video.href
         var hasRows = video.events && video.events.length > 0
         var loadedEvents = {}
@@ -17,7 +17,7 @@ $(document).ready(function(){
             $.each(video.events,function(n,theEvent){
                 loadedEvents[new Date(theEvent.time)] = theEvent
                 var objectsFound = {}
-                eventMatrixHtml += `<div class="d-block tab-videoPlayer-event-row card bg-darker mb-1 p-2" time-index="${theEvent.time}">`
+                eventMatrixHtml += `<div class="d-block tab-videoPlayer-event-row card bg-darker mb-1 p-2" data-mid="${theEvent.mid}" data-time="${theEvent.time}">`
                 eventMatrixHtml += `<div class="d-block">
                     <div class="d-block">${formattedTime(theEvent.time)}</div>
                 </div>`
@@ -60,7 +60,16 @@ $(document).ready(function(){
                                   <div class="btn-group btn-group-justified">
                                         <a class="btn btn-sm btn-success" download href="${videoUrl}"><i class="fa fa-download"></i> ${lang.Download}</a>
                                         ${permissionCheck('video_delete',video.mid) ? `<a class="btn btn-sm btn-danger delete-video"><i class="fa fa-trash-o"></i> ${lang.Delete}</a>` : ''}
-                                        ${permissionCheck('video_delete',video.mid) ? `<a class="btn btn-sm btn-${video.archive === 1 ? `success status-archived` : `default`} archive-video" title="${lang.Archive}"><i class="fa fa-${video.archive === 1 ? `lock` : `unlock-alt`}"></i> <span>${video.archive === 1 ? lang.Unarchive : lang.Archive}</span></a>` : ''}
+                                        <div class="dropdown d-inline-block">
+                                            <a class="btn btn-sm btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
+                                              <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
+                                            </a>
+                                            <ul class="dropdown-menu ${definitions.Theme.isDark ? 'dropdown-menu-dark bg-dark' : ''} shadow-lg">
+                                                ${buildDefaultVideoMenuItems(video,{
+                                                    play: false
+                                                })}
+                                            </ul>
+                                        </div>
                                   </div>
                               </div>
                           </div>
@@ -150,7 +159,7 @@ $(document).ready(function(){
         var videoEl = parent.find('video')
         var videoData = loadedVideosInMemory[parent.attr('video-id')]
         var videoTime = new Date(videoData.time).getTime() / 1000
-        var timeIndex = new Date(el.attr('time-index')).getTime() / 1000
+        var timeIndex = new Date(el.attr('data-time')).getTime() / 1000
         var newVideoTimeIndex = timeIndex - videoTime
         console.log(newVideoTimeIndex)
         videoEl[0].currentTime = newVideoTimeIndex

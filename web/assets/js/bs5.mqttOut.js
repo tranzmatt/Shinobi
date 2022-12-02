@@ -31,6 +31,14 @@ $(document).ready(function(){
                 label: lang['Detection Event'],
             },
             {
+                value: 'insertCompletedVideoExtender',
+                label: lang['Recording Complete'],
+            },
+            {
+                value: 'onEventBasedRecordingComplete',
+                label: lang['Event-Based Recording'],
+            },
+            {
                 value: 'onDetectorNoTriggerTimeout',
                 label: lang['No Trigger'],
             },

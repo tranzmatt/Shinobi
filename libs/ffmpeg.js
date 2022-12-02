@@ -59,7 +59,7 @@ module.exports = async (s,config,lang,onFinish) => {
                 //clean the string of spatial impurities and split for spawn()
                 const ffmpegCommandParsed = splitForFFPMEG(ffmpegCommandString)
                 try{
-                    fs.unlinkSync(e.sdir + 'cmd.txt')
+                    fs.rmSync(e.sdir + 'cmd.txt')
                 }catch(err){
 
                 }
@@ -81,7 +81,23 @@ module.exports = async (s,config,lang,onFinish) => {
                 const cameraProcess = spawn('node',cameraCommandParams,{detached: true,stdio: stdioPipes})
                 if(config.debugLog === true && config.debugLogMonitors === true){
                     cameraProcess.stderr.on('data',(data) => {
-                        console.log(`${e.ke} ${e.mid}`)
+                        const string = data.toString()
+                        var checkLog = function(x){return string.indexOf(x)>-1}
+                        switch(true){
+                            case checkLog('pkt->duration = 0'):
+                            case checkLog('[hls @'):
+                            case checkLog('Past duration'):
+                            case checkLog('Last message repeated'):
+                            case checkLog('Non-monotonous DTS'):
+                            case checkLog('NULL @'):
+                            case checkLog('RTP: missed'):
+                            case checkLog('deprecated pixel format used'):
+                                if(!config.debugLogMonitorsVerbose){
+                                    return;
+                                }
+                            break;
+                        }
+                        console.log(`${e.ke} ${e.name} (${e.mid})`)
                         console.log(data.toString())
                     })
                 }

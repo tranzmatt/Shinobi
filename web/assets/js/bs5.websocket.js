@@ -15,9 +15,9 @@ function onWebSocketEvent(theAction){
     onWebSocketEventFunctions.push(theAction)
 }
 var queuedCallbacks = {}
-$(document).ready(function(){
-    mainSocket = io(location.origin,{
-        path: websocketPath,
+function createWebsocket(theURL,thePath){
+    mainSocket = io(theURL || location.origin,{
+        path: thePath || websocketPath,
         query: websocketQuery
     })
     mainSocket.f = function(data,callback){
@@ -73,4 +73,4 @@ $(document).ready(function(){
             theAction(d)
         })
     })
-})
+}

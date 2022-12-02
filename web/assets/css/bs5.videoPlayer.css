@@ -1,3 +1,6 @@
+.tab-videoPlayer {
+    overflow: auto;
+}
 .tab-videoPlayer video{
     width: 100%;
     background: #333;

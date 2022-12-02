@@ -9,7 +9,6 @@ $(document).ready(function(e){
     var regionEditorMonitorsList = $('#region_editor_monitors')
     var regionEditorLiveView = $('#region_editor_live')
     var regionEditorGridOverlay = regionEditorWindow.find('.grid')
-    var useRegionStillImage = false
     var getRegionEditorCanvas = function(){
         return regionEditorWindow.find('canvas')
     }
@@ -42,6 +41,7 @@ $(document).ready(function(e){
         }
     }
     var loadRegionEditor = function(monitor){
+        regionEditorForm.find('input').prop('disabled',false)
         var theCanvas = getRegionEditorCanvas()
         var monitorDetails = Object.assign({},monitor.details)
         var imageWidth = !isNaN(monitorDetails.detector_scale_x) ? parseInt(monitorDetails.detector_scale_x) : 640
@@ -60,6 +60,13 @@ $(document).ready(function(e){
         }
         regionViewerDetails = monitorDetails;
         initiateRegionList()
+        loadPrimaryFields(monitor)
+    }
+    function loadPrimaryFields(monitor){
+        var monitorDetails = Object.assign({},monitor.details)
+        $.each(monitorDetails,function(n,v){
+            regionEditorForm.find(`[detail="${n}"]`).val(v)
+        })
     }
     var drawPointsTable = function(){
         var currentRegionId = getCurrentlySelectedRegionId()
@@ -91,6 +98,12 @@ $(document).ready(function(e){
         var monitorId = getCurrentlySelectedMonitorId()
         var monitorConfig = Object.assign({},loadedMonitors[monitorId])
         var regionCoordinates = Object.assign({},coorindates || regionViewerDetails.cords instanceof Object ? regionViewerDetails.cords : safeJsonParse(regionViewerDetails.cords) || {});
+        regionEditorForm.find('[detail]').each(function(n,v){
+            var el = $(this);
+            var key = el.attr('detail')
+            var value = el.val()
+            monitorConfig.details[key] = value;
+        });
         monitorConfig.details.cords = JSON.stringify(regionCoordinates)
         monitorConfig.details = JSON.stringify(monitorConfig.details)
         $.post(getApiPrefix(`configureMonitor`)+ '/' + monitorId,{
@@ -134,7 +147,7 @@ $(document).ready(function(e){
             }else{
                 regionEditorGridOverlay.hide()
             }
-            if(useRegionStillImage){
+            if(getRegionStillImageSwitch()){
                 apiPoint = 'jpeg'
             }else{
                 apiPoint = 'embed'
@@ -199,7 +212,16 @@ $(document).ready(function(e){
     }
     function getRegionStillImageSwitch(){
         var dashboardSwitches = dashboardOptions().switches || {}
-        return dashboardSwitches.regionStillImage || '0'
+        return dashboardSwitches.regionStillImage == 1;
+    }
+    function toggleRegionStillImage(){
+        var dashboardSwitches = dashboardOptions().switches || {}
+        if(dashboardSwitches.regionStillImage !== 1){
+            dashboardSwitches.regionStillImage = 1
+        }else{
+            dashboardSwitches.regionStillImage = "0"
+        }
+        dashboardOptions('switches',dashboardSwitches)
     }
     regionEditorRegionsList.change(function(e){
         initCanvas(true);
@@ -283,14 +305,7 @@ $(document).ready(function(e){
         return false;
     })
     regionStillImage.click(function(e){
-        var dashboardSwitches = dashboardOptions().switches || {}
-        if(useRegionStillImage){
-            dashboardSwitches.regionStillImage = 1
-        }else{
-            dashboardSwitches.regionStillImage = "0"
-        }
-        dashboardOptions('switches',dashboardSwitches)
-        useRegionStillImage = !useRegionStillImage
+        toggleRegionStillImage()
         initLiveStream()
     })
     $('body')
@@ -310,10 +325,7 @@ $(document).ready(function(e){
         }
     })
     addOnTabOpen('regionEditor', function () {
-        useRegionStillImage = getRegionStillImageSwitch() === 1;
-        if(!regionEditorMonitorsList.val()){
-            drawMonitorListToSelector(regionEditorMonitorsList,true)
-        }
+        drawMonitorListToSelector(regionEditorMonitorsList,true)
         initLiveStream()
     })
     addOnTabReopen('regionEditor', function () {
@@ -323,7 +335,7 @@ $(document).ready(function(e){
         regionEditorMonitorsList.val(theSelected)
     })
     addOnTabAway('regionEditor', function () {
-        regionEditorLiveView.find('iframe,img').remove()
+        regionEditorLiveView.find('iframe,img').attr('src','about:blank')
     })
     drawSubMenuItems('regionEditor',definitions['Region Editor'])
 })

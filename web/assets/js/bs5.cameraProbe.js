@@ -112,7 +112,7 @@ $(document).ready(function(e){
                 // }
             }
 
-            var monitorConfig = mergeDeep($.aM.generateDefaultMonitorSettings(),{
+            var monitorConfig = mergeDeep(generateDefaultMonitorSettings(),{
                 type: selectedType,
                 fps: monitorCaptureRate, //videoRecordRate
                 details: {
@@ -129,10 +129,9 @@ $(document).ready(function(e){
                     detector_buffer_fps: monitorCaptureRate,
                 }
             })
-            $.aM.import(monitorConfig)
-            $.aM.e.find('[detail="auto_host"]').change()
-            $.aM.e.modal('show')
-            probeWindow.modal('hide')
+            openTab('monitorSettings')
+            importIntoMonitorEditor(monitorConfig)
+            $('#tab-monitorSettings').find('[detail="auto_host"]').change()
         }else{
             console.log('No Probe Result Loaded!')
         }
@@ -143,7 +142,7 @@ $(document).ready(function(e){
             setAsLoading(false)
         })
     })
-    mainSocket.on('f',function(d){
+    onWebSocketEvent(function (d){
         switch(d.f){
             case'ffprobe_stop':
                 setAsLoading(false)
@@ -160,8 +159,7 @@ $(document).ready(function(e){
         submit: function(url,show){
             probeWindow.find('[name="url"]').val(url)
             probeForm.submit()
-            // if(show)probeWindow.modal('show')
-            alert('open Prober')
+            openTab('cameraProbe')
         },
     }
 })

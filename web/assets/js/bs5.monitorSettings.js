@@ -19,6 +19,7 @@ var fieldsLoaded = {}
 var sections = {}
 var loadedPresets = {}
 function generateDefaultMonitorSettings(){
+    var eventFilterId = generateId(5)
     return {
        "mode": "start",
        "mid": generateId(),
@@ -153,10 +154,46 @@ function generateDefaultMonitorSettings(){
            "detector_discordbot": null,
            "detector_discordbot_send_video": null,
            "detector_discordbot_timeout": "",
-           "use_detector_filters": null,
-           "use_detector_filters_object": null,
+           "use_detector_filters": "0",
+           "use_detector_filters_object": "1",
            "cords": "[]",
-           "detector_filters": "",
+           "detector_filters": {
+              [eventFilterId]: {
+                "id": eventFilterId,
+                "enabled": "1",
+                "filter_name": "Standard Object Detection Filter",
+                "where": [
+                  {
+                    "p1": "tag",
+                    "p2": "!indexOf",
+                    "p3": "person",
+                    "p4": "&&"
+                  },
+                  {
+                    "p1": "tag",
+                    "p2": "!indexOf",
+                    "p3": "car",
+                    "p4": "&&"
+                  },
+                  {
+                    "p1": "tag",
+                    "p2": "!indexOf",
+                    "p3": "truck",
+                    "p4": "&&"
+                  }
+                ],
+                "actions": {
+                  "halt": "1",
+                  "save": "",
+                  "indifference": "",
+                  "webhook": "",
+                  "command": "",
+                  "record": "",
+                  "emailClient": "",
+                  "global_webhook": ""
+                }
+              }
+           },
            "detector_pam": "1",
            "detector_show_matrix": null,
            "detector_sensitivity": "",
@@ -539,6 +576,7 @@ function drawInputMapSelectorHtml(options,parent){
 }
 function importIntoMonitorEditor(options){
     var monitorConfig = options.values || options
+    var monitorId = monitorConfig.mid
     $.get(getApiPrefix()+'/hls/'+monitorConfig.ke+'/'+monitorConfig.mid+'/detectorStream.m3u8',function(data){
         $('#monEditBufferPreview').html(data)
     })
@@ -673,8 +711,6 @@ function importIntoMonitorEditor(options){
     };
     copySettingsSelector.val('0').change()
 
-    drawPresetsSection()
-
     var tmp = '';
     $.each(loadedMonitors,function(n,monitor){
         if(monitor.ke === $user.ke){
@@ -766,6 +802,13 @@ editorForm.submit(function(e){
     }
     var monitorConfig = validation.monitorConfig
     $.post(getApiPrefix()+'/configureMonitor/'+$user.ke+'/'+monitorConfig.mid,{data:JSON.stringify(monitorConfig)},function(d){
+        if(d.ok === false){
+            new PNotify({
+                title: lang['Action Failed'],
+                text: d.msg,
+                type: 'danger'
+            })
+        }
         debugLog(d)
     })
     //
@@ -893,9 +936,9 @@ var buildMonitorURL = function(){
             host: host,
             protocol: protocol,
             port: port,
-            path: path,
+            path: encodeURIComponent(path),
             type: type,
-        }) + path;
+        });
     }
     return url
 }
@@ -976,7 +1019,7 @@ monitorEditorWindow.on('change','[channel-detail]',function(){
     monitorStreamChannelsave()
 })
 monitorEditorWindow.find('.probe-monitor-settings').click(function(){
-    $.pB.submit(buildMonitorURL(),true)
+    $.pB.submit(buildMonitorURL())
 })
 monitorEditorWindow.find('.save_config').click(function(e){
     //export monior config in view
@@ -1068,194 +1111,6 @@ editorForm.find('[name="type"]').change(function(e){
             drawMonitorSettingsSubMenu()
         }
     }
-    // presets
-    var loadPresets = function(callback){
-        $.getJSON(getApiPrefix() + '/monitorStates/' + $user.ke,function(d){
-            var presets = d.presets
-            loadedPresets = {}
-            $.each(presets,function(n,preset){
-                loadedPresets[preset.name] = preset
-            })
-            drawPresetsSection()
-            if(callback)callback(presets)
-        })
-    }
-    var drawPresetsSection = function(){
-        var html = ''
-        var selectedMonitor = getSelectedMonitorInfo()
-        $.each(loadedPresets,function(n,preset){
-            var hasSelectedMonitor = false
-            var humanizedMonitorKeys
-            var presetMonitors = preset.details.monitors || []
-            $.each(presetMonitors,function(n,monitor){
-                if(monitor.mid === selectedMonitor.mid){
-                    hasSelectedMonitor = true
-                    humanizedMonitorKeys = getHumanizedMonitorConfig(monitor)
-                }
-            })
-            html += `<div class="mdl-list__item card btn-default mb-2" preset-name="${preset.name}">
-                <div class="card-body d-flex flex-row">
-                    <div class="flex-grow-1 pr-3">
-                        ${preset.name}
-                    </div>
-                    <div class="pr-3">
-                        <small class="text-muted">${presetMonitors.length} Monitor${presetMonitors.length > 1 ? 's' : ''}</small>
-                        ${hasSelectedMonitor ? `<ul class="json-to-block striped import-monitor-preset cursor-pointer">${jsonToHtmlBlock(humanizedMonitorKeys)}</ul>` : ''}
-                    </div>
-                    <div class="pr-3">
-                        <span><input class="form-check-input no-abs" type="checkbox" value="${preset.name}" ${hasSelectedMonitor ? 'checked' : ''}/></span>
-                    </div>
-                    <div>
-                        <a class="badge btn btn-sm btn-danger delete-preset"><i class="fa fa-trash-o"></i></a>
-                    </div>
-                </div>
-            </div>`
-        })
-        monitorPresetsSelection.html(html)
-        console.log(`!!!!!!!\ncomponentHandler.upgradeAllRegistered\n!!!!!!!`)
-    }
-    var addNewPreset = function(callback){
-        var newName = monitorPresetsNameField.val()
-        if(newName === ''){
-            return new PNotify({title:lang['Invalid Data'],text:lang['Name cannot be empty.'],type:'error'})
-        }
-        var data = JSON.stringify({
-            monitors: []
-        })
-        $.post(getApiPrefix() + '/monitorStates/' + $user.ke + '/' + newName + '/insert',{data:data},function(d){
-            debugLog(d)
-            if(d.ok === true){
-                loadPresets(function(presets){
-                    if(callback)callback(d)
-                })
-                new PNotify({title:lang.Success,text:d.msg,type:'success'})
-            }
-        })
-    }
-    var deletePreset = function(presetName,callback){
-        var preset = loadedPresets[presetName]
-        var monitorsAssociated = `<code>${lang.Presets}</code><br><br><div class="row">`
-        $.each(preset.details.monitors,function(n,monitorConfigPartial){
-            monitorsAssociated += `<div class="col-md-6 json-to-block striped">${jsonToHtmlBlock(getHumanizedMonitorConfig(monitorConfigPartial))}</div>`
-        })
-        monitorsAssociated += '</div>'
-        $.confirm.create({
-            title: lang['Delete Monitor States Preset'],
-            body: lang.deleteMonitorStateText1 + `<br><br>` + monitorsAssociated,
-            clickOptions: {
-                title:'Delete',
-                class:'btn-danger'
-            },
-            clickCallback: function(){
-                $.post(getApiPrefix() + '/monitorStates/' + $user.ke + '/' + presetName + '/delete',function(d){
-                    debugLog(d)
-                    if(d.ok === true){
-                        loadPresets(function(presets){
-                            if(callback)callback(d)
-                        })
-                        new PNotify({title:lang.Success,text:d.msg,type:'success'})
-                    }
-                })
-            }
-        })
-    }
-    var validateMonitorPreset = function(monitorPartialToAdd){
-        var response = {ok: true}
-        var numberOfKeys = Object.keys(monitorPartialToAdd)
-        if(numberOfKeys.length < 2){
-            response.ok = false
-            response.msg = lang.monitorStateNotEnoughChanges
-            return response
-        }
-        return response
-    }
-    var addMonitorToPreset = function(presetName,callback){
-        var validation = getMonitorEditFormFields()
-        if(!validation.ok){
-            callback(true)
-            return
-        }
-        var monitorConfig = validation.monitorConfig
-        console.log(monitorConfig.mid)
-        var inMemoryMonitorConfig = Object.assign({},loadedMonitors[monitorConfig.mid]);
-        var currentPreset = loadedPresets[presetName]
-        var presetMonitors = currentPreset.details.monitors || []
-        var newMonitorsArray = [].concat(presetMonitors)
-        var monitorIndexInPreset = newMonitorsArray.findIndex(monitor => monitor.mid === monitorConfig.mid)
-        delete(inMemoryMonitorConfig.ke)
-        delete(monitorConfig.ke)
-        var monitorPartialToAdd = differentiateMonitorConfig(inMemoryMonitorConfig,monitorConfig)
-        monitorPartialToAdd.mid = monitorConfig.mid
-        //validateMonitorPreset
-        var monitorPresetValidation = validateMonitorPreset(monitorPartialToAdd)
-        if(!monitorPresetValidation.ok){
-            new PNotify({title:lang.monitorStatesError,text:monitorPresetValidation.msg,type:'warning'})
-            callback(true)
-            return
-        }
-        //
-        if(monitorIndexInPreset > -1){
-            newMonitorsArray[monitorIndexInPreset] = monitorPartialToAdd
-        }else{
-            newMonitorsArray.push(monitorPartialToAdd)
-        }
-        var data = JSON.stringify({
-            monitors: newMonitorsArray
-        })
-        $.post(getApiPrefix() + '/monitorStates/' + $user.ke + '/' + presetName + '/edit',{data:data},function(d){
-            debugLog(d)
-            if(d.ok === true){
-                loadPresets(function(presets){
-                    callback(null,d)
-                })
-                new PNotify({title:lang.Success,text:d.msg,type:'success'})
-            }
-        })
-    }
-    var removeMonitorFromPreset = function(presetName,callback){
-        var validation = getMonitorEditFormFields()
-        if(!validation.ok){
-            return
-        }
-        var monitorConfig = validation.monitorConfig
-        var currentPreset = loadedPresets[presetName]
-        var presetMonitors = currentPreset.details.monitors || []
-        var newMonitorsArray = [].concat(presetMonitors)
-        var monitorIndexInPreset = newMonitorsArray.findIndex(monitor => monitor.mid === monitorConfig.mid)
-        if(monitorIndexInPreset > -1){
-            delete(newMonitorsArray[monitorIndexInPreset])
-            newMonitorsArray = newMonitorsArray.filter(function () { return true })
-        }
-        var data = JSON.stringify({
-            monitors: newMonitorsArray
-        })
-        $.post(getApiPrefix() + '/monitorStates/' + $user.ke + '/' + presetName + '/edit',{data:data},function(d){
-            debugLog(d)
-            if(d.ok === true){
-                loadPresets(function(presets){
-                    callback(d)
-                })
-                new PNotify({title:lang.Success,text:d.msg,type:'success'})
-            }
-        })
-    }
-    var loadMonitorPartialFromPreset = function(preset,monitorId){
-        $.confirm.create({
-            title: lang['Import Monitor Configuration'],
-            body: lang.undoAllUnsaveChanges,
-            clickOptions: {
-                title: 'Import',
-                class: 'btn-primary'
-            },
-            clickCallback: function(){
-                var monitorConfigPartial = preset.details.monitors.find(monitor => monitor.mid === monitorId) || {};
-                var copyCurrentConfig = loadedMonitors[monitorConfig.mid]
-                copyCurrentConfig.details = safeJsonParse(copyCurrentConfig.details)
-                var monitorObjectToLoad = mergeDeep(copyCurrentConfig,monitorConfigPartial);
-                importIntoMonitorEditor(monitorObjectToLoad)
-            }
-        })
-    }
     window.openMonitorEditorPage = function(monitorId){
         var monitorConfigToLoad;
         monitorEditorWindow.find('.am_notice').hide()
@@ -1278,6 +1133,7 @@ editorForm.find('[name="type"]').change(function(e){
         monitorEditorSelectedMonitor = monitorConfigToLoad
         importIntoMonitorEditor(monitorConfigToLoad)
         openTab(`monitorSettings`,{},null)
+        monitorsList.val(monitorConfigToLoad.mid || '')
     }
     function onMonitorEdit(d){
         var monitorId = d.mid || d.id
@@ -1363,7 +1219,6 @@ editorForm.find('[name="type"]').change(function(e){
             }
         })
     }
-    loadPresets()
     monSectionPresets.find('.add-new').click(function(){
         addNewPreset()
     })
@@ -1459,10 +1314,13 @@ editorForm.find('[name="type"]').change(function(e){
             var el = thisEl.parents('[data-mid]')
             monitorId = el.attr('data-mid')
         }
+        console.log(monitorId)
         openMonitorEditorPage(doNew === 'true' ? null : monitorId)
-    })
-
-    mainSocket.on('f',function (d){
+    });
+    monitorEditorWindow.find('.probe_config').click(function(){
+        $.pB.submit(buildMonitorURL(),true)
+    });
+    onWebSocketEvent(function (d){
         //     new PNotify({
         //         title: lang['Settings Changed'],
         //         text: lang.SettingsChangedText,
@@ -1497,20 +1355,19 @@ editorForm.find('[name="type"]').change(function(e){
             sideMenuCollapsePoint.collapse('show')
         }
     }
+    function onTabMove(){
+        var theSelected = `${monitorsList.val() || ''}`
+        drawMonitorListToSelector(monitorsList.find('optgroup'),false,'host')
+        monitorsList.val(theSelected)
+        checkToOpenSideMenu()
+    }
     addOnTabAway('monitorSettings', function(){
         if(isSideBarMenuCollapsed()){
             sideMenuCollapsePoint.collapse('hide')
         }
     })
-    addOnTabOpen('monitorSettings', function () {
-        drawMonitorListToSelector(monitorsList.find('optgroup'),false,'host')
-        checkToOpenSideMenu()
-    })
-    addOnTabReopen('monitorSettings', function () {
-        var theSelected = `${monitorsList.val()}`
-        drawMonitorListToSelector(monitorsList.find('optgroup'),false,'host')
-        monitorsList.val(theSelected)
-        checkToOpenSideMenu()
-    })
+    addOnTabOpen('monitorSettings', onTabMove)
+    addOnTabReopen('monitorSettings', onTabMove)
     window.generateDefaultMonitorSettings = generateDefaultMonitorSettings
+    window.importIntoMonitorEditor = importIntoMonitorEditor
 })

@@ -495,6 +495,10 @@ module.exports = (s,config,lang,app,io) => {
                             }
                         }
                         resolve(response)
+                        for (var i = 0; i < s.onEventBasedRecordingCompleteExtensions.length; i++) {
+                            const extender = s.onEventBasedRecordingCompleteExtensions[i]
+                            await extender(response,monitorConfig)
+                        }
                     },1000)
                 })
             }else{
@@ -549,7 +553,9 @@ module.exports = (s,config,lang,app,io) => {
                 ){
                     outputMap += `-map 0:1 `
                 }
-                const ffmpegCommand = `-loglevel warning -live_start_index -99999 -analyzeduration ${analyzeDuration} -probesize ${probeSize} -re -i "${s.dir.streams+d.ke+'/'+d.id}/detectorStream.m3u8" ${outputMap}-movflags faststart+frag_keyframe+empty_moov -fflags +igndts -c:v copy -c:a aac -strict -2 -strftime 1 -y "${s.getVideoDirectory(monitorConfig) + filename}"`
+                const secondsBefore = parseInt(monitorDetails.detector_buffer_seconds_before) || 5
+                let LiveStartIndex = parseInt(secondsBefore / 2 + 1)
+                const ffmpegCommand = `-loglevel warning -live_start_index -${LiveStartIndex} -analyzeduration ${analyzeDuration} -probesize ${probeSize} -re -i "${s.dir.streams+d.ke+'/'+d.id}/detectorStream.m3u8" ${outputMap}-movflags faststart+frag_keyframe+empty_moov -fflags +igndts -c:v copy -c:a aac -strict -2 -strftime 1 -y "${s.getVideoDirectory(monitorConfig) + filename}"`
                 s.debugLog(ffmpegCommand)
                 activeMonitor.eventBasedRecording.process = spawn(
                     config.ffmpegDir,
@@ -570,8 +576,10 @@ module.exports = (s,config,lang,app,io) => {
                         runRecord()
                         return
                     }
+                    const secondBefore = (parseInt(monitorDetails.detector_buffer_seconds_before) || 5) + 1
                     s.insertCompletedVideo(monitorConfig,{
                         file : filename,
+                        endTime: moment(new Date()).subtract(secondBefore,'seconds')._d,
                     },function(err,response){
                         const autoCompressionEnabled = monitorDetails.auto_compress_videos === '1';
                         if(autoCompressionEnabled){

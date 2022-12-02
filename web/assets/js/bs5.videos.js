@@ -1,4 +1,5 @@
 var loadedVideosInMemory = {}
+var loadedEventsInMemory = {}
 var loadedFramesMemory = {}
 var loadedFramesMemoryTimeout = {}
 var loadedFramesLock = {}
@@ -66,7 +67,7 @@ function createVideoLinks(video,options){
         video.ext = video.href.split('.')
         video.ext = video.ext[video.ext.length - 1]
     }
-    video.filename = formattedTimeForFilename(video.time,null,`YYYY-MM-DDTHH-mm-ss`) + '.' + video.ext;
+    video.filename = formattedTimeForFilename(convertTZ(video.time, serverTimezone),null,`YYYY-MM-DDTHH-mm-ss`) + '.' + video.ext;
     var href = getApiPrefix('videos') + '/'+video.mid+'/'+video.filename;
     video.actionUrl = href
     video.links = {
@@ -262,48 +263,50 @@ function getPercentOfTimePositionFromVideo(video,theEvent){
     return percentChanged
 }
 function createVideoRow(row,classOverride){
+    var objectTagsHtml = ``
     var eventMatrixHtml = ``
+    if(row.objects && row.objects.length > 0){
+        $.each(row.objects.split(','),function(n,objectTag){
+            eventMatrixHtml += `<span class="badge badge-primary badge-sm">${objectTag}</span>`
+        })
+    }
     if(row.events && row.events.length > 0){
         $.each(row.events,function(n,theEvent){
             var leftPercent = getPercentOfTimePositionFromVideo(row,theEvent)
-            eventMatrixHtml += `<div class="video-time-needle video-time-needle-event" style="left:${leftPercent}%"></div>`
+            eventMatrixHtml += `<div title="Event at ${theEvent.time}" class="video-time-needle video-time-needle-event" style="left:${leftPercent}%"></div>`
         })
     }
     var videoEndpoint = getApiPrefix(`videos`) + '/' + row.mid + '/' + row.filename
     return `
     <div class="video-row ${classOverride ? classOverride : `col-md-12 col-lg-6 mb-3`} search-row" data-mid="${row.mid}" data-time="${row.time}" data-time-formed="${new Date(row.time)}">
         <div class="video-time-card shadow-lg px-0 btn-default">
-            <div class="card-header d-flex flex-row">
-                <div class="flex-grow-1 ${definitions.Theme.isDark ? 'text-white' : ''}">
-                    ${loadedMonitors[row.mid] ? loadedMonitors[row.mid].name : row.mid}
+            <div class="card-header">
+                <div class="${definitions.Theme.isDark ? 'text-white' : ''}">
+                    ${moment(row.time).fromNow()}
                 </div>
-                <div>
-                    <a class="badge btn btn-primary open-video mr-1" title="${lang['Watch']}"><i class="fa fa-play-circle"></i></a>
+                <small class="text-muted">~${durationBetweenTimes(row.time,row.end)} ${lang.Minutes}</small>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <a class="badge btn btn-primary open-video" title="${lang['Watch']}"><i class="fa fa-play-circle"></i></a>
                     <a class="badge btn btn-success" download href="${videoEndpoint}" title="${lang['Download']}"><i class="fa fa-download"></i></a>
                     <a class="badge btn btn-danger delete-video" title="${lang['Delete']}"><i class="fa fa-trash-o"></i></a>
                 </div>
-            </div>
-            <div class="video-time-img">
-                <div class="card-body">
-                    <div title="${row.time}" class="d-flex flex-row">
-                        <div class="flex-grow-1">
-                            ${moment(row.time).fromNow()}
-                        </div>
-                        <div>
-                            <small class="text-muted">~${durationBetweenTimes(row.time,row.end)} ${lang.Minutes}</small>
-                        </div>
+                <div title="${row.time}" class="border-bottom-dotted border-bottom-dark mb-2">
+                    <div>
+                        <div title="${row.time}"><small class="text-muted">${lang.Started} : ${formattedTime(row.time,true)}</small></div>
+                        <div title="${row.end}"><small class="text-muted">${lang.Ended} : ${formattedTime(row.end,true)}</small></div>
                     </div>
-                    <div title="${row.time}" class="d-flex flex-row border-bottom-dotted border-bottom-dark mb-2">
-                        <div>
-                            <div title="${row.time}"><small class="text-muted">${lang.Started} : ${formattedTime(row.time,true)}</small></div>
-                            <div title="${row.end}"><small class="text-muted">${lang.Ended} : ${formattedTime(row.end,true)}</small></div>
-                        </div>
-                    </div>
+                    <small>
+                        ${loadedMonitors[row.mid] ? loadedMonitors[row.mid].name : row.mid}
+                    </small>
+                </div>
+                <div class="mb-2">
+                    ${objectTagsHtml}
                 </div>
             </div>
             <div class="video-time-strip card-footer p-0">
                 ${eventMatrixHtml}
-                <div class="video-time-needle video-time-needle-seeker" style="z-index: 2"></div>
             </div>
         </div>
     </div>`
@@ -340,13 +343,17 @@ function getAllDays(videos,frames){
     })
     videos.forEach(function(video){
         var videoTime = new Date(video.time)
+        var monitorId = video.mid
         var theDayKey = `${videoTime.getDate()}-${videoTime.getMonth()}-${videoTime.getFullYear()}`
-        listOfDays[video.mid][theDayKey] = []
+        if(!listOfDays[monitorId])listOfDays[monitorId] = {};
+        listOfDays[monitorId][theDayKey] = []
     })
     frames.forEach(function(frame){
         var frameTime = new Date(frame.time)
+        var monitorId = frame.mid
         var theDayKey = `${frameTime.getDate()}-${frameTime.getMonth()}-${frameTime.getFullYear()}`
-        listOfDays[frame.mid][theDayKey] = []
+        if(!listOfDays[monitorId])listOfDays[monitorId] = {};
+        listOfDays[monitorId][theDayKey] = []
     })
     return listOfDays
 }
@@ -431,9 +438,16 @@ function drawVideoRowsToList(targetElement,rows){
     })
     liveStamp()
 }
-function loadVideoData(video){
-    delete(video.f)
-    loadedVideosInMemory[`${video.mid}${video.time}`] = video
+function loadVideosData(newVideos){
+    $.each(newVideos,function(n,video){
+        delete(video.f)
+        loadedVideosInMemory[`${video.mid}${video.time}`] = video
+    })
+}
+function loadEventsData(videoEvents){
+    videoEvents.forEach((anEvent) => {
+        loadedEventsInMemory[`${anEvent.mid}${anEvent.time}`] = anEvent
+    })
 }
 function getVideos(options,callback){
     return new Promise((resolve,reject) => {
@@ -463,14 +477,18 @@ function getVideos(options,callback){
             requestQueries.push(`archived=1`)
         }
         $.getJSON(`${getApiPrefix(customVideoSet ? customVideoSet : searchQuery ? `videosByEventTag` : `videos`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`noLimit=1`]).join('&')}`,function(data){
-            var videos = data.videos
+            var videos = data.videos.map((video) => {
+                return Object.assign({},video,{
+                    href: getFullOrigin(true) + video.href
+                })
+            })
             $.getJSON(`${getApiPrefix(`timelapse`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`noLimit=1`]).join('&')}`,function(timelapseFrames){
                 $.getJSON(`${getApiPrefix(`events`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`limit=${limit}`]).join('&')}`,function(eventData){
-                    var newVideos = applyDataListToVideos(videos,eventData)
-                    newVideos = applyTimelapseFramesListToVideos(newVideos,timelapseFrames,'timelapseFrames',true)
-                    $.each(newVideos,function(n,video){
-                        loadVideoData(video)
-                    })
+                    var theEvents = eventData.events || eventData;
+                    var newVideos = applyDataListToVideos(videos,theEvents)
+                    newVideos = applyTimelapseFramesListToVideos(newVideos,timelapseFrames.frames || timelapseFrames,'timelapseFrames',true)
+                    loadEventsData(theEvents)
+                    loadVideosData(newVideos)
                     if(callback)callback({videos: newVideos, frames: timelapseFrames});
                     resolve({videos: newVideos, frames: timelapseFrames})
                 })
@@ -479,33 +497,38 @@ function getVideos(options,callback){
     })
 }
 function getEvents(options,callback){
-    options = options ? options : {}
-    var requestQueries = []
-    var monitorId = options.monitorId
-    var limit = options.limit || 5000
-    var eventStartTime
-    var eventEndTime
-    // var startDate = options.startDate
-    // var endDate = options.endDate
-    if(options.startDate){
-        eventStartTime = formattedTimeForFilename(options.startDate,false)
-        requestQueries.push(`start=${eventStartTime}`)
-    }
-    if(options.endDate){
-        eventEndTime = formattedTimeForFilename(options.endDate,false)
-        requestQueries.push(`end=${eventEndTime}`)
-    }
-    if(options.onlyCount){
-        requestQueries.push(`onlyCount=1`)
-    }
-    $.getJSON(`${getApiPrefix(`events`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.join('&')}`,function(eventData){
-        callback(eventData)
+    return new Promise((resolve,reject) => {
+        options = options ? options : {}
+        var requestQueries = []
+        var monitorId = options.monitorId
+        var limit = options.limit || 5000
+        var eventStartTime
+        var eventEndTime
+        // var startDate = options.startDate
+        // var endDate = options.endDate
+        if(options.startDate){
+            eventStartTime = formattedTimeForFilename(options.startDate,false)
+            requestQueries.push(`start=${eventStartTime}`)
+        }
+        if(options.endDate){
+            eventEndTime = formattedTimeForFilename(options.endDate,false)
+            requestQueries.push(`end=${eventEndTime}`)
+        }
+        if(options.onlyCount){
+            requestQueries.push(`onlyCount=1`)
+        }
+        $.getJSON(`${getApiPrefix(`events`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.join('&')}`,function(eventData){
+            var theEvents = eventData.events || eventData
+            if(callback)callback(theEvents)
+            resolve(theEvents)
+        })
     })
 }
 function deleteVideo(video,callback){
     return new Promise((resolve,reject) => {
         var videoEndpoint = getApiPrefix(`videos`) + '/' + video.mid + '/' + video.filename
         $.getJSON(videoEndpoint + '/delete',function(data){
+            notifyIfActionFailed(data)
             if(callback)callback(data)
             resolve(data)
         })
@@ -609,6 +632,18 @@ async function unarchiveVideos(videos){
         var video = videos[i];
         await unarchiveVideo(video)
     }
+}
+function buildDefaultVideoMenuItems(file,options){
+    var href = file.href
+    options = options ? options : {play: true}
+    return `
+    <li><a class="dropdown-item" href="${href}" download>${lang.Download}</a></li>
+    ${options.play ? `<li><a class="dropdown-item open-video" href="${href}">${lang.Play}</a></li>` : ``}
+    <li><hr class="dropdown-divider"></li>
+    ${permissionCheck('video_delete',file.mid) ? `<li><a class="dropdown-item open-video-studio" href="${href}">${lang.Slice}</a></li>` : ``}
+    ${permissionCheck('video_delete',file.mid) ? `<li><a class="dropdown-item delete-video" href="${href}">${lang.Delete}</a></li>` : ``}
+    ${permissionCheck('video_delete',file.mid) ? `<li><a class="dropdown-item compress-video" href="${href}">${lang.Compress}</a></li>` : ``}
+`
 }
 onWebSocketEvent(function(d){
     switch(d.f){

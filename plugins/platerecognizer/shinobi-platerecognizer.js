@@ -96,7 +96,7 @@ function platerecognizerRequest(d,frameBuffer){
 						console.log(body)
 					}
 					resolve(predictions);
-					fs.unlink(filePath,function(){
+					fs.rm(filePath,function(){
 
 					})
 				})

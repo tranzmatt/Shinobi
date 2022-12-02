@@ -3,11 +3,12 @@ $(document).ready(function(e){
     var powerVideoMonitorsListElement = $('#powerVideoMonitorsList')
     var powerVideoMonitorViewsElement = $('#powerVideoMonitorViews')
     var powerVideoTimelineStripsContainer = $('#powerVideoTimelineStrips')
-    var powerVideoDateRangeElement = $('#powerVideoDateRange')
+    var dateSelector = $('#powerVideoDateRange')
     var powerVideoVideoLimitElement = $('#powerVideoVideoLimit')
     var powerVideoEventLimitElement = $('#powerVideoEventLimit')
     var powerVideoSet = $('#powerVideoSet')
     var powerVideoMuteIcon = powerVideoWindow.find('[powerVideo-control="toggleMute"] i')
+    var objectTagSearchField = $('#powerVideo_tag_search')
     var powerVideoLoadedVideos = {}
     var powerVideoLoadedEvents = {}
     var powerVideoLoadedChartData = {}
@@ -30,23 +31,18 @@ $(document).ready(function(e){
     }
     var activeTimeline = null
     // fix utc/localtime translation (use timelapseJpeg as guide, it works as expected) >
-    powerVideoDateRangeElement.daterangepicker({
+    loadDateRangePicker(dateSelector,{
         startDate: moment().subtract(moment.duration("24:00:00")),
         endDate: moment().add(moment.duration("24:00:00")),
-        timePicker: true,
         timePicker24Hour: true,
         timePickerSeconds: true,
-        timePickerIncrement: 30,
-        locale: {
-            format: 'DD/MM/YYYY h:mm A'
+        onChange: function(start, end, label) {
+            dateSelector.focus()
+            $.each(lastPowerVideoSelectedMonitors,async function(n,monitorId){
+                await requestTableData(monitorId)
+            })
         }
-    },function(start, end, label){
-        // $.pwrvid.drawTimeline()
-        powerVideoDateRangeElement.focus()
-        $.each(lastPowerVideoSelectedMonitors,function(n,monitorId){
-            requestTableData(monitorId)
-        })
-    });
+    })
     // fix utc/localtime translation (use timelapseJpeg as guide, it works as expected) />
     function loadVideosToTimeLineMemory(monitorId,videos,events){
         videos.forEach((video) => {
@@ -74,23 +70,27 @@ $(document).ready(function(e){
         })
         powerVideoMonitorsListElement.html(html)
     }
-    function requestTableData(monitorId,user){
-        if(!user)user = $user
-        var dateData = powerVideoDateRangeElement.data('daterangepicker')
-        var newRequest = {
-            f: 'monitor',
-            ff: 'get',
-            fff: 'videos&events',
-            videoSet: powerVideoSet.val() || '',
-            videoLimit: parseInt(powerVideoVideoLimitElement.val()) || 0,
-            eventLimit: parseInt(powerVideoEventLimitElement.val()) || 500,
-            startDate: dateData.startDate.clone().utc().format('YYYY-MM-DDTHH:mm:ss'),
-            endDate: dateData.endDate.clone().utc().format('YYYY-MM-DDTHH:mm:ss'),
-            ke: user.ke,
-            mid: monitorId
-        }
-        console.log(newRequest)
-        mainSocket.f(newRequest)
+    function getVideoSetSelected(){
+        return powerVideoSet.val()
+    }
+    async function requestTableData(monitorId){
+        var dateRange = getSelectedTime(dateSelector)
+        var searchQuery = objectTagSearchField.val() || null
+        var startDate = dateRange.startDate
+        var endDate = dateRange.endDate
+        var wantsCloudVideo = getVideoSetSelected() === 'cloud'
+        var wantsArchivedVideo = getVideoSetSelected() === 'archive'
+        var videos = (await getVideos({
+            monitorId,
+            startDate,
+            endDate,
+            searchQuery,
+            archived: wantsArchivedVideo,
+            customVideoSet: wantsCloudVideo ? 'cloudVideos' : 'videos',
+        })).videos;
+        var events = ([]).concat(...videos.map(row => row.events || []));
+        loadVideosToTimeLineMemory(monitorId,videos,events)
+        drawLoadedTableData()
     }
     function unloadTableData(monitorId,user){
         if(!user)user = $user
@@ -131,7 +131,7 @@ $(document).ready(function(e){
             chartData.push({
                 group: loadedTableGroupIds[monitorId],
                 content: `<div timeline-video-file="${video.mid}${video.time}">
-                    ${video.time}
+                    ${formattedTime(video.time, 'hh:mm:ss AA, DD-MM-YYYY')}
                     <div class="progress">
                         <div class="progress-bar progress-bar-danger" role="progressbar" style="width:0%;"><span></span></div>
                     </div>
@@ -164,7 +164,7 @@ $(document).ready(function(e){
         var monitorId = video.mid
         var labels = []
         var chartData = []
-        var events = video.detections
+        var events = video.detections || video.events
         $.each(events,function(n,v){
             if(!v.details.confidence){v.details.confidence=0}
             var time = moment(v.time).format('MM/DD/YYYY HH:mm:ss')
@@ -258,7 +258,7 @@ $(document).ready(function(e){
                 var name = mon.name;
                 groups.push({
                     id: groupId,
-                    content: name + " | " + monitorId
+                    content: name + " | " + lang.Videos
                 })
                 groupId += 1
                 groups.push({
@@ -271,7 +271,6 @@ $(document).ready(function(e){
             })
             groupsDataSet.add(groups)
             var chartData = getAllChartDataForLoadedVideos()
-            console.log(chartData)
             if(chartData.length > 0){
                 var items = new vis.DataSet(chartData)
                 var options = {
@@ -477,7 +476,7 @@ $(document).ready(function(e){
         var videoContainer = powerVideoMonitorViewsElement.find(`.videoPlayer[data-mid=${video.mid}] .videoPlayer-buffers`)
         if(videoContainer.length === 0){
             if(!monitorSlotPlaySpeeds)monitorSlotPlaySpeeds[video.mid] = {}
-            powerVideoMonitorViewsElement.append(`<div class="videoPlayer" style="width:${widthOfBlock}%" data-mid="${video.mid}">
+            powerVideoMonitorViewsElement.append(`<div class="videoPlayer" style="width:${widthOfBlock}%;max-width:500px" data-mid="${video.mid}">
                 <div class="videoPlayer-detection-info">
                     <canvas style="height:400px"></canvas>
                 </div>
@@ -671,24 +670,11 @@ $(document).ready(function(e){
         lastPowerVideoSelectedMonitors.forEach((monitorId) => {
             unloadTableData(monitorId)
         })
-        monitorIdsSelectedNow.forEach((monitorId) => {
-            requestTableData(monitorId)
+        monitorIdsSelectedNow.forEach(async (monitorId) => {
+            await requestTableData(monitorId)
         })
         lastPowerVideoSelectedMonitors = ([]).concat(monitorIdsSelectedNow || [])
     }
-    onWebSocketEvent(function (d){
-        switch(d.f){
-            case'videos&events':
-                console.log('videos&events',d)
-                if(tabTree.name === 'powerVideo'){
-                    var videos = d.videos.videos
-                    var events = d.events
-                    loadVideosToTimeLineMemory(d.id,videos,events)
-                    drawLoadedTableData()
-                }
-            break;
-        }
-    })
     powerVideoMonitorsListElement.on('change','input',onPowerVideoSettingsChange);
     powerVideoVideoLimitElement.change(onPowerVideoSettingsChange);
     powerVideoEventLimitElement.change(onPowerVideoSettingsChange);
@@ -766,7 +752,7 @@ $(document).ready(function(e){
         monitorListElement: powerVideoMonitorsListElement,
         monitorViewsElement: powerVideoMonitorViewsElement,
         timelineStripsElement: powerVideoTimelineStripsContainer,
-        dateRangeElement: powerVideoDateRangeElement,
+        dateRangeElement: dateSelector,
         loadedVideos: powerVideoLoadedVideos,
         loadedEvents: powerVideoLoadedEvents,
         loadedChartData: powerVideoLoadedChartData,
