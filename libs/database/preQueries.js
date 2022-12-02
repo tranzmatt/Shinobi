@@ -12,7 +12,7 @@ module.exports = function(s,config){
             {name: 'ke', length: 50, type: 'string'},
             {name: 'mid', length: 50, type: 'string'},
             {name: 'name', length: 50, type: 'string'},
-            {name: 'size', type: 'float', defaultTo: 0},
+            {name: 'size', type: 'bigint'},
             {name: 'details', type: 'text'},
             {name: 'status', type: 'integer', length: 1, defaultTo: 0},
             {name: 'archive', type: 'tinyint', length: 1, defaultTo: 0},
@@ -24,7 +24,7 @@ module.exports = function(s,config){
             {name: 'ke', length: 50, type: 'string'},
             {name: 'mid', length: 50, type: 'string'},
             {name: 'ext', type: 'string', length: 10, defaultTo: 'mp4'},
-            {name: 'size', type: 'float', defaultTo: 0},
+            {name: 'size', type: 'bigint'},
             {name: 'status', type: 'tinyint', length: 1, defaultTo: 0},
             {name: 'archive', type: 'tinyint', length: 1, defaultTo: 0},
             {name: 'objects', type: 'string'},
@@ -41,7 +41,7 @@ module.exports = function(s,config){
             {name: 'ke', length: 50, type: 'string'},
             {name: 'mid', length: 50, type: 'string'},
             {name: 'href', length: 50, type: 'text'},
-            {name: 'size', type: 'float', defaultTo: 0},
+            {name: 'size', type: 'bigint'},
             {name: 'details', type: 'text'},
             {name: 'status', type: 'integer', length: 1, defaultTo: 0},
             {name: 'archive', type: 'tinyint', length: 1, defaultTo: 0},
@@ -78,7 +78,7 @@ module.exports = function(s,config){
             {name: 'href', type: 'text'},
             {name: 'filename', length: 50, type: 'string'},
             {name: 'time', type: 'timestamp'},
-            {name: 'size', type: 'float', defaultTo: 0},
+            {name: 'size', type: 'bigint'},
             {name: 'details', type: 'text'},
         ]);
         await createTable('API',[
@@ -132,7 +132,7 @@ module.exports = function(s,config){
             {name: 'width', type: 'integer', length: 11},
             {name: 'height', type: 'integer', length: 11},
             // KEY `monitors_index` (`ke`,`mode`,`type`,`ext`)
-            {name: ['ke', 'mid', 'mode', 'type', 'ext'], type: 'index', length: 'monitors_index'},
+            {name: ['ke', 'mid'], type: 'index', length: 'monitors_index'},
         ]);
         await createTable('Presets',[
             isMySQL ? {name: 'utf8', type: 'charset'} : null,
@@ -159,7 +159,7 @@ module.exports = function(s,config){
             {name: 'mid', length: 50, type: 'string'},
             {name: 'filename', length: 50, type: 'string'},
             {name: 'time', type: 'timestamp'},
-            {name: 'size', type: 'float', length: 11},
+            {name: 'size', type: 'bigint'},
             {name: 'archive', length: 1, type: 'tinyint', defaultTo: 0},
             {name: 'saveDir', length: 255, type: 'string'},
             {name: 'details', type: 'text'},
