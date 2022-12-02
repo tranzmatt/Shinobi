@@ -153,6 +153,7 @@ module.exports = function(s,config,lang){
             'port',
             'fps',
             'mode',
+            'saveDir',
             'width',
             'height'
         ];
