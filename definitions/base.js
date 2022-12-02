@@ -4645,15 +4645,7 @@ module.exports = function(s,config,lang){
                     {
                        "name": "details",
                        "preFill": "{}",
-                    },
-                    {
-                       "name": "shto",
-                       "preFill": "[]",
-                    },
-                    {
-                       "name": "shfr",
-                       "preFill": "[]",
-                    },
+                    }
                 ]
              }
           }

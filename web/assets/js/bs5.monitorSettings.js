@@ -289,9 +289,7 @@ function generateDefaultMonitorSettings(){
                     "cust_stream": ""
                 }
             }
-        },
-       "shto": "[]",
-       "shfr": "[]"
+        }
     }
 }
 var getHumanizedMonitorConfig = function(monitor){

@@ -118,8 +118,6 @@ module.exports = function(s,config){
             {name: 'ke', length: 50, type: 'string'},
             {name: 'mid', length: 50, type: 'string'},
             {name: 'name', length: 50, type: 'string'},
-            {name: 'shto', type: 'text'},
-            {name: 'shfr', type: 'text'},
             {name: 'details', type: 'longtext'},
             {name: 'type', type: 'string', length: 25, defaultTo: 'h264'},
             {name: 'ext', type: 'string', length: 10, defaultTo: 'mp4'},
