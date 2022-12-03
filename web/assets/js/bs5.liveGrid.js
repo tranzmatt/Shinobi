@@ -83,7 +83,7 @@ function buildStreamElementHtml(streamType){
     }else{
         switch(streamType){
             case'hls':case'flv':case'mp4':
-                html = `<video class="stream-element" playsinline muted autoplay></video>`;
+                html = `<video class="stream-element" playsinline autoplay></video>`;
             break;
             case'mjpeg':
                 html = '<iframe class="stream-element"></iframe>';
