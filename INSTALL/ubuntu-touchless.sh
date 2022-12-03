@@ -110,7 +110,7 @@ echo "Shinobi - Randomizing cron key"
 node tools/modifyConfiguration.js addToConfig="{\"cron\":{\"key\":\"$(head -c 64 < /dev/urandom | sha256sum | awk '{print substr($1,1,60)}')\"}}"
 echo "Shinobi - Starting Shinobi and setting to start on boot"
 sudo pm2 start camera.js
-sudo pm2 start cron.js
+#sudo pm2 start cron.js
 sudo pm2 startup
 sudo pm2 save
 sudo pm2 list

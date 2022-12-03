@@ -172,6 +172,6 @@ echo "(y)es or (N)o"
 read -r startShinobi
 if [ "$startShinobi" = "y" ]; then
     pm2 start camera.js
-    pm2 start cron.js
+    #pm2 start cron.js
     pm2 list
 fi
