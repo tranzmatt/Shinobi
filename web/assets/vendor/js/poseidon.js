@@ -516,6 +516,9 @@ var Poseidon = function () {
                     this._video.currentTime = this._sourceBuffer.buffered.end(0) - 0.5;
                 }
             }
+            if (!(data instanceof ArrayBuffer)){
+                data = data.segment;
+            }
             if (this._sourceBuffer.updating) {
                 this._lastSegment = data;
             } else {
