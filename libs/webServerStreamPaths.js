@@ -109,7 +109,6 @@ module.exports = function(s,config,lang,app){
                             res.end('404 : Not Found : '+errorMessage);
                         } else {
                             res.locals.mp4frag = mp4frag
-                            res.set('Access-Control-Allow-Origin', '*')
                             res.set('Connection', 'close')
                             res.set('Cache-Control', 'private, no-cache, no-store, must-revalidate')
                             res.set('Expires', '-1')
@@ -323,7 +322,6 @@ module.exports = function(s,config,lang,app){
                     var contentWriter
                     //set headers
                     res.setHeader('Content-Type', 'video/x-flv');
-                    res.setHeader('Access-Control-Allow-Origin','*');
                     //write first frame on stream
                     res.write(s.group[req.params.ke].activeMonitors[req.params.id].firstStreamChunk[chunkChannel])
                     var ip = s.getClientIp(req)
