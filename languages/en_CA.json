@@ -763,6 +763,7 @@
    "Recording Segment Interval": "Recording Segment Interval <small>in minutes</small>",
    "Record Video Filter": "Record Video Filter",
    "Input Flags": "Input Flags",
+   "JPEG API Flags": "JPEG API Flags",
    "Snapshot Flags": "Snapshot Flags",
    "Object Detector Flags": "Object Detector Flags",
    "Detector Flags": "Detector Flags",

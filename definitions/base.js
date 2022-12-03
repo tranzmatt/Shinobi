@@ -4496,22 +4496,22 @@ module.exports = function(s,config,lang){
                    {
                        hidden: true,
                       "name": "detail=cust_snap",
-                      "field": "Snapshot Flags",
+                      "field": lang["JPEG API Flags"],
                       "description": lang["fieldTextCustSnap"],
-                      "default": "",
-                      "example": "",
                       "form-group-class": "h_sn_input h_sn_1",
-                      "possible": ""
+                   },
+                   {
+                       hidden: true,
+                      "name": "detail=cust_snap_raw",
+                      "field": lang["Snapshot Flags"],
+                      "description": lang["fieldTextCustSnap"],
                    },
                    {
                        hidden: true,
                       "name": "detail=cust_record",
                       "field": lang["Recording Flags"],
                       "description": lang["fieldTextCustRecord"],
-                      "default": "",
-                      "example": "",
                       "form-group-class": "h_m_input h_m_record",
-                      "possible": ""
                    },
                    {
                        hidden: true,
@@ -4528,10 +4528,7 @@ module.exports = function(s,config,lang){
                       "name": "detail=cust_detect_object",
                       "field": lang["Object Detector Flags"],
                       "description": lang["fieldTextCustDetectObject"],
-                      "default": "",
-                      "example": "",
                       "form-group-class": "shinobi-detector",
-                      "possible": ""
                    },
                    {
                        hidden: true,
