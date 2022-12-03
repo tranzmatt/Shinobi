@@ -204,7 +204,7 @@ module.exports = function(s,config,lang){
                         var temporaryImageFile = streamDir + s.gid(5) + '.jpg'
                         var iconImageFile = streamDir + 'icon.jpg'
                         const snapRawFilters = monitor.details.cust_snap_raw
-                        if(snapRawFilters)outputOptions.push(`-vf`,snapRawFilters);
+                        if(snapRawFilters)outputOptions.push(snapRawFilters);
                         var ffmpegCmd = splitForFFPMEG(`-y -loglevel warning ${isDetectorStream ? '-live_start_index 2' : ''} -re ${inputOptions.join(' ')} -i "${url}" ${outputOptions.join(' ')} -f image2 -an -frames:v 1 "${temporaryImageFile}"`)
                         checkExists(streamDir, function(success) {
                             if (success === false) {
