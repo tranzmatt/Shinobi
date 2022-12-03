@@ -625,9 +625,13 @@ module.exports = (s,config,lang) => {
         const objectDetectorFpsFilter = 'fps=' + (e.details.detector_fps_object ? e.details.detector_fps_object : baseFps)
         const cudaVideoFilters = 'hwdownload,format=nv12'
         const videoFilters = []
+        let addedVideoFilters = false
         if(e.details.detector === '1' && (sendFramesGlobally || sendFramesToObjectDetector)){
             const addVideoFilters = () => {
-                if(videoFilters.length > 0)detectorFlags.push(' -vf "' + videoFilters.join(',') + '"')
+                if(addedVideoFilters)return;
+                addedVideoFilters = true
+                if(videoFilters.length > 0)detectorFlags.push(' -vf "' + videoFilters.join(',') + '"');
+                detectorFlags.push(baseDimensionsFlag)
             }
             const addInputMap = () => {
                 detectorFlags.push(buildInputMap(e,e.details.input_map_choices.detector))
@@ -648,11 +652,9 @@ module.exports = (s,config,lang) => {
                 if(e.details.cust_detect)detectorFlags.push(e.details.cust_detect)
                 if(!objectDetectorOutputIsEnabled && !sendFramesToObjectDetector){
                     addVideoFilters()
-                    detectorFlags.push(baseDimensionsFlag)
                 }
                 if(builtInMotionDetectorIsEnabled){
                     addVideoFilters()
-                    detectorFlags.push(baseDimensionsFlag)
                     detectorFlags.push('-an -c:v pam -pix_fmt gray -f image2pipe pipe:3')
                     if(objectDetectorOutputIsEnabled){
                         addObjectDetectorInputMap()
