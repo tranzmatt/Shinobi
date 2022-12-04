@@ -145,11 +145,16 @@ if(rawMonitorConfig.details.detector === '1' && rawMonitorConfig.details.detecto
 }
 
 if(rawMonitorConfig.type === 'jpeg'){
+    writeToStderr('JPEG Input Type Detected')
     var recordingSnapper
     var errorTimeout
     var errorCount = 0
-    var capture_fps = parseFloat(rawMonitorConfig.details.sfps || 1)
-    if(isNaN(capture_fps))capture_fps = 1
+    var capture_fps = parseInt(rawMonitorConfig.details.sfps) || 1
+    if(isNaN(capture_fps)){
+        writeToStderr(`${lang['Error While Decoding']}, ${lang['Field Missing Value']} : ${lang['Monitor Capture Rate']}`)
+        return;
+    }
+    writeToStderr(`Running at ${capture_fps} FPS`)
     try{
         cameraProcess.stdio[0].on('error',function(err){
             if(err && rawMonitorConfig.details.loglevel !== 'quiet'){
@@ -160,15 +165,14 @@ if(rawMonitorConfig.type === 'jpeg'){
         writeToStderr(err.stack)
     }
     setTimeout(() => {
-        if(!cameraProcess.stdio[0])return writeToStderr('No Camera Process Found for Snapper');
+        if(!cameraProcess.stdin)return writeToStderr('No Camera Process Found for Snapper');
         const captureOne = function(f){
             fetchTimeout(buildMonitorUrl(rawMonitorConfig),15000,{
                 method: 'GET',
             })
-            .then(response => response.text())
-            .then(function(body){
-                // writeToStderr(data.body.length)
-                cameraProcess.stdio[0].write(data.body)
+            .then(response => response.arrayBuffer())
+            .then(function(content){
+                cameraProcess.stdin.write(new Uint8Array(content))
                 recordingSnapper = setTimeout(function(){
                     captureOne()
                 },1000 / capture_fps)
@@ -183,7 +187,7 @@ if(rawMonitorConfig.type === 'jpeg'){
                 ++errorCount
                 clearTimeout(errorTimeout)
                 errorTimeout = null
-                writeToStderr(JSON.stringify(err))
+                writeToStderr(err.stack)
                 if(rawMonitorConfig.details.loglevel !== 'quiet'){
                     // s.userLog(e,{
                     //     type: lang['JPEG Error'],
