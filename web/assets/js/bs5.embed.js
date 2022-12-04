@@ -278,34 +278,6 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
     $.each(onLiveStreamInitiateExtensions,function(n,extender){
         extender(streamType,monitor,loadedPlayer,subStreamChannel)
     })
-    var monitorMutes = dashboardOptions().monitorMutes || {}
-    if(dashboardOptions().switches.monitorMuteAudio === 1){
-        containerElement.find('video').each(function(n,el){
-            el.muted = "muted"
-        })
-    }else{
-        $.each(loadedMonitors,function(frontId,monitor){
-            setTimeout(() => {
-                var monitorId = monitor.mid
-                var muted = monitorMutes[monitorId]
-                try{
-                    var vidEl = $('.monitor_item[mid="' + monitorId + '"] video')[0]
-                    if(vidEl.length === 0)return;
-                    if(muted === 1){
-                        vidEl.muted = true
-                    }else{
-                        try{
-                            vidEl.muted = false
-                        }catch(err){
-                            console.error('User must have window active to unmute.')
-                        }
-                    }
-                }catch(err){
-                    // console.log(err)
-                }
-            },2000)
-        })
-    }
     //initiate signal check
     if(streamType !== 'useSubstream'){
         var signalCheckInterval = (isNaN(loadedMonitor.details.signal_check) ? 10 : parseFloat(loadedMonitor.details.signal_check)) * 1000 * 60
@@ -635,7 +607,7 @@ $(document).ready(function(e){
             break;
         }
     });
-    createWebsocket(`ws://${location.host}`,'/socket.io');
+    createWebsocket(urlPrefix,{});
     onInitWebsocket(function(){
         requestMonitorInit();
     });

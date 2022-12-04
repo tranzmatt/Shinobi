@@ -62,6 +62,7 @@ module.exports = function(s,config,lang,app){
                     };
                     s.renderPage(req,res,config.renderPaths.embed,{
                         data: req.params,
+                        protocol: req.protocol,
                         baseUrl: req.protocol+'://'+req.hostname,
                         config: s.getConfigWithBranding(req.hostname),
                         define: s.getDefinitonFile(user.details ? user.details.lang : config.lang),

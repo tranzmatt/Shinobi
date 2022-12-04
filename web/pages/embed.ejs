@@ -1,6 +1,6 @@
 <%
     var urlPrefix = ``
-    var targetPort = config.ssl && config.ssl.port && data.protocol === 'https' ? config.ssl.port : config.port
+    var targetPort = config.ssl && config.ssl.port && protocol === 'https' ? config.ssl.port : config.port
     var addonsEnabled = {}
     var rawAddonList = decodeURI(data.addon || '').split('|');
     rawAddonList.forEach(function(piece){

@@ -16,9 +16,9 @@ function onWebSocketEvent(theAction){
 }
 var queuedCallbacks = {}
 function createWebsocket(theURL,thePath){
-    mainSocket = io(theURL || location.origin,{
+    mainSocket = io(theURL || location.origin, thePath instanceof Object ? thePath : {
         path: thePath || websocketPath,
-        query: websocketQuery
+        query: websocketQuery,
     })
     mainSocket.f = function(data,callback){
         if(!data.ke)data.ke = $user.ke;
