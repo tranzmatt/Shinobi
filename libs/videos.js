@@ -467,9 +467,21 @@ module.exports = function(s,config,lang){
             req.headerWrite['content-disposition']='attachment; filename="'+req.query.downloadName+'"';
         }
         res.writeHead(req.writeCode,req.headerWrite);
+        res.on('finish', () => {
+           file.close();
+        });
+
+        res.on('close', () => {
+           file.close();
+        });
+
+        res.on('disconnect', () => {
+           file.close();
+        });
+
         file.on('close',function(){
             res.end()
-        })
+        });
         file.pipe(res)
         return file
     }
