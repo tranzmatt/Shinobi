@@ -181,16 +181,18 @@ $(document).ready(function(e){
     function drawPreviewVideo(href){
         videosTablePreviewArea.html(`<video class="video_video" style="width:100%" autoplay controls preload loop src="${href}"></video>`)
     }
-    function getSelectedRows(){
+    function getSelectedRows(getLoadedRows){
         var rowsSelected = []
         videosTableDrawArea.find('[name="btSelectItem"]:checked').each(function(n,checkbox){
             var rowInfo = $(checkbox).parents('tr').find('.row-info')
             var monitorId = rowInfo.attr('data-mid')
             var groupKey = rowInfo.attr('data-ke')
+            var time = rowInfo.attr('data-time')
             var filename = rowInfo.attr('data-filename')
-            rowsSelected.push({
+            rowsSelected.push(getLoadedRows ? loadedVideosInMemory[`${monitorId}${time}`] : {
                 mid: monitorId,
                 ke: groupKey,
+                time: time,
                 filename: filename,
             })
         })
@@ -257,6 +259,12 @@ $(document).ready(function(e){
         e.preventDefault()
         var href = $(this).attr('href')
         drawPreviewVideo(href)
+        return false;
+    })
+    .on('click','.zip-selected-videos',function(e){
+        e.preventDefault()
+        var videos = getSelectedRows(true)
+        zipVideosAndDownloadWithConfirm(videos)
         return false;
     })
     .on('click','.refresh-data',function(e){

@@ -6373,6 +6373,7 @@ module.exports = function(s,config,lang){
                            },
                            {
                               "fieldType": "btn-group",
+                              "class": "mb-3",
                               "btns": [
                                   {
                                       "fieldType": "btn",
@@ -6381,17 +6382,29 @@ module.exports = function(s,config,lang){
                                   },
                                   {
                                       "fieldType": "btn",
-                                      "class": `btn-success download_mp4`,
+                                      "class": `btn-secondary download_mp4`,
                                       "btnContent": `${lang['Download']}`,
                                   },
                               ],
-                           }
+                          },
+                          {
+                             "fieldType": "btn-group",
+                             "btns": [
+                                 {
+                                     "fieldType": "btn",
+                                     "class": `btn-success fill refresh-data mb-3`,
+                                     "icon": `refresh`,
+                                     "btnContent": `${lang['Refresh']}`,
+                                 },
+                             ],
+                          },
                       ]
                     },
                     {
                        isFormGroupGroup: true,
                        "headerTitle": `
-                         <a href=# class="btn btn-danger btn-sm delete-selected"><i class="fa fa-trash-o"></i> ${lang['Delete selected']}</a>
+                         <a class="btn btn-danger btn-sm delete-selected-frames">${lang['Delete selected']}</a>
+                         <a class="btn btn-primary btn-sm zip-selected-frames">${lang['Zip and Download']}</a>
                          <div class="pull-right">
                              <input type="checkbox" class="form-check-input select-all">
                          </div>`,
@@ -8370,13 +8383,7 @@ module.exports = function(s,config,lang){
                                 "class": `btn-success fill refresh-data mb-3`,
                                 "icon": `refresh`,
                                 "btnContent": `${lang['Refresh']}`,
-                            },
-                            {
-                                "fieldType": "btn",
-                                "class": `btn-danger fill delete-selected mb-3`,
-                                "icon": `trash-o`,
-                                "btnContent": `${lang['Delete Selected']}`,
-                            },
+                            }
                         ],
                      },
                      {

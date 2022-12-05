@@ -57,13 +57,24 @@ $(document).ready(function(e){
     })
     monitorsList.change(function(){
         drawTimelapseWindowElements()
-        getLiveStream()
+        // getLiveStream()
+    })
+    timelapseWindow.find('.refresh-data').click(function(){
+        drawTimelapseWindowElements()
+        // getLiveStream()
     })
     var getLiveStream = function(){
         var selectedMonitor = monitorsList.val()
         liveStreamView.html(`<iframe src="${apiBaseUrl + '/embed/' + $user.ke + '/' + selectedMonitor + '/jquery|fullscreen'}"></iframe>`)
         liveStreamView.find('iframe').width(playBackViewImage.width())
 
+    }
+    function getSelectedRows(){
+        var checkedBoxes = frameIcons.serializeObject()
+        var fileNames = Object.values(checkedBoxes)
+        return fileNames.map((filename) => {
+            return currentPlaylist[filename]
+        });
     }
     function drawTimelapseWindowElements(selectedMonitor,startDate,endDate){
         setDownloadButtonLabel(lang['Build Video'], 'database')
@@ -216,10 +227,10 @@ $(document).ready(function(e){
         var href = currentPlaylist[selectedFrame].href
         setPlayBackFrame(href)
     })
-    timelapseWindow.on('click','.playPause',function(){
+    .on('click','.playPause',function(){
         togglePlayPause()
     })
-    timelapseWindow.on('click','.frame .delete',function(e){
+    .on('click','.frame .delete',function(e){
         e.stopPropagation()
         var el = $(this).parents('.frame')
         var filename = el.attr('data-filename')
@@ -239,19 +250,25 @@ $(document).ready(function(e){
             }
         })
     })
-    timelapseWindow.on('click','.delete-selected',function(e){
+    .on('click','.delete-selected-frames',function(e){
         deleteSelectedFrames()
     })
-    selectAllBox.click(function(e){
-        toggleSelectOnAllFrames()
+    .on('click','.zip-selected-frames',function(e){
+        e.preventDefault()
+        var frames = getSelectedRows(true)
+        zipVideosAndDownloadWithConfirm(frames)
+        return false;
     })
-    timelapseWindow.on('click','.frame input',function(e){
+    .on('click','.frame input',function(e){
         e.stopPropagation()
         const checked = $(this).is(':checked')
         if(!checked){
             selectAllBox.prop('checked',false)
         }
-    })
+    });
+    selectAllBox.click(function(e){
+        toggleSelectOnAllFrames()
+    });
     downloadButton.click(function(){
         var fps = fpsSelector.val()
         var dateRange = getSelectedTime(dateSelector)
@@ -291,12 +308,8 @@ $(document).ready(function(e){
             }
         })
     }
-    function buildFileBinUrl(data){
-        return apiBaseUrl + '/fileBin/' + data.ke + '/' + data.mid + '/' + data.name
-    }
-    function downloadTimelapseVideo(data){
-        var downloadUrl = buildFileBinUrl(data)
-        downloadFile(downloadUrl,data.name)
+    function downloadTimelapseFrame(frame){
+        downloadFile(frame.href,frame.filename)
     }
     function onTimelapseVideoBuildComplete(data){
         var saveBuiltVideo = dashboardOptions().switches.timelapseSaveBuiltVideo

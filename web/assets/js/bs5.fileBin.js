@@ -5,6 +5,10 @@ $(document).ready(function(e){
     var fileBinDrawArea = $('#fileBin_draw_area')
     var fileBinPreviewArea = $('#fileBin_preview_area')
     var loadedFilesInMemory = {};
+    function getFileBinHref(file){
+        var href = getApiPrefix('fileBin') + '/' + file.mid + '/' + file.name
+        return href
+    }
     function openFileBinView(monitorId,startDate,endDate){
         drawFileBinViewElements(monitorId,startDate,endDate)
     }
@@ -18,7 +22,10 @@ $(document).ready(function(e){
     })
     function loadFileData(video){
         delete(video.f)
-        loadedFilesInMemory[`${video.mid}${video.name}`] = video
+        loadedFilesInMemory[`${video.mid}${video.name}`] = Object.assign({},video,{
+            href: getFileBinHref(video),
+            filename: video.name,
+        })
     }
     function drawFileBinViewElements(selectedMonitor,startDate,endDate){
         var dateRange = getSelectedTime(dateSelector)
@@ -139,6 +146,16 @@ $(document).ready(function(e){
             return {ok: false}
         }
     }
+    function downloadFileBin(video){
+        var videoEndpoint = getApiPrefix(`fileBin`) + '/' + video.mid + '/' + video.name
+        downloadFile(videoEndpoint,video.name)
+    }
+    async function downloadFileBins(videos){
+        for (let i = 0; i < videos.length; i++) {
+            var video = videos[i];
+            await downloadFileBin(video)
+        }
+    }
     function getSelectedRows(){
         var rowsSelected = []
         fileBinDrawArea.find('[name="btSelectItem"]:checked').each(function(n,checkbox){
@@ -210,7 +227,13 @@ $(document).ready(function(e){
         });
         return false;
     })
-    .on('click','.delete-selected',function(e){
+    .on('click','.zip-selected-videos',function(e){
+        e.preventDefault()
+        var videos = getSelectedRows(true)
+        zipVideosAndDownloadWithConfirm(videos)
+        return false;
+    })
+    .on('click','.delete-selected-videos',function(e){
         e.preventDefault()
         var videosSelected = getSelectedRows()
         if(videosSelected.length === 0){
@@ -238,6 +261,23 @@ $(document).ready(function(e){
         });
         return false;
     })
+    .on('click','.download-selected-videos',function(e){
+        e.preventDefault()
+        var videos = getSelectedRows()
+        if(videos.length === 0)return;
+        $.confirm.create({
+            title: lang["Batch Download"],
+            body: `${lang.batchDownloadText}`,
+            clickOptions: {
+                title: '<i class="fa fa-check"></i> ' + lang.Yes,
+                class: 'btn-success btn-sm'
+            },
+            clickCallback: function(){
+                downloadFileBins(videos)
+            }
+        });
+        return false;
+    });
     addOnTabOpen('fileBinView', function () {
         drawMonitorListToSelector(monitorsList,null,null,true)
         drawFileBinViewElements()
