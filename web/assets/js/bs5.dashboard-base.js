@@ -958,6 +958,10 @@ function loadDateRangePicker(dateSelector,options){
         }
     },options || {},{ onChange: undefined }), options.onChange)
 }
+function setPreviewedVideoHighlight(buttonEl,tableEl){
+    tableEl.find('tr').removeClass('bg-gradient-blue')
+    buttonEl.parents('tr').addClass('bg-gradient-blue')
+}
 // on page load
 var readyFunctions = []
 function onDashboardReady(theAction){

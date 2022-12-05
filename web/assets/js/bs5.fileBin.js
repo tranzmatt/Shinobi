@@ -184,7 +184,9 @@ $(document).ready(function(e){
     })
     .on('click','.preview-video',function(e){
         e.preventDefault()
-        var href = $(this).attr('href')
+        var el = $(this)
+        var href = el.attr('href')
+        setPreviewedVideoHighlight(el,fileBinDrawArea)
         drawPreviewVideo(href)
         return false;
     })
