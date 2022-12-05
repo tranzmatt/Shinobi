@@ -1208,11 +1208,12 @@ $(document).ready(function(e){
         $('.monitor_item video').each(function(n,vidEl){
             var el = $(this)
             var monitorId = el.parents('[data-mid]').attr('data-mid')
+            console.log(monitorId,monitorMutes[monitorId])
             if(toggleState === 1){
-                el.attr('muted','muted')
+                vidEl.muted = true
             }else{
                 if(monitorMutes[monitorId] !== 1){
-                    el.removeAttr('muted')
+                    vidEl.muted = false
                 }
             }
         })
