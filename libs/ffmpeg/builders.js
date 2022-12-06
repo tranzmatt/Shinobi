@@ -17,6 +17,9 @@ module.exports = (s,config,lang) => {
     const hasCudaEnabled = (monitor) => {
         return monitor.details.accelerator === '1' && monitor.details.hwaccel === 'cuvid' && monitor.details.hwaccel_vcodec === ('h264_cuvid' || 'hevc_cuvid' || 'mjpeg_cuvid' || 'mpeg4_cuvid')
     }
+    const hasRkmppEnabled = (monitor) => {
+        return monitor.details.accelerator === '1' && monitor.details.hwaccel === 'drm' && monitor.details.hwaccel_vcodec === ('h264_rkmpp' || 'hevc_rkmpp' || 'vp8_rkmpp' || 'vp9_rkmpp')
+    }
     const inputTypeIsStreamer = (monitor) => {
         return monitor.type === 'dashcam'|| monitor.type === 'socket'
     }
@@ -198,6 +201,7 @@ module.exports = (s,config,lang) => {
         }
         const channelNumber = number - config.pipeAddition
         const isCudaEnabled = hasCudaEnabled(e)
+        const isRkmppEnabled = hasRkmppEnabled(e)
         const streamFlags = []
         const streamFilters = []
         const videoCodecisCopy = channel.stream_vcodec === 'copy'
@@ -236,6 +240,9 @@ module.exports = (s,config,lang) => {
             }
         }
         if(isCudaEnabled && (streamType === 'mjpeg' || streamType === 'b64')){
+            streamFilters.push('hwdownload,format=nv12')
+        }
+        if(isRkmppEnabled && (streamType === 'mjpeg' || streamType === 'b64')){
             streamFilters.push('hwdownload,format=nv12')
         }
         if(!outputRequiresEncoding && videoCodec !== 'no'){
@@ -311,6 +318,7 @@ module.exports = (s,config,lang) => {
         //x = temporary values
         const isStreamer = inputTypeIsStreamer(e)
         const isCudaEnabled = hasCudaEnabled(e)
+        const isRkmppEnabled = hasRkmppEnabled(e)
         const inputFlags = []
         const useWallclockTimestamp = e.details.wall_clock_timestamp_ignore !== '1' || config.wallClockTimestampAsDefault && !e.details.wall_clock_timestamp_ignore
         const inputTypeIsH264 = e.type === 'h264'
@@ -382,6 +390,7 @@ module.exports = (s,config,lang) => {
         const streamType = e.details.stream_type ? e.details.stream_type : 'hls'
         if(streamType !== 'jpeg' && streamType !== 'useSubstream'){
             const isCudaEnabled = hasCudaEnabled(e)
+            const isRkmppEnabled = hasRkmppEnabled(e)
             const streamFilters = []
             const videoCodecisCopy = e.details.stream_vcodec === 'copy'
             const videoCodec = e.details.stream_vcodec ? e.details.stream_vcodec : 'no'
@@ -419,6 +428,9 @@ module.exports = (s,config,lang) => {
                 }
         	}
             if(isCudaEnabled && (streamType === 'mjpeg' || streamType === 'b64')){
+                streamFilters.push('hwdownload,format=nv12')
+            }
+            if(isRkmppEnabled && (streamType === 'mjpeg' || streamType === 'b64')){
                 streamFilters.push('hwdownload,format=nv12')
             }
             if(!outputRequiresEncoding && videoCodec !== 'no'){
@@ -491,6 +503,7 @@ module.exports = (s,config,lang) => {
     const buildJpegApiOutput = function(e){
         if(e.details.snap === '1'){
             const isCudaEnabled = hasCudaEnabled(e)
+            const isRkmppEnabled = hasRkmppEnabled(e)
             const videoFlags = []
             const videoFilters = []
             const inputMap = buildInputMap(e,e.details.input_map_choices.stream)
@@ -498,6 +511,9 @@ module.exports = (s,config,lang) => {
             if(inputMap)videoFlags.push(inputMap)
             if(e.details.snap_vf)videoFilters.push(e.details.snap_vf)
             if(isCudaEnabled){
+                videoFilters.push('hwdownload,format=nv12')
+            }
+            if(isRkmppEnabled){
                 videoFilters.push('hwdownload,format=nv12')
             }
             videoFilters.push(`fps=${e.details.snap_fps || '1'}`)
@@ -610,6 +626,7 @@ module.exports = (s,config,lang) => {
         //e = monitor object
         //x = temporary values
         const isCudaEnabled = hasCudaEnabled(e)
+        const isRkmppEnabled = hasRkmppEnabled(e)
         const detectorFlags = []
         const inputMapsRequired = (e.details.input_map_choices && e.details.input_map_choices.detector)
         const sendFramesGlobally = (e.details.detector_send_frames === '1')
@@ -624,6 +641,7 @@ module.exports = (s,config,lang) => {
         const objectDetectorDimensionsFlag = `-s ${e.details.detector_scale_x_object ? e.details.detector_scale_x_object : baseWidth}x${e.details.detector_scale_y_object ? e.details.detector_scale_y_object : baseHeight}`
         const objectDetectorFpsFilter = 'fps=' + (e.details.detector_fps_object ? e.details.detector_fps_object : baseFps)
         const cudaVideoFilters = 'hwdownload,format=nv12'
+        const rkmppVideoFilters = 'hwdownload,format=nv12'
         const videoFilters = []
         let addedVideoFilters = false
         if(e.details.detector === '1' && (sendFramesGlobally || sendFramesToObjectDetector)){
@@ -643,12 +661,15 @@ module.exports = (s,config,lang) => {
                 const objVideoFilters = [objectDetectorFpsFilter]
                 if(e.details.cust_detect_object)detectorFlags.push(e.details.cust_detect_object)
                 if(isCudaEnabled)objVideoFilters.push(cudaVideoFilters)
+                if(isRkmppEnabled)objVideoFilters.push(rkmppVideoFilters)
                 detectorFlags.push(objectDetectorDimensionsFlag + ' -vf "' + objVideoFilters.join(',') + '"')
             }
             if(sendFramesGlobally){
                 if(builtInMotionDetectorIsEnabled)addInputMap();
                 if(isCudaEnabled)videoFilters.push(cudaVideoFilters);
                 videoFilters.push(baseFpsFilter)
+                // do hwdownload after fps filter to improve performance
+                if(isRkmppEnabled)videoFilters.push(rkmppVideoFilters);
                 if(e.details.cust_detect)detectorFlags.push(e.details.cust_detect)
                 if(!objectDetectorOutputIsEnabled && !sendFramesToObjectDetector){
                     addVideoFilters()
@@ -682,6 +703,7 @@ module.exports = (s,config,lang) => {
         const outputFlags = []
         if(e.details.detector === '1' && e.details.detector_trigger === '1' && e.details.detector_record_method === 'sip'){
             const isCudaEnabled = hasCudaEnabled(e)
+            const isRkmppEnabled = hasRkmppEnabled(e)
             const outputFilters = []
             var videoCodec = e.details.detector_buffer_vcodec
             var liveStartIndex = e.details.detector_buffer_live_start_index || '-3'
@@ -702,6 +724,8 @@ module.exports = (s,config,lang) => {
                     videoCodec = `copy`
                 }else if(e.details.accelerator === '1' && isCudaEnabled){
                     videoCodec = 'h264_nvenc'
+                }else if(e.details.accelerator === '1' && isRkmppEnabled){
+                    videoCodec = 'h264_rkmpp'
                 }else{
                     videoCodec = 'libx264'
                 }

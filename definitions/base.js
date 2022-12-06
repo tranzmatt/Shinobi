@@ -4,6 +4,125 @@ module.exports = function(s,config,lang){
     }
     const mainBackgroundColor = Theme.isDark ? 'bg-dark' : Theme.isDarkDefaultBg || 'bg-light'
     const textWhiteOnBgDark = Theme.isDark ? 'text-white' : ''
+    const possibleHwAccelVideoCodecs = [
+       {
+          "name": lang.Auto + '('+lang.Recommended+')',
+          "value": "",
+          selected: true
+       },
+       {
+          "name": lang.NVIDIA,
+          "optgroup": [
+              {
+                 "name": lang.h264_cuvid,
+                 "value": "h264_cuvid"
+              },
+              {
+                 "name": lang.hevc_cuvid,
+                 "value": "hevc_cuvid"
+              },
+              {
+                 "name": lang.mjpeg_cuvid,
+                 "value": "mjpeg_cuvid"
+              },
+              {
+                 "name": lang.mpeg4_cuvid,
+                 "value": "mpeg4_cuvid"
+              },
+          ]
+       },
+       {
+          "name": lang["Quick Sync Video"],
+          "optgroup": [
+              {
+                 "name": lang.h264_qsv,
+                 "value": "h264_qsv"
+              },
+              {
+                 "name": lang.hevc_qsv,
+                 "value": "hevc_qsv"
+              },
+              {
+                 "name": lang.mpeg2_qsv,
+                 "value": "mpeg2_qsv"
+              },
+          ]
+       },
+       {
+          "name": lang['Raspberry Pi'],
+          "optgroup": [
+              {
+                 "name": lang.h264_mmal,
+                 "value": "h264_mmal"
+              },
+              {
+                 "name": lang.mpeg2_mmal,
+                 "value": "mpeg2_mmal"
+              },
+              {
+                 "name": lang.mpeg4_mmal,
+                 "value": "mpeg4_mmal"
+              },
+              {
+                 "name": lang.h263_v4l2m2m,
+                 "value": "h263_v4l2m2m"
+              },
+              {
+                 "name": lang.h264_v4l2m2m,
+                 "value": "h264_v4l2m2m"
+              },
+              {
+                 "name": lang.hevc_v4l2m2m,
+                 "value": "hevc_v4l2m2m"
+              },
+              {
+                 "name": lang.mpeg1_v4l2m2m,
+                 "value": "mpeg1_v4l2m2m"
+              },
+              {
+                 "name": lang.mpeg2_v4l2m2m,
+                 "value": "mpeg2_v4l2m2m"
+              },
+              {
+                 "name": lang.mpeg4_v4l2m2m,
+                 "value": "mpeg4_v4l2m2m"
+              },
+              {
+                 "name": lang.vc1_v4l2m2m,
+                 "value": "vc1_v4l2m2m"
+              },
+              {
+                 "name": lang.vp8_v4l2m2m,
+                 "value": "vp8_v4l2m2m"
+              },
+              {
+                 "name": lang.vp9_v4l2m2m,
+                 "value": "vp9_v4l2m2m"
+              }
+          ]
+       },
+       {
+           "name": lang['RockChip'],
+           "optgroup": [
+               {
+                  "name": lang.h264_rkmpp,
+                  "value": "h264_rkmpp"
+               },
+               {
+                  "name": lang.hevc_rkmpp,
+                  "value": "hevc_rkmpp"
+               },
+               {
+                  "name": lang.vp8_rkmpp,
+                  "value": "vp8_rkmpp"
+               },
+               {
+                  "name": lang.vp9_rkmpp,
+                  "value": "vp9_rkmpp"
+               }
+           ]
+        },
+    ];
     return Object.assign({
         Theme: Theme,
     },{
@@ -655,67 +774,7 @@ module.exports = function(s,config,lang){
                         "example": "",
                         "form-group-class": "h_gpud_input h_gpud_1",
                         "fieldType": "select",
-                        "possible": [
-                           {
-                              "name": lang.Auto + '('+lang.Recommended+')',
-                              "value": ""
-                           },
-                           {
-                              "name": lang.NVIDIA,
-                              "optgroup": [
-                                  {
-                                     "name": lang.h264_cuvid,
-                                     "value": "h264_cuvid"
-                                  },
-                                  {
-                                     "name": lang.hevc_cuvid,
-                                     "value": "hevc_cuvid"
-                                  },
-                                  {
-                                     "name": lang.mjpeg_cuvid,
-                                     "value": "mjpeg_cuvid"
-                                  },
-                                  {
-                                     "name": lang.mpeg4_cuvid,
-                                     "value": "mpeg4_cuvid"
-                                  },
-                              ]
-                           },
-                           {
-                              "name": lang["Quick Sync Video"],
-                              "optgroup": [
-                                  {
-                                     "name": lang.h264_qsv,
-                                     "value": "h264_qsv"
-                                  },
-                                  {
-                                     "name": lang.hevc_qsv,
-                                     "value": "hevc_qsv"
-                                  },
-                                  {
-                                     "name": lang.mpeg2_qsv,
-                                     "value": "mpeg2_qsv"
-                                  },
-                              ]
-                           },
-                           {
-                              "name": lang['Raspberry Pi'],
-                              "optgroup": [
-                                  {
-                                     "name": lang.h264_mmal,
-                                     "value": "h264_mmal"
-                                  },
-                                  {
-                                     "name": lang.mpeg2_mmal,
-                                     "value": "mpeg2_mmal"
-                                  },
-                                  {
-                                     "name": lang["MPEG-4 (Raspberry Pi)"],
-                                     "value": "mpeg4_mmal"
-                                  }
-                              ]
-                           },
-                        ]
+                        "possible": possibleHwAccelVideoCodecs
                     },
                     {
                          "name": "detail=hwaccel_device",
@@ -1491,68 +1550,7 @@ module.exports = function(s,config,lang){
                                default:'auto',
                                "fieldType": "select",
                                type:'selector',
-                               possible:[
-                                   {
-                                      "name": lang.Auto + '('+lang.Recommended+')',
-                                      "value": "",
-                                      selected: true,
-                                   },
-                                   {
-                                      "name": lang.NVIDIA,
-                                      "optgroup": [
-                                          {
-                                             "name": lang.h264_cuvid,
-                                             "value": "h264_cuvid"
-                                          },
-                                          {
-                                             "name": lang.hevc_cuvid,
-                                             "value": "hevc_cuvid"
-                                          },
-                                          {
-                                             "name": lang.mjpeg_cuvid,
-                                             "value": "mjpeg_cuvid"
-                                          },
-                                          {
-                                             "name": lang.mpeg4_cuvid,
-                                             "value": "mpeg4_cuvid"
-                                          },
-                                      ]
-                                   },
-                                   {
-                                      "name": lang["Quick Sync Video"],
-                                      "optgroup": [
-                                          {
-                                             "name": lang.h264_qsv,
-                                             "value": "h264_qsv"
-                                          },
-                                          {
-                                             "name": lang.hevc_qsv,
-                                             "value": "hevc_qsv"
-                                          },
-                                          {
-                                             "name": lang.mpeg2_qsv,
-                                             "value": "mpeg2_qsv"
-                                          },
-                                      ]
-                                   },
-                                   {
-                                      "name": lang['Raspberry Pi'],
-                                      "optgroup": [
-                                          {
-                                             "name": lang.h264_mmal,
-                                             "value": "h264_mmal"
-                                          },
-                                          {
-                                             "name": lang.mpeg2_mmal,
-                                             "value": "mpeg2_mmal"
-                                          },
-                                          {
-                                             "name": lang["MPEG-4 (Raspberry Pi)"],
-                                             "value": "mpeg4_mmal"
-                                          }
-                                      ]
-                                   },
-                                  ]
+                               possible: possibleHwAccelVideoCodecs
                            },
                            {
                                name:'detail-substream-input=hwaccel_device',
