@@ -140,6 +140,7 @@ function toggleSideBarMenuHide(){
 }
 function makeMonitorListSortable(){
     var monitorSideList = $('#monitorSideList')
+    if(isMobile)return;
     var options = {
         cellHeight: 80,
         verticalMargin: 10,
