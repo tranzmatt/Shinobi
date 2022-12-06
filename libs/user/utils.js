@@ -20,28 +20,26 @@ module.exports = (s,config,lang) => {
                 }
                 if(whereGroup.length > 0)queryGroup.__separator = 'or'
                 whereGroup.push(queryGroup)
-                fs.chmod(video.dir,0o777,function(err){
-                    fs.rm(video.dir,function(err){
-                        ++completedCheck
-                        if(err){
-                            fs.stat(video.dir,function(err){
-                                if(!err){
-                                    fs.unlink(video.dir)
-                                }
-                            })
-                        }
-                        const whereGroupLength = whereGroup.length
-                        if(whereGroupLength > 0 && whereGroupLength === completedCheck){
-                            whereQuery[1] = whereGroup
-                            s.knexQuery({
-                                action: "delete",
-                                table: "Videos",
-                                where: whereQuery
-                            },(err,info) => {
-                                setTimeout(reRunCheck,1000)
-                            })
-                        }
-                    })
+                fs.rm(video.dir,function(err){
+                    ++completedCheck
+                    if(err){
+                        fs.stat(video.dir,function(err){
+                            if(!err){
+                                fs.unlink(video.dir)
+                            }
+                        })
+                    }
+                    const whereGroupLength = whereGroup.length
+                    if(whereGroupLength > 0 && whereGroupLength === completedCheck){
+                        whereQuery[1] = whereGroup
+                        s.knexQuery({
+                            action: "delete",
+                            table: "Videos",
+                            where: whereQuery
+                        },(err,info) => {
+                            setTimeout(reRunCheck,1000)
+                        })
+                    }
                 })
                 if(storageIndex){
                     s.setDiskUsedForGroupAddStorage(groupKey,{

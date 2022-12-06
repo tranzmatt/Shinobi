@@ -92,9 +92,7 @@ module.exports = function(s,config,lang){
                     insertQuery: insertQuery,
                 }
                 if(callback)callback(err,response)
-                fs.chmod(k.dir+k.file,0o777,function(err){
-                    resolve(response)
-                })
+                resolve(response)
             })
         })
     }
@@ -224,36 +222,34 @@ module.exports = function(s,config,lang){
             },(err,r) => {
                 if(r && r[0]){
                     r = r[0]
-                    fs.chmod(e.dir+filename,0o777,function(err){
-                        s.tx({
-                            f: 'video_delete',
-                            filename: filename,
-                            mid: e.id,
-                            ke: e.ke,
-                            time: new Date(s.nameToTime(filename)),
-                            end: s.formattedTime(new Date,'YYYY-MM-DD HH:mm:ss')
-                        },'GRP_'+e.ke);
-                        var storageIndex = s.getVideoStorageIndex(e)
-                        if(storageIndex){
-                            s.setDiskUsedForGroupAddStorage(e.ke,{
-                                size: -(r.size / 1048576),
-                                storageIndex: storageIndex
-                            })
-                        }else{
-                            s.setDiskUsedForGroup(e.ke,-(r.size / 1048576))
+                    s.tx({
+                        f: 'video_delete',
+                        filename: filename,
+                        mid: e.id,
+                        ke: e.ke,
+                        time: new Date(s.nameToTime(filename)),
+                        end: s.formattedTime(new Date,'YYYY-MM-DD HH:mm:ss')
+                    },'GRP_'+e.ke);
+                    var storageIndex = s.getVideoStorageIndex(e)
+                    if(storageIndex){
+                        s.setDiskUsedForGroupAddStorage(e.ke,{
+                            size: -(r.size / 1048576),
+                            storageIndex: storageIndex
+                        })
+                    }else{
+                        s.setDiskUsedForGroup(e.ke,-(r.size / 1048576))
+                    }
+                    s.knexQuery({
+                        action: "delete",
+                        table: "Videos",
+                        where: whereQuery
+                    },(err) => {
+                        if(err){
+                            s.systemLog(lang['File Delete Error'] + ' : '+e.ke+' : '+' : '+e.id,err)
                         }
-                        s.knexQuery({
-                            action: "delete",
-                            table: "Videos",
-                            where: whereQuery
-                        },(err) => {
-                            if(err){
-                                s.systemLog(lang['File Delete Error'] + ' : '+e.ke+' : '+' : '+e.id,err)
-                            }
-                        })
-                        fs.rm(e.dir+filename,function(err){
-                            resolve()
-                        })
+                    })
+                    fs.rm(e.dir+filename,function(err){
+                        resolve()
                     })
                 }else{
                     console.log(lang['Database row does not exist'],whereQuery)
@@ -286,26 +282,24 @@ module.exports = function(s,config,lang){
                     time = video.time
                 }
                 time = new Date(time)
-                fs.chmod(video.dir + filename,0o777,function(err){
-                    s.tx({
-                        f: 'video_delete',
-                        filename: filename,
-                        mid: video.mid,
-                        ke: video.ke,
-                        time: s.nameToTime(filename),
-                        end: s.formattedTime(new Date,'YYYY-MM-DD HH:mm:ss')
-                    },'GRP_'+video.ke);
-                    var storageIndex = s.getVideoStorageIndex(video)
-                    if(storageIndex){
-                        s.setDiskUsedForGroupAddStorage(video.ke,{
-                            size: -(video.size / 1048576),
-                            storageIndex: storageIndex
-                        })
-                    }else{
-                        s.setDiskUsedForGroup(video.ke,-(video.size / 1048576))
-                    }
-                    s.file('delete',video.dir + filename)
-                });
+                s.tx({
+                    f: 'video_delete',
+                    filename: filename,
+                    mid: video.mid,
+                    ke: video.ke,
+                    time: s.nameToTime(filename),
+                    end: s.formattedTime(new Date,'YYYY-MM-DD HH:mm:ss')
+                },'GRP_'+video.ke);
+                var storageIndex = s.getVideoStorageIndex(video)
+                if(storageIndex){
+                    s.setDiskUsedForGroupAddStorage(video.ke,{
+                        size: -(video.size / 1048576),
+                        storageIndex: storageIndex
+                    })
+                }else{
+                    s.setDiskUsedForGroup(video.ke,-(video.size / 1048576))
+                }
+                s.file('delete',video.dir + filename)
                 const queryGroup = {
                     ke: video.ke,
                     mid: video.mid,
