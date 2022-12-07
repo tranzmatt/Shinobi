@@ -1,5 +1,5 @@
 //
-// Shinobi - DeepStack Face Recognition Plugin
+// Shinobi - DeepStack Object Detection Plugin
 // Copyright (C) 2021 Elad Bar
 //
 // Base Init >>
@@ -173,7 +173,7 @@ const initialize = () => {
     });
 };
 
-const processImage = (imageB64, d, tx, frameLocation, callback) => {
+const processImage = (frameBuffer, d, tx, frameLocation, callback) => {
 	if(!detectorSettings.active) {
         return;
     }
@@ -195,7 +195,7 @@ const processImage = (imageB64, d, tx, frameLocation, callback) => {
                 res.duration = getDuration(requestTime);
             }
 
-            onImageProcessed(d, tx, err, res, body, imageB64);
+            onImageProcessed(d, tx, err, res, body, frameBuffer);
 
             fs.unlinkSync(frameLocation);
 		});        
@@ -221,21 +221,19 @@ const detectObject = (frameBuffer, d, tx, frameLocation, callback) => {
 
     d.dir = `${s.dir.streams}${d.ke}/${d.id}/`;
     
-    frameLocation = `${d.dir}${s.gid(5)}.jpg`;
+    const filePath = `${d.dir}${s.gid(5)}.jpg`;
 
     if(!fs.existsSync(d.dir)) {
         fs.mkdirSync(d.dir, dirCreationOptions);
     }
     
-    fs.writeFile(frameLocation, frameBuffer, function(err) {
+    fs.writeFile(filePath, frameBuffer, function(err) {
         if(err) {
             return s.systemLog(err);
         }
     
         try {
-            const imageB64 = frameBuffer.toString('base64');
-
-            processImage(imageB64, d, tx, frameLocation, callback);
+            processImage(frameBuffer, d, tx, filePath, callback);
 
         } catch(ex) {
             logError(`Detector failed to parse frame, Error: ${ex}`);
@@ -279,7 +277,7 @@ const onFaceListResult = (err, res, body) => {
     }
 };
 
-const onImageProcessed = (d, tx, err, res, body, imageStream) => {
+const onImageProcessed = (d, tx, err, res, body, frameBuffer) => {
     const duration = !!res ? res.duration : 0;
 
     let objects = [];
@@ -338,7 +336,7 @@ const onImageProcessed = (d, tx, err, res, body, imageStream) => {
                             imgWidth: height,
                             time: duration
                         },
-                        frame: imageStream       
+                        frame: frameBuffer          
                     };
 
                     tx(eventData);
