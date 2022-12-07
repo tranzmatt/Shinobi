@@ -90,6 +90,9 @@
                             <li class="nav-item">
                                 <a class="nav-link" data-bs-toggle="tab" data-bs-target="#superPluginManager" role="tab"><%-lang['Plugin Manager']%></a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-bs-toggle="tab" data-bs-target="#superFaceManager" role="tab"><%-lang['Face Manager']%></a>
+                            </li>
                         </ul>
                         <div class="card-body text-white" style="background:#263343">
                             <!-- Tab panes -->
@@ -125,6 +128,9 @@
                                 </div>
                                 <div class="tab-pane text-left" id="superPluginManager" role="tabpanel">
                                     <% include blocks/superPluginManager.ejs %>
+                                </div>
+                                <div class="tab-pane text-left" id="superFaceManager" role="tabpanel">
+                                    <% include blocks/superFaceManager.ejs %>
                                 </div>
                             </div>
                         </div>
