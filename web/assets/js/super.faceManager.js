@@ -419,7 +419,7 @@ $(document).ready(() => {
     const onRecompileFaceDescriptors = (d) => {
         moduleData.faces = d.faces;
 
-        onFaceImagesReterived(moduleData.selectedFace);
+        onFaceImagesReterived();
     };
 
     const onFaceFolderDeleted = (d) => {
