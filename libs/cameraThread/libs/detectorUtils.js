@@ -311,27 +311,27 @@ module.exports = function(jsonData,pamDiffResponder,alternatePamDiff){
     }
     function checkTriggerThreshold(triggerLabel){
         const threshold = regionTriggerThresholds[triggerLabel] || globalThreshold
-        if (threshold <= 1) {
+        if(threshold <= 1){
             return true
-        } else {
-            if (triggerTimer[triggerLabel] === undefined) {
+        }else{
+            if(triggerTimer[triggerLabel] === undefined){
                 triggerTimer[triggerLabel] = {
                     count : threshold,
                     timeout : null
                 }
             }
             const theTriggerTimerInfo = triggerTimer[triggerLabel]
-            if (--theTriggerTimerInfo.count == 0) {
+            if(--theTriggerTimerInfo.count == 0){
                 clearTimeout(theTriggerTimerInfo.timeout)
                 theTriggerTimerInfo = undefined
                 return true
-            } else {
-                if (theTriggerTimerInfo.timeout !== null){
+            }else{
+                if(theTriggerTimerInfo.timeout !== null){
                     clearTimeout(theTriggerTimerInfo.timeout)
                 }
-                theTriggerTimerInfo.timeout = setTimeout(function() {
+                theTriggerTimerInfo.timeout = setTimeout(function(){
                     triggerTimer[triggerLabel] = undefined
-                }, ((threshold+0.5) * 1000) / detectorFrameRate)
+                },((threshold+0.5) * 1000) / detectorFrameRate)
                 return false
             }
         }
