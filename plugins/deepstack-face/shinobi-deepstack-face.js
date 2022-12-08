@@ -1,4 +1,3 @@
-//
 // Shinobi - DeepStack Face Recognition Plugin
 // Copyright (C) 2021 Elad Bar
 //
@@ -321,19 +320,19 @@ const detectObject = (frameBuffer, d, tx, frameLocation, callback) => {
 
     d.dir = `${s.dir.streams}${d.ke}/${d.id}/`;
     
-    const path = `${d.dir}${s.gid(5)}.jpg`;
+    const filePath = `${d.dir}${s.gid(5)}.jpg`;
 
     if(!fs.existsSync(d.dir)) {
         fs.mkdirSync(d.dir, dirCreationOptions);
     }
     
-    fs.writeFile(path, frameBuffer, function(err) {
+    fs.writeFile(filePath, frameBuffer, function(err) {
         if(err) {
             return s.systemLog(err);
         }
     
         try {
-            processImage(frameBuffer, d, tx, path, callback);
+            processImage(frameBuffer, d, tx, filePath, callback);
 
         } catch(ex) {
             logError(`Detector failed to parse frame, Error: ${ex}`);

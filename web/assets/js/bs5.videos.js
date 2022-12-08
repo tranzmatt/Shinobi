@@ -639,14 +639,33 @@ function buildDefaultVideoMenuItems(file,options){
     return `
     <li><a class="dropdown-item" href="${href}" download>${lang.Download}</a></li>
     ${options.play ? `<li><a class="dropdown-item open-video" href="${href}">${lang.Play}</a></li>` : ``}
+    ${options.play ? `<li><a class="dropdown-item mark-unread" href="${href}">${lang.Play}</a></li>` : ``}
     <li><hr class="dropdown-divider"></li>
     ${permissionCheck('video_delete',file.mid) ? `<li><a class="dropdown-item open-video-studio" href="${href}">${lang.Slice}</a></li>` : ``}
     ${permissionCheck('video_delete',file.mid) ? `<li><a class="dropdown-item delete-video" href="${href}">${lang.Delete}</a></li>` : ``}
     ${permissionCheck('video_delete',file.mid) ? `<li><a class="dropdown-item compress-video" href="${href}">${lang.Compress}</a></li>` : ``}
 `
 }
+function setVideoStatus(video,toStatus){
+    return new Promise((resolve,reject) => {
+        toStatus = toStatus || 2
+        if(video.status != toStatus){
+            $.get(`${video.actionUrl}/status/${toStatus}`,function(data){
+                resolve(data)
+            })
+        }
+    })
+}
 onWebSocketEvent(function(d){
     switch(d.f){
+        case'video_edit':case'video_archive':
+            var video = loadedVideosInMemory[`${d.mid}${d.time}`]
+            if(video){
+                let filename = `${formattedTimeForFilename(convertTZ(d.time),false,`YYYY-MM-DDTHH-mm-ss`)}.${video.ext || 'mp4'}`
+                loadedVideosInMemory[`${d.mid}${d.time}`].status = d.status
+                $(`[data-mid="${d.mid}"][data-filename="${filename}"]`).attr('data-status',d.status);
+            }
+        break;
         case'video_delete':
             $('[file="'+d.filename+'"][mid="'+d.mid+'"]:not(.modal)').remove();
             $('[data-file="'+d.filename+'"][data-mid="'+d.mid+'"]:not(.modal)').remove();
@@ -656,15 +675,6 @@ onWebSocketEvent(function(d){
                 goBackOneTab()
             }
             deleteTab(videoPlayerId)
-            // if($.powerVideoWindow.currentDataObject&&$.powerVideoWindow.currentDataObject[d.filename]){
-            //     delete($.timelapse.currentVideos[$.powerVideoWindow.currentDataObject[d.filename].position])
-            //     $.powerVideoWindow.drawTimeline(false)
-            // }
-            // if($.timelapse.currentVideos&&$.timelapse.currentVideos[d.filename]){
-            //     delete($.timelapse.currentVideosArray.videos[$.timelapse.currentVideos[d.filename].position])
-            //     $.timelapse.drawTimeline(false)
-            // }
-            // if($.vidview.loadedVideos && $.vidview.loadedVideos[d.filename])delete($.vidview.loadedVideos[d.filename])
         break;
     }
 })
@@ -677,6 +687,7 @@ $(document).ready(function(){
         var videoTime = el.attr('data-time')
         var video = loadedVideosInMemory[`${monitorId}${videoTime}`]
         createVideoPlayerTab(video)
+        setVideoStatus(video)
         return false;
     })
     .on('click','[video-time-seeked-video-position]',function(){

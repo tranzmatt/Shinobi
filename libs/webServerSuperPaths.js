@@ -482,9 +482,7 @@ module.exports = function(s,config,lang,app){
                         ke: account.ke,
                     }
                 })
-                fs.chmod(s.dir.videos+account.ke,0o777,function(err){
-                    fs.rmdir(s.dir.videos+account.ke,function(err){})
-                })
+                fs.rmdir(s.dir.videos+account.ke,function(err){})
             }
             if(s.getPostData(req,'deleteEvents',false) == '1'){
                 s.knexQuery({
