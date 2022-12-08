@@ -392,6 +392,7 @@ module.exports = (s,config,lang) => {
             const outputCanHaveAudio = config.outputsWithAudio.indexOf(streamType) > -1;
             const outputRequiresEncoding = streamType === 'mjpeg' || streamType === 'b64'
             const outputIsPresetCapable = outputCanHaveAudio
+            const streamChannels = s.parseJSON(e.details.stream_channels) || []
             const { videoWidth, videoHeight } = validateDimensions(e.details.stream_scale_x,e.details.stream_scale_y)
             if(inputMap)streamFlags.push(inputMap)
             if(e.details.cust_stream)streamFlags.push(e.details.cust_stream)
@@ -480,8 +481,8 @@ module.exports = (s,config,lang) => {
             if(e.details.custom_output){
                 streamFlags.push(e.details.custom_output)
             }
-            if(e.details.stream_channels){
-                e.details.stream_channels.forEach(function(v,n){
+            if(streamChannels){
+                streamChannels.forEach(function(v,n){
                     streamFlags.push(createStreamChannel(e,n + config.pipeAddition,v))
                 })
             }
