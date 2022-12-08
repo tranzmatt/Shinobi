@@ -447,8 +447,6 @@ $(document).ready(() => {
         }
     };
 
-    window.moduleData = moduleData;
-
     $.ccio.ws.on("f", (d) => {
         const handler = moduleData.eventMapper[d.f];
 

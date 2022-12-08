@@ -290,9 +290,7 @@ module.exports = (s, config, lang, app, io) => {
                     ok: false
                 });
             }
-        });
-
-        
+        });        
     }
 
     const createDirectory = () => {
@@ -307,10 +305,13 @@ module.exports = (s, config, lang, app, io) => {
         }
     };
 
+    const onProcessReady = (d) => {
+        reloadFacesData();
+    };
+
     const initialize = () => {
         createDirectory();
-        reloadFacesData();
-
+        
         registerGetEndpoint('s', handleGetFaces);
         registerGetEndpoint('/:name/image/:image', handleGetImage);
 
@@ -319,6 +320,8 @@ module.exports = (s, config, lang, app, io) => {
 
         registerPostEndpoint('/:name', handleImageUpload, () => fileUpload());
         registerPostEndpoint('/:name/image/:image/move/:newName', handleMoveImage);
+        
+        s.onProcessReadyExtensions.push(onProcessReady);
     };
     
     initialize();
