@@ -60,6 +60,8 @@ docker-arm32v7-build:
     - docker push "$CI_REGISTRY_IMAGE${tag}"
   # Run this job in a branch where a Dockerfile exists
   rules:
+    - if: $CI_COMMIT_BRANCH != "master" && $CI_COMMIT_BRANCH != "main" && $CI_COMMIT_BRANCH != "dev"
+      when: never
     - if: $CI_COMMIT_BRANCH
       exists:
         - Dockerfile.arm32v7
@@ -88,6 +90,8 @@ docker-nvidia-build:
     - docker push "$CI_REGISTRY_IMAGE${tag}"
   # Run this job in a branch where a Dockerfile exists
   rules:
+    - if: $CI_COMMIT_BRANCH != "master" && $CI_COMMIT_BRANCH != "main" && $CI_COMMIT_BRANCH != "dev"
+      when: never
     - if: $CI_COMMIT_BRANCH
       exists:
         - Dockerfile.nvidia
