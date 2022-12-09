@@ -109,7 +109,6 @@ $(document).ready(() => {
 
             faceNameField.val("");
             fileinput.val("");
-
         } catch (error) {
             console.error(`Failed to handle form submit event, Error: ${error}`);
         }  
@@ -129,7 +128,6 @@ $(document).ready(() => {
     const getFaceDelete = (name) => {
         const navigationItem = `<div style="padding: 5px;">
                                     <a class="btn btn-sm btn-danger m-0 deleteFolder" style="margin-left: 5px; margin-right: 5px;" face="${name}"><i class="fa fa-trash"></i> ${lang.deleteFace}</a>
-                                    <a class="btn btn-sm btn-primary m-0 uploadImage" face="${name}"><i class="fa fa-upload"></i> ${lang['Click to Upload Images']}</a>
                                 </div>`;
 
         return navigationItem;
@@ -336,30 +334,6 @@ $(document).ready(() => {
         return false;
     };
 
-    const onUploadImageRequest = (e) => {
-        try {
-            e.preventDefault();
-            const faceName = getEventItemAttribute(e, "face");
-
-            faceNameField.val(faceName);
-            fileinput.trigger('click');
-
-            const image = fileinput.val();
-
-            if(image !== undefined && image !== null && image !== "") {
-                setTimeout(() => onFormSubmitted(), 2000);
-            } else {
-                faceNameField.val("");
-                fileinput.val("");
-            }  
-            
-        } catch (error) {
-            console.error(`Failed to handle delete image request event, Error: ${error}`);
-        }  
-
-        return false;
-    };
-
     const onDeleteFaceRequest = (e) => {
         try {
             e.preventDefault();
@@ -473,10 +447,6 @@ $(document).ready(() => {
 
     faceImageList.on("click", ".deleteImage", e => {
         onDeleteImageRequest(e);
-    });
-
-    faceImageList.on("click", ".uploadImage", e => {
-        onUploadImageRequest(e);
     });
 
     faceNameField.change(() => {

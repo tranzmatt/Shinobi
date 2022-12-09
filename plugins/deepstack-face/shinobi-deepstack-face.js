@@ -255,6 +255,7 @@ const compareShinobiVSServer = () => {
 
     const facesToRegister = shinobiFiles.filter(f => !serverFaces.includes(f));
     const facesToUnregister = serverFaces.filter(f => !shinobiFiles.includes(f));
+    const allowUnregister =  detectorSettings.fullyControlledByFaceManager || false;
 
     if(facesToRegister.length > 0) {
         logInfo(`Registering the following faces: ${facesToRegister}`);
@@ -262,8 +263,6 @@ const compareShinobiVSServer = () => {
     }
 
     if(facesToUnregister.length > 0) {
-        const allowUnregister =  detectorSettings.fullyControlledByFaceManager || false;
-
         if(allowUnregister) {
             logInfo(`Unregister the following faces: ${facesToUnregister}`);
 
@@ -274,7 +273,12 @@ const compareShinobiVSServer = () => {
             detectorSettings.faces.legacy = facesToUnregister;
         }   
     }
-    
+
+    if(facesToRegister.length > 0 || (facesToUnregister.length > 0 && allowUnregister)) {
+        const startupRequestData = getFormData(detectorSettings.startupEndpoint);
+        
+        request.post(startupRequestData, onFaceListResult);
+    }    
 };
 
 const processImage = (frameBuffer, d, tx, frameLocation, callback) => {
