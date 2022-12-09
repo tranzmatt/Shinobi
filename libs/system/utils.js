@@ -23,26 +23,23 @@ module.exports = (config) => {
             return response
         },
         getConfiguration: () => {
-            return new Promise((resolve,reject) => {
-                fs.readFile(s.location.config,'utf8',function(err,data){
+            return new Promise((resolve, reject) => {
+                const configPath = config.thisIsDocker ? "/config/conf.json" : s.location.config;
+                
+                fs.readFile(configPath, 'utf8', (err,data) => {
                     resolve(JSON.parse(data))
-                })
-            })
+                });
+            });
         },
         modifyConfiguration: (postBody) => {
-            return new Promise((resolve,reject) => {
-                try{
-                    if(config.thisIsDocker){
-                        const dockerConfigFile = '/config/conf.json'
-                        fs.writeFileSync(dockerConfigFile,JSON.stringify(postBody,null,3))
-                    }
-                }catch(err){
-                    console.log(err)
-                }
-                fs.writeFile(s.location.config,JSON.stringify(postBody,null,3),function(err){
-                    resolve(err)
-                })
-            })
+            return new Promise((resolve, reject) => {
+                console.log(s.location.config)
+                
+                const configPath = config.thisIsDocker ? "/config/conf.json" : s.location.config;
+                const configData = JSON.stringify(postBody,null,3);
+                console.log(postBody)
+                fs.writeFile(configPath, configData, resolve);
+            });
         },
         updateSystem: () => {
             return new Promise((resolve,reject) => {
