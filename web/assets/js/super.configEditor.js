@@ -1,5 +1,5 @@
-$(document).ready(function(){
-  var schema = {
+$(document).ready(function () {
+  const schema = {
     "title": "Main Configuration",
     "type": "object",
     "properties": {
@@ -256,105 +256,125 @@ $(document).ready(function(){
     }
   };
 
-  var configurationTab = $('#config')
-  var configurationForm = configurationTab.find('form')
+  const configurationTab = $("#config");
+  const configurationForm = configurationTab.find("form");
 
-  // Set default options
-  JSONEditor.defaults.options.theme = 'bootstrap3';
-  JSONEditor.defaults.options.iconlib = 'fontawesome4';
-
-  // Initialize the editor
-  let configurationEditor = null;
-
-  function loadConfiguationIntoEditor(){
-      $.get(superApiPrefix + $user.sessionKey + '/system/configure', function(data){
-        const dataConfig = data.config;
-        const dataConfigKeys = Object.keys(dataConfig);
-        const schemaItemsKeys = Object.keys(schema.properties);
-                  
-        const schemaWithoutData = schemaItemsKeys.filter(sk => !dataConfigKeys.includes(sk));
-        const dataWithoutSchema = dataConfigKeys.filter(dk => !schemaItemsKeys.includes(dk));
-
-        schemaWithoutData.forEach(sk => {
-          const schemaItem = schema.properties[sk];
-          const defaultConfig = schemaItem.default;
-
-          data.config[sk] = defaultConfig;
-        });
-
-        if(dataWithoutSchema.length > 0) {
-          dataWithoutSchema.forEach(dk => {
-            const schemaItem ={
-              title: dk,
-              options: {
-                  hidden: true
-              }
-            };
-
-            schema.properties[dk] = schemaItem;
-          });
-
-          configurationEditor = new JSONEditor(document.getElementById("configForHumans"),{
-              theme: 'bootstrap3',
-              schema: schema
-            });
-        }
-
-        configurationEditor.setValue(data.config);
-
-        window.configurationEditor = configurationEditor;
-      });
+  const moduleData = {
+    endpoint: null,
+    configurationEditor: null
   }
-  
+
+  const handleGetConfigurationData = data => {
+    const dataConfig = data.config;
+    const dataConfigKeys = Object.keys(dataConfig);
+    const schemaItemsKeys = Object.keys(schema.properties);
+
+    const schemaWithoutData = schemaItemsKeys.filter(
+      (sk) => !dataConfigKeys.includes(sk)
+    );
+    const dataWithoutSchema = dataConfigKeys.filter(
+      (dk) => !schemaItemsKeys.includes(dk)
+    );
+
+    schemaWithoutData.forEach((sk) => {
+      const schemaItem = schema.properties[sk];
+      const defaultConfig = schemaItem.default;
+
+      data.config[sk] = defaultConfig;
+    });
+
+    if (dataWithoutSchema.length > 0) {
+      dataWithoutSchema.forEach((dk) => {
+        const schemaItem = {
+          title: dk,
+          options: {
+            hidden: true,
+          },
+        };
+
+        schema.properties[dk] = schemaItem;
+      });
+
+      // Set default options
+      JSONEditor.defaults.options.theme = "bootstrap3";
+      JSONEditor.defaults.options.iconlib = "fontawesome4";
+    }
+
+    const configurationEditor = new JSONEditor(
+      document.getElementById("configForHumans"), {
+        schema: schema,
+      }
+    );
+
+    configurationEditor.setValue(data.config);
+
+    moduleData.configurationEditor = configurationEditor;
+    window.configurationEditor = configurationEditor;
+  };
+
+  const handlePostConfigurationData = data => {
+    // console.log(data);
+  }
+
+  function loadConfiguationIntoEditor(d) {
+    moduleData.endpoint = `${superApiPrefix}${$user.sessionKey}/system/configure`;
+
+    $.get(moduleData.endpoint, handleGetConfigurationData);
+  }
+
   // configurationEditor.on("change",  function() {
   //   // Do something...
   // });
-  var submitConfiguration = function(){
-      var errors = configurationEditor.validate();
-      console.log(errors.length)
-      console.log(errors)
-      if(errors.length === 0) {
-          var newConfiguration = JSON.stringify(configurationEditor.getValue(),null,3)
-          var html = '<p>This is a change being applied to the configuration file (conf.json). Are you sure you want to do this? You must restart Shinobi for these changes to take effect. <b>The JSON below is what you are about to save.</b></p>'
-          html += `<pre>${newConfiguration}</pre>`
-          $.confirm.create({
-              title: 'Save Configuration',
-              body: html,
-              clickOptions: {
-                  class: 'btn-success',
-                  title: lang.Save,
-              },
-              clickCallback: function(){
-                  $.post(superApiPrefix + $user.sessionKey + '/system/configure',{
-                      data: newConfiguration
-                  },function(data){
-                      // console.log(data)
-                  })
-              }
-          })
-      }else{
-          new PNotify({text:'Invalid JSON Syntax, Cannot Save.',type:'error'})
-      }
-  }
+  const submitConfiguration = function () {
+    const configurationEditor = moduleData.configurationEditor;
+    const errors = configurationEditor.validate();
 
-  
+    if (errors.length === 0) {
+      const newConfiguration = JSON.stringify(configurationEditor.getValue(), null, 3);
 
-  configurationTab.find('.submit').click(function(){
-      submitConfiguration()
+      const html = `<p>
+                      This is a change being applied to the configuration file (conf.json). 
+                      Are you sure you want to do this? You must restart Shinobi for these changes to take effect. 
+
+                      <b>The JSON below is what you are about to save.</b>
+                    </p>
+                    <pre>
+                      ${newConfiguration}
+                    </pre>`;
+
+      $.confirm.create({
+        title: "Save Configuration",
+        body: html,
+        clickOptions: {
+          class: "btn-success",
+          title: lang.Save,
+        },
+        clickCallback: () => {
+          const requestData = {
+            data: newConfiguration
+          };
+
+          $.post(moduleData.endpoint, requestData, handlePostConfigurationData);
+        },
+      });
+    } else {
+      new PNotify({ text: "Invalid JSON Syntax, Cannot Save.", type: "error" });
+    }
+  };
+
+  configurationTab.find(".submit").click(function () {
+    submitConfiguration();
   });
 
-  configurationForm.submit(function(e){
-      e.preventDefault()
-      submitConfiguration()
-      return false;
+  configurationForm.submit(function (e) {
+    e.preventDefault();
+    submitConfiguration();
+    return false;
   });
 
-  $.ccio.ws.on('f',function(d){
-      switch(d.f){
-          case'init_success':
-              loadConfiguationIntoEditor()
-          break;
-      }
-  })
-  
-})
+  $.ccio.ws.on("f", d => {
+    if (d.f === "init_success") {
+      loadConfiguationIntoEditor();
+    }
+  });
+});
