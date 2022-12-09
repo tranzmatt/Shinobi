@@ -113,12 +113,12 @@ const initialize = () => {
     const detectionType = config.plug.split("-")[1].toLowerCase();
     const detectorConfig = DETECTOR_CONFIGUTATION[detectionType];
     const detectorConfigKeys = Object.keys(detectorConfig);
-    
     detectorSettings = {
         type: detectionType,
         active: false,
         baseUrl: baseUrl,
         apiKey: config.deepStack.apiKey,
+        fullyControlledByFaceManager: config.fullyControlledByFaceManager || false,
         faces: {
             shinobi: null,
             server: null,
@@ -195,6 +195,10 @@ const registerFace = (serverFileName) => {
 };
 
 const unregisterFace = (serverFileName) => {
+    if (serverFileName === null) {
+        return;
+    }
+
     const form = {
         userid: serverFileName
     };
@@ -216,12 +220,12 @@ const getServerFileNameByShinobi = (name, image) => {
     return fileName;
 }
 
-const compareShinobiVSServer = () => {
+const compareShinobiVSServer = () => {        
     const allFaces = detectorSettings.faces;    
     const shinobiFaces = allFaces.shinobi;
     const serverFaces = allFaces.server;
     const compareShinobiVSServerDelayID = detectorSettings.compareShinobiVSServerDelayID || null;
-
+    
     if (compareShinobiVSServerDelayID !== null) {
         clearTimeout(compareShinobiVSServerDelayID)
     }
@@ -268,8 +272,9 @@ const compareShinobiVSServer = () => {
             logInfo(`Skip unregistering the following faces: ${facesToUnregister}`);
 
             detectorSettings.faces.legacy = facesToUnregister;
-        }    
+        }   
     }
+    
 };
 
 const processImage = (frameBuffer, d, tx, frameLocation, callback) => {
@@ -517,8 +522,8 @@ const onRecompileFaceDescriptors = (d) => {
     if(detectorSettings.faces.shinobi !== d.faces) {
         detectorSettings.faces.shinobi = d.faces;
         detectorSettings.facesPath = d.path;
-
         compareShinobiVSServer();
+        
     }
 };
 
