@@ -1,3 +1,4 @@
+//
 // Shinobi - DeepStack Face Recognition Plugin
 // Copyright (C) 2021 Elad Bar
 //
@@ -123,6 +124,7 @@ const initialize = () => {
             server: null,
             legacy: null
         },
+        facesPath: null,
         eventMapping: {
             "recompileFaceDescriptors": onRecompileFaceDescriptors
         }
@@ -167,24 +169,25 @@ const handleStartupResponse = (err, res, body) => {
 };
 
 const registerFace = (serverFileName) => {
+    const facesPath = detectorSettings.facesPath;
     const shinobiFileParts = serverFileName.split(DELIMITER);
     const faceName = shinobiFileParts[0];
     const image = shinobiFileParts[1];
     
-    const frameLocation = `${config.facesFolder}${faceName}/${image}`;
+    const frameLocation = `${facesPath}${faceName}/${image}`;
 
     const imageStream = fs.createReadStream(frameLocation);
         
     const form = {
         image: imageStream,
-        userId: serverFileName
+        userid: serverFileName
     };
     
     const requestData = getFormData(detectorSettings.registerEndpoint, form);
 
     request.post(requestData, (err, res, body) => {
         if (err) {
-            logError(`Failed to register face, Face: ${faceName}, Image: ${image}`);
+            logError(`Failed to register face, Face: ${faceName}, Image: ${image}, Error: ${err}`);
         } else {
             logInfo(`Register face, Face: ${faceName}, Image: ${image}`);
         }
@@ -193,14 +196,14 @@ const registerFace = (serverFileName) => {
 
 const unregisterFace = (serverFileName) => {
     const form = {
-        userId: serverFileName
+        userid: serverFileName
     };
     
     const requestData = getFormData(detectorSettings.deleteEndpoint, form);
 
     request.post(requestData, (err, res, body) => {
         if (err) {
-            logError(`Failed to delete face, UserID: ${serverFileName}`);
+            logError(`Failed to delete face, UserID: ${serverFileName}, Error: ${err}`);
         } else {
             logInfo(`Deleted face, UserID: ${serverFileName}`);
         }
@@ -214,7 +217,7 @@ const getServerFileNameByShinobi = (name, image) => {
 }
 
 const compareShinobiVSServer = () => {
-    const allFaces = detectorSettings.faces;
+    const allFaces = detectorSettings.faces;    
     const shinobiFaces = allFaces.shinobi;
     const serverFaces = allFaces.server;
     const compareShinobiVSServerDelayID = detectorSettings.compareShinobiVSServerDelayID || null;
@@ -241,9 +244,6 @@ const compareShinobiVSServer = () => {
                                     return value;
                                 })
                                 .reduce((acc, item) => {
-                                    console.log("acc: ", acc);
-                                    console.log("item: ", item);
-
                                     const result = [...acc, ...item];
                                     
                                     return result;
@@ -320,19 +320,19 @@ const detectObject = (frameBuffer, d, tx, frameLocation, callback) => {
 
     d.dir = `${s.dir.streams}${d.ke}/${d.id}/`;
     
-    const filePath = `${d.dir}${s.gid(5)}.jpg`;
+    const path = `${d.dir}${s.gid(5)}.jpg`;
 
     if(!fs.existsSync(d.dir)) {
         fs.mkdirSync(d.dir, dirCreationOptions);
     }
     
-    fs.writeFile(filePath, frameBuffer, function(err) {
+    fs.writeFile(path, frameBuffer, function(err) {
         if(err) {
             return s.systemLog(err);
         }
     
         try {
-            processImage(frameBuffer, d, tx, filePath, callback);
+            processImage(frameBuffer, d, tx, path, callback);
 
         } catch(ex) {
             logError(`Detector failed to parse frame, Error: ${ex}`);
@@ -516,6 +516,7 @@ const getPredictionDescripton = (prediction) => {
 const onRecompileFaceDescriptors = (d) => {
     if(detectorSettings.faces.shinobi !== d.faces) {
         detectorSettings.faces.shinobi = d.faces;
+        detectorSettings.facesPath = d.path;
 
         compareShinobiVSServer();
     }

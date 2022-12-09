@@ -93,14 +93,14 @@ module.exports = (s, config, lang, app, io) => {
     const checkFile = (file, name, authUser) => {
         const fileName = file.name;
         const fileParts =  fileName.split(".");
-        const fileExt = fileParts[fileParts.length];
-        const allowedExtensions = ["jpeg", "jpg"];
+        const fileExt = fileParts[fileParts.length - 1];
+        const allowedExtensions = ["jpeg", "jpg", "png"];
         const canUpload = allowedExtensions.includes(fileExt);
         const result = canUpload ? fileName : null;
-    
+
         if(canUpload) {
-            const facePath = getFacePath(req.params.name);
-            const imagePath = getImagePath(req.params.name, fileName);
+            const facePath = getFacePath(name);
+            const imagePath = getImagePath(name, fileName);
 
             if(!fs.existsSync(facePath)){
                 fs.mkdirSync(facePath);
@@ -108,7 +108,7 @@ module.exports = (s, config, lang, app, io) => {
             
             file.mv(imagePath, function(err) {
                 if(err) {
-                    console.error(`Failed to store image in ${imagePath}`);
+                    console.error(`Failed to store image in ${imagePath}, Error: ${err}`);
                 } else {
                     notifyImageUploaded(name, fileName, authUser);
                 }                        
@@ -264,7 +264,7 @@ module.exports = (s, config, lang, app, io) => {
         if(fileKeys.length == 0){
             return res.status(400).send('No files were uploaded.');
         }            
-
+        
         fileKeys.forEach(key => {
             const file = req.files[key];
 
