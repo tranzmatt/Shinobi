@@ -173,10 +173,7 @@ $(document).ready(() => {
             
             const faceKeys = Object.keys(moduleData.faces);
 
-            if(faceKeys.length === 0) {
-                console.info("No face found");
-
-            } else {
+            if(faceKeys.length > 0) {
                 if(moduleData.selectedFace === null) {
                     moduleData.selectedFace = faceKeys[0];
                 }                
@@ -459,9 +456,7 @@ $(document).ready(() => {
                 }, 100);                
             } catch (error) {                
                 console.error(`Failed to handle event ${d.f}, Error: ${error}`);
-            }  
-            
-            
+            } 
         }
     });    
 
