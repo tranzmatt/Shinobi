@@ -1,28 +1,34 @@
 $(document).ready(function(){
     var loadedModules = {}
     var listElement = $('#pluginManagerList')
+    var quickSelect = $('#pluginQuickSelect')
+    var pluginDownloadForm = $('#downloadNewPlugin')
     var getModules = function(callback) {
         $.get(superApiPrefix + $user.sessionKey + '/plugins/list',callback)
     }
     var loadedBlocks = {}
     var drawModuleBlock = function(module){
         var humanName = module.properties.name ? module.properties.name : module.name
-        if(listElement.find('[package-name="${module.name}"]').length > 0){
+        if(listElement.find(`[package-name="${module.name}"]`).length > 0){
             var existingElement = listElement.find('[package-name="${module.name}"]')
             existingElement.find('.title').text(humanName)
             existingElement.find('[plugin-manager-action="status"]').text(!module.config.enabled ? lang.Enable : lang.Disable)
         }else{
-            listElement.append(`
-                <div class="col-md-12">
+            listElement.prepend(`
                     <div class="card bg-dark text-white mb-3" package-name="${module.name}">
                         <div class="card-body pb-3">
-                            <div><h4 class="title mt-0">${humanName}</h4></div>
+                            <div><h4 class="title my-0">${humanName}</h4></div>
+                            <div clas="mb-2"><small>${module.name}</small></div>
                             <div class="pb-2"><b>${lang['Time Created']} :</b> ${module.created}</div>
                             <div class="pb-2"><b>${lang['Last Modified']} :</b> ${module.lastModified}</div>
                             <div class="mb-2">
                                 ${module.hasInstaller ? `
                                     <a class="btn btn-sm btn-info" plugin-manager-action="install">${lang['Run Installer']}</a>
                                     <a class="btn btn-sm btn-danger" style="display:none" plugin-manager-action="cancelInstall">${lang['Stop']}</a>
+                                ` : ''}
+                                ${module.hasTester ? `
+                                    <a class="btn btn-sm btn-default" plugin-manager-action="test">${lang['Test']}</a>
+                                    <a class="btn btn-sm btn-danger" style="display:none" plugin-manager-action="cancelTest">${lang['Stop']}</a>
                                 ` : ''}
                                 <a class="btn btn-sm btn-default" plugin-manager-action="status">${!module.config.enabled ? lang.Enable : lang.Disable}</a>
                                 <a class="btn btn-sm btn-danger" plugin-manager-action="delete">${lang.Delete}</a>
@@ -43,8 +49,7 @@ $(document).ready(function(){
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>`)
+                    </div>`)
             var newBlock = $(`.card[package-name="${module.name}"]`)
             loadedBlocks[module.name] = {
                 block: newBlock,
@@ -56,7 +61,7 @@ $(document).ready(function(){
     var downloadModule = function(url,packageRoot,callback){
         $.confirm.create({
             title: 'Module Download',
-            body: `Do you want to download the module from ${url}? `,
+            body: `Do you want to download the module from <b>${url}</b>? `,
             clickOptions: {
                 class: 'btn-success',
                 title: lang.Download,
@@ -81,6 +86,23 @@ $(document).ready(function(){
                 loadedBlocks[packageName].stdout.empty()
                 loadedBlocks[packageName].stderr.empty()
                 $.post(superApiPrefix + $user.sessionKey + '/plugins/install',{
+                    packageName: packageName,
+                },callback)
+            }
+        })
+    }
+    var testModule = function(packageName,callback){
+        $.confirm.create({
+            title: 'Test Module',
+            body: `Do you want to test the module ${packageName}?`,
+            clickOptions: {
+                class: 'btn-success',
+                title: lang.Test,
+            },
+            clickCallback: function(){
+                loadedBlocks[packageName].stdout.empty()
+                loadedBlocks[packageName].stderr.empty()
+                $.post(superApiPrefix + $user.sessionKey + '/plugins/test',{
                     packageName: packageName,
                 },callback)
             }
@@ -140,7 +162,43 @@ $(document).ready(function(){
                                 show: false,
                             },
                             {
+                                action: 'test',
+                                show: false,
+                            },
+                            {
                                 action: 'cancelInstall',
+                                show: true,
+                            },
+                            {
+                                action: 'delete',
+                                show: false,
+                            },
+                            {
+                                action: 'status',
+                                show: false,
+                            },
+                        ])
+                    }
+                })
+            break;
+            case'test':
+                testModule(packageName,function(data){
+                    if(data.ok){
+                        toggleCardButtons(card,[
+                            {
+                                action: 'install',
+                                show: false,
+                            },
+                            {
+                                action: 'test',
+                                show: false,
+                            },
+                            {
+                                action: 'cancelInstall',
+                                show: false,
+                            },
+                            {
+                                action: 'cancelTest',
                                 show: true,
                             },
                             {
@@ -167,7 +225,47 @@ $(document).ready(function(){
                                 show: true,
                             },
                             {
+                                action: 'test',
+                                show: true,
+                            },
+                            {
                                 action: 'cancelInstall',
+                                show: false,
+                            },
+                            {
+                                action: 'delete',
+                                show: true,
+                            },
+                            {
+                                action: 'status',
+                                show: true,
+                            },
+                        ])
+                    }
+                })
+                toggleUsabilityOfYesAndNoButtons(packageName,false)
+            break;
+            case'cancelTest':
+                $.post(superApiPrefix + $user.sessionKey + '/plugins/test',{
+                    packageName: packageName,
+                    cancelInstall: 'true'
+                },function(data){
+                    if(data.ok){
+                        toggleCardButtons(card,[
+                            {
+                                action: 'install',
+                                show: true,
+                            },
+                            {
+                                action: 'test',
+                                show: true,
+                            },
+                            {
+                                action: 'cancelInstall',
+                                show: false,
+                            },
+                            {
+                                action: 'cancelTest',
                                 show: false,
                             },
                             {
@@ -231,18 +329,48 @@ $(document).ready(function(){
             break;
         }
     })
-    $('#downloadNewPlugin').submit(function(e){
+    pluginDownloadForm.submit(function(e){
         e.preventDefault();
         var el = $(this)
         var form = el.serializeObject()
         downloadModule(form.downloadUrl,form.packageRoot,function(data){
             console.log(data)
             if(data.ok){
-                data.newModule.config.enabled = false
-                drawModuleBlock(data.newModule)
+                var theModule = data.newModule
+                theModule.config.enabled = false
+                drawModuleBlock(theModule)
+                if(theModule.installerRunning){
+                    toggleCardButtons(card,[
+                        {
+                            action: 'install',
+                            show: false,
+                        },
+                        {
+                            action: 'cancelInstall',
+                            show: true,
+                        },
+                        {
+                            action: 'delete',
+                            show: false,
+                        },
+                        {
+                            action: 'status',
+                            show: false,
+                        },
+                    ])
+                }
             }
         })
         return false
+    })
+    $('#pluginQuickSelectExec').click(function(){
+        var currentVal = quickSelect.val()
+        var valParts = currentVal.split('.zip,')
+        var packageUrl = `${valParts[0]}.zip`
+        var packageRoot = valParts[1]
+        pluginDownloadForm.find(`[name="downloadUrl"]`).val(packageUrl)
+        pluginDownloadForm.find(`[name="packageRoot"]`).val(packageRoot)
+        pluginDownloadForm.submit()
     })
     setTimeout(function(){
         getModules(function(data){
@@ -258,6 +386,7 @@ $(document).ready(function(){
             case'plugin-info':
                 var name = data.module
                 switch(data.process){
+                    case'test-stdout':
                     case'install-stdout':
                         loadedBlocks[name].stdout.append(`<div class="line">${data.data}</div>`)
                         // if(loadedBlocks[name].stdout.find('.line').length > 10){
@@ -265,8 +394,38 @@ $(document).ready(function(){
                         // }
                         if(data.data.indexOf('(y)es or (N)o') > -1){
                             toggleUsabilityOfYesAndNoButtons(name,true)
+                        }else if(data.data === '#END_PROCESS'){
+                            var isTest = data.process === 'test-stdout'
+                            var card = $(`[package-name="${name}"]`)
+                            toggleCardButtons(card,[
+                                {
+                                    action: 'install',
+                                    show: true,
+                                },
+                                {
+                                    action: 'test',
+                                    show: true,
+                                },
+                                {
+                                    action: 'cancelInstall',
+                                    show: false,
+                                },
+                                {
+                                    action: 'cancelTest',
+                                    show: false,
+                                },
+                                {
+                                    action: 'delete',
+                                    show: true,
+                                },
+                                {
+                                    action: 'status',
+                                    show: true,
+                                },
+                            ])
                         }
                     break;
+                    case'test-stderr':
                     case'install-stderr':
                         loadedBlocks[name].stderr.append(`<div class="line">${data.data}</div>`)
                         // if(loadedBlocks[name].stderr.find('.line').length > 10){
