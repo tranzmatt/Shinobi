@@ -56,16 +56,10 @@ processArgv.forEach(function(val) {
     console.log(index + ': ' + value);
 });
 
-try{
-    if(config.thisIsDocker){
-        const dockerConfigFile = '/config/conf.json'
-        fs.writeFileSync(dockerConfigFile,JSON.stringify(config,null,3))
-    }
-}catch(err){
-    console.log(err)
-}
+const configPath = config.thisIsDocker ? "/config/conf.json" : configLocation;
+const configData = JSON.stringify(config,null,3);
 
-fs.writeFile(configLocation,JSON.stringify(config,null,3),function(){
-    console.log('Changes Complete. Here is what it is now.')
-    console.log(JSON.stringify(config,null,2))
-})
+fs.writeFile(configPath, configData, () => {
+    onsole.log('Changes Complete. Here is what it is now.');
+    console.log(JSON.stringify(config, null, 2));
+});
