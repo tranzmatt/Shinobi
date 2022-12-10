@@ -2,6 +2,7 @@ const fs = require('fs-extra');
 const express = require('express')
 const unzipper = require('unzipper')
 const spawn = require('child_process').spawn
+const exec = require('child_process').execSync
 const {
   Worker
 } = require('worker_threads');
@@ -22,6 +23,7 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
     } = require('../events/utils.js')(s,config,lang)
     const runningPluginWorkers = {}
     const runningInstallProcesses = {}
+    const runningTestProcesses = {}
     const modulesBasePath = process.cwd() + '/plugins/'
     const extractNameFromPackage = (filePath) => {
         const filePathParts = filePath.split('/')
@@ -59,11 +61,15 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
                 size: stats.size,
                 lastModified: stats.mtime,
                 created: stats.ctime,
+                hasTester: false,
             }
             var hasInstaller = false
             if(!fs.existsSync(modulePath + '/index.js')){
                 hasInstaller = true
                 newModule.noIndex = true
+            }
+            if(fs.existsSync(modulePath + '/test.js')){
+                newModule.hasTester = true
             }
             //package.json
             if(fs.existsSync(modulePath + '/package.json')){
@@ -77,6 +83,7 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
             //conf.json
             newModule.config = getModuleConfiguration(moduleName)
             newModule.hasInstaller = hasInstaller
+            newModule.installerRunning = !!runningInstallProcesses[moduleName]
         }
         return newModule
     }
@@ -89,7 +96,11 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
     }
     const downloadModule = (downloadUrl,packageName) => {
         const downloadPath = modulesBasePath + packageName
-        fs.mkdirSync(downloadPath)
+        try{
+            fs.mkdirSync(downloadPath)
+        }catch(err){
+            s.debugLog(err)
+        }
         return new Promise(async (resolve, reject) => {
             fs.mkdir(downloadPath, () => {
                 fetchDownloadAndWrite(downloadUrl,downloadPath + '.zip', 1)
@@ -114,6 +125,7 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
                         fs.remove(downloadPath + '.zip', () => {})
                         resolve()
                     })
+                    .catch(reject)
                 })
             })
         })
@@ -135,31 +147,37 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
                 const installerPath = modulePath + `INSTALL.sh`
                 const propertiesPath = modulePath + 'package.json'
                 var installProcess
-                // check for INSTALL.sh (ubuntu only)
+                const tempRunPath = `${process.cwd()}/plugin-install-${name}.sh`
                 if(fs.existsSync(installerPath)){
-                    installProcess = spawn(`sh`,[installerPath])
+                    // check for INSTALL.sh (ubuntu only)
+                    fs.writeFileSync(tempRunPath,`cd "${modulePath}" && sh INSTALL.sh && echo "Done!"`)
                 }else if(fs.existsSync(propertiesPath)){
                     // no INSTALL.sh found, check for package.json and do `npm install --unsafe-perm`
-                    installProcess = spawn(`npm`,['install','--unsafe-perm','--prefix',modulePath])
+                    fs.writeFileSync(tempRunPath,`cd "${modulePath}" && npm install && echo "Done!"`)
+                }else{
+                    fs.writeFileSync(tempRunPath,`echo "No Installer Found"`)
                 }
+                installProcess = spawn(`sh`,[tempRunPath])
+                fs.rm(tempRunPath,function(err){s.debugLog(err)})
                 if(installProcess){
                     const sendData = (data,channel) => {
                         const clientData = {
                             f: 'plugin-info',
                             module: name,
                             process: 'install-' + channel,
-                            data: data.toString(),
+                            data: data,
                         }
                         s.tx(clientData,'$')
                         s.debugLog(clientData)
                     }
                     installProcess.stderr.on('data',(data) => {
-                        sendData(data,'stderr')
+                        sendData(data.toString(),'stderr')
                     })
                     installProcess.stdout.on('data',(data) => {
-                        sendData(data,'stdout')
+                        sendData(data.toString(),'stdout')
                     })
                     installProcess.on('exit',(data) => {
+                        sendData('#END_PROCESS','stdout')
                         runningInstallProcesses[name] = null;
                     })
                     runningInstallProcesses[name] = installProcess
@@ -170,7 +188,49 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
             }
         })
     }
-    const disableModule = (name,status) => {
+    const testModule = (name) => {
+        return new Promise((resolve, reject) => {
+            if(!runningTestProcesses[name]){
+                //depending on module this may only work for Ubuntu
+                const modulePath = getModulePath(name)
+                const testScriptPath = modulePath + `test.js`
+                var testProcess
+                const tempRunPath = `${process.cwd()}/plugin-test-${name}.sh`
+                if(fs.existsSync(testScriptPath)){
+                    fs.writeFileSync(tempRunPath,`cd "${modulePath}" && node test.js && echo "Done!"`)
+                    testProcess = spawn(`sh`,[tempRunPath])
+                    fs.rm(tempRunPath,function(err){s.debugLog(err)})
+                    if(testProcess){
+                        const sendData = (data,channel) => {
+                            const clientData = {
+                                f: 'plugin-info',
+                                module: name,
+                                process: 'test-' + channel,
+                                data: data,
+                            }
+                            s.tx(clientData,'$')
+                            s.debugLog(clientData)
+                        }
+                        testProcess.stderr.on('data',(data) => {
+                            sendData(data.toString(),'stderr')
+                        })
+                        testProcess.stdout.on('data',(data) => {
+                            sendData(data.toString(),'stdout')
+                        })
+                        testProcess.on('exit',(data) => {
+                            sendData('#END_PROCESS','stdout')
+                            runningTestProcesses[name] = null;
+                        })
+                        runningTestProcesses[name] = testProcess
+                    }
+                }
+                resolve()
+            }else{
+                resolve('Already Testing...')
+            }
+        })
+    }
+    const enableModule = (name,status) => {
         // set status to `false` to enable
         const modulePath = getModulePath(name)
         const confJson = getModuleConfiguration(name)
@@ -183,7 +243,7 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
         try{
             const modulePath = modulesBasePath + name
             fs.remove(modulePath, (err) => {
-                console.log(err)
+                if(err)console.log(err)
             })
             return true
         }catch(err){
@@ -256,10 +316,10 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
         });
         runningPluginWorkers[moduleName] = worker
     }
-    const moveModuleToNameInProperties = (modulePath,packageRoot,properties) => {
+    const moveModuleToNameInProperties = (modulePath,packageRoot) => {
         return new Promise((resolve,reject) => {
             const packageRootParts = packageRoot.split('/')
-            const filename = packageRootParts[packageRootParts.length - 1]
+            const filename = `dl_${packageRootParts[packageRootParts.length - 1]}`
             fs.move(modulePath + packageRoot,modulesBasePath + filename,(err) => {
                 if(packageRoot){
                     fs.remove(modulePath, (err) => {
@@ -309,16 +369,21 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
                 const packageName = req.body.packageName || extractNameFromPackage(url)
                 const modulePath = getModulePath(packageName)
                 await downloadModule(url,packageName)
-                const properties = getModuleProperties(packageName)
-                const newName = await moveModuleToNameInProperties(modulePath,packageRoot,properties)
+                s.debugLog('Downloaded',packageName,url)
+                const newName = await moveModuleToNameInProperties(modulePath,packageRoot)
+                const properties = getModuleProperties(newName)
+                s.debugLog('properties',properties)
+                s.debugLog('moveModuleToNameInProperties',newName)
                 const chosenName = newName ? newName : packageName
-                disableModule(chosenName,true)
+                enableModule(chosenName,false)
+                s.debugLog('Plugin Ready to Use!',newName,url)
                 s.closeJsonResponse(res,{
                     ok: true,
                     moduleName: chosenName,
                     newModule: getModule(chosenName)
                 })
             }catch(err){
+                console.error(err)
                 s.closeJsonResponse(res,{
                     ok: false,
                     error: err
@@ -341,7 +406,7 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
     //             const newName = await moveModuleToNameInProperties(modulePath,packageRoot,properties)
     //             const chosenName = newName ? newName : packageName
     //
-    //             disableModule(chosenName,true)
+    //             enableModule(chosenName,true)
     //             s.closeJsonResponse(res,{
     //                 ok: true,
     //                 moduleName: chosenName,
@@ -367,6 +432,26 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
                 runningInstallProcesses[packageName].kill('SIGTERM')
             }else{
                 const error = await installModule(packageName)
+                if(error){
+                    response.ok = false
+                    response.msg = error
+                }
+            }
+            s.closeJsonResponse(res,response)
+        },res,req)
+    })
+    /**
+    * API : Superuser : Custom Auto Load Package Test (node test.js).
+    */
+    app.post(config.webPaths.superApiPrefix+':auth/plugins/test', (req,res) => {
+        s.superAuth(req.params, async (resp) => {
+            const packageName = req.body.packageName
+            const cancelInstall = req.body.cancelTest === 'true' ? true : false
+            const response = {ok: true}
+            if(runningTestProcesses[packageName] && cancelTest){
+                runningTestProcesses[packageName].kill('SIGTERM')
+            }else{
+                const error = await testModule(packageName)
                 if(error){
                     response.ok = false
                     response.msg = error
@@ -437,7 +522,7 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
             const packageName = req.body.packageName
             const selection = status == 'true' ? true : false
             const theModule = getModule(packageName)
-            disableModule(packageName,selection)
+            enableModule(packageName,selection)
             if(theModule.config.hotLoadable === true){
                 if(!selection){
                     loadModule(theModule)

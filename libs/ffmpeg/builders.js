@@ -321,6 +321,7 @@ module.exports = (s,config,lang) => {
         const monitorCaptureRate = !isNaN(parseFloat(e.details.sfps)) && e.details.sfps !== '0' ? parseFloat(e.details.sfps) : null
         const logLevel = e.details.loglevel ? e.details.loglevel : 'warning'
         const casualDecodingRequired = e.type === 'mp4' || e.type === 'mjpeg'
+        const inputMaps = s.parseJSON(e.details.input_maps) || []
         if(e.details.cust_input)inputFlags.push(e.details.cust_input)
         if(useWallclockTimestamp && inputTypeIsH264 && !arrayContains('-use_wallclock_as_timestamps',inputFlags)){
             inputFlags.push('-use_wallclock_as_timestamps 1')
@@ -368,8 +369,8 @@ module.exports = (s,config,lang) => {
             inputFlags.push(`-re`)
         }
         inputFlags.push(buildConnectionFlagsFromConfiguration(e))
-        if(e.details.input_maps){
-            e.details.input_maps.forEach(function(v,n){
+        if(inputMaps){
+            inputMaps.forEach(function(v,n){
                 inputFlags.push(createInputMap(e,n+1,v))
             })
         }
@@ -392,6 +393,7 @@ module.exports = (s,config,lang) => {
             const outputCanHaveAudio = config.outputsWithAudio.indexOf(streamType) > -1;
             const outputRequiresEncoding = streamType === 'mjpeg' || streamType === 'b64'
             const outputIsPresetCapable = outputCanHaveAudio
+            const streamChannels = s.parseJSON(e.details.stream_channels) || []
             const { videoWidth, videoHeight } = validateDimensions(e.details.stream_scale_x,e.details.stream_scale_y)
             if(inputMap)streamFlags.push(inputMap)
             if(e.details.cust_stream)streamFlags.push(e.details.cust_stream)
@@ -480,8 +482,8 @@ module.exports = (s,config,lang) => {
             if(e.details.custom_output){
                 streamFlags.push(e.details.custom_output)
             }
-            if(e.details.stream_channels){
-                e.details.stream_channels.forEach(function(v,n){
+            if(streamChannels){
+                streamChannels.forEach(function(v,n){
                     streamFlags.push(createStreamChannel(e,n + config.pipeAddition,v))
                 })
             }

@@ -252,8 +252,9 @@ module.exports = function(s,config,lang,app){
                 //update master list in system
                 const configPath = config.thisIsDocker ? "/config/super.json" : s.location.super;
                 const configData = JSON.stringify(postBody,null,3);
+                
                 fs.writeFile(configPath, configData, () => {
-                    s.tx({f:'save_preferences'},'$')
+                    s.tx({f: 'save_preferences'},'$')
                 });
                 
             }else{

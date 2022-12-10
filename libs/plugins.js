@@ -236,7 +236,7 @@ module.exports = function(s,config,lang,app,io){
                 plug: v.id,
                 type: v.type
             }
-            if(v.enabled===false){return}
+            if(!v.enabled){return}
             if(v.mode==='host'){
                 //is in host mode (camera.js is client)
                 if(v.https===true){

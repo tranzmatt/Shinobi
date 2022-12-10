@@ -59,7 +59,7 @@ processArgv.forEach(function(val) {
 const configPath = config.thisIsDocker ? "/config/conf.json" : configLocation;
 const configData = JSON.stringify(config,null,3);
 
-fs.writeFile(configPath, configData, () =>{
-    console.log('Changes Complete. Here is what it is now.')
-    console.log(JSON.stringify(config,null,2))
+fs.writeFile(configPath, configData, () => {
+    onsole.log('Changes Complete. Here is what it is now.');
+    console.log(JSON.stringify(config, null, 2));
 });
