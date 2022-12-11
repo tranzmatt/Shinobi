@@ -137,6 +137,29 @@ const initialize = () => {
     request.post(startupRequestData, handleStartupResponse);
 };
 
+const getJobKey = (groupId, monitorId) => {
+    const jobKey = `${groupId}_${monitorId}`;
+
+    return jobKey;
+}
+
+const addJob = (groupId, monitorId) => {
+    const jobKey = getJobKey(groupId, monitorId);
+    const jobExists = detectorSettings.jobs.includes(jobKey);
+
+    if(!jobExists) {
+        detectorSettings.jobs.push(jobKey);
+    }    
+
+    return !jobExists;
+}
+
+const removeJob = (groupId, monitorId) => {
+    const jobKey = getJobKey(groupId, monitorId);
+
+    detectorSettings.jobs = detectorSettings.jobs.filter(j => j !== jobKey);
+}
+
 const handleStartupResponse = (err, res, body) => {
     try {
         if(err) {
@@ -306,8 +329,12 @@ const processImage = (frameBuffer, d, tx, frameLocation, callback) => {
             onImageProcessed(d, tx, err, res, body, frameBuffer);
 
             fs.unlinkSync(frameLocation);
+
+            removeJob(d.ke, d.id);
 		});        
 	} catch(ex) {
+        removeJob(d.ke, d.id);
+
 		logError(`Failed to process image, Error: ${ex}`);
 
         if(fs.existsSync(frameLocation)) {
@@ -320,6 +347,12 @@ const processImage = (frameBuffer, d, tx, frameLocation, callback) => {
 
 const detectObject = (frameBuffer, d, tx, frameLocation, callback) => {
 	if(!detectorSettings.active) {
+        return;
+    }
+
+    const jobCreated = addJob(d.ke, d.id);
+
+    if(!jobCreated) {
         return;
     }
 
@@ -337,6 +370,8 @@ const detectObject = (frameBuffer, d, tx, frameLocation, callback) => {
     
     fs.writeFile(path, frameBuffer, function(err) {
         if(err) {
+            removeJob(d.ke, d.id);
+
             return s.systemLog(err);
         }
     
@@ -344,6 +379,8 @@ const detectObject = (frameBuffer, d, tx, frameLocation, callback) => {
             processImage(frameBuffer, d, tx, path, callback);
 
         } catch(ex) {
+            removeJob(d.ke, d.id);
+
             logError(`Detector failed to parse frame, Error: ${ex}`);
         }
     });
