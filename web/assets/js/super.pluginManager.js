@@ -7,6 +7,19 @@ $(document).ready(function(){
     var getModules = function(callback) {
         $.get(superApiPrefix + $user.sessionKey + '/plugins/list',callback)
     }
+    function getDownloadableModules(callback) {
+        return new Promise((resolve,reject) => {
+            const pluginListUrl = `https://cdn.shinobi.video/plugins/list.json`
+            $.getJSON(pluginListUrl,function(data){
+                var html = ''
+                $.each(data,function(n,plugin){
+                    html += `<option value="${plugin.link}${plugin.dir ? `,${plugin.dir}` : ''}">${plugin.name}</option>`
+                })
+                quickSelect.html(html)
+                resolve(data)
+            })
+        })
+    }
     var loadedBlocks = {}
     var drawModuleBlock = function(module){
         var humanName = module.properties.name ? module.properties.name : module.name
@@ -355,4 +368,5 @@ $(document).ready(function(){
             break;
         }
     })
+    getDownloadableModules()
 })

@@ -3,10 +3,10 @@
         <form class="card bg-dark grey mt-1" id="downloadNewPlugin">
             <div class="card-body">
                 <div class="form-group">
-                    <input type="text" placeholder="Download URL for Module" class="form-control" name="downloadUrl" />
+                    <input type="text" placeholder="<%- lang['Download URL for Module'] %> (.zip)" class="form-control" name="downloadUrl" />
                 </div>
                 <div class="form-group">
-                    <input type="text" placeholder="Subdirectory for Module (Inside the downloaded package)" class="form-control" name="packageRoot" />
+                    <input type="text" placeholder="<%- lang['Subdirectory for Module'] %> (<%- lang['Inside the downloaded package'] %>)" class="form-control" name="packageRoot" />
                 </div>
                 <div><button type="submit" class="btn btn-round btn-block btn-default mb-0"><i class="fa fa-download"></i> <%- lang.Download %></button></div>
             </div>
