@@ -38,10 +38,6 @@ $(document).ready(function(){
                                     <a class="btn btn-sm btn-info" plugin-manager-action="install">${lang['Run Installer']}</a>
                                     <a class="btn btn-sm btn-danger" style="display:none" plugin-manager-action="cancelInstall">${lang['Stop']}</a>
                                 ` : ''}
-                                ${module.hasTester ? `
-                                    <a class="btn btn-sm btn-default" plugin-manager-action="test">${lang['Test']}</a>
-                                    <a class="btn btn-sm btn-danger" style="display:none" plugin-manager-action="cancelTest">${lang['Stop']}</a>
-                                ` : ''}
                                 ${addCmdButtons}
                                 <a class="btn btn-sm btn-default" plugin-manager-action="status">${!module.config.enabled ? lang.Enable : lang.Disable}</a>
                                 <a class="btn btn-sm btn-danger" plugin-manager-action="delete">${lang.Delete}</a>
@@ -128,23 +124,6 @@ $(document).ready(function(){
             }
         })
     }
-    var testModule = function(packageName,callback){
-        $.confirm.create({
-            title: 'Test Module',
-            body: `Do you want to test the module ${packageName}?`,
-            clickOptions: {
-                class: 'btn-success',
-                title: lang.Test,
-            },
-            clickCallback: function(){
-                loadedBlocks[packageName].stdout.empty()
-                loadedBlocks[packageName].stderr.empty()
-                $.post(superApiPrefix + $user.sessionKey + '/plugins/test',{
-                    packageName: packageName,
-                },callback)
-            }
-        })
-    }
     var deleteModule = function(packageName,callback){
         $.confirm.create({
             title: 'Delete Module',
@@ -222,7 +201,6 @@ $(document).ready(function(){
                     if(data.ok){
                         toggleCardButtons(card,[
                             { action: 'install', show: false },
-                            { action: 'test',show: false },
                             { el: '.command-line', show: true },
                             { action: 'cancelInstall', show: true },
                             { action: 'delete', show: false },
@@ -236,24 +214,8 @@ $(document).ready(function(){
                     if(data.ok){
                         toggleCardButtons(card,[
                             { action: 'install', show: false },
-                            { action: 'test',show: false },
                             { el: '.command-line', show: true },
                             { action: 'cancelInstall', show: true },
-                            { action: 'delete', show: false },
-                            { action: 'status', show: false },
-                        ])
-                    }
-                })
-            break;
-            case'test':
-                testModule(packageName,function(data){
-                    if(data.ok){
-                        toggleCardButtons(card,[
-                            { action: 'install', show: false },
-                            { action: 'test', show: false },
-                            { el: '.command-line', show: false },
-                            { action: 'cancelInstall', show: false },
-                            { action: 'cancelTest', show: true },
                             { action: 'delete', show: false },
                             { action: 'status', show: false },
                         ])
@@ -268,28 +230,8 @@ $(document).ready(function(){
                     if(data.ok){
                         toggleCardButtons(card,[
                             { action: 'install', show: true },
-                            { action: 'test', show: true },
                             { el: '.command-line', show: false },
                             { action: 'cancelInstall', show: false },
-                            { action: 'delete', show: true },
-                            { action: 'status', show: true },
-                        ])
-                    }
-                })
-                toggleUsabilityOfYesAndNoButtons(packageName,false)
-            break;
-            case'cancelTest':
-                $.post(superApiPrefix + $user.sessionKey + '/plugins/test',{
-                    packageName: packageName,
-                    cancelInstall: 'true'
-                },function(data){
-                    if(data.ok){
-                        toggleCardButtons(card,[
-                            { action: 'install', show: true },
-                            { action: 'test', show: true },
-                            { el: '.command-line', show: false },
-                            { action: 'cancelInstall', show: false },
-                            { action: 'cancelTest', show: false },
                             { action: 'delete', show: true },
                             { action: 'status', show: true },
                         ])
@@ -358,7 +300,6 @@ $(document).ready(function(){
                 if(theModule.installerRunning){
                     toggleCardButtons(card,[
                         { action: 'install', show: false },
-                        { action: 'test',show: false },
                         { el: '.command-line', show: true },
                         { action: 'cancelInstall', show: true },
                         { action: 'delete', show: false },
@@ -392,26 +333,21 @@ $(document).ready(function(){
             case'plugin-info':
                 var name = data.module
                 switch(data.process){
-                    case'test-stdout':
                     case'install-stdout':
                         appendLoggerData(data.data,loadedBlocks[name].stdout)
                         if(data.data.indexOf('(y)es or (N)o') > -1 || data.data.indexOf('(Y)es or (n)o') > -1){
                             toggleUsabilityOfYesAndNoButtons(name,true)
                         }else if(data.data === '#END_PROCESS'){
-                            var isTest = data.process === 'test-stdout'
                             var card = $(`[package-name="${name}"]`)
                             toggleCardButtons(card,[
                                 { action: 'install', show: true },
-                                { action: 'test', show: true },
                                 { el: '.command-line', show: false },
                                 { action: 'cancelInstall', show: false },
-                                { action: 'cancelTest', show: false },
                                 { action: 'delete', show: true },
                                 { action: 'status', show: true },
                             ])
                         }
                     break;
-                    case'test-stderr':
                     case'install-stderr':
                         appendLoggerData(data.data,loadedBlocks[name].stderr)
                     break;

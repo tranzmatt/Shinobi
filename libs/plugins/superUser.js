@@ -23,7 +23,6 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
     } = require('../events/utils.js')(s,config,lang)
     const runningPluginWorkers = {}
     const runningInstallProcesses = {}
-    const runningTestProcesses = {}
     const modulesBasePath = process.cwd() + '/plugins/'
     const extractNameFromPackage = (filePath) => {
         const filePathParts = filePath.split('/')
@@ -61,15 +60,11 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
                 size: stats.size,
                 lastModified: stats.mtime,
                 created: stats.ctime,
-                hasTester: false,
             }
             var hasInstaller = false
             if(!fs.existsSync(modulePath + '/index.js')){
                 hasInstaller = true
                 newModule.noIndex = true
-            }
-            if(fs.existsSync(modulePath + '/test.js')){
-                newModule.hasTester = true
             }
             //package.json
             if(fs.existsSync(modulePath + '/package.json')){
@@ -226,48 +221,6 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
                 resolve()
             }else{
                 resolve(lang['Already Installing...'])
-            }
-        })
-    }
-    const testModule = (name) => {
-        return new Promise((resolve, reject) => {
-            if(!runningTestProcesses[name]){
-                //depending on module this may only work for Ubuntu
-                const modulePath = getModulePath(name)
-                const testScriptPath = modulePath + `test.js`
-                var testProcess
-                const tempRunPath = `${process.cwd()}/plugin-test-${name}.sh`
-                if(fs.existsSync(testScriptPath)){
-                    fs.writeFileSync(tempRunPath,`cd "${modulePath}" && node test.js && echo "Done!"`)
-                    testProcess = spawn(`sh`,[tempRunPath])
-                    fs.rm(tempRunPath,function(err){s.debugLog(err)})
-                    if(testProcess){
-                        const sendData = (data,channel) => {
-                            const clientData = {
-                                f: 'plugin-info',
-                                module: name,
-                                process: 'test-' + channel,
-                                data: data,
-                            }
-                            s.tx(clientData,'$')
-                            s.debugLog(clientData)
-                        }
-                        testProcess.stderr.on('data',(data) => {
-                            sendData(data.toString(),'stderr')
-                        })
-                        testProcess.stdout.on('data',(data) => {
-                            sendData(data.toString(),'stdout')
-                        })
-                        testProcess.on('exit',(data) => {
-                            sendData('#END_PROCESS','stdout')
-                            runningTestProcesses[name] = null;
-                        })
-                        runningTestProcesses[name] = testProcess
-                    }
-                }
-                resolve()
-            }else{
-                resolve('Already Testing...')
             }
         })
     }
@@ -495,26 +448,6 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
                 runningInstallProcesses[packageName].kill('SIGTERM')
             }else{
                 const error = await runModuleCommand(packageName,scriptName)
-                if(error){
-                    response.ok = false
-                    response.msg = error
-                }
-            }
-            s.closeJsonResponse(res,response)
-        },res,req)
-    })
-    /**
-    * API : Superuser : Custom Auto Load Package Test (node test.js).
-    */
-    app.post(config.webPaths.superApiPrefix+':auth/plugins/test', (req,res) => {
-        s.superAuth(req.params, async (resp) => {
-            const packageName = req.body.packageName
-            const cancelInstall = req.body.cancelTest === 'true' ? true : false
-            const response = {ok: true}
-            if(runningTestProcesses[packageName] && cancelTest){
-                runningTestProcesses[packageName].kill('SIGTERM')
-            }else{
-                const error = await testModule(packageName)
                 if(error){
                     response.ok = false
                     response.msg = error
