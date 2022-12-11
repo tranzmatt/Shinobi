@@ -630,6 +630,8 @@
    "Prefix": "Prefix",
    "Saved": "Saved",
    "Run": "Run",
+   "runConfirmationText": "Do you want to run the command?",
+   "Commands": "Commands",
    "Helping Hand": "Helping Hand",
    "Active Tutorial": "Active Tutorial",
    "Not Saved": "Not Saved",

@@ -188,6 +188,47 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
             }
         })
     }
+    const runModuleCommand = (name,scriptName) => {
+        return new Promise((resolve, reject) => {
+            if(!runningInstallProcesses[name]){
+                //depending on module this may only work for Ubuntu
+                const modulePath = getModulePath(name)
+                const properties = getModuleProperties(name);
+                const theCmd = properties.addCmd[scriptName].cmd
+                var installProcess
+                const tempRunPath = `${process.cwd()}/plugin-install-${name}.sh`
+                fs.writeFileSync(tempRunPath,`cd "${modulePath}" && ${theCmd}`)
+                installProcess = spawn(`sh`,[tempRunPath])
+                fs.rm(tempRunPath,function(err){s.debugLog(err)})
+                if(installProcess){
+                    const sendData = (data,channel) => {
+                        const clientData = {
+                            f: 'plugin-info',
+                            module: name,
+                            process: 'install-' + channel,
+                            data: data,
+                        }
+                        s.tx(clientData,'$')
+                        s.debugLog(clientData)
+                    }
+                    installProcess.stderr.on('data',(data) => {
+                        sendData(data.toString(),'stderr')
+                    })
+                    installProcess.stdout.on('data',(data) => {
+                        sendData(data.toString(),'stdout')
+                    })
+                    installProcess.on('exit',(data) => {
+                        sendData('#END_PROCESS','stdout')
+                        runningInstallProcesses[name] = null;
+                    })
+                    runningInstallProcesses[name] = installProcess
+                }
+                resolve()
+            }else{
+                resolve(lang['Already Installing...'])
+            }
+        })
+    }
     const testModule = (name) => {
         return new Promise((resolve, reject) => {
             if(!runningTestProcesses[name]){
@@ -430,8 +471,30 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
             const response = {ok: true}
             if(runningInstallProcesses[packageName] && cancelInstall){
                 runningInstallProcesses[packageName].kill('SIGTERM')
+            }else if(cancelInstall){
+                // response.msg = ''
             }else{
                 const error = await installModule(packageName)
+                if(error){
+                    response.ok = false
+                    response.msg = error
+                }
+            }
+            s.closeJsonResponse(res,response)
+        },res,req)
+    })
+    /**
+    * API : Superuser : Custom Auto Load Package Install.
+    */
+    app.post(config.webPaths.superApiPrefix+':auth/plugins/run', (req,res) => {
+        s.superAuth(req.params, async (resp) => {
+            const packageName = req.body.packageName
+            const scriptName = req.body.scriptName
+            const response = {ok: true}
+            if(runningInstallProcesses[packageName]){
+                runningInstallProcesses[packageName].kill('SIGTERM')
+            }else{
+                const error = await runModuleCommand(packageName,scriptName)
                 if(error){
                     response.ok = false
                     response.msg = error

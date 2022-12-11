@@ -3,17 +3,29 @@ $(document).ready(function(){
     var listElement = $('#pluginManagerList')
     var quickSelect = $('#pluginQuickSelect')
     var pluginDownloadForm = $('#downloadNewPlugin')
+    var pluginCommandLine = $('#pluginCommandLine')
     var getModules = function(callback) {
         $.get(superApiPrefix + $user.sessionKey + '/plugins/list',callback)
     }
     var loadedBlocks = {}
     var drawModuleBlock = function(module){
         var humanName = module.properties.name ? module.properties.name : module.name
+        var additionalCommands = module.properties.addCmd ? Object.values(module.properties.addCmd) : [];
         if(listElement.find(`[package-name="${module.name}"]`).length > 0){
-            var existingElement = listElement.find('[package-name="${module.name}"]')
+            var existingElement = listElement.find(`[package-name="${module.name}"]`)
             existingElement.find('.title').text(humanName)
             existingElement.find('[plugin-manager-action="status"]').text(!module.config.enabled ? lang.Enable : lang.Disable)
         }else{
+            var addCmdButtons = additionalCommands.length > 0 ? `<div class="dropdown d-inline-block">
+              <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" id="dmb-${module.name}" data-bs-toggle="dropdown" aria-expanded="false">
+                ${lang['Commands']}
+              </button>
+              <ul class="dropdown-menu" aria-labelledby="dmb-${module.name}">
+                ${additionalCommands.map((script) => {
+                    return `<li><a class="dropdown-item" plugin-manager-action="run" data-script="${script.name}">${script.title}</a></li>`
+                }).join('')}
+              </ul>
+            </div>` : ''
             listElement.prepend(`
                     <div class="card bg-dark text-white mb-3" package-name="${module.name}">
                         <div class="card-body pb-3">
@@ -30,22 +42,29 @@ $(document).ready(function(){
                                     <a class="btn btn-sm btn-default" plugin-manager-action="test">${lang['Test']}</a>
                                     <a class="btn btn-sm btn-danger" style="display:none" plugin-manager-action="cancelTest">${lang['Stop']}</a>
                                 ` : ''}
+                                ${addCmdButtons}
                                 <a class="btn btn-sm btn-default" plugin-manager-action="status">${!module.config.enabled ? lang.Enable : lang.Disable}</a>
                                 <a class="btn btn-sm btn-danger" plugin-manager-action="delete">${lang.Delete}</a>
                                 <a class="btn btn-sm btn-warning" plugin-manager-action="editConfig">${lang[`Edit Configuration`]}</a>
                             </div>
-                            <div class="pl-2 pr-2">
-                                <div class="install-output row">
-                                    <div class="col-md-6 pr-2"><pre class="install-output-stdout text-white mb-0"></pre></div>
-                                    <div class="col-md-6 pl-2"><pre class="install-output-stderr text-white mb-0"></pre></div>
+                            <form style="display:none" class="command-line row mb-3" plugin-manager-command-line>
+                                <div class="form-group mb-0">
+                                    <div class="input-group">
+                                      <input name="cmd" type="text" class="form-control form-control-sm" placeholder="Type and Press Enter to Send Command">
+                                      <button type="submit" class="btn btn-sm btn-primary m-0">${lang.Run}</button>
+                                    </div>
                                 </div>
-                                <div class="command-installer row" style="display:none">
-                                    <div class="col-md-6">
-                                        <button type="button" class="btn btn-sm btn-success btn-block" plugin-manager-action="command" command="y">${lang.Yes}</button>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <button type="button" class="btn btn-sm btn-danger btn-block" plugin-manager-action="command" command="N">${lang.No}</button>
-                                    </div>
+                            </form>
+                            <div class="install-output row">
+                                <div class="col-md-6 pr-2 mb-2"><pre class="install-output-stdout text-white mb-0"></pre></div>
+                                <div class="col-md-6 pl-2 mb-2"><pre class="install-output-stderr text-white mb-0"></pre></div>
+                            </div>
+                            <div class="command-installer row" style="display:none">
+                                <div class="col-md-6">
+                                    <button type="button" class="btn btn-sm btn-success btn-block" plugin-manager-action="command" command="y">${lang.Yes}</button>
+                                </div>
+                                <div class="col-md-6">
+                                    <button type="button" class="btn btn-sm btn-danger btn-block" plugin-manager-action="command" command="N">${lang.No}</button>
                                 </div>
                             </div>
                         </div>
@@ -87,6 +106,24 @@ $(document).ready(function(){
                 loadedBlocks[packageName].stderr.empty()
                 $.post(superApiPrefix + $user.sessionKey + '/plugins/install',{
                     packageName: packageName,
+                },callback)
+            }
+        })
+    }
+    var runModuleCommand = function(packageName,scriptName,callback){
+        $.confirm.create({
+            title: lang.Run,
+            body: lang.runConfirmationText,
+            clickOptions: {
+                class: 'btn-success',
+                title: lang.Run,
+            },
+            clickCallback: function(){
+                loadedBlocks[packageName].stdout.empty()
+                loadedBlocks[packageName].stderr.empty()
+                $.post(superApiPrefix + $user.sessionKey + '/plugins/run',{
+                    packageName: packageName,
+                    scriptName: scriptName,
                 },callback)
             }
         })
@@ -143,7 +180,13 @@ $(document).ready(function(){
     }
     var toggleCardButtons = function(card,buttons){
         $.each(buttons,function(n,button){
-            card.find(`[plugin-manager-action="${button.action}"]`)[button.show ? 'show' : 'hide']()
+            var el
+            if(button.el){
+                el = card.find(`${button.el}`)
+            }else{
+                el = card.find(`[plugin-manager-action="${button.action}"]`)
+            }
+            el[button.show ? 'show' : 'hide']()
         })
     }
     function appendLoggerData(text,outputEl){
@@ -153,13 +196,53 @@ $(document).ready(function(){
             objDiv.scrollTop = objDiv.scrollHeight;
         },100)
     }
-    $('body').on(`click`,`[plugin-manager-action]`,function(e){
+    $('body')
+    .on(`submit`,`[plugin-manager-command-line]`,function(e){
+        e.preventDefault()
+        var form = $(this)
+        var formCmdEl = form.find('[name="cmd"]')
+        var packageName = form.parents('[package-name]').attr('package-name')
+        var command = formCmdEl.val()
+        sendInstallerCommand(packageName,command,function(data){
+            console.log(data)
+            formCmdEl.val('')
+        })
+        return false;
+    })
+    .on(`click`,`[plugin-manager-action]`,function(e){
         e.preventDefault()
         var el = $(this)
         var action = el.attr('plugin-manager-action')
         var card = el.parents('[package-name]')
         var packageName = card.attr('package-name')
         switch(action){
+            case'run':
+                var scriptName = el.attr('data-script')
+                runModuleCommand(packageName,scriptName,function(data){
+                    if(data.ok){
+                        toggleCardButtons(card,[
+                            { action: 'install', show: false },
+                            {
+                                action: 'test',
+                                show: false,
+                            },
+                            { el: '.command-line', show: true },
+                            {
+                                action: 'cancelInstall',
+                                show: true,
+                            },
+                            {
+                                action: 'delete',
+                                show: false,
+                            },
+                            {
+                                action: 'status',
+                                show: false,
+                            },
+                        ])
+                    }
+                })
+            break;
             case'install':
                 installModule(packageName,function(data){
                     if(data.ok){
@@ -172,6 +255,7 @@ $(document).ready(function(){
                                 action: 'test',
                                 show: false,
                             },
+                            { el: '.command-line', show: true },
                             {
                                 action: 'cancelInstall',
                                 show: true,
@@ -200,6 +284,7 @@ $(document).ready(function(){
                                 action: 'test',
                                 show: false,
                             },
+                            { el: '.command-line', show: false },
                             {
                                 action: 'cancelInstall',
                                 show: false,
@@ -235,6 +320,7 @@ $(document).ready(function(){
                                 action: 'test',
                                 show: true,
                             },
+                            { el: '.command-line', show: false },
                             {
                                 action: 'cancelInstall',
                                 show: false,
@@ -267,6 +353,7 @@ $(document).ready(function(){
                                 action: 'test',
                                 show: true,
                             },
+                            { el: '.command-line', show: false },
                             {
                                 action: 'cancelInstall',
                                 show: false,
@@ -352,6 +439,7 @@ $(document).ready(function(){
                             action: 'install',
                             show: false,
                         },
+                        { el: '.command-line', show: true },
                         {
                             action: 'cancelInstall',
                             show: true,
@@ -396,7 +484,7 @@ $(document).ready(function(){
                     case'test-stdout':
                     case'install-stdout':
                         appendLoggerData(data.data,loadedBlocks[name].stdout)
-                        if(data.data.indexOf('(y)es or (N)o') > -1){
+                        if(data.data.indexOf('(y)es or (N)o') > -1 || data.data.indexOf('(Y)es or (n)o') > -1){
                             toggleUsabilityOfYesAndNoButtons(name,true)
                         }else if(data.data === '#END_PROCESS'){
                             var isTest = data.process === 'test-stdout'
@@ -410,6 +498,7 @@ $(document).ready(function(){
                                     action: 'test',
                                     show: true,
                                 },
+                                { el: '.command-line', show: false },
                                 {
                                     action: 'cancelInstall',
                                     show: false,
