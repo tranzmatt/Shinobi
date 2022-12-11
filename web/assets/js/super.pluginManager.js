@@ -146,6 +146,13 @@ $(document).ready(function(){
             card.find(`[plugin-manager-action="${button.action}"]`)[button.show ? 'show' : 'hide']()
         })
     }
+    function appendLoggerData(text,outputEl){
+        outputEl.append(`<div class="line">${text}</div>`)
+        setTimeout(function(){
+            var objDiv = outputEl[0]
+            objDiv.scrollTop = objDiv.scrollHeight;
+        },100)
+    }
     $('body').on(`click`,`[plugin-manager-action]`,function(e){
         e.preventDefault()
         var el = $(this)
@@ -388,10 +395,7 @@ $(document).ready(function(){
                 switch(data.process){
                     case'test-stdout':
                     case'install-stdout':
-                        loadedBlocks[name].stdout.append(`<div class="line">${data.data}</div>`)
-                        // if(loadedBlocks[name].stdout.find('.line').length > 10){
-                        //     loadedBlocks[name].stdout.children().first().remove()
-                        // }
+                        appendLoggerData(data.data,loadedBlocks[name].stdout)
                         if(data.data.indexOf('(y)es or (N)o') > -1){
                             toggleUsabilityOfYesAndNoButtons(name,true)
                         }else if(data.data === '#END_PROCESS'){
@@ -427,10 +431,7 @@ $(document).ready(function(){
                     break;
                     case'test-stderr':
                     case'install-stderr':
-                        loadedBlocks[name].stderr.append(`<div class="line">${data.data}</div>`)
-                        // if(loadedBlocks[name].stderr.find('.line').length > 10){
-                        //     loadedBlocks[name].stderr.children().first().remove()
-                        // }
+                        appendLoggerData(data.data,loadedBlocks[name].stderr)
                     break;
                 }
             break;
