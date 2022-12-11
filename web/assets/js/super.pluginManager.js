@@ -222,23 +222,11 @@ $(document).ready(function(){
                     if(data.ok){
                         toggleCardButtons(card,[
                             { action: 'install', show: false },
-                            {
-                                action: 'test',
-                                show: false,
-                            },
+                            { action: 'test',show: false },
                             { el: '.command-line', show: true },
-                            {
-                                action: 'cancelInstall',
-                                show: true,
-                            },
-                            {
-                                action: 'delete',
-                                show: false,
-                            },
-                            {
-                                action: 'status',
-                                show: false,
-                            },
+                            { action: 'cancelInstall', show: true },
+                            { action: 'delete', show: false },
+                            { action: 'status', show: false },
                         ])
                     }
                 })
@@ -247,27 +235,12 @@ $(document).ready(function(){
                 installModule(packageName,function(data){
                     if(data.ok){
                         toggleCardButtons(card,[
-                            {
-                                action: 'install',
-                                show: false,
-                            },
-                            {
-                                action: 'test',
-                                show: false,
-                            },
+                            { action: 'install', show: false },
+                            { action: 'test',show: false },
                             { el: '.command-line', show: true },
-                            {
-                                action: 'cancelInstall',
-                                show: true,
-                            },
-                            {
-                                action: 'delete',
-                                show: false,
-                            },
-                            {
-                                action: 'status',
-                                show: false,
-                            },
+                            { action: 'cancelInstall', show: true },
+                            { action: 'delete', show: false },
+                            { action: 'status', show: false },
                         ])
                     }
                 })
@@ -276,31 +249,13 @@ $(document).ready(function(){
                 testModule(packageName,function(data){
                     if(data.ok){
                         toggleCardButtons(card,[
-                            {
-                                action: 'install',
-                                show: false,
-                            },
-                            {
-                                action: 'test',
-                                show: false,
-                            },
+                            { action: 'install', show: false },
+                            { action: 'test', show: false },
                             { el: '.command-line', show: false },
-                            {
-                                action: 'cancelInstall',
-                                show: false,
-                            },
-                            {
-                                action: 'cancelTest',
-                                show: true,
-                            },
-                            {
-                                action: 'delete',
-                                show: false,
-                            },
-                            {
-                                action: 'status',
-                                show: false,
-                            },
+                            { action: 'cancelInstall', show: false },
+                            { action: 'cancelTest', show: true },
+                            { action: 'delete', show: false },
+                            { action: 'status', show: false },
                         ])
                     }
                 })
@@ -312,27 +267,12 @@ $(document).ready(function(){
                 },function(data){
                     if(data.ok){
                         toggleCardButtons(card,[
-                            {
-                                action: 'install',
-                                show: true,
-                            },
-                            {
-                                action: 'test',
-                                show: true,
-                            },
+                            { action: 'install', show: true },
+                            { action: 'test', show: true },
                             { el: '.command-line', show: false },
-                            {
-                                action: 'cancelInstall',
-                                show: false,
-                            },
-                            {
-                                action: 'delete',
-                                show: true,
-                            },
-                            {
-                                action: 'status',
-                                show: true,
-                            },
+                            { action: 'cancelInstall', show: false },
+                            { action: 'delete', show: true },
+                            { action: 'status', show: true },
                         ])
                     }
                 })
@@ -345,31 +285,13 @@ $(document).ready(function(){
                 },function(data){
                     if(data.ok){
                         toggleCardButtons(card,[
-                            {
-                                action: 'install',
-                                show: true,
-                            },
-                            {
-                                action: 'test',
-                                show: true,
-                            },
+                            { action: 'install', show: true },
+                            { action: 'test', show: true },
                             { el: '.command-line', show: false },
-                            {
-                                action: 'cancelInstall',
-                                show: false,
-                            },
-                            {
-                                action: 'cancelTest',
-                                show: false,
-                            },
-                            {
-                                action: 'delete',
-                                show: true,
-                            },
-                            {
-                                action: 'status',
-                                show: true,
-                            },
+                            { action: 'cancelInstall', show: false },
+                            { action: 'cancelTest', show: false },
+                            { action: 'delete', show: true },
+                            { action: 'status', show: true },
                         ])
                     }
                 })
@@ -435,23 +357,12 @@ $(document).ready(function(){
                 drawModuleBlock(theModule)
                 if(theModule.installerRunning){
                     toggleCardButtons(card,[
-                        {
-                            action: 'install',
-                            show: false,
-                        },
+                        { action: 'install', show: false },
+                        { action: 'test',show: false },
                         { el: '.command-line', show: true },
-                        {
-                            action: 'cancelInstall',
-                            show: true,
-                        },
-                        {
-                            action: 'delete',
-                            show: false,
-                        },
-                        {
-                            action: 'status',
-                            show: false,
-                        },
+                        { action: 'cancelInstall', show: true },
+                        { action: 'delete', show: false },
+                        { action: 'status', show: false },
                     ])
                 }
             }
@@ -490,31 +401,13 @@ $(document).ready(function(){
                             var isTest = data.process === 'test-stdout'
                             var card = $(`[package-name="${name}"]`)
                             toggleCardButtons(card,[
-                                {
-                                    action: 'install',
-                                    show: true,
-                                },
-                                {
-                                    action: 'test',
-                                    show: true,
-                                },
+                                { action: 'install', show: true },
+                                { action: 'test', show: true },
                                 { el: '.command-line', show: false },
-                                {
-                                    action: 'cancelInstall',
-                                    show: false,
-                                },
-                                {
-                                    action: 'cancelTest',
-                                    show: false,
-                                },
-                                {
-                                    action: 'delete',
-                                    show: true,
-                                },
-                                {
-                                    action: 'status',
-                                    show: true,
-                                },
+                                { action: 'cancelInstall', show: false },
+                                { action: 'cancelTest', show: false },
+                                { action: 'delete', show: true },
+                                { action: 'status', show: true },
                             ])
                         }
                     break;
