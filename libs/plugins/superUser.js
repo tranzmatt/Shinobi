@@ -3,6 +3,7 @@ const express = require('express')
 const unzipper = require('unzipper')
 const spawn = require('child_process').spawn
 const exec = require('child_process').execSync
+const treekill = require('tree-kill');
 const {
   Worker
 } = require('worker_threads');
@@ -423,7 +424,7 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
             const cancelInstall = req.body.cancelInstall === 'true' ? true : false
             const response = {ok: true}
             if(runningInstallProcesses[packageName] && cancelInstall){
-                runningInstallProcesses[packageName].kill('SIGTERM')
+                treekill(runningInstallProcesses[packageName].pid)
             }else if(cancelInstall){
                 // response.msg = ''
             }else{
@@ -445,7 +446,7 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
             const scriptName = req.body.scriptName
             const response = {ok: true}
             if(runningInstallProcesses[packageName]){
-                runningInstallProcesses[packageName].kill('SIGTERM')
+                treekill(runningInstallProcesses[packageName].pid)
             }else{
                 const error = await runModuleCommand(packageName,scriptName)
                 if(error){
