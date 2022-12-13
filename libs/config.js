@@ -36,6 +36,7 @@ module.exports = function(s){
     if(config.cron.interval === undefined)config.cron.interval=1;
     if(config.databaseType === undefined){config.databaseType='mysql'}
     if(config.pluginKeys === undefined)config.pluginKeys={};
+    if(config.enableFaceManager === undefined)config.enableFaceManager=false;
     if(config.databaseLogs === undefined){config.databaseLogs=false}
     if(config.useUTC === undefined){config.useUTC=false}
     if(config.iconURL === undefined){config.iconURL = "https://shinobi.video/libs/assets/icon/apple-touch-icon-152x152.png"}

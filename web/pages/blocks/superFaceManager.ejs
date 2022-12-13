@@ -1,0 +1,30 @@
+<div class="row">
+    <form class="form-group-group card bg-dark red mt-1" id="faceManagerUploadForm">
+        <div class="card-body">
+            <div class="form-group">
+                <span class="badge badge-primary"><%- lang['Face Name'] %></span>
+            </div>
+            <div class="form-group">
+                <input placeholder="<%- lang['Face Name'] %>" class="form-control form-control-lg" name="faceName" id="faceNameField" style="border-radius: .3rem;" />
+            </div>
+            <div class="form-group">
+                <input type="file" id="fileinput" name="files" required multiple="multiple" accept="image/jpeg, image/png" />
+            </div>
+            <div>
+                <button type="submit" class="btn btn-round btn-primary mb-0" id="submitUpload"><i class="fa fa-upload"></i> <%- lang['Click to Upload Images'] %> (JPEG / PNG)</button>
+            </div>
+            <div class="success" id="faceManagerUploadStatus">
+                <span class="badge bg-light badge-success"><%- lang['Images Sent'] %></span>
+            </div>
+        </div>
+    </form>
+    <div class="card-body">
+        <ul class="nav nav-pills" id="faceNvigationPanel"></ul>
+
+        <div style="padding-top: 20px;">
+            <div class="row" id="faceImageList"></ul>
+        </div>
+    </div>
+</div>
+
+<script src="<%-window.libURL%>assets/js/super.faceManager.js" type="text/javascript"></script>
