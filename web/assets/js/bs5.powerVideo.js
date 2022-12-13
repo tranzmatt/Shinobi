@@ -61,7 +61,7 @@ $(document).ready(function(e){
         //     }
         // });
         var html = ``
-        $.each(loadedMonitors,function(n,monitor){
+        $.each(getLoadedMonitorsAlphabetically(),function(n,monitor){
             html += `<div class="flex-row d-flex">
                 <div class="flex-grow-1 p-2">${monitor.name}</div>
                 <div class="p-2 text-right"><small>${monitor.host}</small></div>

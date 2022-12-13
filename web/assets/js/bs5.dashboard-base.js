@@ -726,10 +726,22 @@ function permissionCheck(toCheck,monitorId){
     }
     return false
 }
-
+function getLoadedMonitorsAlphabetically(){
+    return Object.values(loadedMonitors).sort(function( a, b ) {
+        const aName = a.name.toLowerCase()
+        const bName = b.name.toLowerCase()
+        if ( aName < bName ){
+            return -1;
+        }
+        if ( aName > bName ){
+            return 1;
+        }
+        return 0;
+    });
+}
 function drawMonitorListToSelector(jqTarget,selectFirst,showId,addAllMonitorsOption){
     var html = ''
-    $.each(loadedMonitors,function(n,v){
+    $.each(getLoadedMonitorsAlphabetically(),function(n,v){
         html += createOptionHtml({
             value: v.mid,
             label: v.name + (showId === 'host' ? ` (${v.host})` : showId ? ` (${v.mid})` : ''),
