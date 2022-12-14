@@ -7,6 +7,7 @@
     "key": "DeepStack-Face",
     "mode": "client",
     "type": "detector",
+    "fullyControlledByFaceManager": false,
     "deepStack": {
        "host": "HOSTNAME OR IP",
        "port": 5000,
