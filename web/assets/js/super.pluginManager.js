@@ -29,7 +29,7 @@ $(document).ready(function(){
             existingElement.find('.title').text(humanName)
             existingElement.find('[plugin-manager-action="status"]').text(!module.config.enabled ? lang.Enable : lang.Disable)
         }else{
-            var addCmdButtons = additionalCommands.length > 0 ? `<div class="dropdown d-inline-block">
+            var addCmdButtons = additionalCommands.length > 0 ? `<div class="dropdown d-inline-block command-buttons">
               <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" id="dmb-${module.name}" data-bs-toggle="dropdown" aria-expanded="false">
                 ${lang['Commands']}
               </button>
@@ -55,15 +55,13 @@ $(document).ready(function(){
                                 <a class="btn btn-sm btn-default" plugin-manager-action="status">${!module.config.enabled ? lang.Enable : lang.Disable}</a>
                                 <a class="btn btn-sm btn-danger" plugin-manager-action="delete">${lang.Delete}</a>
                                 <a class="btn btn-sm btn-warning" plugin-manager-action="editConfig">${lang[`Edit Configuration`]}</a>
-                            </div>
-                            <form style="display:none" class="command-line row mb-3" plugin-manager-command-line>
-                                <div class="form-group mb-0">
+                                <form style="display:none" class="command-line row mb-3" plugin-manager-command-line>
                                     <div class="input-group">
                                       <input name="cmd" type="text" class="form-control form-control-sm" placeholder="Type and Press Enter to Send Command">
                                       <button type="submit" class="btn btn-sm btn-primary m-0">${lang.Run}</button>
                                     </div>
-                                </div>
-                            </form>
+                                </form>
+                            </div>
                             <div class="install-output row">
                                 <div class="col-md-6 pr-2 mb-2"><pre class="install-output-stdout text-white mb-0"></pre></div>
                                 <div class="col-md-6 pl-2 mb-2"><pre class="install-output-stderr text-white mb-0"></pre></div>
@@ -178,7 +176,7 @@ $(document).ready(function(){
             }else{
                 el = card.find(`[plugin-manager-action="${button.action}"]`)
             }
-            el[button.show ? 'show' : 'hide']()
+            el.removeClass(button.show ? 'd-none' : 'd-inline-block').addClass(button.show ? 'd-inline-block' : 'd-none')
         })
     }
     function appendLoggerData(text,outputEl){
@@ -215,6 +213,8 @@ $(document).ready(function(){
                         toggleCardButtons(card,[
                             { action: 'install', show: false },
                             { el: '.command-line', show: true },
+                            { el: '.command-buttons', show: false },
+                            { action: 'editConfig', show: false },
                             { action: 'cancelInstall', show: true },
                             { action: 'delete', show: false },
                             { action: 'status', show: false },
@@ -228,6 +228,8 @@ $(document).ready(function(){
                         toggleCardButtons(card,[
                             { action: 'install', show: false },
                             { el: '.command-line', show: true },
+                            { el: '.command-buttons', show: false },
+                            { action: 'editConfig', show: false },
                             { action: 'cancelInstall', show: true },
                             { action: 'delete', show: false },
                             { action: 'status', show: false },
@@ -244,6 +246,8 @@ $(document).ready(function(){
                         toggleCardButtons(card,[
                             { action: 'install', show: true },
                             { el: '.command-line', show: false },
+                            { el: '.command-buttons', show: true },
+                            { action: 'editConfig', show: true },
                             { action: 'cancelInstall', show: false },
                             { action: 'delete', show: true },
                             { action: 'status', show: true },
@@ -314,6 +318,8 @@ $(document).ready(function(){
                     toggleCardButtons(card,[
                         { action: 'install', show: false },
                         { el: '.command-line', show: true },
+                        { el: '.command-buttons', show: false },
+                        { action: 'editConfig', show: false },
                         { action: 'cancelInstall', show: true },
                         { action: 'delete', show: false },
                         { action: 'status', show: false },
@@ -332,11 +338,24 @@ $(document).ready(function(){
         pluginDownloadForm.find(`[name="packageRoot"]`).val(packageRoot)
         pluginDownloadForm.submit()
     })
+    function getObjectAlphabetically(theObject,key){
+        return Object.values(theObject).sort(function( a, b ) {
+            const aName = new Date(a[key]).getTime()
+            const bName = new Date(b[key]).getTime()
+            if ( aName < bName ){
+                return -1;
+            }
+            if ( aName > bName ){
+                return 1;
+            }
+            return 0;
+        });
+    }
     setTimeout(function(){
         getModules(function(data){
             loadedModules = data.modules
             console.log(loadedModules)
-            $.each(data.modules,function(n,module){
+            $.each(getObjectAlphabetically(data.modules,'created'),function(n,module){
                 drawModuleBlock(module)
             })
         })
@@ -355,6 +374,8 @@ $(document).ready(function(){
                             toggleCardButtons(card,[
                                 { action: 'install', show: true },
                                 { el: '.command-line', show: false },
+                                { el: '.command-buttons', show: true },
+                                { action: 'editConfig', show: true },
                                 { action: 'cancelInstall', show: false },
                                 { action: 'delete', show: true },
                                 { action: 'status', show: true },
