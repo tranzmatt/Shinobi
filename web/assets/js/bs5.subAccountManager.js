@@ -251,6 +251,17 @@ $(document).ready(function(){
         </div>`
         currentlyActiveUsersList.html(html)
     }
+    function resetAccountForm(){
+        permissionsSection.find('[detail]').each(function(n,v){
+            var el = $(v)
+            var key = el.attr('detail')
+            var defaultValue = el.attr('data-default')
+            el.val(defaultValue)
+        })
+        drawSelectableForPermissionForm()
+        setSubmitButtonState(lang['Add New'],'plus')
+        theWindowForm.find('input').val('')
+    }
     //add new
     submitButtons.click(function(){
         theWindowForm.submit()
@@ -259,15 +270,15 @@ $(document).ready(function(){
         e.preventDefault();
         var formValues = getCompleteForm()
         var uid = formValues.uid
-        console.log(formValues)
         if(formValues.uid){
-            console.log('edit')
             editSubaccount(uid,formValues,function(data){
                 console.log(data)
             })
         }else{
             addSubAccount(formValues,function(data){
-                console.log(data)
+                if(data.ok){
+                    resetAccountForm()
+                }
             })
         }
         return false;
@@ -285,17 +296,7 @@ $(document).ready(function(){
         openSubAccountEditor(uid)
         setSubmitButtonState(lang['Save Changes'],'check')
     })
-    theWindow.on('click','.reset-form',function(e){
-        permissionsSection.find('[detail]').each(function(n,v){
-            var el = $(v)
-            var key = el.attr('detail')
-            var defaultValue = el.attr('data-default')
-            el.val(defaultValue)
-        })
-        drawSelectableForPermissionForm()
-        setSubmitButtonState(lang['Add New'],'plus')
-        theWindowForm.find('[name="pass"],[name="password_again"]').val('')
-    })
+    theWindow.on('click','.reset-form',resetAccountForm)
 
     permissionsSection.on('click','[check]',function(e){
         $(this).parents('.form-group-group').find('select').val($(this).attr('check')).first().change()
@@ -312,6 +313,9 @@ $(document).ready(function(){
         }else{
             el.show()
         }
+    })
+    addOnTabOpen('subAccountManager', function () {
+        resetAccountForm()
     })
     onWebSocketEvent(function(d){
         switch(d.f){
