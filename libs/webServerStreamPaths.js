@@ -61,6 +61,7 @@ module.exports = function(s,config,lang,app){
                         details: {},
                     };
                     s.renderPage(req,res,config.renderPaths.embed,{
+                        forceUrlPrefix: req.query.host || '',
                         data: req.params,
                         protocol: req.protocol,
                         baseUrl: req.protocol+'://'+req.hostname,
