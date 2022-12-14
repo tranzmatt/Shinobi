@@ -11,6 +11,7 @@ module.exports = function(s,config,lang,getSnapshot){
                 let mqttEndpoint = options.host
                 const username = options.username || ''
                 const password = options.password || ''
+                const clientId = options.clientId || `shinobi_${Math.random().toString(16).substr(2, 8)}`
                 const subKey = options.subKey
                 const pubKey = options.pubKey
                 const groupKey = options.ke
@@ -32,7 +33,7 @@ module.exports = function(s,config,lang,getSnapshot){
                     clean: true,
                     username: username,
                     password: password,
-                    clientId: `shinobi_${Math.random().toString(16).substr(2, 8)}`,
+                    clientId: clientId,
                     reconnectPeriod: 10000, // 10 seconds
                 });
                 client.on('reconnect', (e) => mqttUserLog(`MQTT Reconnected`))
@@ -182,6 +183,7 @@ module.exports = function(s,config,lang,getSnapshot){
                             mqttSubs[mqttSubId].client = createMqttSubscription({
                                 username: row.username,
                                 password: row.password,
+                                clientId: row.clientId,
                                 host: row.host,
                                 pubKey: row.pubKey,
                                 ke: groupKey,
