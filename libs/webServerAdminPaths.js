@@ -668,6 +668,4 @@ module.exports = function(s,config,lang,app){
             }
         },res,req)
     })
-
-    require('./faceManager.js')(s,config,lang,app,null);
 }

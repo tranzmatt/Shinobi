@@ -1,5 +1,5 @@
 //
-// Shinobi - DeepStack Face Recognition Plugin
+// Shinobi - DeepStack Object Detection Plugin
 // Copyright (C) 2021 Elad Bar
 //
 // Base Init >>
@@ -113,8 +113,7 @@ const initialize = () => {
         type: detectionType,
         active: false,
         baseUrl: baseUrl,
-        apiKey: config.deepStack.apiKey,
-        jobs: []
+        apiKey: config.deepStack.apiKey
 	};
 
     if(detectionType === DETECTOR_TYPE_FACE) {
@@ -174,7 +173,7 @@ const initialize = () => {
     });
 };
 
-const processImage = (imageB64, d, tx, frameLocation, callback) => {
+const processImage = (frameBuffer, d, tx, frameLocation, callback) => {
 	if(!detectorSettings.active) {
         return;
     }
@@ -196,15 +195,11 @@ const processImage = (imageB64, d, tx, frameLocation, callback) => {
                 res.duration = getDuration(requestTime);
             }
 
-            onImageProcessed(d, tx, err, res, body, imageB64);
+            onImageProcessed(d, tx, err, res, body, frameBuffer);
 
             fs.unlinkSync(frameLocation);
-
-            removeJob(d.ke, d.id);
 		});        
 	}catch(ex){
-        removeJob(d.ke, d.id);
-
 		logError(`Failed to process image, Error: ${ex}`);
 
         if(fs.existsSync(frameLocation)) {
@@ -214,37 +209,9 @@ const processImage = (imageB64, d, tx, frameLocation, callback) => {
 
 	callback();
 };
-const getJobKey = (groupId, monitorId) => {
-    const jobKey = `${groupId}_${monitorId}`;
-
-    return jobKey;
-}
-
-const addJob = (groupId, monitorId) => {
-    const jobKey = getJobKey(groupId, monitorId);
-    const jobExists = detectorSettings.jobs.includes(jobKey);
-
-    if(!jobExists) {
-        detectorSettings.jobs.push(jobKey);
-    }    
-
-    return !jobExists;
-}
-
-const removeJob = (groupId, monitorId) => {
-    const jobKey = getJobKey(groupId, monitorId);
-
-    detectorSettings.jobs = detectorSettings.jobs.filter(j => j !== jobKey);
-}
 
 const detectObject = (frameBuffer, d, tx, frameLocation, callback) => {
 	if(!detectorSettings.active) {
-        return;
-    }   
-    
-    const jobCreated = addJob(d.ke, d.id);
-
-    if(!jobCreated) {
         return;
     }
 
@@ -254,27 +221,21 @@ const detectObject = (frameBuffer, d, tx, frameLocation, callback) => {
 
     d.dir = `${s.dir.streams}${d.ke}/${d.id}/`;
     
-    frameLocation = `${d.dir}${s.gid(5)}.jpg`;
+    const filePath = `${d.dir}${s.gid(5)}.jpg`;
 
     if(!fs.existsSync(d.dir)) {
         fs.mkdirSync(d.dir, dirCreationOptions);
     }
     
-    fs.writeFile(frameLocation, frameBuffer, function(err) {
+    fs.writeFile(filePath, frameBuffer, function(err) {
         if(err) {
-            removeJob(d.ke, d.id);
-
             return s.systemLog(err);
         }
     
         try {
-            const imageB64 = frameBuffer.toString('base64');
-
-            processImage(imageB64, d, tx, frameLocation, callback);
+            processImage(frameBuffer, d, tx, filePath, callback);
 
         } catch(ex) {
-            removeJob(d.ke, d.id);
-
             logError(`Detector failed to parse frame, Error: ${ex}`);
         }
     });
@@ -316,7 +277,7 @@ const onFaceListResult = (err, res, body) => {
     }
 };
 
-const onImageProcessed = (d, tx, err, res, body, imageStream) => {
+const onImageProcessed = (d, tx, err, res, body, frameBuffer) => {
     const duration = !!res ? res.duration : 0;
 
     let objects = [];
@@ -336,14 +297,12 @@ const onImageProcessed = (d, tx, err, res, body, imageStream) => {
             if(predictions !== null && predictions.length > 0) {
                 objects = predictions.map(p => getDeepStackObject(p)).filter(p => !!p);
 
-                if(objects.length === 0) {
-                    logInfo(`Processed image for ${detectorSettings.type} on monitor ${d.id} returned no results, Response time: ${duration} ms`);
-                } else {
+                if(objects.length > 0) {
                     const identified = objects.filter(p => p.tag !== FACE_UNKNOWN);
                     const unknownCount = objects.length - identified.length;
                     
                     if(unknownCount > 0) {
-                        logInfo(`{d.id}$ detected ${unknownCount} unknown ${detectorSettings.type}s, Response time: ${duration} ms`);
+                        logInfo(`${d.id} detected ${unknownCount} unknown ${detectorSettings.type}s, Response time: ${duration} ms`);
                     }
 
                     if(identified.length > 0) {
@@ -375,19 +334,17 @@ const onImageProcessed = (d, tx, err, res, body, imageStream) => {
                             matrices: objects,
                             imgHeight: width,
                             imgWidth: height,
-                            time: duration,
-                            imageStream: imageStream
-                        }                        
+                            time: duration
+                        },
+                        frame: frameBuffer          
                     };
 
                     tx(eventData);
                 }
             }
-        } else {            
-            logWarn(`Processed image for ${detectorSettings.type} on monitor ${d.id} failed, Reason: ${response.error}, Response time: ${duration} ms`);
         }
     } catch(ex) {
-        logError(`Error while processing image, Error: ${ex} | ${err}, Response time: ${duration} ms, Body: ${body}`);
+        logError(`Error while processing image, Error: ${ex} | ${err},, Response time: ${duration} ms, Body: ${body}`);
     }
 
     return objects

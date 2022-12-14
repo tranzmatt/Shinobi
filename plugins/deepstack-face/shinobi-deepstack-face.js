@@ -1,4 +1,3 @@
-//
 // Shinobi - DeepStack Face Recognition Plugin
 // Copyright (C) 2021 Elad Bar
 //
@@ -51,8 +50,6 @@ if(s === null) {
 
 let detectorSettings = null;
 
-const DELIMITER = "___";
-
 const DETECTOR_TYPE_FACE = 'face';
 const DETECTOR_TYPE_OBJECT = 'object';
 
@@ -63,13 +60,10 @@ const DETECTOR_CONFIGUTATION = {
     face: {
         detectEndpoint: '/vision/face/recognize',
         startupEndpoint: '/vision/face/list',
-        registerEndpoint: '/vision/face/register',
-        deleteEndpoint: '/vision/face/delete',
         key: 'userid'
     },
     object: {
         detectEndpoint: '/vision/detection',
-        startupEndpoint: '/vision/detection',
         key: 'label'
     }
 }
@@ -108,200 +102,74 @@ const postMessage = (data) => {
 const initialize = () => {
     const deepStackProtocol = PROTOCOLS[config.deepStack.isSSL];
     
-    const baseUrl = `${deepStackProtocol}://${config.deepStack.host}:${config.deepStack.port}/v1`;
+    baseUrl = `${deepStackProtocol}://${config.deepStack.host}:${config.deepStack.port}/v1`;
     
     const detectionType = config.plug.split("-")[1].toLowerCase();
     const detectorConfig = DETECTOR_CONFIGUTATION[detectionType];
     const detectorConfigKeys = Object.keys(detectorConfig);
+    
     detectorSettings = {
         type: detectionType,
         active: false,
         baseUrl: baseUrl,
-        apiKey: config.deepStack.apiKey,
-        fullyControlledByFaceManager: config.fullyControlledByFaceManager || false,
-        faces: {
-            shinobi: null,
-            server: null,
-            legacy: null
-        },
-        facesPath: null,
-        eventMapping: {
-            "recompileFaceDescriptors": onRecompileFaceDescriptors
-        }
+        apiKey: config.deepStack.apiKey
 	};
-    
+
+    if(detectionType === DETECTOR_TYPE_FACE) {
+        detectorSettings["registeredPersons"] = config.persons === undefined ? [] : config.persons;
+    }
+
 	detectorConfigKeys.forEach(k => detectorSettings[k] = detectorConfig[k]);
 
-    const startupRequestData = getFormData(detectorSettings.startupEndpoint);
+    const testRequestData = getFormData(detectorSettings.detectEndpoint);
     
-    request.post(startupRequestData, handleStartupResponse);
-};
-
-const getJobKey = (groupId, monitorId) => {
-    const jobKey = `${groupId}_${monitorId}`;
-
-    return jobKey;
-}
-
-const addJob = (groupId, monitorId) => {
-    const jobKey = getJobKey(groupId, monitorId);
-    const jobExists = detectorSettings.jobs.includes(jobKey);
-
-    if(!jobExists) {
-        detectorSettings.jobs.push(jobKey);
-    }    
-
-    return !jobExists;
-}
-
-const removeJob = (groupId, monitorId) => {
-    const jobKey = getJobKey(groupId, monitorId);
-
-    detectorSettings.jobs = detectorSettings.jobs.filter(j => j !== jobKey);
-}
-
-const handleStartupResponse = (err, res, body) => {
-    try {
-        if(err) {
-            logError(`Failed to initialize ${config.plug} plugin, Error: ${err}`);
-
-        } else {
-            const response = JSON.parse(body);
+    request.post(testRequestData, (err, res, body) => {
+        try {
+            if(err) {
+                throw err;
+            }
             
+            const response = JSON.parse(body);
+                
             if(response.error) {
                 detectorSettings.active = !response.error.endsWith('endpoint not activated');
             } else {
                 detectorSettings.active = response.success;
             }
 
-            logInfo(`${config.plug} loaded, Configuration: ${JSON.stringify(detectorSettings)}`);
+            const detectorSettingsKeys = Object.keys(detectorSettings);
+			
+			const pluginMessageHeader = [];
+            pluginMessageHeader.push(`${config.plug} loaded`);
+
+			const configMessage = detectorSettingsKeys.map(k => `${k}: ${detectorSettings[k]}`);
+
+            const fullPluginMessage = pluginMessageHeader.concat(configMessage);
+
+            const pluginMessage = fullPluginMessage.join(", ");
+
+			logInfo(pluginMessage);
 
             if (detectorSettings.active) {
                 s.detectObject = detectObject;
 
-                if(detectorSettings.type === DETECTOR_TYPE_FACE) {
-                    onFaceListResult(err, res, body);
+                if(detectionType === DETECTOR_TYPE_FACE) {
+                    const requestData = getFormData(detectorSettings.startupEndpoint);
+                    const requestTime = getCurrentTimestamp();
+                    
+                    request.post(requestData, (errStartup, resStartup, bodyStartup) => {
+                        if (!!resStartup) {
+                            resStartup.duration = getDuration(requestTime);
+                        }
+
+                        onFaceListResult(errStartup, resStartup, bodyStartup);
+                    });
                 }
-            }  
+            }            
+        } catch(ex) {
+            logError(`Failed to initialize ${config.plug} plugin, Error: ${ex}`)
         }
-        
-                  
-    } catch(ex) {
-        logError(`Failed to initialize ${config.plug} plugin, Error: ${ex}`);
-    }
-};
-
-const registerFace = (serverFileName) => {
-    const facesPath = detectorSettings.facesPath;
-    const shinobiFileParts = serverFileName.split(DELIMITER);
-    const faceName = shinobiFileParts[0];
-    const image = shinobiFileParts[1];
-    
-    const frameLocation = `${facesPath}${faceName}/${image}`;
-
-    const imageStream = fs.createReadStream(frameLocation);
-        
-    const form = {
-        image: imageStream,
-        userid: serverFileName
-    };
-    
-    const requestData = getFormData(detectorSettings.registerEndpoint, form);
-
-    request.post(requestData, (err, res, body) => {
-        if (err) {
-            logError(`Failed to register face, Face: ${faceName}, Image: ${image}, Error: ${err}`);
-        } else {
-            logInfo(`Register face, Face: ${faceName}, Image: ${image}`);
-        }
-    });   
-};
-
-const unregisterFace = (serverFileName) => {
-    if (serverFileName === null) {
-        return;
-    }
-
-    const form = {
-        userid: serverFileName
-    };
-    
-    const requestData = getFormData(detectorSettings.deleteEndpoint, form);
-
-    request.post(requestData, (err, res, body) => {
-        if (err) {
-            logError(`Failed to delete face, UserID: ${serverFileName}, Error: ${err}`);
-        } else {
-            logInfo(`Deleted face, UserID: ${serverFileName}`);
-        }
-    });  
-};
-
-const getServerFileNameByShinobi = (name, image) => {
-    const fileName = `${name}${DELIMITER}${image}`;
-
-    return fileName;
-}
-
-const compareShinobiVSServer = () => {        
-    const allFaces = detectorSettings.faces;    
-    const shinobiFaces = allFaces.shinobi;
-    const serverFaces = allFaces.server;
-    const compareShinobiVSServerDelayID = detectorSettings.compareShinobiVSServerDelayID || null;
-    
-    if (compareShinobiVSServerDelayID !== null) {
-        clearTimeout(compareShinobiVSServerDelayID)
-    }
-
-    if(serverFaces === null || shinobiFaces === null) {
-        detectorSettings.compareShinobiVSServerDelayID = setTimeout(compareShinobiVSServer, 5000);
-        logWarn("AI Server not ready yet, will retry in 5 seconds");
-
-        return;
-    }
-
-    const shinobiFaceKeys = Object.keys(shinobiFaces);    
-
-    const shinobiFiles = shinobiFaceKeys.length === 0 ? 
-                            [] :
-                            shinobiFaceKeys
-                                .map(faceName => {
-                                    const value = shinobiFaces[faceName].map(image => getServerFileNameByShinobi(faceName, image));
-                            
-                                    return value;
-                                })
-                                .reduce((acc, item) => {
-                                    const result = [...acc, ...item];
-                                    
-                                    return result;
-                                });
-
-    const facesToRegister = shinobiFiles.filter(f => !serverFaces.includes(f));
-    const facesToUnregister = serverFaces.filter(f => !shinobiFiles.includes(f));
-    const allowUnregister =  detectorSettings.fullyControlledByFaceManager || false;
-
-    if(facesToRegister.length > 0) {
-        logInfo(`Registering the following faces: ${facesToRegister}`);
-        facesToRegister.forEach(f => registerFace(f));
-    }
-
-    if(facesToUnregister.length > 0) {
-        if(allowUnregister) {
-            logInfo(`Unregister the following faces: ${facesToUnregister}`);
-
-            facesToUnregister.forEach(f => unregisterFace(f));    
-        } else {        
-            logInfo(`Skip unregistering the following faces: ${facesToUnregister}`);
-
-            detectorSettings.faces.legacy = facesToUnregister;
-        }   
-    }
-
-    if(facesToRegister.length > 0 || (facesToUnregister.length > 0 && allowUnregister)) {
-        const startupRequestData = getFormData(detectorSettings.startupEndpoint);
-        
-        request.post(startupRequestData, onFaceListResult);
-    }    
+    });
 };
 
 const processImage = (frameBuffer, d, tx, frameLocation, callback) => {
@@ -329,12 +197,8 @@ const processImage = (frameBuffer, d, tx, frameLocation, callback) => {
             onImageProcessed(d, tx, err, res, body, frameBuffer);
 
             fs.unlinkSync(frameLocation);
-
-            removeJob(d.ke, d.id);
 		});        
-	} catch(ex) {
-        removeJob(d.ke, d.id);
-
+	}catch(ex){
 		logError(`Failed to process image, Error: ${ex}`);
 
         if(fs.existsSync(frameLocation)) {
@@ -350,37 +214,27 @@ const detectObject = (frameBuffer, d, tx, frameLocation, callback) => {
         return;
     }
 
-    const jobCreated = addJob(d.ke, d.id);
-
-    if(!jobCreated) {
-        return;
-    }
-
     const dirCreationOptions = {
         recursive: true
     };
 
     d.dir = `${s.dir.streams}${d.ke}/${d.id}/`;
     
-    const path = `${d.dir}${s.gid(5)}.jpg`;
+    const filePath = `${d.dir}${s.gid(5)}.jpg`;
 
     if(!fs.existsSync(d.dir)) {
         fs.mkdirSync(d.dir, dirCreationOptions);
     }
     
-    fs.writeFile(path, frameBuffer, function(err) {
+    fs.writeFile(filePath, frameBuffer, function(err) {
         if(err) {
-            removeJob(d.ke, d.id);
-
             return s.systemLog(err);
         }
     
         try {
-            processImage(frameBuffer, d, tx, path, callback);
+            processImage(frameBuffer, d, tx, filePath, callback);
 
         } catch(ex) {
-            removeJob(d.ke, d.id);
-
             logError(`Detector failed to parse frame, Error: ${ex}`);
         }
     });
@@ -403,6 +257,8 @@ const getDuration = (requestTime) => {
 };
 
 const onFaceListResult = (err, res, body) => {
+    const duration = !!res ? res.duration : 0;
+
     try {
         const response = JSON.parse(body);
 
@@ -410,22 +266,20 @@ const onFaceListResult = (err, res, body) => {
         const facesArr = response.faces;
         const faceStr = facesArr.join(",");
 
-        detectorSettings.faces.server = facesArr;
-
         if(success) {
-            logInfo(`DeepStack loaded with the following faces: ${faceStr}`);            
+            logInfo(`DeepStack loaded with the following faces: ${faceStr}, Response time: ${duration} ms`);
         } else {
-            logWarn(`Failed to connect to DeepStack server, Error: ${err}`);
+            logWarn(`Failed to connect to DeepStack server, Error: ${err}, Response time: ${duration} ms`);
         }
     } catch(ex) {
-        logError(`Error while connecting to DeepStack server, Error: ${ex} | ${err}`);
+        logError(`Error while connecting to DeepStack server, Error: ${ex} | ${err}, Response time: ${duration} ms`);
     }
 };
 
 const onImageProcessed = (d, tx, err, res, body, frameBuffer) => {
     const duration = !!res ? res.duration : 0;
 
-    const result = [];
+    let objects = [];
     
     try {
         if(err) {
@@ -440,13 +294,11 @@ const onImageProcessed = (d, tx, err, res, body, frameBuffer) => {
             const predictions = response.predictions;
     
             if(predictions !== null && predictions.length > 0) {
-                const predictionDescriptons = predictions.map(p => getPredictionDescripton(p)).filter(p => !!p);
+                objects = predictions.map(p => getDeepStackObject(p)).filter(p => !!p);
 
-                result.push(...predictionDescriptons);
-
-                if(predictionDescriptons.length > 0) {
-                    const identified = predictionDescriptons.filter(p => p.tag !== FACE_UNKNOWN);
-                    const unknownCount = predictionDescriptons.length - identified.length;
+                if(objects.length > 0) {
+                    const identified = objects.filter(p => p.tag !== FACE_UNKNOWN);
+                    const unknownCount = objects.length - identified.length;
                     
                     if(unknownCount > 0) {
                         logInfo(`${d.id} detected ${unknownCount} unknown ${detectorSettings.type}s, Response time: ${duration} ms`);
@@ -489,12 +341,12 @@ const onImageProcessed = (d, tx, err, res, body, frameBuffer) => {
                     tx(eventData);
                 }
             }
-        } 
+        }
     } catch(ex) {
         logError(`Error while processing image, Error: ${ex} | ${err},, Response time: ${duration} ms, Body: ${body}`);
     }
 
-    return result
+    return objects
 };
 
 const getFormData = (endpoint, additionalParameters) => {
@@ -519,7 +371,7 @@ const getFormData = (endpoint, additionalParameters) => {
     return requestData;
 };
 
-const getPredictionDescripton = (prediction) => {
+const getDeepStackObject = (prediction) => {
     if(prediction === undefined) {
         return null;
     }
@@ -544,40 +396,14 @@ const getPredictionDescripton = (prediction) => {
     };    
 
     if (detectorSettings.type === DETECTOR_TYPE_FACE) {
-        const legacyFaces = detectorSettings.faces.legacy || [];
+        const matchingPersons = detectorSettings.registeredPersons.filter(p => tag.startsWith(p))
+        const person = matchingPersons.length > 0 ? matchingPersons[0] : null;
 
-        if (legacyFaces.includes(tag)) {
-            const matchingPersons = detectorSettings.registeredPersons.filter(p => tag.startsWith(p))
-            obj.person = matchingPersons.length > 0 ? matchingPersons[0] : null;
-
-        } else {
-            const shinobiFileParts = tag.split(DELIMITER);
-            obj.person = shinobiFileParts[0];
-        }        
-    }    
+        obj["person"] = person;
+    }
+    
 
     return obj;
 };
-
-const onRecompileFaceDescriptors = (d) => {
-    if(detectorSettings.faces.shinobi !== d.faces) {
-        detectorSettings.faces.shinobi = d.faces;
-        detectorSettings.facesPath = d.path;
-        compareShinobiVSServer();
-        
-    }
-};
-
-s.MainEventController = (d,cn,tx) => {
-    const handler = detectorSettings.eventMapping[d.f];
-
-    if (handler !== undefined) {
-        try {
-            handler(d);              
-        } catch (error) {                
-            logError(`Failed to handle event ${d.f}, Error: ${error}`);
-        } 
-    }
-}
 
 initialize();
