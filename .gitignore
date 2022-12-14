@@ -12,3 +12,5 @@ shinobi.sqlite
 dist
 ._*
 generatedLanguageFiles
+faces
+unknownFaces
