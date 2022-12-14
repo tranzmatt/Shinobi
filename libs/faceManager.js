@@ -280,7 +280,7 @@ module.exports = (s, config, lang, app, io) => {
                     filesUploaded: uploaded
                 };
 
-                console.info(`Handle image uploading completed successfuly, Data: ${responseData}`);
+                console.info(`Handle image uploading completed successfuly, Data: ${JSON.stringify(responseData)}`);
 
                 res.json(responseData);
             } catch(err) {
