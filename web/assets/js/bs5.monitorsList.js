@@ -102,7 +102,7 @@ $(document).ready(function(){
     }
     function loadMonitorsFromMemory(options,callback){
         theList.empty();
-        $.each(loadedMonitors,function(n,row){
+        $.each(getLoadedMonitorsAlphabetically(),function(n,row){
             drawRowToList(row)
         })
     }

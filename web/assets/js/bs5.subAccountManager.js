@@ -152,9 +152,9 @@ $(document).ready(function(){
     ];
     var drawSelectableForPermissionForm = function(){
         var html = ''
-        $.each(loadedMonitors,function(n,monitor){
+        $.each(getLoadedMonitorsAlphabetically(),function(n,monitor){
             html += `<div class="form-group permission-view">`
-                html += `<div><label>${monitor.name} (${monitor.mid})</label></div>`
+                html += `<div><label class="mb-2">${monitor.name} (${monitor.mid})</label></div>`
                 html += `<div><select class="form-control" multiple monitor="${monitor.mid}">`
                     $.each(permissionTypeNames,function(n,permission){
                         html += `<option value="${permission.name}">${permission.label}</option>`
