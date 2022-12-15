@@ -535,6 +535,10 @@ module.exports = (s,config,lang,app,io) => {
             activeMonitor.eventBasedRecording.allowEnd = false;
             activeMonitor.eventBasedRecording.lastFileTime = `${fileTime}`;
             const runRecord = function(){
+                for (var i = 0; i < s.onEventBasedRecordingStartExtensions.length; i++) {
+                    const extender = s.onEventBasedRecordingStartExtensions[i]
+                    extender(monitorConfig)
+                }
                 var ffmpegError = ''
                 var error
                 var filename = fileTime + '.mp4'
