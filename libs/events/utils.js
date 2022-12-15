@@ -535,10 +535,6 @@ module.exports = (s,config,lang,app,io) => {
             activeMonitor.eventBasedRecording.allowEnd = false;
             activeMonitor.eventBasedRecording.lastFileTime = `${fileTime}`;
             const runRecord = function(){
-                for (var i = 0; i < s.onEventBasedRecordingStartExtensions.length; i++) {
-                    const extender = s.onEventBasedRecordingStartExtensions[i]
-                    extender(monitorConfig)
-                }
                 var ffmpegError = ''
                 var error
                 var filename = fileTime + '.mp4'
@@ -549,6 +545,10 @@ module.exports = (s,config,lang,app,io) => {
                     type: logTitleText,
                     msg: lang["Started"]
                 })
+                for (var i = 0; i < s.onEventBasedRecordingStartExtensions.length; i++) {
+                    const extender = s.onEventBasedRecordingStartExtensions[i]
+                    extender(monitorConfig,filename)
+                }
                 //-t 00:'+s.timeObject(new Date(detector_timeout * 1000 * 60)).format('mm:ss')+'
                 if(
                     monitorDetails.detector_buffer_acodec &&
