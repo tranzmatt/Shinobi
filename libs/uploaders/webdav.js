@@ -50,7 +50,7 @@ module.exports = function(s,config,lang){
     var unloadWebDavForUser = function(user){
         s.group[user.ke].webdav = null
     }
-    var deleteVideoFromWebDav = function(e,video,callback){
+    var deleteVideoFromWebDav = function(groupKey,video,callback){
         // e = user
         try{
             var videoDetails = JSON.parse(video.details)
@@ -58,10 +58,10 @@ module.exports = function(s,config,lang){
             var videoDetails = video.details
         }
         if(!videoDetails.location){
-            var prefix = s.addUserPassToUrl(s.checkCorrectPathEnding(s.group[e.ke].init.webdav_url),s.group[e.ke].init.webdav_user,s.group[e.ke].init.webdav_pass)
+            var prefix = s.addUserPassToUrl(s.checkCorrectPathEnding(s.group[groupKey].init.webdav_url),s.group[groupKey].init.webdav_user,s.group[groupKey].init.webdav_pass)
             videoDetails.location = video.href.replace(prefix,'')
         }
-        s.group[e.ke].webdav.unlink(videoDetails.location, function(err) {
+        s.group[groupKey].webdav.unlink(videoDetails.location, function(err) {
             if (err) console.log(videoDetails.location,err)
             callback()
         })
