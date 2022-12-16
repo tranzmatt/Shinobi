@@ -65,7 +65,7 @@ $(document).ready(function(e){
     })
     var getLiveStream = function(){
         var selectedMonitor = monitorsList.val()
-        liveStreamView.html(`<iframe src="${apiBaseUrl + '/embed/' + $user.ke + '/' + selectedMonitor + '/jquery|fullscreen'}"></iframe>`)
+        liveStreamView.html(`<iframe src="${apiBaseUrl + '/embed/' + $user.ke + '/' + selectedMonitor + '/jquery|fullscreen'}?host=${location.pathname}"></iframe>`)
         liveStreamView.find('iframe').width(playBackViewImage.width())
 
     }

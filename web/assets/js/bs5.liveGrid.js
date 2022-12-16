@@ -688,7 +688,7 @@ function popOutMonitor(monitorId){
         if(monitorPop){
             monitorPop.close()
         }
-        monitorPop = window.open(getApiPrefix() + '/embed/' + $user.ke + '/' + monitorId + '/fullscreen|jquery|relative|gui','pop_' + monitorId + $user.auth_token,'height='+img.height+',width='+img.width);
+        monitorPop = window.open(getApiPrefix() + '/embed/' + $user.ke + '/' + monitorId + '/fullscreen|jquery|relative|gui' + `?host=${location.pathname}`,'pop_' + monitorId + $user.auth_token,'height='+img.height+',width='+img.width);
     }
     if(loadedLiveGrids[monitorId]){
         getSnapshot(loadedMonitors[monitorId],function(url){
