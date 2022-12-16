@@ -125,7 +125,7 @@ $(document).ready(() => {
 
     const loadNewFaceItem = () => {
         const htmlContent =    `<div class="col-md-4 card-page-selection">
-                                    <div class="${definitions.Theme.isDark ? 'text-white' : 'text-dark'} p-3 mb-3 card shadow-sm btn-default" style="height: 300px;">
+                                    <div class="${definitions.Theme.isDark ? 'text-white' : 'text-dark'} p-3 mb-3 card shadow-sm btn-default" style="min-height: 300px;">
                                         <h5 class="mb-3 pb-3 <%- define.Theme.isDark ? 'text-white' : '' %> border-bottom-dotted border-color-green d-flex flex-row">
                                             <div style="flex:8">
                                                 ${lang.addImage} (JPEG / PNG)
@@ -188,7 +188,7 @@ $(document).ready(() => {
         const imageItemsDivs = getFaceImageItems(name);
 
         const htmlContent =    `<div data-mid="${name}" class="col-md-4 card-page-selection">
-                                    <div class="${definitions.Theme.isDark ? 'text-white' : 'text-dark'} p-3 mb-3 card shadow-sm btn-default" style="height: 300px;">
+                                    <div class="${definitions.Theme.isDark ? 'text-white' : 'text-dark'} p-3 mb-3 card shadow-sm btn-default" style="min-height: 300px;">
                                         <h5 class="container mb-3 pb-3 <%- define.Theme.isDark ? 'text-white' : '' %> border-bottom-dotted border-color-orange d-flex flex-row">
                                             <div style="flex:8" class="faceName" face="${name}">
                                                 ${name}
