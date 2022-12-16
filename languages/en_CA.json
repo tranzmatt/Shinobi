@@ -1750,6 +1750,7 @@
    "notificationDeleteImage": "Delete image [image] of [face]",
    "notificationDeleteFace": "Delete face [face] and all its images",
    "notificationMoveImage": "Move image [image] from [face] to [newFaceName]",
+   "notificationUploadImage": "Upload image to [face]",
    "addImage": "Add Image",
    "faceName": "Face name",
    "uploadImage": "Upload"
