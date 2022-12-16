@@ -1,12 +1,5 @@
 $(document).ready(() => {
-    //const faceManagerModal = $("#faceManager");
-    const faceImageList = $("#faceImageList");
-    const faceNvigationPanel = $("#faceNvigationPanel");
-
-    const faceManagerForm = $("#faceManagerUploadForm");
-    const faceNameField = $("#faceNameField");
-    const fileinput = $("#fileinput");
-    const faceManagerUploadStatus = $("#faceManagerUploadStatus");
+    const faceListRows = $('#faceListRows');
 
     const getUrl = (endpoint) => {
         const url = `${moduleData.baseUrl}${endpoint}`;
@@ -14,7 +7,39 @@ $(document).ready(() => {
         return url;
     };
 
-    const getFaceImages = () => {
+    const notify = (text, isError = false) => {
+        const notification = {
+            type: isError ? 'warning' : 'info',
+            title: isError ? lang.operationSuccess : lang.operationFailed,
+            text: text,
+        };
+
+        new PNotify(notification);
+
+        httpGetFaceImages();
+    }
+
+    const sendAJAXRequest = (requestData, notificationText) => {
+        try {
+            requestData.success = result => {
+                console.info(`Succesfully sent ${requestData.type} request to ${requestData.url}, Response: ${JSON.stringify(result)}`);
+
+                notify(notificationText);
+            };
+
+            requestData.error = result => {
+                console.error(`Failed to ${requestData.type} request to ${requestData.url}, Response: ${JSON.stringify(result)}`);
+
+                notify(notificationText, true);
+            };
+
+            $.ajax(requestData);
+        } catch (error) {
+            console.error(`Failed to ${requestData.type} request to ${requestData.url}, Error: ${error}`);
+        }  
+    };
+
+    const httpGetFaceImages = () => {
         const url = getUrl("s");
         
         $.get(url, response => {
@@ -23,25 +48,9 @@ $(document).ready(() => {
                 
                 onFaceImagesReterived();
             } else {
-                console.error(`Unable to reterive faces for Face Manager (${url}), Error: ${response}`);
+                console.error(`Unable to reterive faces for Face Manager (${url}), Error: ${response.msg}`);
             }
         });
-    };
-
-    const sendAJAXRequest = (requestData) => {
-        try {
-            requestData.success = result => {
-                console.info(`Succesfully sent ${requestData.type} request to ${requestData.url}, Response: ${JSON.stringify(result)}`);
-            };
-
-            requestData.error = result => {
-                console.error(`Failed to ${requestData.type} request to ${requestData.url}, Response: ${JSON.stringify(result)}`);
-            };
-
-            $.ajax(requestData);
-        } catch (error) {
-            console.error(`Failed to ${requestData.type} request to ${requestData.url}, Error: ${error}`);
-        }  
     };
 
     const deleteFaceImage = (name, image) => {
@@ -53,13 +62,20 @@ $(document).ready(() => {
                 type: "DELETE"
             };
 
-            sendAJAXRequest(requestData);
+            const textReplacements = {
+                "face": name,
+                "image": image
+            };
+
+            const text = getFixedText(lang.notificationDeleteImage, textReplacements);
+
+            sendAJAXRequest(requestData, text);
         } catch (error) {
             console.error(`Failed to delete image ${image} of face ${face}, Error: ${error}`);
         }  
     };
 
-    const deleteFaceFolder = (name) => {
+    const deleteFace = (name) => {
         try {
             const url = getUrl(`/${name}`);
 
@@ -68,9 +84,15 @@ $(document).ready(() => {
                 type: "DELETE"
             };
 
-            sendAJAXRequest(requestData);
+            const textReplacements = {
+                "face": name
+            };
+
+            const text = getFixedText(lang.notificationDeleteFace, textReplacements);
+
+            sendAJAXRequest(requestData, text);
         } catch (error) {
-            console.error(`Failed to delete face ${face}, Error: ${error}`);
+            console.error(`Failed to delete face ${name}, Error: ${error}`);
         }  
     };
 
@@ -81,136 +103,135 @@ $(document).ready(() => {
             const requestData = {
                 url: url,
                 type: "POST",
-                data: new FormData(faceManagerForm[0]),
+                data: new FormData($("#faceForm")[0]),
                 cache: false,
                 contentType: false,
                 processData: false,
             };
 
-            sendAJAXRequest(requestData);
+            const textReplacements = {
+                "face": name,
+                "newFaceName": newFaceName,
+                "image": image
+            };
+
+            const text = getFixedText(lang.notificationMoveImage, textReplacements);
+
+            sendAJAXRequest(requestData, text);
         } catch (error) {
             console.error(`Failed to move image ${image} of face ${face} to ${newFaceName}, Error: ${error}`);
         }  
     };
-    
-    const onFormSubmitted = () => {
-        try {
-            const name = faceNameField.val();
-            const url = getUrl(`/${name}`);
 
-            const requestData = {
-                url: url,
-                type: "POST",
-                data: new FormData(faceManagerForm[0]),
-                cache: false,
-                contentType: false,
-                processData: false
-            };
+    const loadNewFaceItem = () => {
+        const htmlContent =    `<div class="col-md-4 card-page-selection">
+                                    <div class="${definitions.Theme.isDark ? 'text-white' : 'text-dark'} p-3 mb-3 card shadow-sm btn-default" style="height: 300px;">
+                                        <h5 class="mb-3 pb-3 <%- define.Theme.isDark ? 'text-white' : '' %> border-bottom-dotted border-color-green d-flex flex-row">
+                                            <div style="flex:8">
+                                                ${lang.addImage} (JPEG / PNG)
+                                            </div>
+                                        </h5>
+                                        <form class="form-group-group card bg-dark red mt-1" id="faceForm">
+                                            <div class="card-body">
+                                                <div class="form-group">
+                                                    <input placeholder="${lang.faceName}" class="form-control" name="faceName" id="fieldFaceName" style="border-radius: .3rem;" />
+                                                </div>
+                                                <div class="form-group">
+                                                    <input type="file" id="fieldFaceImage" name="files" required multiple="multiple" accept="image/jpeg, image/png" />
+                                                </div>
+                                                <div>
+                                                    <button type="submit" class="btn btn-round btn-primary mb-0 uploadImage" id="submitForm"><i class="fa fa-upload"></i>
+                                                        ${lang.uploadImage}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </dorm>
+                                    </div>
+                                <div>`;
 
-            faceManagerUploadStatus.show();
-
-            sendAJAXRequest(requestData);
-
-            faceNameField.val("");
-            fileinput.val("");
-        } catch (error) {
-            console.error(`Failed to handle form submit event, Error: ${error}`);
-        }  
+        faceListRows.append(htmlContent);
     };
 
-    const getFaceNavigationItem = (name) => {
+    const getFaceImageItems = (name) => {
         const images = moduleData.faces[name];
         const imageCount = images.length;
+        const imageItems = [];
 
-        const navigationItem = `<li class="nav-item" face="${name}" style="display: flex; flex-direction: row; align-items: center;">
-                                    <a class="nav-link faceNavigation" data-toggle="tab" href="#" face="${name}" style="margin-left: 5px; margin-right: 5px;">${name} <span class="badge badge-dark badge-pill" style="margin-left: 5px; margin-right: 5px;">${imageCount}</span></a>                                    
-                                </li>`;
+        if(imageCount === 0) {
+            const noAvailableImages = "<div>No image is available</div>";
 
-        return navigationItem;
-    };
+            imageItems.push(noAvailableImages);
 
-    const getFaceDelete = (name) => {
-        const navigationItem = `<div style="padding: 5px;">
-                                    <a class="btn btn-sm btn-danger m-0 deleteFolder" style="margin-left: 5px; margin-right: 5px;" face="${name}"><i class="fa fa-trash"></i> ${lang.deleteFace}</a>
-                                </div>`;
+        } else {
+            const items = images.map(image => {
 
-        return navigationItem;
-    };
+                const imageUrl = getUrl(`/${name}/image/${image}`);
+                const imageItem =  `
+                                    <div class="col-md-3 col-sm-4 m-1">
+                                        <div class="col-md-1 face-image" style="background-image:url('${imageUrl}'); background-size: contain; background-repeat: no-repeat; padding: 2px; width: 100px; height: 100px; border-radius: 3px;" face="${name}" image="${image}">
+                                            <a class="btn btn-sm btn-danger m-0 deleteImage" face="${name}" image="${image}"><i class="fa fa-trash"></i></a>
+                                        </div>                                        
+                                    </div>`;
 
-    const getImageListItem = (name, image) => {
-        const imageUrl = getUrl(`/${name}/image/${image}`);
-        const imageItem = `<div class="col-md-2 face-image" style="background-image:url('${imageUrl}'); background-size: contain; background-repeat: no-repeat; width: 150px; height: 150px; padding: 2px;" face="${name}" image="${image}">
-                                <a class="btn btn-sm btn-danger m-0 deleteImage" face="${name}" image="${image}"><i class="fa fa-trash"></i></a>
-                            </div>`;
+                return imageItem;
+            });
 
-        return imageItem;
-    };
-
-    const onSelectedFaceChanged = () => {
-        try {
-            $(`#faceNvigationPanel li[face="${moduleData.selectedFace}"] a`).tab('show');
-
-            faceImageList.empty();
-            const images = moduleData.faces[moduleData.selectedFace];
-            const items = images.map(image => getImageListItem(moduleData.selectedFace, image));
-
-            const deleteFace = getFaceDelete(moduleData.selectedFace);
-            items.push(deleteFace);
-
-            const html = items.join("");
-            faceImageList.html(html);
-
-            activateDraggableImages();
-            prettySizeFaceImages();
-        } catch (error) {
-            console.error(`Failed to handle face [${moduleData.selectedFace}] selection changed event, Error: ${error}`);
+            imageItems.push(...items);
         }
+
+        const result = imageItems.join("");
+
+        return result;
+    }
+
+    const loadFaceItem = (name) => {
+        const imageItemsDivs = getFaceImageItems(name);
+
+        const htmlContent =    `<div data-mid="${name}" class="col-md-4 card-page-selection">
+                                    <div class="${definitions.Theme.isDark ? 'text-white' : 'text-dark'} p-3 mb-3 card shadow-sm btn-default" style="height: 300px;">
+                                        <h5 class="container mb-3 pb-3 <%- define.Theme.isDark ? 'text-white' : '' %> border-bottom-dotted border-color-orange d-flex flex-row">
+                                            <div style="flex:8" class="faceName" face="${name}">
+                                                ${name}
+                                            </div>
+                                            <div class="text-right">
+                                                <a class="btn btn-sm btn-danger m-0 deleteFace" face="${name}"><i class="fa fa-trash"></i></a>
+                                                <a class="btn btn-sm btn-primary m-0 addImage" face="${name}"><i class="fa fa-plus-square"></i></a>
+                                            </div>
+                                        </h5>
+                                        <div class="row">
+                                            ${imageItemsDivs}
+                                        </div>
+                                    </div>
+                                <div>`;
+                                
+        faceListRows.append(htmlContent);
+
+        activateDroppableContainer(name);
+        activateDraggableImages(name);
     };
 
     const onFaceImagesReterived = () => {
         try {
-            faceNvigationPanel.empty();
-            faceImageList.empty();
-            faceManagerUploadStatus.hide();
+            faceListRows.empty();
             
             const faceKeys = Object.keys(moduleData.faces);
 
             if(faceKeys.length > 0) {
-                if(moduleData.selectedFace === null) {
-                    moduleData.selectedFace = faceKeys[0];
-                }                
-
-                const items = faceKeys.map(name => getFaceNavigationItem(name));
-
-                const html = items.join("");
-
-                faceNvigationPanel.html(html);
-
-                faceKeys.forEach(name => activateDroppableContainer(name));
-
-                onSelectedFaceChanged();
+                loadNewFaceItem();
+                
+                faceKeys.forEach(name => loadFaceItem(name));
             }
+
+            onFormDataChanged();
             
         } catch (error) {
             console.error(`Failed to handle images reterived event, Error: ${error}`);
         }
     };
   
-    const drawFaceImages = (selectedFace = null) => {
-        try {
-            moduleData.selectedFace = selectedFace;
-            
-            onFormDataChanged();
-
-            getFaceImages();
-        } catch (error) {
-            console.error(`Failed to draw face images, Error: ${error}`);
-        }
-    };
-  
     const prettySizeFaceImages = () => {
         try {
-            const faceImagesRendered = faceImageList.find(".face-image");
+            const faceImagesRendered = faceListRows.find(".face-image");
             const faceHeight = faceImagesRendered.first().width();
             faceImagesRendered.css("height", faceHeight);
         } catch (error) {
@@ -219,7 +240,7 @@ $(document).ready(() => {
     };
 
     const activateDroppableContainer = (name) => {
-        const navigationItem = faceNvigationPanel.find(`.nav-item[face="${name}"]`);
+        const navigationItem = faceListRows.find(`.faceName[face="${name}"]`);
 
         try {
             navigationItem.droppable("destroy");
@@ -253,7 +274,7 @@ $(document).ready(() => {
     };
 
     const activateDraggableImages = (name) => {
-        const imageEls = faceImageList.find(`.face-image`);
+        const imageEls = faceListRows.find(`.face-image`);
         try {
             imageEls.draggable("destroy");
         } catch (err) {}
@@ -268,15 +289,6 @@ $(document).ready(() => {
             console.error(`Failed to activate draggable images, Face: ${name}, Error: ${error}`);
         }        
     };
-
-    $(window).resize(() => {
-        try {
-            prettySizeFaceImages();
-        } catch (error) {
-            console.error(`Failed to resize event, Error: ${error}`);
-        }
-        
-    });
     
     const getEventItemAttribute = (eventData, key, targetKey = null) => {
         if(targetKey === null) {
@@ -304,6 +316,53 @@ $(document).ready(() => {
         });
 
         return text;
+    };
+    
+    // Event Handlers    
+    const onFormSubmitted = (e) => {
+        try {
+            e.preventDefault();
+
+            const name = $("#fieldFaceName").val();
+            const url = getUrl(`/${name}`);
+
+            const requestData = {
+                url: url,
+                type: "POST",
+                data: new FormData($("#faceForm")[0]),
+                cache: false,
+                contentType: false,
+                processData: false
+            };
+
+            const textReplacements = {
+                "face": name
+            };
+
+            const text = getFixedText(lang.notificationUploadImage, textReplacements);
+
+            sendAJAXRequest(requestData, text);
+
+            $("#fieldFaceName").val("");
+            $("#fieldFaceImage").val("");
+        } catch (error) {
+            console.error(`Failed to handle form submit event, Error: ${error}`);
+        } 
+        
+        return false;
+    };
+
+    const onAddImageRequest = (e) => {
+        try {
+            e.preventDefault();
+            const faceName = getEventItemAttribute(e, "face");
+
+            $("#fieldFaceName").val(faceName);
+        } catch (error) {
+            console.error(`Failed to handle delete image request event, Error: ${error}`);
+        }  
+
+        return false;
     };
     
     const onDeleteImageRequest = (e) => {
@@ -357,7 +416,7 @@ $(document).ready(() => {
                     class: "btn-danger",
                     title: lang.Delete,
                 },
-                clickCallback: () => deleteFaceFolder(faceName)
+                clickCallback: () => deleteFace(faceName)
             };
 
             $.confirm.create(data);
@@ -370,12 +429,12 @@ $(document).ready(() => {
 
     const onFormDataChanged = () => {
         try {
-            const name = faceNameField.val();
-            const image = fileinput.val();
+            const name = $("#fieldFaceName").val();
+            const image = $("#fieldFaceImage").val();
 
             const enableSubmit = name !== undefined && name !== null && name.length > 0 && image !== undefined && image !== null && image.length > 0;
-
-            $("#submitUpload").prop('disabled', !enableSubmit);
+            
+            $("#submitForm").prop('disabled', !enableSubmit);
         } catch (error) {
             console.error(`Failed to handle image browsing, Error: ${error}`);
         }        
@@ -383,7 +442,7 @@ $(document).ready(() => {
     
     const onTabOpened = () => {
         try {
-            drawFaceImages();
+            httpGetFaceImages();
         } catch (error) {
             console.error(`Failed to handle tab opened event, Error: ${error}`);
         }          
@@ -403,32 +462,11 @@ $(document).ready(() => {
         onFaceImagesReterived();
     };
 
-    const onFaceFolderDeleted = (d) => {
-        drawFaceImages();
+    const onFaceDataChanged = (d) => {
+        httpGetFaceImages();
     };
 
-    const onFaceImageDeleted = (d) => {
-        drawFaceImages(moduleData.selectedFace);
-    };
-
-    const onFaceImageUploaded = (d) => {
-        drawFaceImages(d.faceName);
-    };
-
-    const moduleData = {
-        baseUrl: null,
-        faces: {},
-        selectedFace: null,
-        eventMapper: {
-            "init_success": onInitSuccess,
-            "recompileFaceDescriptors": onRecompileFaceDescriptors,
-            "faceFolderDeleted": onFaceFolderDeleted,
-            "faceImageDeleted": onFaceImageDeleted,
-            "faceImageUploaded": onFaceImageUploaded
-        }
-    };
-
-    onWebSocketEvent = d => {
+    const onWebSocketEvent = d => {
         const handler = moduleData.eventMapper[d.f];
 
         if (handler !== undefined) {
@@ -440,44 +478,54 @@ $(document).ready(() => {
                 console.error(`Failed to handle event ${d.f}, Error: ${error}`);
             } 
         }
-    };    
+    };
 
-    // Upload image 
-    faceManagerForm.submit(() => {
-        onFormSubmitted();
-
-        return false;
+    faceListRows.on("click", ".uploadImage", e => {
+        return onFormSubmitted(e); 
     });
 
-    $("div").on("click", ".deleteFolder", e => {
+    faceListRows.on("click", ".deleteFace", e => {
         onDeleteFaceRequest(e);
     });
 
-    faceImageList.on("click", ".deleteImage", e => {
-        onDeleteImageRequest(e);
+    faceListRows.on("click", ".addImage", e => {
+        onAddImageRequest(e);        
     });
 
-    faceNameField.change(() => {
+    faceListRows.on("click", ".deleteImage", e => {
+        onDeleteImageRequest(e);        
+    });
+
+    faceListRows.on("change", "#fieldFaceName", e => {
         onFormDataChanged();
     });
 
-    fileinput.change(() => {
+    faceListRows.on("change", "#fieldFaceImage", e => {
         onFormDataChanged();
     });
 
-    faceNvigationPanel.on('click', ".faceNavigation", e => {
-        const faceName = getEventItemAttribute(e, "face");
-        
-        if(faceName !== moduleData.selectedFace) {
-            moduleData.selectedFace = faceName;
-
-            onSelectedFaceChanged();
+    $(window).resize(() => {
+        try {
+            prettySizeFaceImages();
+        } catch (error) {
+            console.error(`Failed to resize event, Error: ${error}`);
         }
-
         
     });
+
+    const moduleData = {
+        baseUrl: null,
+        faces: {},
+        eventMapper: {
+            "init_success": onInitSuccess,
+            "recompileFaceDescriptors": onRecompileFaceDescriptors,
+            "faceFolderDeleted": onFaceDataChanged,
+            "faceImageDeleted": onFaceDataChanged,
+            "faceImageUploaded": onFaceDataChanged
+        }
+    };
 
     addOnTabOpen('faceManager', onTabOpened);
 
-    onWebSocketEventFunctions.push(onWebSocketEvent);
+    onWebSocketEventFunctions.push(onWebSocketEvent);    
 });

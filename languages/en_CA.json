@@ -1740,14 +1740,17 @@
    "Z-Wave Manager": "Z-Wave Manager",
    "Z-Wave": "Z-Wave",
    "Primary":"Primary",
-   "Upload Images": "Upload Images",
-   "Images Sent": "Images Sent",
-   "Click to Upload Images": "Click to Upload Images",
-   "Face Name": "Face Name",
    "faceManager": "Face Manager",
-   "Face Manager": "Face Manager",
    "deleteFace": "Delete Face",
    "deleteFaceText": "Are you sure you want to delete ALL the images for this face [face]? they will not be recoverable.",
    "deleteImage": "Delete Image",
-   "deleteImageText": "Are you sure you want to delete this image [image] of [face]? it will not be recoverable."
+   "deleteImageText": "Are you sure you want to delete this image [image] of [face]? it will not be recoverable.",
+   "operationFailed": "Operation failed",
+   "operationSuccess": "Operation completed successfuly",
+   "notificationDeleteImage": "Delete image [image] of [face]",
+   "notificationDeleteFace": "Delete face [face] and all its images",
+   "notificationMoveImage": "Move image [image] from [face] to [newFaceName]",
+   "addImage": "Add Image",
+   "faceName": "Face name",
+   "uploadImage": "Upload"
 }
