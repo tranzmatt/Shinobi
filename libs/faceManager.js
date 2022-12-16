@@ -310,10 +310,6 @@ module.exports = (s, config, lang, app, io) => {
     };
 
     const initialize = () => {
-        if(!config.enableFaceManager) {
-            return;
-        }
-
         createDirectory();
         
         registerGetEndpoint('s', handleGetFaces);

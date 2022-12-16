@@ -114,12 +114,6 @@ $(document).ready(function () {
           "properties": {}
         }
       },
-      "enableFaceManager": {
-        "type": "boolean",
-        "title": "Enable Face Manager",
-        "description": "Super dashboard and API to register and unregister faces with images for Face Recognition plugins",
-        "default": false
-      },
       "db": {
         "type": "object",
         "format": "table",
