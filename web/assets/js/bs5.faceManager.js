@@ -18,9 +18,13 @@ $(document).ready(() => {
         const url = getUrl("s");
         
         $.get(url, response => {
-            moduleData.faces = response.faces || {};
-
-            onFaceImagesReterived();
+            if(response.ok) {
+                moduleData.faces = response.faces || {};
+                
+                onFaceImagesReterived();
+            } else {
+                console.error(`Unable to reterive faces for Face Manager (${url}), Error: ${response}`);
+            }
         });
     };
 
@@ -376,12 +380,18 @@ $(document).ready(() => {
             console.error(`Failed to handle image browsing, Error: ${error}`);
         }        
     };
-
+    
+    const onTabOpened = () => {
+        try {
+            drawFaceImages();
+        } catch (error) {
+            console.error(`Failed to handle tab opened event, Error: ${error}`);
+        }          
+    };
+    
     const onInitSuccess = (d) => {
         try {
-            moduleData.baseUrl = `${superApiPrefix}${d.superSessionKey}/face`;
-
-            drawFaceImages();
+            moduleData.baseUrl = `${getLocation()}/${$user.auth_token}/face`;
         } catch (error) {
             console.error(`Failed to handle init success event, Error: ${error}`);
         }          
@@ -418,12 +428,10 @@ $(document).ready(() => {
         }
     };
 
-    $.ccio.ws.on("f", (d) => {
+    onWebSocketEvent = d => {
         const handler = moduleData.eventMapper[d.f];
 
-        if (handler === undefined) {
-            console.info(`No handler found, Data: ${JSON.stringify(d)}`);
-        } else {
+        if (handler !== undefined) {
             try {
                 setTimeout(() => {
                     handler(d);
@@ -432,7 +440,7 @@ $(document).ready(() => {
                 console.error(`Failed to handle event ${d.f}, Error: ${error}`);
             } 
         }
-    });    
+    };    
 
     // Upload image 
     faceManagerForm.submit(() => {
@@ -468,4 +476,8 @@ $(document).ready(() => {
 
         
     });
+
+    addOnTabOpen('faceManager', onTabOpened);
+
+    onWebSocketEventFunctions.push(onWebSocketEvent);
 });

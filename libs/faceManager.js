@@ -73,7 +73,7 @@ module.exports = (s, config, lang, app, io) => {
     };
 
     const getUrl = (endpoint, authUser = ":auth") => {
-        const url = `${config.webPaths.superApiPrefix}${authUser}/${MODULE_NAME}${endpoint}`;
+        const url = `${config.webPaths.apiPrefix}${authUser}/${MODULE_NAME}${endpoint}`;
 
         return url;
     };
@@ -122,8 +122,8 @@ module.exports = (s, config, lang, app, io) => {
         const url = getUrl(endpoint);
 
         app.delete(url, (req, res) => {
-            s.superAuth(req.params, superAuthResponse => {
-                handler(req, res, superAuthResponse);
+            s.auth(req.params, user => {
+                handler(req, res, user);
             }, res, req);
         });
     };
@@ -132,8 +132,8 @@ module.exports = (s, config, lang, app, io) => {
         const url = getUrl(endpoint);
 
         app.get(url, (req, res) => {
-            s.superAuth(req.params, superAuthResponse => {
-                handler(req, res, superAuthResponse);
+            s.auth(req.params, user => {
+                handler(req, res, user);
             }, res, req);
         });
     };
@@ -143,27 +143,27 @@ module.exports = (s, config, lang, app, io) => {
 
         if(isFileUpload) {
             app.post(url, fileUpload(), (req, res) => {
-                s.superAuth(req.params, superAuthResponse => {
-                    handler(req, res, superAuthResponse);
+                s.auth(req.params, user => {
+                    handler(req, res, user);
                 }, res, req);
             });
         } else {
             app.post(url, (req, res) => {
-                s.superAuth(req.params, superAuthResponse => {
-                    handler(req, res, superAuthResponse);
+                s.auth(req.params, user => {
+                    handler(req, res, user);
                 }, res, req);
             });            
         }
     };
 
-    const handleGetFaces = (req, res, superAuthResponse) => {        
+    const handleGetFaces = (req, res, user) => {        
         res.json({
             ok: true,
             faces: data.faces
         });
     };
 
-    const handleGetImage = (req, res, superAuthResponse) => {  
+    const handleGetImage = (req, res, user) => {  
         const imagePath = getImagePath(req.params.name, req.params.image);
 
         if(fs.existsSync(imagePath)) {
@@ -178,7 +178,7 @@ module.exports = (s, config, lang, app, io) => {
         }      
     };
 
-    const handleDeleteImage = (req, res, superAuthResponse) => {   
+    const handleDeleteImage = (req, res, user) => {   
         const name = req.params.name; 
         const image = req.params.image; 
 
@@ -204,7 +204,7 @@ module.exports = (s, config, lang, app, io) => {
         }    
     };
 
-    const handleDeleteFace = (req, res, superAuthResponse) => {    
+    const handleDeleteFace = (req, res, user) => {    
         const name = req.params.name;    
         const facePath = getFacePath(name);
         
@@ -230,7 +230,7 @@ module.exports = (s, config, lang, app, io) => {
         }       
     };
 
-    const handleMoveImage = (req, res, superAuthResponse) => {        
+    const handleMoveImage = (req, res, user) => {        
         const oldImagePath = getImagePath(req.params.name, req.params.image);
         const newImagePath = getImagePath(req.params.newName, req.params.image);
         const fileExists = fs.existsSync(oldImagePath);
@@ -258,7 +258,7 @@ module.exports = (s, config, lang, app, io) => {
         });
     };
 
-    const handleImageUpload = (req, res, superAuthResponse) => {
+    const handleImageUpload = (req, res, user) => {
         const fileKeys = Object.keys(req.files || {});
         
         if(fileKeys.length == 0){
