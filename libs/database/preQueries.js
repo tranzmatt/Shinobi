@@ -6,6 +6,40 @@ module.exports = function(s,config){
         isMySQL,
     } = require('./utils.js')(s,config)
     s.preQueries = async function(){
+        await createTable('Users',[
+            isMySQL ? {name: 'utf8', type: 'charset'} : null,
+            isMySQL ? {name: 'utf8_general_ci', type: 'collate'} : null,
+            {name: 'ke', length: 50, type: 'string'},
+            {name: 'uid', length: 50, type: 'string'},
+            {name: 'auth', length: 50, type: 'string'},
+            {name: 'mail', length: 100, type: 'string'},
+            {name: 'pass', length: 100, type: 'string'},
+            {name: 'accountType', type: 'integer', length: 1, defaultTo: 0},
+            {name: 'details', type: 'longtext'},
+            // UNIQUE KEY `mail` (`mail`)
+            {name: 'mail', type: 'unique'},
+        ]);
+        await createTable('API',[
+            isMySQL ? {name: 'utf8', type: 'charset'} : null,
+            isMySQL ? {name: 'utf8_general_ci', type: 'collate'} : null,
+            {name: 'ke', length: 50, type: 'string'},
+            {name: 'uid', length: 50, type: 'string'},
+            {name: 'ip', type: 'string'},
+            {name: 'code', length: 100, type: 'string'},
+            {name: 'details', type: 'text'},
+            {name: 'time', type: 'timestamp'},
+        ]);
+        await createTable('LoginTokens',[
+            isMySQL ? {name: 'utf8', type: 'charset'} : null,
+            isMySQL ? {name: 'utf8_general_ci', type: 'collate'} : null,
+            {name: 'loginId', length: 255, type: 'string'},
+            {name: 'type', length: 25, type: 'string'},
+            {name: 'ke', length: 50, type: 'string'},
+            {name: 'uid', length: 50, type: 'string'},
+            {name: 'name', length: 50, type: 'string', defaultTo: 'Unknown'},
+            // UNIQUE KEY `logintokens_loginid_unique` (`loginId`)
+            {name: 'loginId', type: 'unique'},
+        ]);
         await createTable('Files',[
             isMySQL ? {name: 'utf8', type: 'charset'} : null,
             isMySQL ? {name: 'utf8_general_ci', type: 'collate'} : null,
@@ -71,6 +105,20 @@ module.exports = function(s,config){
             {name: 'time', type: 'timestamp'},
             {name: 'end', type: 'timestamp'},
         ]);
+        await createTable('Timelapse Frames',[
+            isMySQL ? {name: 'utf8', type: 'charset'} : null,
+            isMySQL ? {name: 'utf8_general_ci', type: 'collate'} : null,
+            {name: 'ke', length: 50, type: 'string'},
+            {name: 'mid', length: 100, type: 'string'},
+            {name: 'filename', length: 50, type: 'string'},
+            {name: 'time', type: 'timestamp'},
+            {name: 'size', type: 'integer'},
+            {name: 'archive', length: 1, type: 'tinyint', defaultTo: 0},
+            {name: 'saveDir', length: 255, type: 'string'},
+            {name: 'details', type: 'text'},
+            // KEY `timelapseframes_index` (`ke`,`mid`,`filename`)
+            {name: ['ke', 'mid', 'filename'], type: 'index', length: 'timelapseframes_index'},
+        ]);
         await createTable('Cloud Timelapse Frames',[
             isMySQL ? {name: 'utf8', type: 'charset'} : null,
             isMySQL ? {name: 'utf8_general_ci', type: 'collate'} : null,
@@ -81,27 +129,6 @@ module.exports = function(s,config){
             {name: 'time', type: 'timestamp'},
             {name: 'size', type: 'integer'},
             {name: 'details', type: 'text'},
-        ]);
-        await createTable('API',[
-            isMySQL ? {name: 'utf8', type: 'charset'} : null,
-            isMySQL ? {name: 'utf8_general_ci', type: 'collate'} : null,
-            {name: 'ke', length: 50, type: 'string'},
-            {name: 'uid', length: 50, type: 'string'},
-            {name: 'ip', type: 'string'},
-            {name: 'code', length: 100, type: 'string'},
-            {name: 'details', type: 'text'},
-            {name: 'time', type: 'timestamp'},
-        ]);
-        await createTable('LoginTokens',[
-            isMySQL ? {name: 'utf8', type: 'charset'} : null,
-            isMySQL ? {name: 'utf8_general_ci', type: 'collate'} : null,
-            {name: 'loginId', length: 255, type: 'string'},
-            {name: 'type', length: 25, type: 'string'},
-            {name: 'ke', length: 50, type: 'string'},
-            {name: 'uid', length: 50, type: 'string'},
-            {name: 'name', length: 50, type: 'string', defaultTo: 'Unknown'},
-            // UNIQUE KEY `logintokens_loginid_unique` (`loginId`)
-            {name: 'loginId', type: 'unique'},
         ]);
         await createTable('Logs',[
             isMySQL ? {name: 'utf8', type: 'charset'} : null,
@@ -151,33 +178,8 @@ module.exports = function(s,config){
             {name: 'end', length: 10, type: 'string'},
             {name: 'enabled', type: 'integer', length: 1, defaultTo: 1},
         ]);
-        await createTable('Timelapse Frames',[
-            isMySQL ? {name: 'utf8', type: 'charset'} : null,
-            isMySQL ? {name: 'utf8_general_ci', type: 'collate'} : null,
-            {name: 'ke', length: 50, type: 'string'},
-            {name: 'mid', length: 100, type: 'string'},
-            {name: 'filename', length: 50, type: 'string'},
-            {name: 'time', type: 'timestamp'},
-            {name: 'size', type: 'integer'},
-            {name: 'archive', length: 1, type: 'tinyint', defaultTo: 0},
-            {name: 'saveDir', length: 255, type: 'string'},
-            {name: 'details', type: 'text'},
-            // KEY `timelapseframes_index` (`ke`,`mid`,`filename`)
-            {name: ['ke', 'mid', 'filename'], type: 'index', length: 'timelapseframes_index'},
-        ]);
-        await createTable('Users',[
-            isMySQL ? {name: 'utf8', type: 'charset'} : null,
-            isMySQL ? {name: 'utf8_general_ci', type: 'collate'} : null,
-            {name: 'ke', length: 50, type: 'string'},
-            {name: 'uid', length: 50, type: 'string'},
-            {name: 'auth', length: 50, type: 'string'},
-            {name: 'mail', length: 100, type: 'string'},
-            {name: 'pass', length: 100, type: 'string'},
-            {name: 'accountType', type: 'integer', length: 1, defaultTo: 0},
-            {name: 'details', type: 'longtext'},
-            // UNIQUE KEY `mail` (`mail`)
-            {name: 'mail', type: 'unique'},
-        ]);
+
+
 
         // additional requirements for older installs
         await require('./migrate/2022-08-22.js')(s,config)
