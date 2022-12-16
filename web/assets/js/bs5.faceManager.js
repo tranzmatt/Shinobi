@@ -296,7 +296,7 @@ $(document).ready(() => {
     const getFixedText = (text, replacements = {}) => {
         const replacementKeys = Object.keys(replacements);
         replacementKeys.forEach(r => {
-            text = text.replace(`{${r}}`, `<b style="color: red">${replacements[r]}</b>`);
+            text = text.replace(`[${r}]`, `<b style="color: red">${replacements[r]}</b>`);
         });
 
         return text;
