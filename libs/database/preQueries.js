@@ -162,8 +162,8 @@ module.exports = function(s,config){
             {name: 'archive', length: 1, type: 'tinyint', defaultTo: 0},
             {name: 'saveDir', length: 255, type: 'string'},
             {name: 'details', type: 'text'},
-            // KEY `timelapseframes_index` (`ke`,`mid`,`time`)
-            {name: ['ke', 'mid', 'time'], type: 'index', length: 'timelapseframes_index'},
+            // KEY `timelapseframes_index` (`ke`,`mid`,`filename`)
+            {name: ['ke', 'mid', 'filename'], type: 'index', length: 'timelapseframes_index'},
         ]);
         await createTable('Users',[
             isMySQL ? {name: 'utf8', type: 'charset'} : null,

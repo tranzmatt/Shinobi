@@ -302,6 +302,7 @@ function getDbColumnsForMonitor(monitor){
         'fps',
         'mode',
         'saveDir',
+        'tags',
         'width',
         'height'
     ]

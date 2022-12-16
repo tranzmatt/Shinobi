@@ -154,6 +154,7 @@ module.exports = function(s,config,lang){
             'fps',
             'mode',
             'saveDir',
+            'tags',
             'width',
             'height'
         ];
