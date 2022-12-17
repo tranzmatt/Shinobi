@@ -140,7 +140,24 @@ module.exports = function(s,config,lang){
     }
     s.cleanMonitorObjectForDatabase = function(dirtyMonitor){
         var cleanMonitor = {}
-        var acceptedFields = ['mid','ke','name','shto','shfr','details','type','ext','protocol','host','path','port','fps','mode','width','height']
+        var acceptedFields = [
+            'mid',
+            'ke',
+            'name',
+            'details',
+            'type',
+            'ext',
+            'protocol',
+            'host',
+            'path',
+            'port',
+            'fps',
+            'mode',
+            'saveDir',
+            'tags',
+            'width',
+            'height'
+        ];
         Object.keys(dirtyMonitor).forEach(function(key){
             if(acceptedFields.indexOf(key) > -1){
                 cleanMonitor[key] = dirtyMonitor[key]

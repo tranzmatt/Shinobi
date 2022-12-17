@@ -549,6 +549,8 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
             s.closeJsonResponse(res,{ok: true})
         },res,req)
     })
-    // Initialize Modules on Start
-    await initializeAllModules();
+    s.onProcessReady(async () => {
+        // Initialize Modules on Start
+        await initializeAllModules();
+    })
 }
