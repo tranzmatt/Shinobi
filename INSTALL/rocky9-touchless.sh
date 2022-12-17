@@ -100,6 +100,10 @@ sudo firewall-cmd --permanent --add-port=8080/tcp -q
 sudo firewall-cmd --reload -q
 echo "Enabling Superuser"
 sudo cp super.sample.json super.json
+if [ ! -e "./conf.json" ]; then
+	echo "Creating conf.json"
+    cp conf.sample.json conf.json
+fi
 
 echo "========================================================="
 sudo pm2 start camera.js
