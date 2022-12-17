@@ -125,7 +125,7 @@ echo "(y)es or (N)o"
 read -r startShinobi
 if [ "$startShinobi" = "y" ] || [ "$startShinobi" = "y" ]; then
     sudo pm2 start camera.js
-    sudo pm2 start cron.js
+    #sudo pm2 start cron.js
     sudo pm2 startup
     sudo pm2 save
     sudo pm2 list

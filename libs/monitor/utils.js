@@ -43,13 +43,13 @@ module.exports = (s,config,lang) => {
                         }
                         setTimeout(function(){
                             try{
-                                proc.kill()
+                                treekill(proc.pid)
                                 resolve(response)
                             }catch(err){
                                 s.debugLog(err)
                                 sendError(err)
                             }
-                        },1000)
+                        },3000)
                     }
                 },1000)
             }catch(err){

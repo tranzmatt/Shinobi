@@ -31,7 +31,7 @@ function getLocation(d){
             url = url+'/'
         }
     }else{
-        url = urlPrefix
+        url = checkCorrectPathEnding(urlPrefix)
     }
     return url
 }

@@ -201,9 +201,10 @@ module.exports = function(s,config,lang){
                       })
                     }
                     try{
-                        var snapBuffer = []
                         var temporaryImageFile = streamDir + s.gid(5) + '.jpg'
                         var iconImageFile = streamDir + 'icon.jpg'
+                        const snapRawFilters = monitor.details.cust_snap_raw
+                        if(snapRawFilters)outputOptions.push(snapRawFilters);
                         var ffmpegCmd = splitForFFPMEG(`-y -loglevel warning ${isDetectorStream ? '-live_start_index 2' : ''} -re ${inputOptions.join(' ')} -i "${url}" ${outputOptions.join(' ')} -f image2 -an -frames:v 1 "${temporaryImageFile}"`)
                         checkExists(streamDir, function(success) {
                             if (success === false) {
@@ -1074,10 +1075,10 @@ module.exports = function(s,config,lang){
                     },1000)
                 break;
                 case checkLog(d,'Immediate exit requested'):
+                    cameraDestroy(e)
                     activeMonitor.timeoutToRestart = setTimeout(() => {
                         launchMonitorProcesses(e)
                     },15000)
-                    cameraDestroy(e)
                 break;
                 case checkLog(d,'mjpeg_decode_dc'):
                 case checkLog(d,'bad vlc'):

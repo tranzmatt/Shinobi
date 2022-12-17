@@ -104,13 +104,13 @@ sudo npm install pm2@latest -g
 echo "Shinobi - Finished"
 sudo chmod -R 755 .
 touch INSTALL/installed.txt
-dos2unix /home/Shinobi/INSTALL/shinobi
-ln -s /home/Shinobi/INSTALL/shinobi /usr/bin/shinobi
+dos2unix INSTALL/shinobi
+ln -s INSTALL/shinobi /usr/bin/shinobi
 echo "Shinobi - Randomizing cron key"
-node /home/Shinobi/tools/modifyConfiguration.js addToConfig="{\"cron\":{\"key\":\"$(head -c 64 < /dev/urandom | sha256sum | awk '{print substr($1,1,60)}')\"}}"
+node tools/modifyConfiguration.js addToConfig="{\"cron\":{\"key\":\"$(head -c 64 < /dev/urandom | sha256sum | awk '{print substr($1,1,60)}')\"}}"
 echo "Shinobi - Starting Shinobi and setting to start on boot"
 sudo pm2 start camera.js
-sudo pm2 start cron.js
+#sudo pm2 start cron.js
 sudo pm2 startup
 sudo pm2 save
 sudo pm2 list

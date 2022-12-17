@@ -83,7 +83,7 @@ function buildStreamElementHtml(streamType){
     }else{
         switch(streamType){
             case'hls':case'flv':case'mp4':
-                html = `<video class="stream-element" playsinline muted autoplay></video>`;
+                html = `<video class="stream-element" playsinline autoplay></video>`;
             break;
             case'mjpeg':
                 html = '<iframe class="stream-element"></iframe>';
@@ -688,7 +688,7 @@ function popOutMonitor(monitorId){
         if(monitorPop){
             monitorPop.close()
         }
-        monitorPop = window.open(getApiPrefix() + '/embed/' + $user.ke + '/' + monitorId + '/fullscreen|jquery|relative|gui','pop_' + monitorId + $user.auth_token,'height='+img.height+',width='+img.width);
+        monitorPop = window.open(getApiPrefix() + '/embed/' + $user.ke + '/' + monitorId + '/fullscreen|jquery|relative|gui' + `?host=${location.pathname}`,'pop_' + monitorId + $user.auth_token,'height='+img.height+',width='+img.width);
     }
     if(loadedLiveGrids[monitorId]){
         getSnapshot(loadedMonitors[monitorId],function(url){
@@ -1208,11 +1208,12 @@ $(document).ready(function(e){
         $('.monitor_item video').each(function(n,vidEl){
             var el = $(this)
             var monitorId = el.parents('[data-mid]').attr('data-mid')
+            console.log(monitorId,monitorMutes[monitorId])
             if(toggleState === 1){
-                el.attr('muted','muted')
+                vidEl.muted = true
             }else{
                 if(monitorMutes[monitorId] !== 1){
-                    el.removeAttr('muted')
+                    vidEl.muted = false
                 }
             }
         })

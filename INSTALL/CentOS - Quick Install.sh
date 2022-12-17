@@ -306,7 +306,7 @@ read -p "Start Shinobi now? Y/N " startShinobi
 
 if [ "${startShinobi^}" = "Y" ]; then
     sudo pm2 start camera.js
-    sudo pm2 start cron.js
+    #sudo pm2 start cron.js
 fi
 
 ipaddress=$(hostname -I)

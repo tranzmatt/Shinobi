@@ -11,6 +11,7 @@ module.exports = function(s,config,lang,getSnapshot){
                 let mqttEndpoint = options.host
                 const username = options.username || ''
                 const password = options.password || ''
+                const clientId = options.clientId || `shinobi_${Math.random().toString(16).substr(2, 8)}`
                 const subKey = options.subKey
                 const pubKey = options.pubKey
                 const groupKey = options.ke
@@ -32,7 +33,7 @@ module.exports = function(s,config,lang,getSnapshot){
                     clean: true,
                     username: username,
                     password: password,
-                    clientId: `shinobi_${Math.random().toString(16).substr(2, 8)}`,
+                    clientId: clientId,
                     reconnectPeriod: 10000, // 10 seconds
                 });
                 client.on('reconnect', (e) => mqttUserLog(`MQTT Reconnected`))
@@ -101,7 +102,7 @@ module.exports = function(s,config,lang,getSnapshot){
                     sendToMqttConnections(groupKey,'onDetectorNoTriggerTimeout',[e],true)
                 }
             }
-            const onEventTrigger = (d,filter) => {
+            const onEventTrigger = async (d,filter) => {
                 const monitorConfig = s.group[d.ke].rawMonitorConfigurations[d.id]
                 if((filter.mqttout || monitorConfig.details.notify_mqttout === '1') && !s.group[d.ke].activeMonitors[d.id].detector_mqttout){
                     var detector_mqttout_timeout
@@ -116,7 +117,10 @@ module.exports = function(s,config,lang,getSnapshot){
                     },detector_mqttout_timeout)
                     //
                     const groupKey = d.ke
-                    sendToMqttConnections(groupKey,'onEventTrigger',[d,filter],true)
+                    await getSnapshot(d,monitorConfig)
+                    sendToMqttConnections(groupKey,'onEventTrigger',[Object.assign({},d,{
+                        screenshotBuffer: d.screenshotBuffer.toString('base64')
+                    }),filter],true)
                 }
             }
             const onMonitorSave = (monitorConfig) => {
@@ -182,6 +186,7 @@ module.exports = function(s,config,lang,getSnapshot){
                             mqttSubs[mqttSubId].client = createMqttSubscription({
                                 username: row.username,
                                 password: row.password,
+                                clientId: row.clientId,
                                 host: row.host,
                                 pubKey: row.pubKey,
                                 ke: groupKey,

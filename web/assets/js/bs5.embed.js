@@ -3,6 +3,7 @@ var monitorPops = {}
 var liveGridElements = {}
 var runningJpegStreams = {}
 var liveGrid = $('#monitors_live .stream-element-container')
+var websocketPath = checkCorrectPathEnding(urlPrefix) + 'socket.io'
 //
 var onLiveStreamInitiateExtensions = []
 function onLiveStreamInitiate(callback){
@@ -98,6 +99,7 @@ function drawLiveGridBlock(monitorConfig,subStreamChannel){
     if($('#monitor_live_' + monitorId).length === 0){
         var html = buildLiveGridBlock(monitorConfig)
         liveGrid.html(html);
+        console.log(liveGrid.length,html)
         var theBlock = $('#monitor_live_' + monitorId);
         var streamElement = theBlock.find('.stream-element')
         liveGridElements[monitorId] = {
@@ -119,7 +121,6 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
     var monitorId = monitor.mid
     var loadedMonitor = loadedMonitors[monitorId]
     var loadedPlayer = loadedLiveGrids[monitor.mid]
-    var websocketPath = checkCorrectPathEnding(location.pathname) + 'socket.io'
     var containerElement = $(`#monitor_live_${monitor.mid}`)
     var streamType = subStreamChannel ? details.substream ? details.substream.output.stream_type : 'hls' : details.stream_type
     switch(streamType){
@@ -130,7 +131,7 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
             if(loadedPlayer.Base64 && loadedPlayer.Base64.connected){
                 loadedPlayer.Base64.disconnect()
             }
-            loadedPlayer.Base64 = io(location.host,{ path: '/socket.io', transports: ['websocket'], forceNew: false})
+            loadedPlayer.Base64 = io(location.origin,{ path: websocketPath, transports: ['websocket'], forceNew: false})
             var ws = loadedPlayer.Base64
             var buffer
             ws.on('diconnect',function(){
@@ -278,34 +279,6 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
     $.each(onLiveStreamInitiateExtensions,function(n,extender){
         extender(streamType,monitor,loadedPlayer,subStreamChannel)
     })
-    var monitorMutes = dashboardOptions().monitorMutes || {}
-    if(dashboardOptions().switches.monitorMuteAudio === 1){
-        containerElement.find('video').each(function(n,el){
-            el.muted = "muted"
-        })
-    }else{
-        $.each(loadedMonitors,function(frontId,monitor){
-            setTimeout(() => {
-                var monitorId = monitor.mid
-                var muted = monitorMutes[monitorId]
-                try{
-                    var vidEl = $('.monitor_item[mid="' + monitorId + '"] video')[0]
-                    if(vidEl.length === 0)return;
-                    if(muted === 1){
-                        vidEl.muted = true
-                    }else{
-                        try{
-                            vidEl.muted = false
-                        }catch(err){
-                            console.error('User must have window active to unmute.')
-                        }
-                    }
-                }catch(err){
-                    // console.log(err)
-                }
-            },2000)
-        })
-    }
     //initiate signal check
     if(streamType !== 'useSubstream'){
         var signalCheckInterval = (isNaN(loadedMonitor.details.signal_check) ? 10 : parseFloat(loadedMonitor.details.signal_check)) * 1000 * 60
@@ -635,7 +608,9 @@ $(document).ready(function(e){
             break;
         }
     });
-    createWebsocket(`ws://${location.host}`,'/socket.io');
+    createWebsocket(location.origin,{
+        path: websocketPath
+    });
     onInitWebsocket(function(){
         requestMonitorInit();
     });

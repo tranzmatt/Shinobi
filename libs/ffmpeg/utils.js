@@ -62,14 +62,13 @@ module.exports = (s,config,lang) => {
             probeProcess.stdout.on('data',function(data){
                 stdout += data.toString()
             })
-            probeProcess.on('close',function(){
+            probeProcess.on('exit',function(){
                 clearTimeout(processTimeout)
                 finishReponse()
             })
             processTimeout = setTimeout(() => {
                 treekill(probeProcess.pid)
-                finishReponse()
-            },4000)
+            },10000)
         })
     }
     const probeMonitor = (monitor,timeoutAmount,forceOverlap) => {

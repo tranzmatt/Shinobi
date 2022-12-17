@@ -22,7 +22,7 @@ npm install pm2@latest -g
 cp conf.sample.json conf.json
 cp super.sample.json super.json
 pm2 start camera.js
-pm2 start cron.js
+#pm2 start cron.js
 pm2 save
 pm2 list
 pm2 startup rcd

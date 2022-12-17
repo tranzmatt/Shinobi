@@ -8,6 +8,7 @@ var execSync = require('child_process').execSync;
 var exec = require('child_process').exec;
 var spawn = require('child_process').spawn;
 var httpProxy = require('http-proxy');
+var cors = require('cors')
 var proxy = httpProxy.createProxyServer({})
 var ejs = require('ejs');
 var fileupload = require("express-fileupload");
@@ -96,10 +97,7 @@ module.exports = function(s,config,lang,app,io){
     })
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({extended: true}));
-    app.use(function (req,res,next){
-        res.header("Access-Control-Allow-Origin",'*');
-        next()
-    })
+    app.use(cors());
     app.set('views', s.mainDirectory + '/web');
     app.set('view engine','ejs');
     //add template handler

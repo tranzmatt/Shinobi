@@ -106,7 +106,6 @@ RUN sed -i -e 's/\r//g' /home/Shinobi/Docker/init.sh
 # RUN chmod -f +x /home/Shinobi/shinobi
 
 VOLUME ["/home/Shinobi/videos"]
-VOLUME ["/home/Shinobi/plugins"]
 VOLUME ["/home/Shinobi/libs/customAutoLoad"]
 VOLUME ["/config"]
 VOLUME ["/var/lib/mysql"]

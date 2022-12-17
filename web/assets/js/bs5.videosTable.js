@@ -111,11 +111,7 @@ $(document).ready(function(e){
                   },
                   {
                     field: 'time',
-                    title: lang['Time Created'],
-                  },
-                  {
-                    field: 'end',
-                    title: lang['Ended']
+                    title: lang['Time'],
                   },
                   {
                     field: 'objects',
@@ -153,16 +149,16 @@ $(document).ready(function(e){
                     </div>`,
                     Monitor: loadedMonitor && loadedMonitor.name ? loadedMonitor.name : file.mid,
                     mid: file.mid,
-                    time: formattedTime(file.time, 'DD-MM-YYYY hh:mm:ss AA'),
-                    end: formattedTime(file.end, 'DD-MM-YYYY hh:mm:ss AA'),
+                    time: `<div><b>${lang.Start}</b> ${formattedTime(file.time, 'DD-MM-YYYY hh:mm:ss AA')}</div>
+                           <div><b>${lang.End}</b> ${formattedTime(file.end, 'DD-MM-YYYY hh:mm:ss AA')}</div>`,
+                    objects: file.objects,
                     tags: `
                         ${file.ext ? `<span class="badge badge-${file.ext ==='webm' ? `primary` : 'danger'}">${file.ext}</span>` : ''}
                     `,
-                    objects: file.objects,
                     size: convertKbToHumanSize(file.size),
                     buttons: `
-                    <div class="row-info" data-mid="${file.mid}" data-ke="${file.ke}" data-time="${file.time}" data-filename="${file.filename}">
-                        <a class="btn btn-sm btn-default open-video" href="${href}" title="${lang.Play}"><i class="fa fa-play"></i></a>
+                    <div class="row-info btn-group" data-mid="${file.mid}" data-ke="${file.ke}" data-time="${file.time}" data-filename="${file.filename}" data-status="${file.status}">
+                        <a class="btn btn-sm btn-default btn-monitor-status-color open-video" href="${href}" title="${lang.Play}"><i class="fa fa-play"></i></a>
                         ${permissionCheck('video_delete',file.mid) ? `<a class="btn btn-sm btn-${file.archive === 1 ? `success status-archived` : `default`} archive-video" title="${lang.Archive}"><i class="fa fa-${file.archive === 1 ? `lock` : `unlock-alt`}"></i></a>` : ''}
                         <div class="dropdown d-inline-block">
                             <a class="btn btn-sm btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
@@ -181,16 +177,18 @@ $(document).ready(function(e){
     function drawPreviewVideo(href){
         videosTablePreviewArea.html(`<video class="video_video" style="width:100%" autoplay controls preload loop src="${href}"></video>`)
     }
-    function getSelectedRows(){
+    function getSelectedRows(getLoadedRows){
         var rowsSelected = []
         videosTableDrawArea.find('[name="btSelectItem"]:checked').each(function(n,checkbox){
             var rowInfo = $(checkbox).parents('tr').find('.row-info')
             var monitorId = rowInfo.attr('data-mid')
             var groupKey = rowInfo.attr('data-ke')
+            var time = rowInfo.attr('data-time')
             var filename = rowInfo.attr('data-filename')
-            rowsSelected.push({
+            rowsSelected.push(getLoadedRows ? loadedVideosInMemory[`${monitorId}${time}`] : {
                 mid: monitorId,
                 ke: groupKey,
+                time: time,
                 filename: filename,
             })
         })
@@ -255,8 +253,21 @@ $(document).ready(function(e){
     theEnclosure
     .on('click','.preview-video',function(e){
         e.preventDefault()
-        var href = $(this).attr('href')
+        var el = $(this)
+        var rowEl = $(this).parents('[data-mid]')
+        var monitorId = rowEl.attr('data-mid')
+        var videoTime = rowEl.attr('data-time')
+        var video = loadedVideosInMemory[`${monitorId}${videoTime}`]
+        var href = el.attr('href')
+        setPreviewedVideoHighlight(el,videosTableDrawArea)
         drawPreviewVideo(href)
+        setVideoStatus(video)
+        return false;
+    })
+    .on('click','.zip-selected-videos',function(e){
+        e.preventDefault()
+        var videos = getSelectedRows(true)
+        zipVideosAndDownloadWithConfirm(videos)
         return false;
     })
     .on('click','.refresh-data',function(e){

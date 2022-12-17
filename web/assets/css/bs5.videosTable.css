@@ -26,3 +26,14 @@
     background: rgba(0,0,0,0.6);
     color: #fff;
 }
+
+[data-status="1"] .btn-monitor-status-color {
+    background: #27b392!important;
+    border-color: #27b392!important;
+}
+
+[data-status="2"] .btn-monitor-status-color {
+    background-color: #2b3c4b;
+    border-color: #2b3c4b;
+    color: #fff;
+}
