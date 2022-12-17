@@ -239,7 +239,6 @@ if [ "${mysqlDefaultData^}" = "Y" ]; then
 	echo "Inserting database tables"
 	#Connect to the database and insert the default database
     sudo mysql -h "$sqlhost" -P "$sqlport" -u "$sqluser" -p"$sqlpass" -e "source sql/user.sql" || true
-    sudo mysql -h "$sqlhost" -P "$sqlport" -u "$sqluser" -p"$sqlpass" -e "source sql/framework.sql" || true
 else
 	echo "========================================================="
     echo "Skipping database installation..."

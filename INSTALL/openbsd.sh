@@ -92,7 +92,6 @@ schema_install () {
 	read -r sqlpass
 	cd /home/_shinobi/shinobi || schema_install_abort
 	doas -u _shinobi mysql -u root -p"$sqlpass" -e "source /home/_shinobi/shinobi/sql/user.sql" || schema_install_abort
-	doas -u _shinobi mysql -u root -p"$sqlpass" -e "source /home/_shinobi/shinobi/sql/framework.sql" || schema_install_abort
 }
 
 pro_download () {

@@ -1,6 +1,10 @@
 /*
+ * As of 2022-10-19 Shinobi will create the tables during the startup process.
+ * Only a blank database needs to exist with access provided to the sql user.
+ *
+ *
  * PostgresSQL rewrite of framework.sql - dave@dream-tech.com
- * Placed into open source, no license required here unless you want one, licenses and lawyers 
+ * Placed into open source, no license required here unless you want one, licenses and lawyers
  * are the primary bane of good software development. :)
  *
  * Trigger code lifted from stack overflow here:
@@ -34,19 +38,19 @@
  *    You'll need to do 'npm install pg'
  */
 
-CREATE OR REPLACE FUNCTION update_time_column()   
+CREATE OR REPLACE FUNCTION update_time_column()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.time = NOW();
-    RETURN NEW;   
+    RETURN NEW;
 END;
 $$ language 'plpgsql';
 
-CREATE OR REPLACE FUNCTION upd_end_column()   
+CREATE OR REPLACE FUNCTION upd_end_column()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW."end" = NOW();
-    RETURN NEW;   
+    RETURN NEW;
 END;
 $$ language 'plpgsql';
 
@@ -58,7 +62,7 @@ CREATE TABLE IF NOT EXISTS "API" (
   "details" text,
   "time" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 )  ;
-CREATE TRIGGER update_api_modtime 
+CREATE TRIGGER update_api_modtime
 BEFORE UPDATE ON "API"
 FOR EACH ROW EXECUTE PROCEDURE update_time_column();
 
@@ -90,7 +94,7 @@ CREATE TABLE IF NOT EXISTS "Events" (
   "details" text,
   "time" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 )  ;
-CREATE TRIGGER update_events_modtime 
+CREATE TRIGGER update_events_modtime
 BEFORE UPDATE ON "Events"
 FOR EACH ROW EXECUTE PROCEDURE update_time_column();
 
@@ -103,7 +107,7 @@ CREATE TABLE IF NOT EXISTS "Events Counts" (
   "count" int NOT NULL DEFAULT 1,
   "tag" varchar(30) DEFAULT NULL
 )  ;
-CREATE TRIGGER update_events_counts_modtime 
+CREATE TRIGGER update_events_counts_modtime
 BEFORE UPDATE ON "Events Counts"
 FOR EACH ROW EXECUTE PROCEDURE upd_end_column();
 
@@ -116,7 +120,7 @@ CREATE TABLE IF NOT EXISTS "Files" (
     "status" int NOT NULL DEFAULT '0',
     "time" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 )  ;
-CREATE TRIGGER update_files_modtime 
+CREATE TRIGGER update_files_modtime
 BEFORE UPDATE ON "Files"
 FOR EACH ROW EXECUTE PROCEDURE update_time_column();
 
@@ -129,7 +133,7 @@ CREATE TABLE IF NOT EXISTS "LoginTokens" (
   "lastLogin" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE ("loginId")
 )  ;
-CREATE TRIGGER update_logintokens_modtime 
+CREATE TRIGGER update_logintokens_modtime
 BEFORE UPDATE ON "LoginTokens"
 FOR EACH ROW EXECUTE PROCEDURE update_time_column();
 
@@ -137,9 +141,9 @@ CREATE TABLE IF NOT EXISTS "Logs" (
   "ke" varchar(50) DEFAULT NULL,
   "mid" varchar(50) DEFAULT NULL,
   "info" text,
-  "time" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP 
+  "time" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 )  ;
-CREATE TRIGGER update_logs_modtime 
+CREATE TRIGGER update_logs_modtime
 BEFORE UPDATE ON "Logs"
 FOR EACH ROW EXECUTE PROCEDURE update_time_column();
 
@@ -196,7 +200,7 @@ CREATE TABLE IF NOT EXISTS "Timelapses" (
   "end" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "size" int NOT NULL
 )  ;
-CREATE TRIGGER update_timelapses_modtime 
+CREATE TRIGGER update_timelapses_modtime
 BEFORE UPDATE ON "Timelapses"
 FOR EACH ROW EXECUTE PROCEDURE upd_end_column();
 

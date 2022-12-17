@@ -292,8 +292,6 @@ function getDbColumnsForMonitor(monitor){
         'mid',
         'ke',
         'name',
-        'shto',
-        'shfr',
         'details',
         'type',
         'ext',
@@ -303,6 +301,8 @@ function getDbColumnsForMonitor(monitor){
         'port',
         'fps',
         'mode',
+        'saveDir',
+        'tags',
         'width',
         'height'
     ]

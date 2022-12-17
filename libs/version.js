@@ -16,5 +16,7 @@ module.exports = function(s,config,lang,app,io){
             if(callback)callback(!isGitRespository,data)
         })
     }
-    getRepositoryCommitId()
+    s.onProcessReady(async () => {
+        getRepositoryCommitId()
+    })
 }

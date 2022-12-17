@@ -88,7 +88,6 @@ if [ "$mysqlagreeData" = "y" ] || [ "$mysqlagreeData" = "Y" ]; then
     echo "What is your SQL Password?"
     read sqlpass
     sudo mysql -u $sqluser -p$sqlpass -e "source sql/user.sql" || true
-    sudo mysql -u $sqluser -p$sqlpass -e "source sql/framework.sql" || true
 fi
 echo "============="
 echo "Shinobi - Install NPM Libraries"
