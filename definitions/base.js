@@ -102,6 +102,11 @@ module.exports = function(s,config,lang){
                       "example": "Home-Front"
                    },
                    {
+                      "name": "tags",
+                      "field": lang['Tags'],
+                      "description": lang.tagsFieldText,
+                   },
+                   {
                       "name": "detail=max_keep_days",
                       "field": lang["Number of Days to keep"] + ' ' + lang['Videos'],
                       "placeholder": "Default is Global value.",
@@ -137,20 +142,6 @@ module.exports = function(s,config,lang){
                      ]
                   }
                 ]
-             },
-             "Presets": {
-                id: "monSectionPresets",
-               "name": lang.Presets,
-               "color": "purple",
-                isSection: true,
-               "info": [
-                   {
-                      "fieldType": "a",
-                      "attribute": `page-open="monitorStates"`,
-                      "class": `btn-info`,
-                      "btnContent": `<i class="fa fa-align-right"></i> &nbsp; ${lang['Monitor States']}`,
-                   },
-               ],
              },
              "Connection": {
                 "name": lang.Connection,

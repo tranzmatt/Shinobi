@@ -692,14 +692,37 @@ function getAvailableMonitorGroups(){
     availableMonitorGroups = theGroups
     return theGroups;
 }
+function getListOfTagsFromMonitors(){
+    var listOftags = {}
+    $.each(loadedMonitors,function(monitorId,monitor){
+        if(monitor.tags){
+           monitor.tags.split(',').forEach((tag) => {
+               if(!listOftags[tag])listOftags[tag] = [];
+               listOftags[tag].push(monitorId)
+           })
+        }
+    })
+    return listOftags
+}
+function buildMonitorGroupListFromTags(){
+    var html = ``
+    var listOftags = getListOfTagsFromMonitors()
+    $.each(listOftags,function(tagName,monitorIds){
+        html += `<li class="cursor-pointer"><a class="dropdown-item monitor-live-group-open" monitor-ids="${monitorIds.join(',')}">${tagName}</a></li>`
+    })
+    return html
+}
 function drawMonitorGroupList(){
-    var html = ''
+    var html = `<li class="pl-4"><small class="text-muted">${lang['Monitor Groups']}</small></li>`
     getAvailableMonitorGroups()
     $.each(availableMonitorGroups,function(groupId,v){
         if($user.mon_groups[groupId]){
            html += `<li class="cursor-pointer"><a class="dropdown-item" monitor-group="${groupId}">${$user.mon_groups[groupId].name}</a></li>`
         }
     })
+    html += `<li><hr class="dropdown-divider"></li>
+    <li class="pl-4"><small class="text-muted">${lang.Tags}</small></li>`
+    html += buildMonitorGroupListFromTags()
     monitorGroupSelections.html(html)
 }
 function loadMonitorGroup(groupId){

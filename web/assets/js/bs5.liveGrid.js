@@ -893,6 +893,17 @@ $(document).ready(function(e){
             openLiveGrid()
         // }
     })
+    .on('click','.monitor-live-group-open',function(){
+        var monitorIds = $(this).attr('monitor-ids').split(',')
+        monitorIds.forEach((monitorId) => {
+            mainSocket.f({
+                f: 'monitor',
+                ff: 'watch_on',
+                id: monitorId
+            })
+        })
+        openLiveGrid()
+    })
     .on('click','.reconnect-live-grid-monitor',function(){
         var monitorId = $(this).parents('[data-mid]').attr('data-mid')
         mainSocket.f({

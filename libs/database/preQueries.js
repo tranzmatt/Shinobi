@@ -178,11 +178,9 @@ module.exports = function(s,config){
             {name: 'end', length: 10, type: 'string'},
             {name: 'enabled', type: 'integer', length: 1, defaultTo: 1},
         ]);
-
-
-
         // additional requirements for older installs
         await require('./migrate/2022-08-22.js')(s,config)
+        await require('./migrate/2022-12-18.js')(s,config)
         delete(s.preQueries)
     }
 }

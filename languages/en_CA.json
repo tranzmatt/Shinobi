@@ -18,6 +18,8 @@
    "deleteSubAccountText": "Do you want to delete this Sub-Account? You cannot recover it.",
    "Accuracy Mode": "Accuracy Mode",
    "Client ID": "Client ID",
+   "Tags": "Tags",
+   "tagsFieldText": "Automatically group Monitors based on a common identifier.",
    "Refresh": "Refresh",
    "Compress": "Compress",
    "Tile Size": "Tile Size",

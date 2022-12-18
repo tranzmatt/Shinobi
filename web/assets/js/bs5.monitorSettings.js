@@ -15,6 +15,7 @@ var monitorGroupSelectors = $('#monitor_groups')
 var monitorsList = monitorEditorWindow.find('.monitors_list')
 var monitorGroupMutliTriggerSelectContainer = $('#monitor_group_detector_multi')
 var editorForm = monitorEditorWindow.find('form')
+var tagsInput = monitorEditorWindow.find('[name="tags"]')
 var fieldsLoaded = {}
 var sections = {}
 var loadedPresets = {}
@@ -575,9 +576,16 @@ function drawInputMapSelectorHtml(options,parent){
 function importIntoMonitorEditor(options){
     var monitorConfig = options.values || options
     var monitorId = monitorConfig.mid
+    var monitorTags = monitorConfig.tags ? monitorConfig.tags.split(',') : []
     $.get(getApiPrefix()+'/hls/'+monitorConfig.ke+'/'+monitorConfig.mid+'/detectorStream.m3u8',function(data){
         $('#monEditBufferPreview').html(data)
     })
+    console.error('monitorConfig.tags',monitorTags)
+    tagsInput.tagsinput('removeAll');
+    monitorTags.forEach((tag) => {
+        tagsInput.tagsinput('add',tag);
+    })
+    console.error('monitorConfig.tags',monitorConfig.tags)
     monitorEditorWindow.find('.edit_id').text(monitorConfig.mid);
     monitorEditorWindow.attr('data-mid',monitorConfig.mid).attr('data-ke',monitorConfig.ke)
     $.each(monitorConfig,function(n,v){
@@ -1217,36 +1225,6 @@ editorForm.find('[name="type"]').change(function(e){
             }
         })
     }
-    monSectionPresets.find('.add-new').click(function(){
-        addNewPreset()
-    })
-    monSectionPresets.on('click','.delete-preset',function(){
-        var presetName = $(this).parents('[preset-name]').attr('preset-name')
-        deletePreset(presetName)
-    })
-    monSectionPresets.on('click','.import-monitor-preset',function(e){
-        e.preventDefault()
-        var presetName = $(this).parents('[preset-name]').attr('preset-name')
-        var preset = loadedPresets[presetName]
-        var currentMonitorInEditor = getSelectedMonitorInfo()
-        loadMonitorPartialFromPreset(preset,currentMonitorInEditor.mid)
-        return false
-    })
-    monitorPresetsSelection.on('change','.mdl-switch__input',function(){
-        var el = $(this)
-        var name = el.val()
-        if(el.is(':checked')){
-            addMonitorToPreset(name,function(err,d){
-                if(err){
-                    el.prop("checked", false)
-                    el.parents('.is-checked').removeClass('is-checked')
-                }
-            })
-        }else{
-            removeMonitorFromPreset(name,function(d){
-            })
-        }
-    })
     monitorsList.change(function(){
         var monitorId = monitorsList.val()
         openMonitorEditorPage(monitorId ? monitorId : null)
