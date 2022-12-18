@@ -15,6 +15,7 @@ var monitorGroupSelectors = $('#monitor_groups')
 var monitorsList = monitorEditorWindow.find('.monitors_list')
 var editorForm = monitorEditorWindow.find('form')
 var tagsInput = monitorEditorWindow.find('[name="tags"]')
+var triggerTagsInput = monitorEditorWindow.find('[detail=det_trigger_tags]')
 var fieldsLoaded = {}
 var sections = {}
 var loadedPresets = {}
@@ -141,7 +142,7 @@ function generateDefaultMonitorSettings(){
            "detector_send_video_length": "",
            "watchdog_reset": "1",
            "detector_delete_motionless_videos": "0",
-           "det_multi_trig": "",
+           "det_trigger_tags": "",
            "detector_webhook": "0",
            "detector_webhook_url": "",
            "detector_webhook_method": null,
@@ -574,15 +575,14 @@ function importIntoMonitorEditor(options){
     var monitorConfig = options.values || options
     var monitorId = monitorConfig.mid
     var monitorTags = monitorConfig.tags ? monitorConfig.tags.split(',') : []
+    loadMonitorGroupTriggerList()
     $.get(getApiPrefix()+'/hls/'+monitorConfig.ke+'/'+monitorConfig.mid+'/detectorStream.m3u8',function(data){
         $('#monEditBufferPreview').html(data)
     })
-    console.error('monitorConfig.tags',monitorTags)
     tagsInput.tagsinput('removeAll');
     monitorTags.forEach((tag) => {
         tagsInput.tagsinput('add',tag);
-    })
-    console.error('monitorConfig.tags',monitorConfig.tags)
+    });
     monitorEditorWindow.find('.edit_id').text(monitorConfig.mid);
     monitorEditorWindow.attr('data-mid',monitorConfig.mid).attr('data-ke',monitorConfig.ke)
     $.each(monitorConfig,function(n,v){
@@ -1187,6 +1187,14 @@ editorForm.find('[name="type"]').change(function(e){
             }
         })
     }
+    function loadMonitorGroupTriggerList(){
+        var monitorTriggerTags = (monitorEditorSelectedMonitor && monitorEditorSelectedMonitor.details.det_trigger_tags ? monitorEditorSelectedMonitor.details.det_trigger_tags : '').split(',')
+        var listOftags = Object.keys(getListOfTagsFromMonitors())
+        triggerTagsInput.tagsinput('removeAll');
+        monitorTriggerTags.forEach((tag) => {
+            triggerTagsInput.tagsinput('add',tag);
+        });
+    }
     window.writeToMonitorSettingsWindow = function(monitorValues){
         $.each(monitorValues,function(key,value){
             if(key === `details`){
@@ -1201,7 +1209,23 @@ editorForm.find('[name="type"]').change(function(e){
     monitorsList.change(function(){
         var monitorId = monitorsList.val()
         openMonitorEditorPage(monitorId ? monitorId : null)
-    })
+    });
+    tagsInput.on('itemAdded', function(event) {
+        drawMonitorGroupList()
+        loadMonitorGroupTriggerList()
+    });
+    triggerTagsInput.on('itemAdded', function(event) {
+        var listOftags = getListOfTagsFromMonitors()
+        var newTag = event.item
+        if(!listOftags[newTag]){
+            new PNotify({
+                title: lang.tagsCannotAddText,
+                text: lang.tagsTriggerCannotAddText,
+                type: 'warning'
+            })
+            triggerTagsInput.tagsinput('remove', newTag);
+        }
+    });
     $('body')
     .on('tab-open-monitorSettings',function(){
         console.log('Opened Account Settings')

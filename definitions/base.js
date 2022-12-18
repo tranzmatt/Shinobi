@@ -2782,6 +2782,12 @@ module.exports = function(s,config,lang){
                       ]
                    },
                    {
+                       hidden: true,
+                      "name": "detail=det_trigger_tags",
+                      "field": lang['Trigger Group to Record'],
+                      "form-group-class": "h_det_input h_det_1",
+                   },
+                   {
                        isAdvanced: true,
                       "name": "detail=detector_http_api",
                       "field": lang["Allow API Trigger"],
@@ -2895,15 +2901,6 @@ module.exports = function(s,config,lang){
                    {
                        hidden: true,
                       "name": "detail=detector_filters",
-                   },
-                   {
-                       isAdvanced: true,
-                       hidden: true,
-                      "name": "detail=det_multi_trig",
-                      "field": lang['Trigger Camera Groups'],
-                      "form-group-class": "h_det_input h_det_1",
-                      "fieldType": "select",
-                      "attribute": "multiple"
                    },
                    {
                        hidden: true,
