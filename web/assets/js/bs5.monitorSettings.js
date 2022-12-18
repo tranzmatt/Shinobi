@@ -13,7 +13,6 @@ var monitorPresetsSelection = $('#monitorPresetsSelection')
 var monitorPresetsNameField = $('#monitorPresetsName')
 var monitorGroupSelectors = $('#monitor_groups')
 var monitorsList = monitorEditorWindow.find('.monitors_list')
-var monitorGroupMutliTriggerSelectContainer = $('#monitor_group_detector_multi')
 var editorForm = monitorEditorWindow.find('form')
 var tagsInput = monitorEditorWindow.find('[name="tags"]')
 var fieldsLoaded = {}
@@ -142,8 +141,7 @@ function generateDefaultMonitorSettings(){
            "detector_send_video_length": "",
            "watchdog_reset": "1",
            "detector_delete_motionless_videos": "0",
-           "det_multi_trig": null,
-           "group_detector_multi": "",
+           "det_multi_trig": "",
            "detector_webhook": "0",
            "detector_webhook_url": "",
            "detector_webhook_method": null,
@@ -453,7 +451,6 @@ window.getMonitorEditFormFields = function(){
     monitorConfig.details = safeJsonParse(monitorConfig.details)
     monitorConfig.details.substream = getSubStreamChannelFields()
     monitorConfig.details.groups = getMonitorGroupsSelected()
-    monitorConfig.details.group_detector_multi = getMonitorTriggerGroupsSelected()
     monitorConfig.details.input_map_choices = monitorSectionInputMapsave()
     // TODO : Input Maps and Stream Channels (does old way at the moment)
 
@@ -692,31 +689,7 @@ function importIntoMonitorEditor(options){
             }
         }
     });
-    try{
-        $.each(['groups','group_detector_multi'],function(m,b){
-            var html = ''
-            $.each($user.mon_groups,function(n,v){
-                var isSelected = monitorDetails[b] && monitorDetails[b].indexOf(v.id) > -1
-                html += `<div class="mdl-list__item card btn-default mb-2">
-                    <div class="card-body d-flex flex-row">
-                        <div class="flex-grow-1 pr-3">
-                            ${v.name} <span class="text-muted">(${v.id})</span>
-                        </div>
-                        <div class="pr-3">
-                            <span><input class="form-check-input no-abs" ${b} type="checkbox" value="${v.id}" ${isSelected ? 'checked' : ''}/></span>
-                        </div>
-                    </div>
-                </div>`
-            })
-            $('#monitor_'+b).html(html)
-        })
-        console.log(`!!!!!!!\ncomponentHandler.upgradeAllRegistered\n!!!!!!!`)
-    }catch(er){
-        console.log(er)
-        //no group, this 'try' will be removed in future.
-    };
     copySettingsSelector.val('0').change()
-
     var tmp = '';
     $.each(loadedMonitors,function(n,monitor){
         if(monitor.ke === $user.ke){
