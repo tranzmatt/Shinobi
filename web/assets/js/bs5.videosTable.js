@@ -133,6 +133,8 @@ $(document).ready(function(e){
             data: loadedVideosTable.map((file) => {
                 var href = file.href
                 var loadedMonitor = loadedMonitors[file.mid]
+                console.log(file)
+                var isLocalVideo = !file.videoSet || file.videoSet === 'videos'
                 return {
                     image: `<div class="video-thumbnail" data-mid="${file.mid}" data-ke="${file.ke}" data-time="${file.time}" data-end="${file.end}" data-filename="${file.filename}">
                         <div class="video-thumbnail-img-block">
@@ -159,7 +161,7 @@ $(document).ready(function(e){
                     buttons: `
                     <div class="row-info btn-group" data-mid="${file.mid}" data-ke="${file.ke}" data-time="${file.time}" data-filename="${file.filename}" data-status="${file.status}">
                         <a class="btn btn-sm btn-default btn-monitor-status-color open-video" href="${href}" title="${lang.Play}"><i class="fa fa-play"></i></a>
-                        ${permissionCheck('video_delete',file.mid) ? `<a class="btn btn-sm btn-${file.archive === 1 ? `success status-archived` : `default`} archive-video" title="${lang.Archive}"><i class="fa fa-${file.archive === 1 ? `lock` : `unlock-alt`}"></i></a>` : ''}
+                        ${isLocalVideo && permissionCheck('video_delete',file.mid) ? `<a class="btn btn-sm btn-${file.archive === 1 ? `success status-archived` : `default`} archive-video" title="${lang.Archive}"><i class="fa fa-${file.archive === 1 ? `lock` : `unlock-alt`}"></i></a>` : ''}
                         <div class="dropdown d-inline-block">
                             <a class="btn btn-sm btn-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" data-bs-reference="parent">
                               <i class="fa fa-ellipsis-v" aria-hidden="true"></i>

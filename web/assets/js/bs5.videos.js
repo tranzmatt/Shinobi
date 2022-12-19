@@ -486,7 +486,10 @@ function getVideos(options,callback){
                 $.getJSON(`${getApiPrefix(`events`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`limit=${limit}`]).join('&')}`,function(eventData){
                     var theEvents = eventData.events || eventData;
                     var newVideos = applyDataListToVideos(videos,theEvents)
-                    newVideos = applyTimelapseFramesListToVideos(newVideos,timelapseFrames.frames || timelapseFrames,'timelapseFrames',true)
+                    newVideos = applyTimelapseFramesListToVideos(newVideos,timelapseFrames.frames || timelapseFrames,'timelapseFrames',true).map((video) => {
+                        video.videoSet = customVideoSet
+                        return video
+                    })
                     loadEventsData(theEvents)
                     loadVideosData(newVideos)
                     if(callback)callback({videos: newVideos, frames: timelapseFrames});
@@ -635,15 +638,15 @@ async function unarchiveVideos(videos){
 }
 function buildDefaultVideoMenuItems(file,options){
     var href = file.href
+    var isLocalVideo = !file.videoSet || file.videoSet === 'videos'
     options = options ? options : {play: true}
     return `
     <li><a class="dropdown-item" href="${href}" download>${lang.Download}</a></li>
     ${options.play ? `<li><a class="dropdown-item open-video" href="${href}">${lang.Play}</a></li>` : ``}
-    ${options.play ? `<li><a class="dropdown-item mark-unread" href="${href}">${lang.Play}</a></li>` : ``}
     <li><hr class="dropdown-divider"></li>
-    ${permissionCheck('video_delete',file.mid) ? `<li><a class="dropdown-item open-video-studio" href="${href}">${lang.Slice}</a></li>` : ``}
+    ${isLocalVideo && permissionCheck('video_delete',file.mid) ? `<li><a class="dropdown-item open-video-studio" href="${href}">${lang.Slice}</a></li>` : ``}
     ${permissionCheck('video_delete',file.mid) ? `<li><a class="dropdown-item delete-video" href="${href}">${lang.Delete}</a></li>` : ``}
-    ${permissionCheck('video_delete',file.mid) ? `<li><a class="dropdown-item compress-video" href="${href}">${lang.Compress}</a></li>` : ``}
+    ${isLocalVideo && permissionCheck('video_delete',file.mid) ? `<li><a class="dropdown-item compress-video" href="${href}">${lang.Compress}</a></li>` : ``}
 `
 }
 function setVideoStatus(video,toStatus){
@@ -705,9 +708,10 @@ $(document).ready(function(){
         var monitorId = el.attr('data-mid')
         var videoTime = el.attr('data-time')
         var video = loadedVideosInMemory[`${monitorId}${videoTime}`]
+        var videoSet = video.videoSet
         var ext = video.filename.split('.')
         ext = ext[ext.length - 1]
-        var videoEndpoint = getApiPrefix(`videos`) + '/' + video.mid + '/' + video.filename
+        var videoEndpoint = getApiPrefix(videoSet || 'videos') + '/' + video.mid + '/' + video.filename
         $.confirm.create({
             title: lang["Delete Video"] + ' : ' + video.filename,
             body: `${lang.DeleteVideoMsg}<br><br><div class="row"><video class="video_video" autoplay loop controls><source src="${videoEndpoint}" type="video/${ext}"></video></div>`,
