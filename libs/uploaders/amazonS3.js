@@ -244,8 +244,8 @@ module.exports = function(s,config,lang){
         cloudDiskUseStartupExtensions: cloudDiskUseStartup,
         beforeAccountSave: beforeAccountSave,
         onAccountSave: cloudDiskUseStartup,
-        onInsertTimelapseFrame: onInsertTimelapseFrame,
-        onDeleteTimelapseFrameFromCloud: onDeleteTimelapseFrameFromCloud,
+        // onInsertTimelapseFrame: onInsertTimelapseFrame,
+        // onDeleteTimelapseFrameFromCloud: onDeleteTimelapseFrameFromCloud,
         onGetVideoData
     })
     //return fields that will appear in settings
