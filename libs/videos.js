@@ -341,12 +341,12 @@ module.exports = function(s,config,lang){
             })
         }
     }
-    s.deleteVideoFromCloud = function(e){
+    s.deleteVideoFromCloud = function(e,cloudType){
         // e = video object
-        s.checkDetails(e)
         const whereQuery = {
             ke: e.ke,
             mid: e.mid,
+            type: cloudType,
             time: new Date(e.time),
         }
         s.knexQuery({
@@ -363,7 +363,7 @@ module.exports = function(s,config,lang){
                     table: "Cloud Videos",
                     where: whereQuery
                 },(err) => {
-                    s.deleteVideoFromCloudExtensionsRunner(e,details.type || 's3',r)
+                    s.deleteVideoFromCloudExtensionsRunner(e,details.type || r.type || 's3',r)
                 })
             }else{
 //                    console.log('Delete Failed',e)

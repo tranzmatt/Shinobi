@@ -1884,7 +1884,7 @@ module.exports = function(s,config,lang,app,io){
                             response.ok = true;
                             switch(videoParam){
                                 case'cloudVideos':
-                                    s.deleteVideoFromCloud(r,details.type || 's3')
+                                    s.deleteVideoFromCloud(r,details.type || r.type || 's3')
                                 break;
                                 default:
                                     s.deleteVideo(r)
