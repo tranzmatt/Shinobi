@@ -79,7 +79,6 @@ module.exports = function(s,config,lang){
         }
     }
     function unloadGroupApp(user){
-        s.group[user.ke].aws = null
         s.group[user.ke].aws_s3 = null
     }
     function deleteVideo(e,video,callback){
@@ -244,8 +243,8 @@ module.exports = function(s,config,lang){
         cloudDiskUseStartupExtensions: cloudDiskUseStartup,
         beforeAccountSave: beforeAccountSave,
         onAccountSave: cloudDiskUseStartup,
-        // onInsertTimelapseFrame: onInsertTimelapseFrame,
-        // onDeleteTimelapseFrameFromCloud: onDeleteTimelapseFrameFromCloud,
+        onInsertTimelapseFrame: (() => {}) || onInsertTimelapseFrame,
+        onDeleteTimelapseFrameFromCloud: (() => {}) || onDeleteTimelapseFrameFromCloud,
         onGetVideoData
     })
     //return fields that will appear in settings
