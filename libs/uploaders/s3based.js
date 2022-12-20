@@ -59,8 +59,6 @@ module.exports = function(s,config,lang){
            userDetails.whcs_accessKeyId !== ''&&
            userDetails.whcs_secretAccessKey &&
            userDetails.whcs_secretAccessKey !== ''&&
-           userDetails.whcs_region &&
-           userDetails.whcs_region !== '' &&
            userDetails.whcs_bucket !== ''
           ){
             if(!userDetails.whcs_dir || userDetails.whcs_dir === '/'){
