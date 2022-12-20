@@ -11,7 +11,6 @@ var monSectionPresets = $('#monSectionPresets')
 var copySettingsSelector = $('#copy_settings')
 var monitorPresetsSelection = $('#monitorPresetsSelection')
 var monitorPresetsNameField = $('#monitorPresetsName')
-var monitorGroupSelectors = $('#monitor_groups')
 var monitorsList = monitorEditorWindow.find('.monitors_list')
 var editorForm = monitorEditorWindow.find('form')
 var tagsInput = monitorEditorWindow.find('[name="tags"]')
@@ -246,7 +245,6 @@ function generateDefaultMonitorSettings(){
            "control_url_zoom_out_stop": "",
            "control_url_zoom_in": "",
            "control_url_zoom_in_stop": "",
-           "groups": "[]",
            "loglevel": "warning",
            "sqllog": "0",
            "detector_cascades": "",
@@ -314,22 +312,6 @@ var getSelectedMonitorInfo = function(){
         mid: monitorId,
         auth: $user.auth_token,
     }
-}
-function getMonitorGroupsSelected(){
-    var monitorGroupsInSelection = []
-    monitorGroupSelectors.find('input:checked').each(function(n,v){
-        var monitorId = $(v).val()
-        monitorGroupsInSelection.push(monitorId)
-    })
-    return monitorGroupsInSelection
-}
-function getMonitorTriggerGroupsSelected(){
-    var monitorGroupsInSelection = []
-    monitorGroupMutliTriggerSelectContainer.find('input:checked').each(function(n,v){
-        var groupId = $(v).val()
-        monitorGroupsInSelection.push(groupId)
-    })
-    return monitorGroupsInSelection
 }
 var differentiateMonitorConfig = function(firstConfig,secondConfig){
     console.log(firstConfig,secondConfig)
@@ -451,7 +433,6 @@ window.getMonitorEditFormFields = function(){
     //edit details
     monitorConfig.details = safeJsonParse(monitorConfig.details)
     monitorConfig.details.substream = getSubStreamChannelFields()
-    monitorConfig.details.groups = getMonitorGroupsSelected()
     monitorConfig.details.input_map_choices = monitorSectionInputMapsave()
     // TODO : Input Maps and Stream Channels (does old way at the moment)
 
@@ -574,7 +555,10 @@ function drawInputMapSelectorHtml(options,parent){
 function importIntoMonitorEditor(options){
     var monitorConfig = options.values || options
     var monitorId = monitorConfig.mid
+    var monitorDetails = safeJsonParse(monitorConfig.details);
     var monitorTags = monitorConfig.tags ? monitorConfig.tags.split(',') : []
+    var monitorGroups = monitorDetails.groups ? safeJsonParse(monitorDetails.groups) : []
+    monitorTags = monitorTags.concat(monitorGroups)
     loadMonitorGroupTriggerList()
     $.get(getApiPrefix()+'/hls/'+monitorConfig.ke+'/'+monitorConfig.mid+'/detectorStream.m3u8',function(data){
         $('#monEditBufferPreview').html(data)
@@ -588,7 +572,6 @@ function importIntoMonitorEditor(options){
     $.each(monitorConfig,function(n,v){
         monitorEditorWindow.find('[name="'+n+'"]').val(v).change()
     })
-    var monitorDetails = safeJsonParse(monitorConfig.details);
     //get maps
     monitorSectionInputMaps.empty()
     if(monitorDetails.input_maps && monitorDetails.input_maps !== ''){
