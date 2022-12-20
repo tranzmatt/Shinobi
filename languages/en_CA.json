@@ -441,6 +441,7 @@
    "Endpoint Address": "Endpoint Address",
    "Custom Endpoint": "Custom Endpoint",
    "Bucket": "Bucket",
+   "Bucket ID": "Bucket ID",
    "Region": "Region",
    "Use Global Amazon S3 Video Storage": "Use Global Amazon S3 Video Storage",
    "Use Global Wasabi Hot Cloud Storage Video Storage": "Use Global Wasabi Hot Cloud Storage Video Storage",
