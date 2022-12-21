@@ -337,7 +337,6 @@ module.exports = function(s,config,lang){
                         if(details.monitor_edit){formDetails.monitor_edit = details.monitor_edit;}
                         if(details.size){formDetails.size = details.size;}
                         if(details.days){formDetails.days = details.days;}
-                        delete(formDetails.mon_groups)
                     }
                     var newSize = parseFloat(formDetails.size) || 10000
                     //load addStorageUse
