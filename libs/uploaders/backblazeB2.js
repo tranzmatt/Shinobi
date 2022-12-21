@@ -59,7 +59,6 @@ module.exports = function(s,config,lang){
                         const getBucketResponse = await b2.getBucket({bucketName: bucketName})
                         const bucketId = getBucketResponse.data.buckets[0].bucketId
                         s.group[e.ke].bb_b2_bucketId = bucketId
-                        console.log('bucketId',bucketId)
                     }catch(err){
                         console.error('b2.authorize',err)
                         backblazeErr(err)
@@ -93,8 +92,10 @@ module.exports = function(s,config,lang){
             fileName: videoDetails.fileName
         }).then(function(resp){
             // console.log('deleteFileVersion',resp)
+            callback()
         }).catch(function(err){
             console.log('deleteFileVersion',err)
+            callback()
         })
     }
     var uploadVideoToBackblazeB2 = function(e,k){
