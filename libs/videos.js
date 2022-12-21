@@ -331,13 +331,9 @@ module.exports = function(s,config,lang){
         }
         if(s.deleteVideoFromCloudExtensions[storageType]){
             s.deleteVideoFromCloudExtensions[storageType](e,video,function(){
-                s.tx({
+                s.tx(Object.assign({
                     f: 'video_delete_cloud',
-                    mid: e.mid,
-                    ke: e.ke,
-                    time: e.time,
-                    end: e.end
-                },'GRP_'+e.ke);
+                },video),'GRP_'+e.ke);
             })
         }
     }
