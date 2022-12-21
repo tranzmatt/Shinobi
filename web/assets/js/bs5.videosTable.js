@@ -61,6 +61,7 @@ $(document).ready(function(e){
         var endDate = dateRange.endDate
         var monitorId = monitorsList.val()
         var wantsArchivedVideo = getVideoSetSelected() === 'archive'
+        var wantCloudVideo = wantCloudVideos()
         var frameIconsHtml = ''
         if(!usePreloadedData){
             loadedVideosTable = (await getVideos({
@@ -69,7 +70,7 @@ $(document).ready(function(e){
                 endDate,
                 searchQuery,
                 archived: wantsArchivedVideo,
-                customVideoSet: wantCloudVideos() ? 'cloudVideos' : null,
+                customVideoSet: wantCloudVideo ? 'cloudVideos' : null,
             })).videos;
             $.each(loadedVideosTable,function(n,v){
                 loadedVideosInMemory[`${monitorId}${v.time}`]
@@ -134,7 +135,7 @@ $(document).ready(function(e){
                 var href = file.href
                 var loadedMonitor = loadedMonitors[file.mid]
                 console.log(file)
-                var isLocalVideo = !file.videoSet || file.videoSet === 'videos'
+                var isLocalVideo = !wantCloudVideo
                 return {
                     image: `<div class="video-thumbnail" data-mid="${file.mid}" data-ke="${file.ke}" data-time="${file.time}" data-end="${file.end}" data-filename="${file.filename}">
                         <div class="video-thumbnail-img-block">
