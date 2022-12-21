@@ -1379,6 +1379,7 @@ module.exports = function(s,config,lang,app,io){
                 where: [
                     ['ke','=',groupKey],
                     ['mid','=',req.params.id],
+                    ['type','=', s.getPostData(req,'type') || 's3'],
                     ['time','=',time]
                 ],
                 limit: 1
@@ -1803,15 +1804,17 @@ module.exports = function(s,config,lang,app,io){
                     videoSet = 'Cloud Videos'
                 break;
             }
+            const whereQuery = [
+                ['ke','=',groupKey],
+                ['mid','=',req.params.id],
+                ['time','=',time]
+            ]
+            if(videoParam === 'cloudVideos')whereQuery.push(['type','=',s.getPostData(req,'type') || 's3']);
             s.knexQuery({
                 action: "select",
                 columns: "*",
                 table: videoSet,
-                where: [
-                    ['ke','=',groupKey],
-                    ['mid','=',req.params.id],
-                    ['time','=',time]
-                ],
+                where: whereQuery,
                 limit: 1
             },async (err,r) => {
                 if(r && r[0]){
