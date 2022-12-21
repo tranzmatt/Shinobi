@@ -278,7 +278,7 @@ function createVideoRow(row,classOverride){
     }
     var videoEndpoint = getApiPrefix(`videos`) + '/' + row.mid + '/' + row.filename
     return `
-    <div class="video-row ${classOverride ? classOverride : `col-md-12 col-lg-6 mb-3`} search-row" data-mid="${row.mid}" data-time="${row.time}" data-time-formed="${new Date(row.time)}">
+    <div class="video-row ${classOverride ? classOverride : `col-md-12 col-lg-6 mb-3`} search-row" data-mid="${row.mid}" data-time="${row.time}" data-type="${row.type}" data-time-formed="${new Date(row.time)}">
         <div class="video-time-card shadow-lg px-0 btn-default">
             <div class="card-header">
                 <div class="${definitions.Theme.isDark ? 'text-white' : ''}">
@@ -441,7 +441,7 @@ function drawVideoRowsToList(targetElement,rows){
 function loadVideosData(newVideos){
     $.each(newVideos,function(n,video){
         delete(video.f)
-        loadedVideosInMemory[`${video.mid}${video.time}`] = video
+        loadedVideosInMemory[`${video.mid}${video.time}${video.type}`] = video
     })
 }
 function loadEventsData(videoEvents){
@@ -486,7 +486,10 @@ function getVideos(options,callback){
                 $.getJSON(`${getApiPrefix(`events`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`limit=${limit}`]).join('&')}`,function(eventData){
                     var theEvents = eventData.events || eventData;
                     var newVideos = applyDataListToVideos(videos,theEvents)
-                    newVideos = applyTimelapseFramesListToVideos(newVideos,timelapseFrames.frames || timelapseFrames,'timelapseFrames',true)
+                    newVideos = applyTimelapseFramesListToVideos(newVideos,timelapseFrames.frames || timelapseFrames,'timelapseFrames',true).map((video) => {
+                        video.videoSet = customVideoSet
+                        return video
+                    })
                     loadEventsData(theEvents)
                     loadVideosData(newVideos)
                     if(callback)callback({videos: newVideos, frames: timelapseFrames});
@@ -634,16 +637,16 @@ async function unarchiveVideos(videos){
     }
 }
 function buildDefaultVideoMenuItems(file,options){
-    var href = file.href
+    var isLocalVideo = !file.videoSet || file.videoSet === 'videos'
+    var href = file.href + `${!isLocalVideo ? `?type=${file.type}` : ''}`
     options = options ? options : {play: true}
     return `
     <li><a class="dropdown-item" href="${href}" download>${lang.Download}</a></li>
     ${options.play ? `<li><a class="dropdown-item open-video" href="${href}">${lang.Play}</a></li>` : ``}
-    ${options.play ? `<li><a class="dropdown-item mark-unread" href="${href}">${lang.Play}</a></li>` : ``}
     <li><hr class="dropdown-divider"></li>
-    ${permissionCheck('video_delete',file.mid) ? `<li><a class="dropdown-item open-video-studio" href="${href}">${lang.Slice}</a></li>` : ``}
+    ${isLocalVideo && permissionCheck('video_delete',file.mid) ? `<li><a class="dropdown-item open-video-studio" href="${href}">${lang.Slice}</a></li>` : ``}
     ${permissionCheck('video_delete',file.mid) ? `<li><a class="dropdown-item delete-video" href="${href}">${lang.Delete}</a></li>` : ``}
-    ${permissionCheck('video_delete',file.mid) ? `<li><a class="dropdown-item compress-video" href="${href}">${lang.Compress}</a></li>` : ``}
+    ${isLocalVideo && permissionCheck('video_delete',file.mid) ? `<li><a class="dropdown-item compress-video" href="${href}">${lang.Compress}</a></li>` : ``}
 `
 }
 function setVideoStatus(video,toStatus){
@@ -659,10 +662,10 @@ function setVideoStatus(video,toStatus){
 onWebSocketEvent(function(d){
     switch(d.f){
         case'video_edit':case'video_archive':
-            var video = loadedVideosInMemory[`${d.mid}${d.time}`]
+            var video = loadedVideosInMemory[`${d.mid}${d.time}${d.type}`]
             if(video){
                 let filename = `${formattedTimeForFilename(convertTZ(d.time),false,`YYYY-MM-DDTHH-mm-ss`)}.${video.ext || 'mp4'}`
-                loadedVideosInMemory[`${d.mid}${d.time}`].status = d.status
+                loadedVideosInMemory[`${d.mid}${d.time}${d.type}`].status = d.status
                 $(`[data-mid="${d.mid}"][data-filename="${filename}"]`).attr('data-status',d.status);
             }
         break;
@@ -685,7 +688,7 @@ $(document).ready(function(){
         var el = $(this).parents('[data-mid]')
         var monitorId = el.attr('data-mid')
         var videoTime = el.attr('data-time')
-        var video = loadedVideosInMemory[`${monitorId}${videoTime}`]
+        var video = loadedVideosInMemory[`${monitorId}${videoTime}${undefined}`]
         createVideoPlayerTab(video)
         setVideoStatus(video)
         return false;
@@ -695,7 +698,7 @@ $(document).ready(function(){
         var monitorId = el.attr('data-mid')
         var videoTime = el.attr('video-time-seeked-video-position')
         var timeInward = (parseInt(el.attr('video-slice-seeked')) / 1000) - 2
-        var video = loadedVideosInMemory[`${monitorId}${videoTime}`]
+        var video = loadedVideosInMemory[`${monitorId}${videoTime}${undefined}`]
         timeInward = timeInward < 0 ? 0 : timeInward
         createVideoPlayerTab(video,timeInward)
     })
@@ -704,23 +707,27 @@ $(document).ready(function(){
         var el = $(this).parents('[data-mid]')
         var monitorId = el.attr('data-mid')
         var videoTime = el.attr('data-time')
-        var video = loadedVideosInMemory[`${monitorId}${videoTime}`]
+        var type = el.attr('data-type')
+        var video = loadedVideosInMemory[`${monitorId}${videoTime}${type}`]
+        var videoSet = video.videoSet
         var ext = video.filename.split('.')
         ext = ext[ext.length - 1]
-        var videoEndpoint = getApiPrefix(`videos`) + '/' + video.mid + '/' + video.filename
+        var isCloudVideo = videoSet === 'cloudVideos'
+        var videoEndpoint = getApiPrefix(videoSet || 'videos') + '/' + video.mid + '/' + video.filename
+        var endpointType = isCloudVideo ? `?type=${video.type}` : ''
         $.confirm.create({
             title: lang["Delete Video"] + ' : ' + video.filename,
-            body: `${lang.DeleteVideoMsg}<br><br><div class="row"><video class="video_video" autoplay loop controls><source src="${videoEndpoint}" type="video/${ext}"></video></div>`,
+            body: `${lang.DeleteVideoMsg}<br><br><div class="row"><video class="video_video" autoplay loop controls><source src="${videoEndpoint}${endpointType}" type="video/${ext}"></video></div>`,
             clickOptions: {
                 title: '<i class="fa fa-trash-o"></i> ' + lang.Delete,
                 class: 'btn-danger btn-sm'
             },
             clickCallback: function(){
-                $.getJSON(videoEndpoint + '/delete',function(data){
+                $.getJSON(videoEndpoint + '/delete' + endpointType,function(data){
                     if(data.ok){
                         console.log('Video Deleted')
                     }else{
-                        console.log('Video Not Deleted',data,videoEndpoint)
+                        console.log('Video Not Deleted',data,videoEndpoint + endpointType)
                     }
                 })
             }
@@ -732,7 +739,7 @@ $(document).ready(function(){
         var el = $(this).parents('[data-mid]')
         var monitorId = el.attr('data-mid')
         var videoTime = el.attr('data-time')
-        var video = loadedVideosInMemory[`${monitorId}${videoTime}`]
+        var video = loadedVideosInMemory[`${monitorId}${videoTime}${undefined}`]
         var ext = video.filename.split('.')
         ext = ext[ext.length - 1]
         var videoEndpoint = getApiPrefix(`videos`) + '/' + video.mid + '/' + video.filename
@@ -755,7 +762,7 @@ $(document).ready(function(){
         var monitorId = el.attr('data-mid')
         var videoTime = el.attr('data-time')
         var unarchive = $(this).hasClass('status-archived')
-        var video = loadedVideosInMemory[`${monitorId}${videoTime}`]
+        var video = loadedVideosInMemory[`${monitorId}${videoTime}${undefined}`]
         var ext = video.filename.split('.')
         ext = ext[ext.length - 1]
         var videoEndpoint = getApiPrefix(`videos`) + '/' + video.mid + '/' + video.filename
@@ -781,7 +788,7 @@ $(document).ready(function(){
         var el = $(this).parents('[data-mid]')
         var monitorId = el.attr('data-mid')
         var videoTime = el.attr('data-time')
-        var video = loadedVideosInMemory[`${monitorId}${videoTime}`]
+        var video = loadedVideosInMemory[`${monitorId}${videoTime}${undefined}`]
         var ext = video.filename.split('.')
         ext = ext[ext.length - 1]
         var videoEndpoint = getApiPrefix(`videos`) + '/' + video.mid + '/' + video.filename

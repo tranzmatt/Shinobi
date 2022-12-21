@@ -95,12 +95,12 @@ module.exports = function(s,config,lang,app,io){
             })
         }
     }
-    s.deleteTimelapseFrameFromCloud = function(e){
+    s.deleteTimelapseFrameFromCloud = function(e,cloudType){
         // e = video object
-        s.checkDetails(e)
         var frameSelector = {
             ke: e.ke,
             mid: e.id,
+            type: cloudType,
             time: new Date(e.time),
         }
         s.knexQuery({
@@ -118,7 +118,7 @@ module.exports = function(s,config,lang,app,io){
                     where: frameSelector,
                     limit: 1
                 },function(){
-                    s.onDeleteTimelapseFrameFromCloudExtensionsRunner(e,r)
+                    s.onDeleteTimelapseFrameFromCloudExtensionsRunner(e,details.type || r.type || 's3',r)
                 })
             }else{
 //                    console.log('Delete Failed',e)

@@ -331,22 +331,18 @@ module.exports = function(s,config,lang){
         }
         if(s.deleteVideoFromCloudExtensions[storageType]){
             s.deleteVideoFromCloudExtensions[storageType](e,video,function(){
-                s.tx({
+                s.tx(Object.assign({
                     f: 'video_delete_cloud',
-                    mid: e.mid,
-                    ke: e.ke,
-                    time: e.time,
-                    end: e.end
-                },'GRP_'+e.ke);
+                },video),'GRP_'+e.ke);
             })
         }
     }
-    s.deleteVideoFromCloud = function(e){
+    s.deleteVideoFromCloud = function(e,cloudType){
         // e = video object
-        s.checkDetails(e)
         const whereQuery = {
             ke: e.ke,
             mid: e.mid,
+            type: cloudType,
             time: new Date(e.time),
         }
         s.knexQuery({
@@ -363,7 +359,7 @@ module.exports = function(s,config,lang){
                     table: "Cloud Videos",
                     where: whereQuery
                 },(err) => {
-                    s.deleteVideoFromCloudExtensionsRunner(e,details.type || 's3',r)
+                    s.deleteVideoFromCloudExtensionsRunner(e,details.type || r.type || 's3',r)
                 })
             }else{
 //                    console.log('Delete Failed',e)
