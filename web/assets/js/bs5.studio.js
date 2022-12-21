@@ -250,7 +250,7 @@ $(document).ready(function(){
         var el = $(this).parents('[data-mid]')
         var monitorId = el.attr('data-mid')
         var videoTime = el.attr('data-time')
-        var video = loadedVideosInMemory[`${monitorId}${videoTime}`]
+        var video = loadedVideosInMemory[`${monitorId}${videoTime}${undefined}`]
         openTab('studio')
         loadVideoIntoSlicer(video)
         return false;

@@ -34,7 +34,7 @@ $(document).ready(function(){
             })
             eventMatrixHtml += `</div>`
         }
-        var baseHtml = `<main class="container page-tab tab-videoPlayer" id="tab-${newTabId}" video-id="${video.mid}${video.time}" data-time="${video.time}" data-mid="${video.mid}" data-ke="${video.ke}">
+        var baseHtml = `<main class="container page-tab tab-videoPlayer" id="tab-${newTabId}" video-id="${video.mid}${video.time}${video.type}" data-time="${video.time}" data-mid="${video.mid}" data-ke="${video.ke}" data-type="${video.type}">
             <div class="my-3 ${definitions.Theme.isDark ? 'bg-dark text-white' : 'bg-light text-dark'} rounded shadow-sm">
                 <div class="p-3">
                     <h6 class="video-title border-bottom-dotted border-bottom-dark pb-2 mb-0">${tabLabel}</h6>
