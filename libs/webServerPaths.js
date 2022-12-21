@@ -1386,7 +1386,7 @@ module.exports = function(s,config,lang,app,io){
                 if(r&&r[0]){
                     r = r[0]
                     const videoDetails = JSON.parse(r.details)
-                    const storageType = videoDetails.type
+                    const storageType = r.type || videoDetails.type
                     const onGetVideoData = s.cloudDiskUseOnGetVideoDataExtensions[storageType]
                     if(onGetVideoData){
                         onGetVideoData(r).then((dataPipe) => {
