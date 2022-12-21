@@ -413,25 +413,6 @@ module.exports = function(s,config,lang,app,io){
                             ['uid','=',user.uid],
                         ]
                     })
-                    if(user.details.sub){
-                        const adminUserCheckResponse = await s.knexQueryPromise({
-                            action: "select",
-                            columns: "details",
-                            table: "Users",
-                            where: [
-                                ['ke','=',user.ke],
-                                ['details','NOT LIKE','%"sub"%'],
-                            ],
-                            limit: 1,
-                        })
-                        if(adminUserCheckResponse.rows && adminUserCheckResponse.rows[0]){
-                            const adminUser = adminUserCheckResponse.rows[0];
-                            const adminUserDetails = s.parseJSON(adminUser.details);
-                            user.details.mon_groups = adminUserDetails.mon_groups;
-                        }else{
-                            return failedAuthentication(req.body.function,req.body.mail)
-                        }
-                    }
                     if(user.details.factorAuth === "1"){
                         const factorAuthCreationResponse = createTwoFactorAuth(
                             user,

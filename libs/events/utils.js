@@ -350,19 +350,20 @@ module.exports = (s,config,lang,app,io) => {
         }
         return true
     }
-    const runMultiTrigger = (monitorConfig,eventDetails, d, triggerEvent) => {
-        s.getCamerasForMultiTrigger(monitorConfig).forEach(function(monitor){
-            if(monitor.mid !== d.id){
-                triggerEvent({
-                    id: monitor.mid,
-                    ke: monitor.ke,
-                    details: {
-                        confidence: 100,
-                        name: "multiTrigger",
-                        plug: eventDetails.plug,
-                        reason: eventDetails.reason
-                    }
-                })
+    const runMultiEventBasedRecord = (monitorConfig, triggerTags, eventTime) => {
+        triggerTags.forEach(function(monitorId){
+            const groupKey = monitorConfig.ke
+            const monitor = s.group[groupKey].rawMonitorConfigurations[monitorId]
+            if(monitorId !== monitorConfig.mid){
+                const monitorDetails = monitor.details
+                if(
+                    monitorDetails.detector_trigger === '1' &&
+                    monitor.mode === 'start' &&
+                    (monitorDetails.detector_record_method === 'sip' || monitorDetails.detector_record_method === 'hot')
+                ){
+                    const secondBefore = (parseInt(monitorDetails.detector_buffer_seconds_before) || 5) + 1
+                    createEventBasedRecording(monitor,moment(eventTime).subtract(secondBefore,'seconds').format('YYYY-MM-DDTHH-mm-ss'))
+                }
             }
         })
     }
@@ -388,8 +389,9 @@ module.exports = (s,config,lang,app,io) => {
         if(monitorDetails.detector_ptz_follow === '1'){
             moveCameraPtzToMatrix(d,monitorDetails.detector_ptz_follow_target)
         }
-        if(monitorDetails.det_multi_trig === '1'){
-            runMultiTrigger(monitorConfig,eventDetails, d, triggerEvent)
+        if(monitorDetails.det_trigger_tags){
+            const triggerTags = monitorDetails.det_trigger_tags.split(',')
+            runMultiEventBasedRecord(monitorConfig, triggerTags, eventTime)
         }
         //save this detection result in SQL, only coords. not image.
         if(d.frame){
@@ -509,8 +511,10 @@ module.exports = (s,config,lang,app,io) => {
     const createEventBasedRecording = function(d,fileTime){
         if(!fileTime)fileTime = s.formattedTime()
         const logTitleText = lang["Traditional Recording"]
-        const activeMonitor = s.group[d.ke].activeMonitors[d.id]
-        const monitorConfig = s.group[d.ke].rawMonitorConfigurations[d.id]
+        const groupKey = d.ke
+        const monitorId = d.mid || d.id
+        const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
+        const monitorConfig = s.group[groupKey].rawMonitorConfigurations[monitorId]
         const monitorDetails = monitorConfig.details
         if(monitorDetails.detector !== '1'){
             return
@@ -559,7 +563,7 @@ module.exports = (s,config,lang,app,io) => {
                 }
                 const secondsBefore = parseInt(monitorDetails.detector_buffer_seconds_before) || 5
                 let LiveStartIndex = parseInt(secondsBefore / 2 + 1)
-                const ffmpegCommand = `-loglevel warning -live_start_index -${LiveStartIndex} -analyzeduration ${analyzeDuration} -probesize ${probeSize} -re -i "${s.dir.streams+d.ke+'/'+d.id}/detectorStream.m3u8" ${outputMap}-movflags faststart -fflags +igndts -c:v copy -c:a aac -strict -2 -strftime 1 -y "${s.getVideoDirectory(monitorConfig) + filename}"`
+                const ffmpegCommand = `-loglevel warning -live_start_index -${LiveStartIndex} -analyzeduration ${analyzeDuration} -probesize ${probeSize} -re -i "${s.dir.streams+groupKey+'/'+monitorId}/detectorStream.m3u8" ${outputMap}-movflags faststart -fflags +igndts -c:v copy -c:a aac -strict -2 -strftime 1 -y "${s.getVideoDirectory(monitorConfig) + filename}"`
                 s.debugLog(ffmpegCommand)
                 activeMonitor.eventBasedRecording.process = spawn(
                     config.ffmpegDir,
@@ -775,7 +779,7 @@ module.exports = (s,config,lang,app,io) => {
         hasMatrices: hasMatrices,
         checkEventFilters: checkEventFilters,
         checkMotionLock: checkMotionLock,
-        runMultiTrigger: runMultiTrigger,
+        runMultiEventBasedRecord: runMultiEventBasedRecord,
         checkForObjectsInRegions: checkForObjectsInRegions,
         runEventExecutions: runEventExecutions,
         createEventBasedRecording: createEventBasedRecording,
