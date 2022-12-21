@@ -115,8 +115,9 @@ module.exports = (s,config,lang,app,io) => {
         s.group[user.ke].googleDrive = null
         s.group[user.ke].googleDriveOAuth2Client = null
     }
-    var deleteVideoFromGoogleDrive = function(groupKey,video,callback){
+    var deleteVideoFromGoogleDrive = function(e,video,callback){
         // e = user
+        const groupKey = e.ke
         var videoDetails = s.parseJSON(video.details)
         if(video.type !== 'googd'){
             callback()
