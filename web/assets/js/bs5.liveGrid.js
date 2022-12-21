@@ -1067,7 +1067,7 @@ $(document).ready(function(e){
                 d.mid = d.id || d.mid
                 var monitorId = d.mid
                 var videoTime = d.time
-                loadedVideosInMemory[`${monitorId}${videoTime}`] = d
+                loadedVideosInMemory[`${monitorId}${videoTime}${d.type}`] = d
                 if(liveGridElements[monitorId] && liveGridElements[monitorId].streamElement)drawVideoCardToMiniList(monitorId,createVideoLinks(d),false)
             break;
             case'monitor_watch_off':case'monitor_stopping':

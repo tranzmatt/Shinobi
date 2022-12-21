@@ -73,7 +73,7 @@ $(document).ready(function(e){
                 customVideoSet: wantCloudVideo ? 'cloudVideos' : null,
             })).videos;
             $.each(loadedVideosTable,function(n,v){
-                loadedVideosInMemory[`${monitorId}${v.time}`]
+                loadedVideosInMemory[`${monitorId}${v.time}${v.type}`]
             })
         }
         // for (let i = 0; i < loadedVideosTable.length; i++) {
@@ -132,10 +132,9 @@ $(document).ready(function(e){
                   }
             ],
             data: loadedVideosTable.map((file) => {
-                var href = file.href
-                var loadedMonitor = loadedMonitors[file.mid]
-                console.log(file)
                 var isLocalVideo = !wantCloudVideo
+                var href = file.href + `${!isLocalVideo ? `?type=${file.type}` : ''}`
+                var loadedMonitor = loadedMonitors[file.mid]
                 return {
                     image: `<div class="video-thumbnail" data-mid="${file.mid}" data-ke="${file.ke}" data-time="${file.time}" data-end="${file.end}" data-filename="${file.filename}">
                         <div class="video-thumbnail-img-block">
@@ -157,10 +156,11 @@ $(document).ready(function(e){
                     objects: file.objects,
                     tags: `
                         ${file.ext ? `<span class="badge badge-${file.ext ==='webm' ? `primary` : 'danger'}">${file.ext}</span>` : ''}
+                        ${!isLocalVideo ? `<span class="badge badge-success">${file.type}</span>` : ''}
                     `,
                     size: convertKbToHumanSize(file.size),
                     buttons: `
-                    <div class="row-info btn-group" data-mid="${file.mid}" data-ke="${file.ke}" data-time="${file.time}" data-filename="${file.filename}" data-status="${file.status}">
+                    <div class="row-info btn-group" data-mid="${file.mid}" data-ke="${file.ke}" data-time="${file.time}" data-filename="${file.filename}" data-status="${file.status}" data-type="${file.type}">
                         <a class="btn btn-sm btn-default btn-monitor-status-color open-video" href="${href}" title="${lang.Play}"><i class="fa fa-play"></i></a>
                         ${isLocalVideo && permissionCheck('video_delete',file.mid) ? `<a class="btn btn-sm btn-${file.archive === 1 ? `success status-archived` : `default`} archive-video" title="${lang.Archive}"><i class="fa fa-${file.archive === 1 ? `lock` : `unlock-alt`}"></i></a>` : ''}
                         <div class="dropdown d-inline-block">
@@ -188,7 +188,8 @@ $(document).ready(function(e){
             var groupKey = rowInfo.attr('data-ke')
             var time = rowInfo.attr('data-time')
             var filename = rowInfo.attr('data-filename')
-            rowsSelected.push(getLoadedRows ? loadedVideosInMemory[`${monitorId}${time}`] : {
+            var type = rowInfo.attr('data-type')
+            rowsSelected.push(getLoadedRows ? loadedVideosInMemory[`${monitorId}${time}${type}`] : {
                 mid: monitorId,
                 ke: groupKey,
                 time: time,
@@ -260,7 +261,8 @@ $(document).ready(function(e){
         var rowEl = $(this).parents('[data-mid]')
         var monitorId = rowEl.attr('data-mid')
         var videoTime = rowEl.attr('data-time')
-        var video = loadedVideosInMemory[`${monitorId}${videoTime}`]
+        var type = rowEl.attr('data-type')
+        var video = loadedVideosInMemory[`${monitorId}${videoTime}${type}`]
         var href = el.attr('href')
         setPreviewedVideoHighlight(el,videosTableDrawArea)
         drawPreviewVideo(href)
@@ -377,11 +379,12 @@ $(document).ready(function(e){
     onWebSocketEvent((data) => {
         switch(data.f){
             case'video_delete':
+            case'video_delete_cloud':
                 if(tabTree.name === 'videosTableView'){
-                    var videoIndexToRemove = loadedVideosTable.findIndex(row => data.mid === row.mid && new Date(row.time).getTime() === new Date(data.time).getTime())
+                    var videoIndexToRemove = loadedVideosTable.findIndex(row => (!data.type || data.type === row.type) && data.mid === row.mid && new Date(row.time).getTime() === new Date(data.time).getTime())
                     if(videoIndexToRemove !== -1){
                         loadedVideosTable.splice(videoIndexToRemove, 1);
-                        delete(loadedVideosInMemory[`${data.mid}${data.time}`])
+                        delete(loadedVideosInMemory[`${data.mid}${data.time}${data.type}`])
                         clearTimeout(redrawTimeout)
                         redrawTimeout = setTimeout(function(){
                             drawVideosTableViewElements(true)
