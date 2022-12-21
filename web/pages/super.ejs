@@ -89,7 +89,7 @@
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" data-bs-toggle="tab" data-bs-target="#superPluginManager" role="tab"><%-lang['Plugin Manager']%></a>
-                            </li>
+                            </li>                          
                         </ul>
                         <div class="card-body text-white" style="background:#263343">
                             <!-- Tab panes -->
@@ -126,9 +126,11 @@
                                 <div class="tab-pane text-left" id="superPluginManager" role="tabpanel">
                                     <% include blocks/superPluginManager.ejs %>
                                 </div>
+
                                 <% customAutoLoad.superPageBlocks.forEach(function(block){ %>
                                     <%- include(block) %>
                                 <% }) %>
+
                             </div>
                         </div>
                     </div>

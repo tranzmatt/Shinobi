@@ -1,0 +1,12 @@
+<main class="container page-tab pt-3" id="tab-faceManager">
+    <div class="my-3 px-3 pt-3 <%- define.Theme.isDark ? 'bg-dark text-white' : 'bg-light' %> rounded shadow-sm">
+        <h4
+            class="mb-3 pb-3 <%- define.Theme.isDark ? 'text-white' : '' %> border-bottom-dotted border-color-blue d-flex flex-row">
+            <div style="flex:8">
+                <%- lang['faceManager'] %>
+            </div>
+        </h4>
+        <div id="faceListRows" class="row"></div>
+    </div>
+    <script src="<%-window.libURL%>assets/js/bs5.faceManager.js" type="text/javascript"></script>
+</main>
