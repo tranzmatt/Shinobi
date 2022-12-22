@@ -659,6 +659,7 @@
    "Creation Interval": "Creation Interval",
    "Plugin": "Plugin",
    "Plugins": "Plugins",
+   "pluginDownloadText": "Learn about <a href='https://docs.shinobi.video/plugin/install' target='_blank'>installing plugins</a> in the Documentation.",
    "Plugin Manager": "Plugin Manager",
    "Download Plugins": "Download Plugins",
    "MonitorStatesText": "You can learn about how to use this <a href='https://hub.shinobi.video/articles/view/6ylYHj9MemlZwrM' target='_blank'>here on ShinobiHub</a>.",
