@@ -324,7 +324,9 @@ var differentiateMonitorConfig = function(firstConfig,secondConfig){
 }
 var copyMonitorSettingsToSelected = function(monitorConfig){
     var monitorDetails = safeJsonParse(monitorConfig.details);
-    var copyMonitors = monitorsForCopy.val();
+    var copyMonitors = monitorsForCopy.val().filter((monitorId) => {
+        return monitorConfig.mid !== monitorId
+    });
     var chosenSections = [];
     var chosenMonitors = {};
 
