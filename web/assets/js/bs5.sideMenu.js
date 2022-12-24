@@ -40,6 +40,7 @@ function drawMonitorIconToMenu(item){
     monitorSideList.append(html)
 }
 function drawMonitors(){
+    monitorSideList.empty()
     $.each(loadedMonitors,function(n,item){
         drawMonitorIconToMenu(item)
     })
