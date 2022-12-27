@@ -477,7 +477,9 @@ module.exports = function(s,config,lang,app){
                         ke: account.ke,
                     }
                 })
-                fs.rmdir(s.dir.videos+account.ke,function(err){})
+                fs.rm(s.dir.videos+account.ke,function(err){
+                    s.debugLog(err)
+                })
             }
             if(s.getPostData(req,'deleteEvents',false) == '1'){
                 s.knexQuery({

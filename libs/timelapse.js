@@ -154,7 +154,7 @@ module.exports = function(s,config,lang,app,io){
                     const fileDirectory = getFileDirectory(folderPath);
                     const folderIsEmpty = (await fs.promises.readdir(folderPath)).filter(file => file.indexOf('.jpg') > -1).length === 0;
                     if(folderIsEmpty){
-                        await fs.rmdir(folderPath, { recursive: true })
+                        await fs.rm(folderPath, { recursive: true })
                     }
                 })
             }else{
