@@ -994,6 +994,9 @@ function getRowsMonitorId(rowEl){
     var monitorId = el.attr('data-mid')
     return monitorId
 }
+function getMonitorEmbedLink(monitorConfig){
+    return `${getApiPrefix('embed')}/${monitorConfig.mid}/fullscreen|jquery|relative`
+}
 $(document).ready(function(){
     $('body')
     .on('click','[system]',function(){
