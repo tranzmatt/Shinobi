@@ -185,8 +185,8 @@ module.exports = function(s,config,lang){
             var streamDir = s.dir.streams + monitor.ke + '/' + monitor.mid + '/'
             var url = options.url
             var secondsInward = options.secondsInward || '0'
-            if(secondsInward.length === 1 && !isNaN(secondsInward))secondsInward = '0' + secondsInward
-	    var dynamicTimeout = (secondsInward * 1000) + 5000
+            if(secondsInward.length === 1 && !isNaN(secondsInward))secondsInward = '0' + secondsInward;
+            var dynamicTimeout = (secondsInward * 1000) + 5000;
             if(options.flags)outputOptions.push(options.flags)
             const checkExists = function(streamDir,callback){
                 s.fileStats(streamDir,function(err){
@@ -1431,108 +1431,112 @@ module.exports = function(s,config,lang){
     //     return false
     // }
     s.addOrEditMonitor = function(form,callback,user){
-        var endData = {
-            ok: false
-        }
-        if(!form.mid){
-            endData.msg = lang['No Monitor ID Present in Form']
-            callback(endData)
-            return
-        }
-        form.mid = form.mid.replace(/[^\w\s]/gi,'').replace(/ /g,'')
-        form = s.cleanMonitorObjectForDatabase(form)
-        s.knexQuery({
-            action: "select",
-            columns: "*",
-            table: "Monitors",
-            where: [
-                ['ke','=',form.ke],
-                ['mid','=',form.mid],
-            ]
-        },(err,r) => {
-            var affectMonitor = false
-            var monitorQuery = {}
-            var txData = {
-                f: 'monitor_edit',
-                mid: form.mid,
-                ke: form.ke,
-                mon: form
+        return new Promise((resolve) => {
+            var endData = {
+                ok: false
             }
-            if(r&&r[0]){
-                txData.new = false
-                Object.keys(form).forEach(function(v){
-                    if(
-                        form[v] !== undefined &&
-                        form[v] !== `undefined` &&
-                        form[v] !== null &&
-                        form[v] !== `null` &&
-                        form[v] !== false &&
-                        form[v] !== `false`
-                    ){
-                        if(form[v] instanceof Object){
-                            form[v] = s.s(form[v])
-                        }
-                        monitorQuery[v] = form[v]
-                    }
-                })
-                s.userLog(form,{type:'Monitor Updated',msg:'by user : '+user.uid})
-                endData.msg = user.lang['Monitor Updated by user']+' : '+user.uid
-                s.knexQuery({
-                    action: "update",
-                    table: "Monitors",
-                    update: monitorQuery,
-                    where: [
-                        ['ke','=',form.ke],
-                        ['mid','=',form.mid],
-                    ]
-                })
-                affectMonitor = true
-            }else if(
-                !s.group[form.ke].init.max_camera ||
-                s.group[form.ke].init.max_camera === '' ||
-                Object.keys(s.group[form.ke].activeMonitors).length <= parseInt(s.group[form.ke].init.max_camera)
-            ){
-                txData.new = true
-                Object.keys(form).forEach(function(v){
-                    if(form[v] && form[v] !== ''){
-                        if(form[v] instanceof Object){
-                            form[v] = s.s(form[v])
-                        }
-                        monitorQuery[v] = form[v]
-                    }
-                })
-                s.userLog(form,{type:'Monitor Added',msg:'by user : '+user.uid})
-                endData.msg = user.lang['Monitor Added by user']+' : '+user.uid
-                s.knexQuery({
-                    action: "insert",
-                    table: "Monitors",
-                    insert: monitorQuery
-                })
-                affectMonitor = true
-            }else{
-                txData.f = 'monitor_edit_failed'
-                txData.ff = 'max_reached'
-                endData.msg = user.lang.monitorEditFailedMaxReached
+            if(!form.mid){
+                endData.msg = lang['No Monitor ID Present in Form']
+                if(callback)callback(endData);
+                resolve(endData)
+                return
             }
-            if(affectMonitor === true){
-                form.details = JSON.parse(form.details)
-                endData.ok = true
-                s.initiateMonitorObject({mid:form.mid,ke:form.ke})
-                s.group[form.ke].rawMonitorConfigurations[form.mid] = s.cleanMonitorObject(form)
-                if(form.mode === 'stop'){
-                    s.camera('stop',form)
-                }else{
-                    s.camera('stop',Object.assign(s.group[form.ke].rawMonitorConfigurations[form.mid]))
-                    setTimeout(function(){
-                        s.camera(form.mode,Object.assign(s.group[form.ke].rawMonitorConfigurations[form.mid]))
-                    },5000)
+            form.mid = form.mid.replace(/[^\w\s]/gi,'').replace(/ /g,'')
+            form = s.cleanMonitorObjectForDatabase(form)
+            s.knexQuery({
+                action: "select",
+                columns: "*",
+                table: "Monitors",
+                where: [
+                    ['ke','=',form.ke],
+                    ['mid','=',form.mid],
+                ]
+            },(err,r) => {
+                var affectMonitor = false
+                var monitorQuery = {}
+                var txData = {
+                    f: 'monitor_edit',
+                    mid: form.mid,
+                    ke: form.ke,
+                    mon: form
                 }
-                s.tx(txData,'STR_'+form.ke)
-            }
-            s.tx(txData,'GRP_'+form.ke)
-            callback(!endData.ok,endData)
-            s.onMonitorSaveExtensions.forEach(function(extender){
-                extender(Object.assign(s.group[form.ke].rawMonitorConfigurations[form.mid],{}),form,endData)
+                if(r&&r[0]){
+                    txData.new = false
+                    Object.keys(form).forEach(function(v){
+                        if(
+                            form[v] !== undefined &&
+                            form[v] !== `undefined` &&
+                            form[v] !== null &&
+                            form[v] !== `null` &&
+                            form[v] !== false &&
+                            form[v] !== `false`
+                        ){
+                            if(form[v] instanceof Object){
+                                form[v] = s.s(form[v])
+                            }
+                            monitorQuery[v] = form[v]
+                        }
+                    })
+                    s.userLog(form,{type:'Monitor Updated',msg:'by user : '+user.uid})
+                    endData.msg = user.lang['Monitor Updated by user']+' : '+user.uid
+                    s.knexQuery({
+                        action: "update",
+                        table: "Monitors",
+                        update: monitorQuery,
+                        where: [
+                            ['ke','=',form.ke],
+                            ['mid','=',form.mid],
+                        ]
+                    })
+                    affectMonitor = true
+                }else if(
+                    !s.group[form.ke].init.max_camera ||
+                    s.group[form.ke].init.max_camera === '' ||
+                    Object.keys(s.group[form.ke].activeMonitors).length <= parseInt(s.group[form.ke].init.max_camera)
+                ){
+                    txData.new = true
+                    Object.keys(form).forEach(function(v){
+                        if(form[v] && form[v] !== ''){
+                            if(form[v] instanceof Object){
+                                form[v] = s.s(form[v])
+                            }
+                            monitorQuery[v] = form[v]
+                        }
+                    })
+                    s.userLog(form,{type:'Monitor Added',msg:'by user : '+user.uid})
+                    endData.msg = user.lang['Monitor Added by user']+' : '+user.uid
+                    s.knexQuery({
+                        action: "insert",
+                        table: "Monitors",
+                        insert: monitorQuery
+                    })
+                    affectMonitor = true
+                }else{
+                    txData.f = 'monitor_edit_failed'
+                    txData.ff = 'max_reached'
+                    endData.msg = user.lang.monitorEditFailedMaxReached
+                }
+                if(affectMonitor === true){
+                    form.details = JSON.parse(form.details)
+                    endData.ok = true
+                    s.initiateMonitorObject({mid:form.mid,ke:form.ke})
+                    s.group[form.ke].rawMonitorConfigurations[form.mid] = s.cleanMonitorObject(form)
+                    if(form.mode === 'stop'){
+                        s.camera('stop',form)
+                    }else{
+                        s.camera('stop',Object.assign(s.group[form.ke].rawMonitorConfigurations[form.mid]))
+                        setTimeout(function(){
+                            s.camera(form.mode,Object.assign(s.group[form.ke].rawMonitorConfigurations[form.mid]))
+                        },5000)
+                    }
+                    s.tx(txData,'STR_'+form.ke)
+                }
+                s.tx(txData,'GRP_'+form.ke)
+                if(callback)callback(!endData.ok,endData);
+                resolve(endData)
+                s.onMonitorSaveExtensions.forEach(function(extender){
+                    extender(Object.assign(s.group[form.ke].rawMonitorConfigurations[form.mid],{}),form,endData)
+                })
             })
         })
     }
