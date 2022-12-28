@@ -79,7 +79,7 @@ function fileBinTableMap(files,writeOptions){
                     ${permissionCheck('video_delete',file.mid) ? `<a class="btn btn-sm btn-danger delete-file" title="${lang.Delete}"><i class="fa fa-trash-o"></i></a>` : ''}
                 </div>
             `,
-        },writeOptions || {})
+        },writeOptions ? writeOptions(file) : {})
     });
 }
 $(document).ready(function(e){
@@ -88,7 +88,6 @@ $(document).ready(function(e){
     var dateSelector = theEnclosure.find('.date_selector')
     var fileBinDrawArea = $('#fileBin_draw_area')
     var fileBinPreviewArea = $('#fileBin_preview_area')
-    var loadedFilesInMemory = {};
     loadDateRangePicker(dateSelector,{
         onChange: function(start, end, label) {
             drawFileBinViewElements()
