@@ -354,7 +354,7 @@ module.exports = (s,config,lang,app,io) => {
         triggerTags.forEach(function(monitorId){
             const groupKey = monitorConfig.ke
             const monitor = s.group[groupKey].rawMonitorConfigurations[monitorId]
-            if(monitorId !== monitorConfig.mid){
+            if(monitorId !== monitorConfig.mid && monitor){
                 const monitorDetails = monitor.details
                 if(
                     monitorDetails.detector_trigger === '1' &&
