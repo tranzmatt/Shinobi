@@ -1,9 +1,12 @@
 const fs = require('fs');
-const treekill = require('tree-kill');
-const spawn = require('child_process').spawn;
-const events = require('events');
 const URL = require('url');
+const events = require('events');
 const Mp4Frag = require('mp4frag');
+const treekill = require('tree-kill');
+const exec = require('child_process').exec;
+const spawn = require('child_process').spawn;
+const connectionTester = require('connection-tester')
+const SoundDetection = require('shinobi-sound-detection')
 const streamViewerCountTimeouts = {}
 module.exports = (s,config,lang) => {
     const {

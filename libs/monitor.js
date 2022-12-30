@@ -1,17 +1,11 @@
 const fs = require('fs');
-const events = require('events');
 const spawn = require('child_process').spawn;
 const exec = require('child_process').exec;
-const Mp4Frag = require('mp4frag');
-const onvif = require("shinobi-onvif");
-const treekill = require('tree-kill');
-const connectionTester = require('connection-tester')
-const SoundDetection = require('shinobi-sound-detection')
 const URL = require('url')
 const {
   Worker
 } = require('worker_threads');
-const { copyObject, createQueue, createQueueAwaited, queryStringToObject, createQueryStringFromObject } = require('./common.js')
+const { queryStringToObject, createQueryStringFromObject } = require('./common.js')
 module.exports = function(s,config,lang){
     const {
         splitForFFPMEG,
