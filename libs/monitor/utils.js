@@ -6,6 +6,13 @@ const URL = require('url');
 const Mp4Frag = require('mp4frag');
 const streamViewerCountTimeouts = {}
 module.exports = (s,config,lang) => {
+    const isMasterNode = (
+        (
+            config.childNodes.enabled === true &&
+            config.childNodes.mode === 'master'
+        ) ||
+        config.childNodes.enabled === false
+    );
     const {
         scanForOrphanedVideos
     } = require('../video/utils.js')(s,config,lang)
@@ -14,6 +21,9 @@ module.exports = (s,config,lang) => {
         splitForFFPMEG,
         sanitizedFfmpegCommand,
     } = require('../ffmpeg/utils.js')(s,config,lang)
+    const {
+        closeEventBasedRecording,
+    } = require('../events/utils.js')(s,config,lang)
     const {
         buildSubstreamString,
         getDefaultSubstreamFields,
@@ -616,7 +626,122 @@ module.exports = (s,config,lang) => {
         data.protocol = `${originalProtocol}:`
         return data
     }
+    async function monitorStop(e){
+        const groupKey = e.ke
+        const monitorId = e.mid || e.id
+        if(!s.group[e.ke]||!s.group[e.ke].activeMonitors[monitorId]){return}
+        const activeMonitor = s.group[e.ke].activeMonitors[monitorId];
+        const isIdle = e.functionMode === 'idle'
+        const isStop = e.functionMode === 'stop'
+        const monitorOnChildNode = config.childNodes.enabled === true && config.childNodes.mode === 'master' && activeMonitor.childNode && s.childNodes[activeMonitor.childNode].activeCameras[e.ke+monitorId];
+        if(monitorOnChildNode){
+            activeMonitor.isStarted = false
+            s.cx({f:'sync',sync:s.group[e.ke].rawMonitorConfigurations[monitorId],ke:e.ke,mid:monitorId},activeMonitor.childNodeId);
+            s.cx({
+                //function
+                f : 'cameraStop',
+                //data, options
+                d : s.group[e.ke].rawMonitorConfigurations[monitorId]
+            },activeMonitor.childNodeId)
+        }else{
+            closeEventBasedRecording(e)
+            if(activeMonitor.fswatch){activeMonitor.fswatch.close();delete(activeMonitor.fswatch)}
+            if(activeMonitor.fswatchStream){activeMonitor.fswatchStream.close();delete(activeMonitor.fswatchStream)}
+            if(activeMonitor.last_frame){delete(activeMonitor.last_frame)}
+            if(activeMonitor.isStarted !== true){return}
+            await cameraDestroy(e)
+            clearTimeout(activeMonitor.trigger_timer)
+            delete(activeMonitor.trigger_timer)
+            clearInterval(activeMonitor.detector_notrigger_timeout)
+            clearTimeout(activeMonitor.err_fatal_timeout);
+            activeMonitor.isStarted = false
+            activeMonitor.isRecording = false
+            s.tx({f:'monitor_stopping',mid:monitorId,ke:e.ke,time:s.formattedTime()},'GRP_'+e.ke);
+            s.cameraSendSnapshot({mid:monitorId,ke:e.ke,mon:e},{useIcon: true})
+            s.userLog(e,{type:lang['Monitor Stopped'],msg:lang.MonitorStoppedText});
+            clearTimeout(activeMonitor.delete)
+            if(e.delete === 1){
+                activeMonitor.delete = setTimeout(function(){
+                    delete(s.group[e.ke].activeMonitors[monitorId]);
+                    delete(s.group[e.ke].rawMonitorConfigurations[monitorId]);
+                },1000*60);
+            }
+        }
+        s.sendMonitorStatus({
+            id: monitorId,
+            ke: e.ke,
+            status: lang.Stopped,
+            code: 5,
+        });
+        if(isMasterNode){
+            setTimeout(() => {
+                scanForOrphanedVideos({
+                    ke: e.ke,
+                    mid: monitorId,
+                },{
+                    forceCheck: true,
+                    checkMax: 2
+                })
+            },2000)
+        }
+        clearTimeout(activeMonitor.onMonitorStartTimer)
+        s.onMonitorStopExtensions.forEach(function(extender){
+            extender(Object.assign(s.group[e.ke].rawMonitorConfigurations[monitorId],{}),e)
+        })
+    }
+    function monitorIdle(e){
+        s.tx({f:'monitor_idle',mid:monitorId,ke:e.ke,time:s.formattedTime()},'GRP_'+e.ke);
+        s.userLog(e,{type:lang['Monitor Idling'],msg:lang.MonitorIdlingText});
+        s.sendMonitorStatus({
+            id: monitorId,
+            ke: e.ke,
+            status: lang.Idle,
+            code: 6,
+        })
+    }
+    async function monitorRestart(e){
+        const groupKey = e.ke
+        const monitorId = e.mid || e.id
+        s.sendMonitorStatus({
+            id: monitorId,
+            ke: groupKey,
+            status: lang.Restarting,
+            code: 4,
+        });
+        await s.camera('stop',e)
+        await s.camera(e.mode === 'restart' ? e.mode : 'start',e)
+    }
+    function monitorAddViewer(e){
+        const groupKey = e.ke
+        const monitorId = e.mid || e.id
+        const activeMonitor = s.group[groupKey].activeMonitors[monitorId];
+        if(!cn.monitorsCurrentlyWatching){cn.monitorsCurrentlyWatching = {}}
+        if(!cn.monitorsCurrentlyWatching[monitorId]){cn.monitorsCurrentlyWatching[monitorId] = { ke: groupKey }}
+        setActiveViewer(groupKey,monitorId,cn.id,true)
+        activeMonitor.allowDestroySubstream = false
+        clearTimeout(activeMonitor.noViewerCountDisableSubstream)
+    }
+    function monitorRemoveViewer(e){
+        const groupKey = e.ke
+        const monitorId = e.mid || e.id
+        const activeMonitor = s.group[groupKey].activeMonitors[monitorId];
+        if(cn.monitorsCurrentlyWatching){delete(cn.monitorsCurrentlyWatching[monitorId])}
+        setActiveViewer(groupKey,monitorId,cn.id,false)
+        clearTimeout(activeMonitor.noViewerCountDisableSubstream)
+        activeMonitor.noViewerCountDisableSubstream = setTimeout(async () => {
+            let currentCount = getActiveViewerCount(groupKey,monitorId)
+            if(currentCount === 0 && activeMonitor.subStreamProcess){
+                activeMonitor.allowDestroySubstream = true
+                await destroySubstreamProcess(activeMonitor)
+            }
+        },10000)
+    }
     return {
+        monitorStop,
+        monitorIdle,
+        monitorRestart,
+        monitorAddViewer,
+        monitorRemoveViewer,
         getUrlProtocol,
         modifyUrlProtocol,
         getUrlParts,

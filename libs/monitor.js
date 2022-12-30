@@ -17,13 +17,6 @@ module.exports = function(s,config,lang){
         fetchTimeout,
         asyncSetTimeout
     } = require('./basic/utils.js')(process.cwd(),config);
-    const isMasterNode = (
-        (
-            config.childNodes.enabled === true &&
-            config.childNodes.mode === 'master'
-        ) ||
-        config.childNodes.enabled === false
-    );
     const {
         probeMonitor,
         getStreamInfoFromProbe,
@@ -33,6 +26,11 @@ module.exports = function(s,config,lang){
         splitForFFPMEG,
     } = require('./ffmpeg/utils.js')(s,config,lang)
     const {
+        monitorStop,
+        monitorIdle,
+        monitorRestart,
+        monitorAddViewer,
+        monitorRemoveViewer,
         processKill,
         cameraDestroy,
         monitorConfigurationMigrator,
@@ -44,7 +42,6 @@ module.exports = function(s,config,lang){
     } = require('./monitor/utils.js')(s,config,lang)
     const {
         addEventDetailsToString,
-        closeEventBasedRecording,
         triggerEvent,
     } = require('./events/utils.js')(s,config,lang)
     const {
@@ -1453,6 +1450,10 @@ module.exports = function(s,config,lang){
             var endData = {
                 ok: false
             }
+            function completeResolve(){
+                if(callback)callback(!endData.ok,endData);
+                resolve(endData)
+            }
             if(!form.mid){
                 endData.msg = lang['No Monitor ID Present in Form']
                 if(callback)callback(endData);
@@ -1541,17 +1542,20 @@ module.exports = function(s,config,lang){
                     s.group[form.ke].rawMonitorConfigurations[form.mid] = s.cleanMonitorObject(form)
                     if(form.mode === 'stop'){
                         s.camera('stop',form)
+                        completeResolve()
                     }else{
-                        s.camera('stop',Object.assign(s.group[form.ke].rawMonitorConfigurations[form.mid]))
-                        setTimeout(function(){
-                            s.camera(form.mode,Object.assign(s.group[form.ke].rawMonitorConfigurations[form.mid]))
-                        },5000)
+                        s.camera('stop',Object.assign(s.group[form.ke].rawMonitorConfigurations[form.mid])).then(() => {
+                            setTimeout(async function(){
+                                await s.camera(form.mode,Object.assign(s.group[form.ke].rawMonitorConfigurations[form.mid]))
+                                completeResolve()
+                            },5000)
+                        })
                     }
                     s.tx(txData,'STR_'+form.ke)
+                }else{
+                    completeResolve()
                 }
                 s.tx(txData,'GRP_'+form.ke)
-                if(callback)callback(!endData.ok,endData);
-                resolve(endData)
                 s.onMonitorSaveExtensions.forEach(function(extender){
                     extender(Object.assign(s.group[form.ke].rawMonitorConfigurations[form.mid],{}),form,endData)
                 })
@@ -1572,106 +1576,19 @@ module.exports = function(s,config,lang){
         s.initiateMonitorObject({ke:e.ke,mid:monitorId})
         switch(e.functionMode){
             case'watch_on'://live streamers - join
-                var activeMonitor = s.group[e.ke].activeMonitors[monitorId];
-                if(!cn.monitorsCurrentlyWatching){cn.monitorsCurrentlyWatching = {}}
-                if(!cn.monitorsCurrentlyWatching[monitorId]){cn.monitorsCurrentlyWatching[monitorId]={ke:e.ke}}
-                setActiveViewer(e.ke,monitorId,cn.id,true)
-                activeMonitor.allowDestroySubstream = false
-                clearTimeout(activeMonitor.noViewerCountDisableSubstream)
+                monitorAddViewer(e)
             break;
             case'watch_off'://live streamers - leave
-                var activeMonitor = s.group[e.ke].activeMonitors[monitorId];
-                if(cn.monitorsCurrentlyWatching){delete(cn.monitorsCurrentlyWatching[monitorId])}
-                setActiveViewer(e.ke,monitorId,cn.id,false)
-                clearTimeout(activeMonitor.noViewerCountDisableSubstream)
-                activeMonitor.noViewerCountDisableSubstream = setTimeout(async () => {
-                    let currentCount = getActiveViewerCount(e.ke,monitorId)
-                    if(currentCount === 0 && activeMonitor.subStreamProcess){
-                        activeMonitor.allowDestroySubstream = true
-                        await destroySubstreamProcess(activeMonitor)
-                    }
-                },10000)
+                monitorRemoveViewer(e)
             break;
             case'restart'://restart monitor
-                s.sendMonitorStatus({
-                    id: monitorId,
-                    ke: e.ke,
-                    status: lang.Restarting,
-                    code: 4,
-                });
-                s.camera('stop',e)
-                setTimeout(function(){
-                    s.camera(e.mode,e)
-                },1300)
+                await monitorRestart(e)
             break;
             case'idle':case'stop'://stop monitor
-                if(!s.group[e.ke]||!s.group[e.ke].activeMonitors[monitorId]){return}
-                var activeMonitor = s.group[e.ke].activeMonitors[monitorId];
-                if(config.childNodes.enabled === true && config.childNodes.mode === 'master' && activeMonitor.childNode && s.childNodes[activeMonitor.childNode].activeCameras[e.ke+monitorId]){
-                    activeMonitor.isStarted = false
-                    s.cx({f:'sync',sync:s.group[e.ke].rawMonitorConfigurations[monitorId],ke:e.ke,mid:monitorId},activeMonitor.childNodeId);
-                    s.cx({
-                        //function
-                        f : 'cameraStop',
-                        //data, options
-                        d : s.group[e.ke].rawMonitorConfigurations[monitorId]
-                    },activeMonitor.childNodeId)
-                }else{
-                    closeEventBasedRecording(e)
-                    if(activeMonitor.fswatch){activeMonitor.fswatch.close();delete(activeMonitor.fswatch)}
-                    if(activeMonitor.fswatchStream){activeMonitor.fswatchStream.close();delete(activeMonitor.fswatchStream)}
-                    if(activeMonitor.last_frame){delete(activeMonitor.last_frame)}
-                    if(activeMonitor.isStarted !== true){return}
-                    cameraDestroy(e)
-                    clearTimeout(activeMonitor.trigger_timer)
-                    delete(activeMonitor.trigger_timer)
-                    clearInterval(activeMonitor.detector_notrigger_timeout)
-                    clearTimeout(activeMonitor.err_fatal_timeout);
-                    activeMonitor.isStarted = false
-                    activeMonitor.isRecording = false
-                    s.tx({f:'monitor_stopping',mid:monitorId,ke:e.ke,time:s.formattedTime()},'GRP_'+e.ke);
-                    s.cameraSendSnapshot({mid:monitorId,ke:e.ke,mon:e},{useIcon: true})
-                    if(e.functionMode === 'stop'){
-                        s.userLog(e,{type:lang['Monitor Stopped'],msg:lang.MonitorStoppedText});
-                        clearTimeout(activeMonitor.delete)
-                        if(e.delete === 1){
-                            activeMonitor.delete = setTimeout(function(){
-                                delete(s.group[e.ke].activeMonitors[monitorId]);
-                                delete(s.group[e.ke].rawMonitorConfigurations[monitorId]);
-                            },1000*60);
-                        }
-                    }else{
-                        s.tx({f:'monitor_idle',mid:monitorId,ke:e.ke,time:s.formattedTime()},'GRP_'+e.ke);
-                        s.userLog(e,{type:lang['Monitor Idling'],msg:lang.MonitorIdlingText});
-                    }
-                }
-                var wantedStatus = lang.Stopped
-                var wantedStatusCode = 5
+                await monitorStop(e)
                 if(e.functionMode === 'idle'){
-                    wantedStatus = lang.Idle
-                    wantedStatusCode = 6
+                    monitorIdle(e)
                 }
-                s.sendMonitorStatus({
-                    id: monitorId,
-                    ke: e.ke,
-                    status: wantedStatus,
-                    code: wantedStatusCode,
-                })
-                if(isMasterNode){
-                    setTimeout(() => {
-                        scanForOrphanedVideos({
-                            ke: e.ke,
-                            mid: monitorId,
-                        },{
-                            forceCheck: true,
-                            checkMax: 2
-                        })
-                    },2000)
-                }
-                clearTimeout(activeMonitor.onMonitorStartTimer)
-                s.onMonitorStopExtensions.forEach(function(extender){
-                    extender(Object.assign(s.group[e.ke].rawMonitorConfigurations[monitorId],{}),e)
-                })
             break;
             case'start':case'record'://watch or record monitor url
                 monitorConfigurationMigrator(e)
@@ -1679,7 +1596,6 @@ module.exports = function(s,config,lang){
                 var activeMonitor = s.group[e.ke].activeMonitors[monitorId]
                 if(!s.group[e.ke].rawMonitorConfigurations[monitorId]){s.group[e.ke].rawMonitorConfigurations[monitorId]=s.cleanMonitorObject(e);}
                 if(activeMonitor.isStarted === true){
-                    //stop action, monitor already started or recording
                     return
                 }
                 if(activeMonitor.masterSaysToStop === true){
@@ -1726,7 +1642,7 @@ module.exports = function(s,config,lang){
                 activeMonitor.errorFatalCount = 0;
                 delete(activeMonitor.childNode)
                 if(e.details.detector_ptz_follow === '1'){
-                    await setHomePositionPreset(e)
+                    setHomePositionPreset(e)
                 }
                 try{
                     await launchMonitorProcesses(e)
