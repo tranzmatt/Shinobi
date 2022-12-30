@@ -712,7 +712,6 @@ module.exports = (s,config,lang) => {
                 })
             },2000)
         }
-        clearTimeout(activeMonitor.onMonitorStartTimer)
         s.onMonitorStopExtensions.forEach(function(extender){
             extender(Object.assign(s.group[e.ke].rawMonitorConfigurations[monitorId],{}),e)
         })
@@ -1417,92 +1416,85 @@ module.exports = (s,config,lang) => {
             if(!activeMonitor.criticalErrors['453'])s.cameraSendSnapshot({mid:monitorId,ke:e.ke,mon:e},{useIcon: true});
             //check host to see if has password and user in it
             clearTimeout(activeMonitor.recordingChecker)
-            if(activeMonitor.isStarted === true){
-                try{
-                    await cameraDestroy(e)
-                }catch(err){
-                    // s.debugLog(err)
-                }
-                async function startVideoProcessor(err,pingResponse){
-                    pingResponse = pingResponse ? pingResponse : {success: true}
-                    return new Promise((resolve) => {
-                        if(pingResponse.success === true){
-                            activeMonitor.isRecording = true
-                            try{
-                                createCameraFfmpegProcess(e).then((mainProcess) => {
-                                    if(mainProcess){
-                                        createEventCounter(e)
-                                        createCameraStreamHandlers(e)
-                                        if(typeIsDashcam){
-                                            setTimeout(function(){
-                                                activeMonitor.allowStdinWrite = true
-                                                s.txToDashcamUsers({
-                                                    f : 'enable_stream',
-                                                    ke : e.ke,
-                                                    mid : monitorId
-                                                },e.ke)
-                                            },30000)
-                                        }
-                                        if(
-                                            isRecord ||
-                                            typeIsMjpeg ||
-                                            typeIsH264 ||
-                                            typeIsLocal
-                                        ){
-                                            catchNewSegmentNames(e)
-                                            cameraFilterFfmpegLog(e)
-                                        }
-                                        if(isRecord){
-                                            s.sendMonitorStatus({
-                                                id: monitorId,
-                                                ke: e.ke,
-                                                status: lang.Recording,
-                                                code: 3
-                                            });
-                                        }else{
-                                            s.sendMonitorStatus({
-                                                id: monitorId,
-                                                ke: e.ke,
-                                                status: lang.Watching,
-                                                code: 2
-                                            });
-                                        }
+            try{
+                await cameraDestroy(e)
+            }catch(err){
+                // s.debugLog(err)
+            }
+            async function startVideoProcessor(err,pingResponse){
+                pingResponse = pingResponse ? pingResponse : {success: true}
+                return new Promise((resolve) => {
+                    if(pingResponse.success === true){
+                        activeMonitor.isRecording = true
+                        try{
+                            createCameraFfmpegProcess(e).then((mainProcess) => {
+                                if(mainProcess){
+                                    createEventCounter(e)
+                                    createCameraStreamHandlers(e)
+                                    if(typeIsDashcam){
+                                        setTimeout(function(){
+                                            activeMonitor.allowStdinWrite = true
+                                            s.txToDashcamUsers({
+                                                f : 'enable_stream',
+                                                ke : e.ke,
+                                                mid : monitorId
+                                            },e.ke)
+                                        },30000)
                                     }
-                                    clearTimeout(activeMonitor.onMonitorStartTimer)
-                                    activeMonitor.onMonitorStartTimer = setTimeout(() => {
-                                        s.onMonitorStartExtensions.forEach(function(extender){
-                                            extender(Object.assign(theGroup.rawMonitorConfigurations[monitorId],{}),e)
-                                        })
-                                        resolve()
-                                    },1000)
+                                    if(
+                                        isRecord ||
+                                        typeIsMjpeg ||
+                                        typeIsH264 ||
+                                        typeIsLocal
+                                    ){
+                                        catchNewSegmentNames(e)
+                                        cameraFilterFfmpegLog(e)
+                                    }
+                                    if(isRecord){
+                                        s.sendMonitorStatus({
+                                            id: monitorId,
+                                            ke: e.ke,
+                                            status: lang.Recording,
+                                            code: 3
+                                        });
+                                    }else{
+                                        s.sendMonitorStatus({
+                                            id: monitorId,
+                                            ke: e.ke,
+                                            status: lang.Watching,
+                                            code: 2
+                                        });
+                                    }
+                                }
+                                s.onMonitorStartExtensions.forEach(function(extender){
+                                    extender(Object.assign(theGroup.rawMonitorConfigurations[monitorId],{}),e)
                                 })
-                            }catch(err){
-                                console.log('Failed to Load',monitorId,e.ke)
-                                console.log(err)
                                 resolve()
-                            }
-                          }else{
-                              s.onMonitorPingFailedExtensions.forEach(function(extender){
-                                  extender(Object.assign(theGroup.rawMonitorConfigurations[monitorId],{}),e)
-                              })
-                              s.userLog(e,{type:lang["Ping Failed"],msg:lang.skipPingText1});
-                              fatalError(e,"Ping Failed");return;
-                              resolve()
-                          }
-                    })
-                }
-                if(doPingTest){
-                    try{
-                        const testResult = await asyncConnectionTest(strippedHost,e.port,2000)
-                        await startVideoProcessor(testResult.err,testResult.response)
-                    }catch(err){
-                        await startVideoProcessor()
-                    }
-                }else{
+                            })
+                        }catch(err){
+                            console.log('Failed to Load',monitorId,e.ke)
+                            console.log(err)
+                            resolve()
+                        }
+                      }else{
+                          s.onMonitorPingFailedExtensions.forEach(function(extender){
+                              extender(Object.assign(theGroup.rawMonitorConfigurations[monitorId],{}),e)
+                          })
+                          s.userLog(e,{type:lang["Ping Failed"],msg:lang.skipPingText1});
+                          fatalError(e,"Ping Failed");
+                          resolve();
+                      }
+                })
+            }
+            if(doPingTest){
+                try{
+                    const testResult = await asyncConnectionTest(strippedHost,e.port,2000)
+                    await startVideoProcessor(testResult.err,testResult.response)
+                }catch(err){
                     await startVideoProcessor()
                 }
             }else{
-                await cameraDestroy(e)
+                await startVideoProcessor()
             }
             if(callback)callback()
         }
@@ -1572,7 +1564,6 @@ module.exports = (s,config,lang) => {
             status: lang.Died,
             code: 7
         });
-        clearTimeout(activeMonitor.onMonitorStartTimer)
         s.onMonitorDiedExtensions.forEach(function(extender){
             extender(Object.assign(s.group[e.ke].rawMonitorConfigurations[monitorId],{}),e)
         })
