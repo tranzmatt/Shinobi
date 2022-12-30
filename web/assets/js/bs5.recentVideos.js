@@ -102,11 +102,4 @@ $(document).ready(function(){
             liveStamp()
         })
     })
-    onWebSocketEvent(function(d){
-        switch(d.f){
-            case'init_success':
-
-            break;
-        }
-    })
 })
