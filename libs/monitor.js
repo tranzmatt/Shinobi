@@ -11,9 +11,12 @@ const URL = require('url')
 const {
   Worker
 } = require('worker_threads');
-const { copyObject, createQueue, queryStringToObject, createQueryStringFromObject } = require('./common.js')
+const { copyObject, createQueue, createQueueAwaited, queryStringToObject, createQueryStringFromObject } = require('./common.js')
 module.exports = function(s,config,lang){
-    const { fetchTimeout } = require('./basic/utils.js')(process.cwd(),config)
+    const {
+        fetchTimeout,
+        asyncSetTimeout
+    } = require('./basic/utils.js')(process.cwd(),config);
     const isMasterNode = (
         (
             config.childNodes.enabled === true &&
@@ -45,7 +48,7 @@ module.exports = function(s,config,lang){
         triggerEvent,
     } = require('./events/utils.js')(s,config,lang)
     const {
-        setPresetForCurrentPosition
+        setHomePositionPreset,
     } = require('./control/ptz.js')(s,config,lang)
     const {
         scanForOrphanedVideos,
@@ -55,7 +58,7 @@ module.exports = function(s,config,lang){
         selectNodeForOperation,
         bindMonitorToChildNode
     } = require('./childNode/utils.js')(s,config,lang)
-    const startMonitorInQueue = createQueue(1, 3)
+    const startMonitorInQueue = createQueueAwaited(0.5, 1)
     s.initiateMonitorObject = function(e){
         if(!s.group[e.ke]){s.group[e.ke]={}};
         if(!s.group[e.ke].activeMonitors){s.group[e.ke].activeMonitors={}}
@@ -93,8 +96,11 @@ module.exports = function(s,config,lang){
     }
     s.sendMonitorStatus = function(e){
         if(!e.status || !e.code)console.error(JSON.stringify(e),new Error());
-        s.group[e.ke].activeMonitors[e.id].monitorStatus = `${e.status}`
-        s.group[e.ke].activeMonitors[e.id].monitorStatusCode = `${e.code}`
+        const groupKey = e.ke
+        const monitorId = e.mid || e.id
+        const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
+        activeMonitor.monitorStatus = `${e.status}`
+        activeMonitor.monitorStatusCode = `${e.code}`
         s.tx(Object.assign(e,{f:'monitor_status'}),'GRP_'+e.ke)
     }
     s.getMonitorCpuUsage = function(e,callback){
@@ -462,6 +468,9 @@ module.exports = function(s,config,lang){
         return items
     }
     const checkObjectsInDetails = function(e){
+        const groupKey = e.ke
+        const monitorId = e.mid || e.id
+        const activeMonitor = s.group[groupKey].activeMonitors[monitorId];
         //parse Objects
         (['detector_cascades','cords','detector_filters','input_map_choices']).forEach(function(v){
             if(e.details && e.details[v]){
@@ -469,13 +478,13 @@ module.exports = function(s,config,lang){
                     if(!e.details[v] || e.details[v] === '')e.details[v] = '{}'
                     e.details[v] = s.parseJSON(e.details[v])
                     if(!e.details[v])e.details[v] = {}
-                    s.group[e.ke].activeMonitors[e.id].details = e.details
+                    activeMonitor.details = e.details
                     switch(v){
                         case'cords':
-                            s.group[e.ke].activeMonitors[e.id].parsedObjects[v] = Object.values(s.parseJSON(e.details[v]))
+                            activeMonitor.parsedObjects[v] = Object.values(s.parseJSON(e.details[v]))
                         break;
                         default:
-                            s.group[e.ke].activeMonitors[e.id].parsedObjects[v] = s.parseJSON(e.details[v])
+                            activeMonitor.parsedObjects[v] = s.parseJSON(e.details[v])
                         break;
                     }
                 }catch(err){
@@ -605,13 +614,14 @@ module.exports = function(s,config,lang){
         }
     }
     const createRecordingDirectory = function(e,callback){
-        var directory
+        var directory;
+        const monitorId = e.mid || e.id
         if(e.details && e.details.dir && e.details.dir !== '' && config.childNodes.mode !== 'child'){
             //addStorage choice
             directory = s.checkCorrectPathEnding(e.details.dir) + e.ke + '/'
             fs.mkdir(directory,function(err){
                 s.handleFolderError(err)
-                directory = directory + e.id + '/'
+                directory = directory + monitorId + '/'
                 fs.mkdir(directory,function(err){
                     s.handleFolderError(err)
                     callback(err,directory)
@@ -622,7 +632,7 @@ module.exports = function(s,config,lang){
             directory = s.dir.videos + e.ke + '/'
             fs.mkdir(directory,function(err){
                 s.handleFolderError(err)
-                directory = s.dir.videos + e.ke + '/' + e.id + '/'
+                directory = s.dir.videos + e.ke + '/' + monitorId + '/'
                 fs.mkdir(directory,function(err){
                     s.handleFolderError(err)
                     callback(err,directory)
@@ -638,10 +648,11 @@ module.exports = function(s,config,lang){
         })
     }
     const createFileBinDirectory = function(e,callback){
+        const monitorId = e.mid || e.id
         var directory = s.dir.fileBin + e.ke + '/'
         fs.mkdir(directory,function(err){
             s.handleFolderError(err)
-            directory = s.dir.fileBin + e.ke + '/' + e.id + '/'
+            directory = s.dir.fileBin + e.ke + '/' + monitorId + '/'
             fs.mkdir(directory,function(err){
                 s.handleFolderError(err)
                 callback(err,directory)
@@ -649,10 +660,11 @@ module.exports = function(s,config,lang){
         })
     }
     const createStreamDirectory = function(e,callback){
+        const monitorId = e.mid || e.id
         callback = callback || function(){}
         var directory = s.dir.streams + e.ke + '/'
         fs.mkdir(directory,function(err){
-            directory = s.dir.streams + e.ke + '/' + e.id + '/'
+            directory = s.dir.streams + e.ke + '/' + monitorId + '/'
             s.handleFolderError(err)
             fs.mkdir(directory,function(err){
                 if (err){
@@ -667,19 +679,23 @@ module.exports = function(s,config,lang){
         })
     }
     const createCameraFolders = function(e,callback){
-        //set the recording directory
-        var activeMonitor = s.group[e.ke].activeMonitors[e.id]
-        createStreamDirectory(e,function(err,directory){
-            activeMonitor.sdir = directory
-            e.sdir = directory
-            createRecordingDirectory(e,function(err,directory){
-                activeMonitor.dir = directory
-                e.dir = directory
-                createTimelapseDirectory(e,function(err,directory){
-                    activeMonitor.dirTimelapse = directory
-                    e.dirTimelapse = directory
-                    createFileBinDirectory(e,function(err){
-                        if(callback)callback()
+        return new Promise((resolve) => {
+            //set the recording directory
+            const monitorId = e.mid || e.id
+            var activeMonitor = s.group[e.ke].activeMonitors[monitorId]
+            createStreamDirectory(e,function(err,directory){
+                activeMonitor.sdir = directory
+                e.sdir = directory
+                createRecordingDirectory(e,function(err,directory){
+                    activeMonitor.dir = directory
+                    e.dir = directory
+                    createTimelapseDirectory(e,function(err,directory){
+                        activeMonitor.dirTimelapse = directory
+                        e.dirTimelapse = directory
+                        createFileBinDirectory(e,function(err){
+                            if(callback)callback()
+                            resolve()
+                        })
                     })
                 })
             })
@@ -706,7 +722,7 @@ module.exports = function(s,config,lang){
             checkMax: 2
         })
     }
-    s.stripAuthFromHost = function(e){
+    function stripAuthFromHost(e){
         var host = e.host.split('@');
         if(host[1]){
             //username and password found
@@ -718,14 +734,17 @@ module.exports = function(s,config,lang){
         return host
     }
     const resetRecordingCheck = function(e){
-        clearTimeout(s.group[e.ke].activeMonitors[e.id].recordingChecker)
+        const groupKey = e.ke
+        const monitorId = e.mid || e.id
+        const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
+        clearTimeout(activeMonitor.recordingChecker)
         const segmentLengthInMinutes = !isNaN(parseFloat(e.details.cutoff)) ? parseFloat(e.details.cutoff) : '15'
         const segmentLength = e.type === 'dashcam' ? segmentLengthInMinutes * 100 : segmentLengthInMinutes
-        s.group[e.ke].activeMonitors[e.id].recordingChecker = setTimeout(function(){
-            if(s.group[e.ke].activeMonitors[e.id].isStarted === true && s.group[e.ke].rawMonitorConfigurations[e.id].mode === 'record'){
+        activeMonitor.recordingChecker = setTimeout(function(){
+            if(activeMonitor.isStarted === true && s.group[e.ke].rawMonitorConfigurations[monitorId].mode === 'record'){
                 forceMonitorRestart({
                     ke: e.ke,
-                    mid: e.id,
+                    mid: monitorId,
                 },{
                     type: lang['Camera is not recording'],
                     msg: {
@@ -736,12 +755,15 @@ module.exports = function(s,config,lang){
         },60000 * segmentLength * 1.3);
     }
     const resetStreamCheck = function(e){
-        clearTimeout(s.group[e.ke].activeMonitors[e.id].streamChecker)
-        s.group[e.ke].activeMonitors[e.id].streamChecker = setTimeout(function(){
-            if(s.group[e.ke].activeMonitors[e.id] && s.group[e.ke].activeMonitors[e.id].isStarted === true){
+        const groupKey = e.ke
+        const monitorId = e.mid || e.id
+        const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
+        clearTimeout(activeMonitor.streamChecker)
+        activeMonitor.streamChecker = setTimeout(function(){
+            if(activeMonitor && activeMonitor.isStarted === true){
                 forceMonitorRestart({
                     ke: e.ke,
-                    mid: e.id,
+                    mid: monitorId,
                 },{
                     type: lang['Camera is not streaming'],
                     msg: {
@@ -753,11 +775,12 @@ module.exports = function(s,config,lang){
     }
     const onDetectorJpegOutputAlone = (e,d) => {
         if(s.isAtleatOneDetectorPluginConnected){
+            const monitorId = e.mid || e.id
             s.ocvTx({
                 f: 'frame',
-                mon: s.group[e.ke].rawMonitorConfigurations[e.id].details,
+                mon: s.group[e.ke].rawMonitorConfigurations[monitorId].details,
                 ke: e.ke,
-                id: e.id,
+                id: monitorId,
                 time: s.formattedTime(),
                 frame: d
             })
@@ -765,7 +788,8 @@ module.exports = function(s,config,lang){
     }
     const onDetectorJpegOutputSecondary = (e,buffer) => {
         if(s.isAtleatOneDetectorPluginConnected){
-            const activeMonitor = s.group[e.ke].activeMonitors[e.id || e.mid]
+            const monitorId = e.mid || e.id
+            const activeMonitor = s.group[e.ke].activeMonitors[monitorId]
             const theArray = activeMonitor.pipe4BufferPieces
             theArray.push(buffer)
             if(buffer[buffer.length-2] === 0xFF && buffer[buffer.length-1] === 0xD9){
@@ -774,25 +798,24 @@ module.exports = function(s,config,lang){
             }
         }
     }
-    const createCameraFfmpegProcess = (e) => {
+    async function createCameraFfmpegProcess(e){
+        const groupKey = e.ke
+        const monitorId = e.mid || e.id
+        const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
         //launch ffmpeg (main)
         s.tx({
             f: 'monitor_starting',
             mode: e.functionMode,
-            mid: e.id,
+            mid: monitorId,
             time: s.formattedTime()
         },'GRP_'+e.ke)
-        try{
-            s.group[e.ke].activeMonitors[e.id].spawn = s.ffmpeg(e)
-        }catch(err){
-            console.log('failed to launch, try again')
-            setTimeout(() => {
-                s.group[e.ke].activeMonitors[e.id].spawn = s.ffmpeg(e)
-            },3000)
+        activeMonitor.spawn = await s.ffmpeg(e)
+        if(activeMonitor.spawn){
+            attachMainProcessHandlers(e,fatalError)
+        }else{
+            s.debugLog(`Failed to Laucnh Monitor!`,)
         }
-        //on unexpected exit restart
-        if(s.group[e.ke].activeMonitors[e.id].spawn)attachMainProcessHandlers(e,fatalError)
-        return s.group[e.ke].activeMonitors[e.id].spawn
+        return activeMonitor.spawn
     }
     const createEventCounter = function(monitor){
         if(monitor.details.detector_obj_count === '1'){
@@ -835,16 +858,19 @@ module.exports = function(s,config,lang){
         }
     }
     const createCameraStreamHandlers = function(e){
-        s.group[e.ke].activeMonitors[e.id].spawn.stdio[5].on('data',function(data){
+        const groupKey = e.ke
+        const monitorId = e.mid || e.id
+        const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
+        activeMonitor.spawn.stdio[5].on('data',function(data){
             resetStreamCheck(e)
         })
         //emitter for mjpeg
         if(!e.details.stream_mjpeg_clients||e.details.stream_mjpeg_clients===''||isNaN(e.details.stream_mjpeg_clients)===false){e.details.stream_mjpeg_clients=20;}else{e.details.stream_mjpeg_clients=parseInt(e.details.stream_mjpeg_clients)}
-        s.group[e.ke].activeMonitors[e.id].emitter = new events.EventEmitter().setMaxListeners(e.details.stream_mjpeg_clients);
+        activeMonitor.emitter = new events.EventEmitter().setMaxListeners(e.details.stream_mjpeg_clients);
         if(e.details.detector_audio === '1'){
-            if(s.group[e.ke].activeMonitors[e.id].audioDetector){
-              s.group[e.ke].activeMonitors[e.id].audioDetector.stop()
-              delete(s.group[e.ke].activeMonitors[e.id].audioDetector)
+            if(activeMonitor.audioDetector){
+              activeMonitor.audioDetector.stop()
+              delete(activeMonitor.audioDetector)
             }
             var triggerLevel
             var triggerLevelMax
@@ -866,29 +892,28 @@ module.exports = function(s,config,lang){
                 triggerLevelMax: triggerLevelMax
             },function(dB) {
                 triggerEvent({
-                    f:'trigger',
-                    id:e.id,
-                    ke:e.ke,
+                    f: 'trigger',
+                    id: monitorId,
+                    ke: e.ke,
                     name: 'db',
                     details:{
-                        plug:'audio',
-                        name:'db',
-                        reason:'soundChange',
-                        confidence:dB
+                        plug: 'audio',
+                        name: 'db',
+                        reason: 'soundChange',
+                        confidence: dB
                     },
-                    plates:[],
-                    imgHeight:e.details.detector_scale_y,
-                    imgWidth:e.details.detector_scale_x
+                    imgHeight: e.details.detector_scale_y,
+                    imgWidth: e.details.detector_scale_x
                 })
             })
-            s.group[e.ke].activeMonitors[e.id].audioDetector = audioDetector
+            activeMonitor.audioDetector = audioDetector
             audioDetector.start()
-            s.group[e.ke].activeMonitors[e.id].spawn.stdio[6].pipe(audioDetector.streamDecoder,{ end: false })
+            activeMonitor.spawn.stdio[6].pipe(audioDetector.streamDecoder,{ end: false })
         }
         if(e.details.record_timelapse === '1'){
             var timelapseRecordingDirectory = s.getTimelapseFrameDirectory(e)
-            s.group[e.ke].activeMonitors[e.id].spawn.stdio[7].on('data',function(data){
-                var fileStream = s.group[e.ke].activeMonitors[e.id].recordTimelapseWriter
+            activeMonitor.spawn.stdio[7].on('data',function(data){
+                var fileStream = activeMonitor.recordTimelapseWriter
                 if(!fileStream){
                     var currentDate = s.formattedTime(null,'YYYY-MM-DD')
                     var filename = s.formattedTime() + '.jpg'
@@ -898,39 +923,39 @@ module.exports = function(s,config,lang){
                     }
                     fileStream = fs.createWriteStream(location + filename)
                     fileStream.on('close', function () {
-                        s.group[e.ke].activeMonitors[e.id].recordTimelapseWriter = null
+                        activeMonitor.recordTimelapseWriter = null
                         s.createTimelapseFrameAndInsert(e,location,filename)
                     })
-                    s.group[e.ke].activeMonitors[e.id].recordTimelapseWriter = fileStream
+                    activeMonitor.recordTimelapseWriter = fileStream
                 }
                 fileStream.write(data)
-                clearTimeout(s.group[e.ke].activeMonitors[e.id].recordTimelapseWriterTimeout)
-                s.group[e.ke].activeMonitors[e.id].recordTimelapseWriterTimeout = setTimeout(function(){
+                clearTimeout(activeMonitor.recordTimelapseWriterTimeout)
+                activeMonitor.recordTimelapseWriterTimeout = setTimeout(function(){
                     fileStream.end()
                 },900)
             })
         }
         if(e.details.detector === '1'){
-            s.ocvTx({f:'init_monitor',id:e.id,ke:e.ke})
+            s.ocvTx({f:'init_monitor',id:monitorId,ke:e.ke})
             //frames from motion detect
             if(e.details.detector_pam === '1'){
-               // s.group[e.ke].activeMonitors[e.id].spawn.stdio[3].pipe(s.group[e.ke].activeMonitors[e.id].p2p).pipe(s.group[e.ke].activeMonitors[e.id].pamDiff)
+               // activeMonitor.spawn.stdio[3].pipe(activeMonitor.p2p).pipe(activeMonitor.pamDiff)
                // spawn.stdio[3] is deprecated and now motion events are handled by dataPort
                 if(e.details.detector_use_detect_object === '1' && e.details.detector_use_motion === '1' ){
-                    s.group[e.ke].activeMonitors[e.id].spawn.stdio[4].on('data',function(data){
+                    activeMonitor.spawn.stdio[4].on('data',function(data){
                         onDetectorJpegOutputSecondary(e,data)
                     })
                 }else{
-		            s.group[e.ke].activeMonitors[e.id].spawn.stdio[4].on('data',function(data){
+		            activeMonitor.spawn.stdio[4].on('data',function(data){
                         onDetectorJpegOutputAlone(e,data)
                     })
 		        }
             }else if(e.details.detector_use_detect_object === '1' && e.details.detector_send_frames !== '1'){
-                s.group[e.ke].activeMonitors[e.id].spawn.stdio[4].on('data',function(data){
+                activeMonitor.spawn.stdio[4].on('data',function(data){
                     onDetectorJpegOutputSecondary(e,data)
                 })
             }else{
-                s.group[e.ke].activeMonitors[e.id].spawn.stdio[4].on('data',function(data){
+                activeMonitor.spawn.stdio[4].on('data',function(data){
                     onDetectorJpegOutputAlone(e,data)
                 })
             }
@@ -940,19 +965,19 @@ module.exports = function(s,config,lang){
        const streamType = e.details.stream_type;
        switch(streamType){
            case'mp4':
-               delete(s.group[e.ke].activeMonitors[e.id].mp4frag['MAIN'])
-               if(!s.group[e.ke].activeMonitors[e.id].mp4frag['MAIN'])s.group[e.ke].activeMonitors[e.id].mp4frag['MAIN'] = new Mp4Frag()
-               s.group[e.ke].activeMonitors[e.id].mp4frag['MAIN'].on('error',function(error){
+               delete(activeMonitor.mp4frag['MAIN'])
+               if(!activeMonitor.mp4frag['MAIN'])activeMonitor.mp4frag['MAIN'] = new Mp4Frag()
+               activeMonitor.mp4frag['MAIN'].on('error',function(error){
                    s.userLog(e,{type:lang['Mp4Frag'],msg:{error:error}})
                })
-               s.group[e.ke].activeMonitors[e.id].spawn.stdio[1].pipe(s.group[e.ke].activeMonitors[e.id].mp4frag['MAIN'],{ end: false })
+               activeMonitor.spawn.stdio[1].pipe(activeMonitor.mp4frag['MAIN'],{ end: false })
            break;
            case'flv':
                frameToStreamPrimary = function(d){
-                   if(!s.group[e.ke].activeMonitors[e.id].firstStreamChunk['MAIN'])s.group[e.ke].activeMonitors[e.id].firstStreamChunk['MAIN'] = d;
+                   if(!activeMonitor.firstStreamChunk['MAIN'])activeMonitor.firstStreamChunk['MAIN'] = d;
                    frameToStreamPrimary = function(d){
                        resetStreamCheck(e)
-                       s.group[e.ke].activeMonitors[e.id].emitter.emit('data',d)
+                       activeMonitor.emitter.emit('data',d)
                    }
                    frameToStreamPrimary(d)
                }
@@ -960,7 +985,7 @@ module.exports = function(s,config,lang){
            case'mjpeg':
                frameToStreamPrimary = function(d){
                    resetStreamCheck(e)
-                   s.group[e.ke].activeMonitors[e.id].emitter.emit('data',d)
+                   activeMonitor.emitter.emit('data',d)
                }
            break;
            case'b64':case undefined:case null:case'':
@@ -973,7 +998,7 @@ module.exports = function(s,config,lang){
                       buffer.push(d)
                   }
                   if((d[d.length-2] === 0xFF && d[d.length-1] === 0xD9)){
-                      s.group[e.ke].activeMonitors[e.id].emitter.emit('data',Buffer.concat(buffer))
+                      activeMonitor.emitter.emit('data',Buffer.concat(buffer))
                       buffer = null
                   }
                }
@@ -983,41 +1008,44 @@ module.exports = function(s,config,lang){
             if(!frameToStreamPrimary)frameToStreamPrimary = extender(streamType,e,resetStreamCheck)
         });
         if(frameToStreamPrimary){
-            s.group[e.ke].activeMonitors[e.id].spawn.stdout.on('data',frameToStreamPrimary)
+            activeMonitor.spawn.stdout.on('data',frameToStreamPrimary)
         }
         if(e.details.stream_channels && e.details.stream_channels !== ''){
             e.details.stream_channels.forEach((fields,number) => {
                 attachStreamChannelHandlers({
                     ke: e.ke,
-                    mid: e.id,
+                    mid: monitorId,
                     fields: fields,
                     number: number,
-                    ffmpegProcess: s.group[e.ke].activeMonitors[e.id].spawn,
+                    ffmpegProcess: activeMonitor.spawn,
                 })
             })
         }
     }
     const catchNewSegmentNames = function(e){
-        const monitorConfig = s.group[e.ke].rawMonitorConfigurations[e.id]
+        const groupKey = e.ke
+        const monitorId = e.mid || e.id
+        const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
+        const monitorConfig = s.group[e.ke].rawMonitorConfigurations[monitorId]
         const monitorDetails = monitorConfig.details
         const autoCompressionEnabled = monitorDetails.auto_compress_videos === '1'
         var checkLog = function(d,x){return d.indexOf(x)>-1}
-        s.group[e.ke].activeMonitors[e.id].spawn.stdio[8].on('data',function(d){
+        activeMonitor.spawn.stdio[8].on('data',function(d){
             d=d.toString();
             if(/T[0-9][0-9]-[0-9][0-9]-[0-9][0-9]./.test(d)){
                 var filename = d.split('.')[0].split(' [')[0].trim()+'.'+e.ext
                 s.insertCompletedVideo(e,{
                     file: filename,
-                    events: s.group[e.ke].activeMonitors[e.id].detector_motion_count
+                    events: activeMonitor.detector_motion_count
                 },function(err,response){
                     s.userLog(e,{type:lang['Video Finished'],msg:{filename:d}})
                     if(
                         e.details.detector === '1' &&
-                        s.group[e.ke].activeMonitors[e.id].isStarted === true &&
+                        activeMonitor.isStarted === true &&
                         e.details &&
                         e.details.detector_record_method === 'del'&&
                         e.details.detector_delete_motionless_videos === '1'&&
-                        s.group[e.ke].activeMonitors[e.id].detector_motion_count.length === 0
+                        activeMonitor.detector_motion_count.length === 0
                     ){
                         if(e.details.loglevel !== 'quiet'){
                             s.userLog(e,{type:lang['Delete Motionless Video'],msg:filename})
@@ -1025,7 +1053,7 @@ module.exports = function(s,config,lang){
                         s.deleteVideo({
                             filename : filename,
                             ke : e.ke,
-                            id : e.id
+                            id : monitorId
                         })
                     }else if(autoCompressionEnabled){
                         s.debugLog('Queue Automatic Compression',response.insertQuery)
@@ -1043,7 +1071,7 @@ module.exports = function(s,config,lang){
                             console.log(err)
                         })
                     }
-                    s.group[e.ke].activeMonitors[e.id].detector_motion_count = []
+                    activeMonitor.detector_motion_count = []
                 })
                 resetRecordingCheck(e)
             }
@@ -1051,7 +1079,8 @@ module.exports = function(s,config,lang){
     }
     const cameraFilterFfmpegLog = function(e){
         var checkLog = function(d,x){return d.indexOf(x)>-1}
-        const activeMonitor = s.group[e.ke].activeMonitors[e.id]
+        const monitorId = e.mid || e.id
+        const activeMonitor = s.group[e.ke].activeMonitors[monitorId]
         activeMonitor.spawn.stderr.on('data',function(d){
             d=d.toString();
             switch(true){
@@ -1116,8 +1145,8 @@ module.exports = function(s,config,lang){
         })
     }
     //formerly known as "No Motion" Detector
-    s.setNoEventsDetector = function(e){
-        var monitorId = e.id || e.mid
+    const setNoEventsDetector = function(e){
+        const monitorId = e.mid || e.id
         var detector_notrigger_timeout = (parseFloat(e.details.detector_notrigger_timeout) || 10) * 1000 * 60
         var currentConfig = s.group[e.ke].rawMonitorConfigurations[monitorId].details
         clearInterval(s.group[e.ke].activeMonitors[monitorId].detector_notrigger_timeout)
@@ -1146,232 +1175,219 @@ module.exports = function(s,config,lang){
             })
         },detector_notrigger_timeout)
     }
+    function setMotionLock(e){
+        const monitorId = e.mid || e.id
+        const groupKey = e.ke
+        const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
+        if(e.details.detector_trigger === '1'){
+            clearTimeout(activeMonitor.motion_lock)
+            activeMonitor.motion_lock = setTimeout(function(){
+                clearTimeout(activeMonitor.motion_lock)
+                delete(activeMonitor.motion_lock)
+            },15000)
+        }
+    }
+    function asyncConnectionTest(host,port,timeout){
+        return new Promise((resolve) => {
+            connectionTester.test(host,port,timeout,(err,response) => {
+                resolve({
+                    err,
+                    response,
+                })
+            })
+        })
+    }
     //set master based process launcher
-    const launchMonitorProcesses = function(e){
-        const activeMonitor = s.group[e.ke].activeMonitors[e.id]
+    async function launchMonitorProcesses(e){
+        const groupKey = e.ke
+        const monitorId = e.mid || e.id
+        const activeMonitor = s.group[e.ke].activeMonitors[monitorId]
+        const isMacOS = s.platform !== 'darwin';
+        const isWatchOnly = e.functionMode === 'start'
+        const isRecord = e.functionMode === 'record'
+        const isWatchOnlyOrRecord = isWatchOnly || isRecord;
+        const streamTypeIsJPEG = e.details.stream_type === 'jpeg'
+        const streamTypeIsHLS = e.details.stream_type === 'hls'
+        const jpegApiEnabled = e.details.snap === '1'
+        const typeIsDashcam = e.type === 'dashcam' || e.type === 'socket'
+        const typeIsMjpeg = e.type === 'mjpeg'
+        const typeIsH264 = e.type === 'h264'
+        const typeIsLocal = e.type === 'local'
+        const monitorConfig = s.group[e.ke].rawMonitorConfigurations[monitorId]
+        const doPingTest = e.type !== 'socket' && e.type !== 'dashcam' && e.protocol !== 'udp' && e.type !== 'local' && e.details.skip_ping !== '1';
         // e = monitor object
         clearTimeout(activeMonitor.resetFatalErrorCountTimer)
         activeMonitor.resetFatalErrorCountTimer = setTimeout(()=>{
             activeMonitor.errorFatalCount = 0
         },1000 * 60)
         s.sendMonitorStatus({
-            id: e.id,
+            id: monitorId,
             ke: e.ke,
             status: lang.Starting,
             code: 1
         });
         //create host string without username and password
-        var strippedHost = s.stripAuthFromHost(e)
-        var doOnThisMachine = function(callback){
-            createCameraFolders(e,async function(){
-                activeMonitor.allowStdinWrite = false
-                if(e.details.detector_trigger === '1'){
-                    clearTimeout(activeMonitor.motion_lock)
-                    activeMonitor.motion_lock = setTimeout(function(){
-                        clearTimeout(activeMonitor.motion_lock)
-                        delete(activeMonitor.motion_lock)
-                    },15000)
+        const strippedHost = stripAuthFromHost(e)
+        async function doOnThisMachine(callback){
+            await createCameraFolders(e)
+            activeMonitor.allowStdinWrite = false
+            setMotionLock(e)
+            //start "no motion" checker
+            if(e.details.detector === '1' && e.details.detector_notrigger === '1'){
+                setNoEventsDetector(e)
+            }
+            if(config.childNodes.mode !== 'child' && s.platform!=='darwin' && (e.functionMode === 'record' || (e.functionMode === 'start'&&e.details.detector_record_method==='sip'))){
+                if(activeMonitor.fswatch && activeMonitor.fswatch.close){
+                  activeMonitor.fswatch.close()
                 }
-                //start "no motion" checker
-                if(e.details.detector === '1' && e.details.detector_notrigger === '1'){
-                    s.setNoEventsDetector(e)
-                }
-                if(e.details.snap === '1'){
-                    // var resetSnapCheck = function(){
-                    //     clearTimeout(activeMonitor.checkSnap)
-                    //     activeMonitor.checkSnap = setTimeout(function(){
-                    //         if(activeMonitor.isStarted === true){
-                    //             s.fileStats(e.sdir+'s.jpg',function(err,snap){
-                    //                 var notStreaming = function(){
-                    //                     launchMonitorProcesses(e)
-                    //                     s.userLog(e,{type:lang['Camera is not streaming'],msg:{msg:lang['Restarting Process']}})
-                    //                     scanForOrphanedVideos(e,{
-                    //                         forceCheck: true,
-                    //                         checkMax: 2
-                    //                     })
-                    //                 }
-                    //                 if(err){
-                    //                     notStreaming()
-                    //                 }else{
-                    //                     if(!activeMonitor.checkSnapTime)activeMonitor.checkSnapTime = snap.mtime
-                    //                     if(err || activeMonitor.checkSnapTime === snap.mtime){
-                    //                         activeMonitor.checkSnapTime = snap.mtime
-                    //                         notStreaming()
-                    //                     }else{
-                    //                         resetSnapCheck()
-                    //                     }
-                    //                 }
-                    //             })
-                    //         }
-                    //     },60000*1);
-                    // }
-                    // resetSnapCheck()
-                }
-                if(config.childNodes.mode !== 'child' && s.platform!=='darwin' && (e.functionMode === 'record' || (e.functionMode === 'start'&&e.details.detector_record_method==='sip'))){
-                    if(activeMonitor.fswatch && activeMonitor.fswatch.close){
-                      activeMonitor.fswatch.close()
+                activeMonitor.fswatch = fs.watch(e.dir, {encoding : 'utf8'}, (event, filename) => {
+                    switch(event){
+                        case'change':
+                            resetRecordingCheck(e)
+                        break;
                     }
-                    activeMonitor.fswatch = fs.watch(e.dir, {encoding : 'utf8'}, (event, filename) => {
-                        switch(event){
-                            case'change':
-                                resetRecordingCheck(e)
-                            break;
-                        }
-                    });
+                });
+            }
+            if(
+                //is MacOS
+                isMacOS &&
+                //is Watch-Only or Record
+                isWatchOnlyOrRecord &&
+                //if JPEG API enabled or Stream Type is HLS
+                (streamTypeIsJPEG || streamTypeIsHLS || jpegApiEnabled)
+            ){
+                if(activeMonitor.fswatchStream && activeMonitor.fswatchStream.close){
+                    activeMonitor.fswatchStream.close()
                 }
-                if(
-                    //is MacOS
-                    s.platform !== 'darwin' &&
-                    //is Watch-Only or Record
-                    (e.functionMode === 'start' || e.functionMode === 'record') &&
-                    //if JPEG API enabled or Stream Type is HLS
-                    (
-                        e.details.stream_type === 'jpeg' ||
-                        e.details.stream_type === 'hls' ||
-                        e.details.snap === '1'
-                    )
-                ){
-                    if(activeMonitor.fswatchStream && activeMonitor.fswatchStream.close){
-                        activeMonitor.fswatchStream.close()
-                    }
-                    activeMonitor.fswatchStream = fs.watch(activeMonitor.sdir, {encoding : 'utf8'}, () => {
-                        resetStreamCheck(e)
-                    })
+                activeMonitor.fswatchStream = fs.watch(activeMonitor.sdir, {encoding : 'utf8'}, () => {
+                    resetStreamCheck(e)
+                })
+            }
+            if(!activeMonitor.criticalErrors['453'])s.cameraSendSnapshot({mid:monitorId,ke:e.ke,mon:e},{useIcon: true});
+            //check host to see if has password and user in it
+            clearTimeout(activeMonitor.recordingChecker)
+            if(activeMonitor.isStarted === true){
+                try{
+                    await cameraDestroy(e)
+                }catch(err){
+                    // s.debugLog(err)
                 }
-                if(!activeMonitor.criticalErrors['453'])s.cameraSendSnapshot({mid:e.id,ke:e.ke,mon:e},{useIcon: true})
-                //check host to see if has password and user in it
-                clearTimeout(activeMonitor.recordingChecker)
-                if(activeMonitor.isStarted === true){
-                    try{
-                        cameraDestroy(e)
-                    }catch(err){
-
-                    }
-                    startVideoProcessor = function(err,pingResponse){
-                        pingResponse = pingResponse ? pingResponse : {success: true}
+                async function startVideoProcessor(err,pingResponse){
+                    pingResponse = pingResponse ? pingResponse : {success: true}
+                    return new Promise((resolve) => {
                         if(pingResponse.success === true){
                             activeMonitor.isRecording = true
                             try{
-                                var mainProcess = createCameraFfmpegProcess(e)
-                                createEventCounter(e)
-                                if(mainProcess){
-                                    createCameraStreamHandlers(e)
-                                    if(e.type === 'dashcam' || e.type === 'socket'){
-                                        setTimeout(function(){
-                                            activeMonitor.allowStdinWrite = true
-                                            s.txToDashcamUsers({
-                                                f : 'enable_stream',
-                                                ke : e.ke,
-                                                mid : e.id
-                                            },e.ke)
-                                        },30000)
+                                createCameraFfmpegProcess(e).then((mainProcess) => {
+                                    if(mainProcess){
+                                        createEventCounter(e)
+                                        createCameraStreamHandlers(e)
+                                        if(typeIsDashcam){
+                                            setTimeout(function(){
+                                                activeMonitor.allowStdinWrite = true
+                                                s.txToDashcamUsers({
+                                                    f : 'enable_stream',
+                                                    ke : e.ke,
+                                                    mid : monitorId
+                                                },e.ke)
+                                            },30000)
+                                        }
+                                        if(
+                                            isRecord ||
+                                            typeIsMjpeg ||
+                                            typeIsH264 ||
+                                            typeIsLocal
+                                        ){
+                                            catchNewSegmentNames(e)
+                                            cameraFilterFfmpegLog(e)
+                                        }
+                                        if(isRecord){
+                                            s.sendMonitorStatus({
+                                                id: monitorId,
+                                                ke: e.ke,
+                                                status: lang.Recording,
+                                                code: 3
+                                            });
+                                        }else{
+                                            s.sendMonitorStatus({
+                                                id: monitorId,
+                                                ke: e.ke,
+                                                status: lang.Watching,
+                                                code: 2
+                                            });
+                                        }
                                     }
-                                    if(
-                                        e.functionMode === 'record' ||
-                                        e.type === 'mjpeg' ||
-                                        e.type === 'h264' ||
-                                        e.type === 'local'
-                                    ){
-                                        catchNewSegmentNames(e)
-                                        cameraFilterFfmpegLog(e)
-                                    }
-                                    if(e.mode === 'record'){
-                                        s.sendMonitorStatus({
-                                            id: e.id,
-                                            ke: e.ke,
-                                            status: lang.Recording,
-                                            code: 3
-                                        });
-                                    }else{
-                                        s.sendMonitorStatus({
-                                            id: e.id,
-                                            ke: e.ke,
-                                            status: lang.Watching,
-                                            code: 2
-                                        });
-                                    }
-                                }
-                                clearTimeout(activeMonitor.onMonitorStartTimer)
-                                activeMonitor.onMonitorStartTimer = setTimeout(() => {
-                                    s.onMonitorStartExtensions.forEach(function(extender){
-                                        extender(Object.assign(s.group[e.ke].rawMonitorConfigurations[e.id],{}),e)
-                                    })
-                                },10000)
+                                    clearTimeout(activeMonitor.onMonitorStartTimer)
+                                    activeMonitor.onMonitorStartTimer = setTimeout(() => {
+                                        s.onMonitorStartExtensions.forEach(function(extender){
+                                            extender(Object.assign(s.group[e.ke].rawMonitorConfigurations[monitorId],{}),e)
+                                        })
+                                        resolve()
+                                    },1000)
+                                })
                             }catch(err){
-                                console.log('Failed to Load',e.id,e.ke)
+                                console.log('Failed to Load',monitorId,e.ke)
                                 console.log(err)
+                                resolve()
                             }
                           }else{
                               s.onMonitorPingFailedExtensions.forEach(function(extender){
-                                  extender(Object.assign(s.group[e.ke].rawMonitorConfigurations[e.id],{}),e)
+                                  extender(Object.assign(s.group[e.ke].rawMonitorConfigurations[monitorId],{}),e)
                               })
                               s.userLog(e,{type:lang["Ping Failed"],msg:lang.skipPingText1});
                               fatalError(e,"Ping Failed");return;
+                              resolve()
                           }
-                      }
-                    if(
-                        e.type !== 'socket' &&
-                        e.type !== 'dashcam' &&
-                        e.protocol !== 'udp' &&
-                        e.type !== 'local' &&
-                        e.details.skip_ping !== '1'
-                    ){
-                        try{
-                            connectionTester.test(strippedHost,e.port,2000,startVideoProcessor);
-                        }catch(err){
-                            startVideoProcessor()
-                        }
-                    }else{
-                        startVideoProcessor()
+                    })
+                }
+                if(doPingTest){
+                    try{
+                        const testResult = await asyncConnectionTest(strippedHost,e.port,2000)
+                        await startVideoProcessor(testResult.err,testResult.response)
+                    }catch(err){
+                        await startVideoProcessor()
                     }
                 }else{
-                    cameraDestroy(e)
+                    await startVideoProcessor()
                 }
-                if(callback)callback()
-            })
+            }else{
+                await cameraDestroy(e)
+            }
+            if(callback)callback()
         }
-        var doOnChildMachine = function(){
-            startVideoProcessor = function(){
+        async function doOnChildMachine(){
+            function startVideoProcessor(){
                 s.cx({
-                    //function
                     f : 'cameraStart',
-                    //mode
                     mode : e.functionMode,
-                    //data, options
-                    d : s.group[e.ke].rawMonitorConfigurations[e.id]
+                    d : s.group[e.ke].rawMonitorConfigurations[monitorId]
                 },activeMonitor.childNodeId)
                 clearTimeout(activeMonitor.recordingChecker);
                 clearTimeout(activeMonitor.streamChecker);
             }
-            if(
-                e.type !== 'socket' &&
-                e.type !== 'dashcam' &&
-                e.protocol !== 'udp' &&
-                e.type !== 'local' &&
-                e.details.skip_ping !== '1'
-            ){
-                connectionTester.test(strippedHost,e.port,2000,startVideoProcessor)
+            if(doPingTest){
+                const testResult = await asyncConnectionTest(strippedHost,e.port,2000)
+                startVideoProcessor(testResult.err,testResult.response)
             }else{
                 startVideoProcessor()
             }
         }
         try{
             if(config.childNodes.enabled === true && config.childNodes.mode === 'master'){
-                selectNodeForOperation({
+                const selectedNode = await selectNodeForOperation({
                     ke: e.ke,
-                    mid: e.id,
-                }).then((selectedNode) => {
-                    if(selectedNode){
-                        bindMonitorToChildNode({
-                            ke: e.ke,
-                            mid: e.id,
-                            childNodeId: selectedNode,
-                        })
-                        doOnChildMachine()
-                    }else{
-                        startMonitorInQueue.push(doOnThisMachine,function(){})
-                    }
+                    mid: monitorId,
                 });
+                if(selectedNode){
+                    bindMonitorToChildNode({
+                        ke: e.ke,
+                        mid: monitorId,
+                        childNodeId: selectedNode,
+                    })
+                    await doOnChildMachine()
+                }else{
+                    startMonitorInQueue.push(doOnThisMachine,function(){})
+                }
             }else{
                 startMonitorInQueue.push(doOnThisMachine,function(){})
             }
@@ -1381,8 +1397,9 @@ module.exports = function(s,config,lang){
         }
     }
     function fatalError(e,errorMessage){
-        const activeMonitor = s.group[e.ke].activeMonitors[e.id]
-        const monitorDetails = s.group[e.ke].rawMonitorConfigurations[e.id].details
+        const monitorId = e.mid || e.id
+        const activeMonitor = s.group[e.ke].activeMonitors[monitorId]
+        const monitorDetails = s.group[e.ke].rawMonitorConfigurations[monitorId].details
         const maxCount = !monitorDetails.fatal_max || isNaN(monitorDetails.fatal_max) ? 0 : parseFloat(monitorDetails.fatal_max);
         clearTimeout(activeMonitor.err_fatal_timeout);
         ++activeMonitor.errorFatalCount;
@@ -1390,7 +1407,7 @@ module.exports = function(s,config,lang){
             activeMonitor.err_fatal_timeout = setTimeout(function(){
                 if(maxCount !== 0 && activeMonitor.errorFatalCount > maxCount){
                     s.userLog(e,{type:lang["Fatal Error"],msg:lang.onFatalErrorExit});
-                    s.camera('stop',{id:e.id,ke:e.ke})
+                    s.camera('stop',{mid:monitorId,ke:e.ke})
                 }else{
                     launchMonitorProcesses(s.cleanMonitorObject(e))
                 };
@@ -1399,14 +1416,14 @@ module.exports = function(s,config,lang){
             cameraDestroy(e)
         }
         s.sendMonitorStatus({
-            id: e.id,
+            id: monitorId,
             ke: e.ke,
             status: lang.Died,
             code: 7
         });
         clearTimeout(activeMonitor.onMonitorStartTimer)
         s.onMonitorDiedExtensions.forEach(function(extender){
-            extender(Object.assign(s.group[e.ke].rawMonitorConfigurations[e.id],{}),e)
+            extender(Object.assign(s.group[e.ke].rawMonitorConfigurations[monitorId],{}),e)
         })
     }
     // s.isWatchCountable = function(d){
@@ -1545,34 +1562,38 @@ module.exports = function(s,config,lang){
         // e = monitor object
         // cn = socket connection or callback or options (depends on function chosen)
         if(cn && cn.ke && !e.ke){e.ke = cn.ke}
+        const groupKey = e.ke
+        const monitorId = e.mid || e.id
         e.functionMode = x
         if(!e.mode){e.mode = x}
         s.checkDetails(e)
         checkObjectsInDetails(e)
-        s.initiateMonitorObject({ke:e.ke,mid:e.id})
+        s.initiateMonitorObject({ke:e.ke,mid:monitorId})
         switch(e.functionMode){
             case'watch_on'://live streamers - join
+                var activeMonitor = s.group[e.ke].activeMonitors[monitorId];
                 if(!cn.monitorsCurrentlyWatching){cn.monitorsCurrentlyWatching = {}}
-                if(!cn.monitorsCurrentlyWatching[e.id]){cn.monitorsCurrentlyWatching[e.id]={ke:e.ke}}
-                setActiveViewer(e.ke,e.id,cn.id,true)
-                s.group[e.ke].activeMonitors[e.id].allowDestroySubstream = false
-                clearTimeout(s.group[e.ke].activeMonitors[e.id].noViewerCountDisableSubstream)
+                if(!cn.monitorsCurrentlyWatching[monitorId]){cn.monitorsCurrentlyWatching[monitorId]={ke:e.ke}}
+                setActiveViewer(e.ke,monitorId,cn.id,true)
+                activeMonitor.allowDestroySubstream = false
+                clearTimeout(activeMonitor.noViewerCountDisableSubstream)
             break;
             case'watch_off'://live streamers - leave
-                if(cn.monitorsCurrentlyWatching){delete(cn.monitorsCurrentlyWatching[e.id])}
-                setActiveViewer(e.ke,e.id,cn.id,false)
-                clearTimeout(s.group[e.ke].activeMonitors[e.id].noViewerCountDisableSubstream)
-                s.group[e.ke].activeMonitors[e.id].noViewerCountDisableSubstream = setTimeout(async () => {
-                    let currentCount = getActiveViewerCount(e.ke,e.id)
-                    if(currentCount === 0 && s.group[e.ke].activeMonitors[e.id].subStreamProcess){
-                        s.group[e.ke].activeMonitors[e.id].allowDestroySubstream = true
-                        await destroySubstreamProcess(s.group[e.ke].activeMonitors[e.id])
+                var activeMonitor = s.group[e.ke].activeMonitors[monitorId];
+                if(cn.monitorsCurrentlyWatching){delete(cn.monitorsCurrentlyWatching[monitorId])}
+                setActiveViewer(e.ke,monitorId,cn.id,false)
+                clearTimeout(activeMonitor.noViewerCountDisableSubstream)
+                activeMonitor.noViewerCountDisableSubstream = setTimeout(async () => {
+                    let currentCount = getActiveViewerCount(e.ke,monitorId)
+                    if(currentCount === 0 && activeMonitor.subStreamProcess){
+                        activeMonitor.allowDestroySubstream = true
+                        await destroySubstreamProcess(activeMonitor)
                     }
                 },10000)
             break;
             case'restart'://restart monitor
                 s.sendMonitorStatus({
-                    id: e.id,
+                    id: monitorId,
                     ke: e.ke,
                     status: lang.Restarting,
                     code: 4,
@@ -1583,42 +1604,43 @@ module.exports = function(s,config,lang){
                 },1300)
             break;
             case'idle':case'stop'://stop monitor
-                if(!s.group[e.ke]||!s.group[e.ke].activeMonitors[e.id]){return}
-                if(config.childNodes.enabled === true && config.childNodes.mode === 'master' && s.group[e.ke].activeMonitors[e.id].childNode && s.childNodes[s.group[e.ke].activeMonitors[e.id].childNode].activeCameras[e.ke+e.id]){
-                    s.group[e.ke].activeMonitors[e.id].isStarted = false
-                    s.cx({f:'sync',sync:s.group[e.ke].rawMonitorConfigurations[e.id],ke:e.ke,mid:e.id},s.group[e.ke].activeMonitors[e.id].childNodeId);
+                if(!s.group[e.ke]||!s.group[e.ke].activeMonitors[monitorId]){return}
+                var activeMonitor = s.group[e.ke].activeMonitors[monitorId];
+                if(config.childNodes.enabled === true && config.childNodes.mode === 'master' && activeMonitor.childNode && s.childNodes[activeMonitor.childNode].activeCameras[e.ke+monitorId]){
+                    activeMonitor.isStarted = false
+                    s.cx({f:'sync',sync:s.group[e.ke].rawMonitorConfigurations[monitorId],ke:e.ke,mid:monitorId},activeMonitor.childNodeId);
                     s.cx({
                         //function
                         f : 'cameraStop',
                         //data, options
-                        d : s.group[e.ke].rawMonitorConfigurations[e.id]
-                    },s.group[e.ke].activeMonitors[e.id].childNodeId)
+                        d : s.group[e.ke].rawMonitorConfigurations[monitorId]
+                    },activeMonitor.childNodeId)
                 }else{
                     closeEventBasedRecording(e)
-                    if(s.group[e.ke].activeMonitors[e.id].fswatch){s.group[e.ke].activeMonitors[e.id].fswatch.close();delete(s.group[e.ke].activeMonitors[e.id].fswatch)}
-                    if(s.group[e.ke].activeMonitors[e.id].fswatchStream){s.group[e.ke].activeMonitors[e.id].fswatchStream.close();delete(s.group[e.ke].activeMonitors[e.id].fswatchStream)}
-                    if(s.group[e.ke].activeMonitors[e.id].last_frame){delete(s.group[e.ke].activeMonitors[e.id].last_frame)}
-                    if(s.group[e.ke].activeMonitors[e.id].isStarted !== true){return}
+                    if(activeMonitor.fswatch){activeMonitor.fswatch.close();delete(activeMonitor.fswatch)}
+                    if(activeMonitor.fswatchStream){activeMonitor.fswatchStream.close();delete(activeMonitor.fswatchStream)}
+                    if(activeMonitor.last_frame){delete(activeMonitor.last_frame)}
+                    if(activeMonitor.isStarted !== true){return}
                     cameraDestroy(e)
-                    clearTimeout(s.group[e.ke].activeMonitors[e.id].trigger_timer)
-                    delete(s.group[e.ke].activeMonitors[e.id].trigger_timer)
-                    clearInterval(s.group[e.ke].activeMonitors[e.id].detector_notrigger_timeout)
-                    clearTimeout(s.group[e.ke].activeMonitors[e.id].err_fatal_timeout);
-                    s.group[e.ke].activeMonitors[e.id].isStarted = false
-                    s.group[e.ke].activeMonitors[e.id].isRecording = false
-                    s.tx({f:'monitor_stopping',mid:e.id,ke:e.ke,time:s.formattedTime()},'GRP_'+e.ke);
-                    s.cameraSendSnapshot({mid:e.id,ke:e.ke,mon:e},{useIcon: true})
+                    clearTimeout(activeMonitor.trigger_timer)
+                    delete(activeMonitor.trigger_timer)
+                    clearInterval(activeMonitor.detector_notrigger_timeout)
+                    clearTimeout(activeMonitor.err_fatal_timeout);
+                    activeMonitor.isStarted = false
+                    activeMonitor.isRecording = false
+                    s.tx({f:'monitor_stopping',mid:monitorId,ke:e.ke,time:s.formattedTime()},'GRP_'+e.ke);
+                    s.cameraSendSnapshot({mid:monitorId,ke:e.ke,mon:e},{useIcon: true})
                     if(e.functionMode === 'stop'){
                         s.userLog(e,{type:lang['Monitor Stopped'],msg:lang.MonitorStoppedText});
-                        clearTimeout(s.group[e.ke].activeMonitors[e.id].delete)
-                        if(e.delete===1){
-                            s.group[e.ke].activeMonitors[e.id].delete=setTimeout(function(){
-                                delete(s.group[e.ke].activeMonitors[e.id]);
-                                delete(s.group[e.ke].rawMonitorConfigurations[e.id]);
+                        clearTimeout(activeMonitor.delete)
+                        if(e.delete === 1){
+                            activeMonitor.delete = setTimeout(function(){
+                                delete(s.group[e.ke].activeMonitors[monitorId]);
+                                delete(s.group[e.ke].rawMonitorConfigurations[monitorId]);
                             },1000*60);
                         }
                     }else{
-                        s.tx({f:'monitor_idle',mid:e.id,ke:e.ke,time:s.formattedTime()},'GRP_'+e.ke);
+                        s.tx({f:'monitor_idle',mid:monitorId,ke:e.ke,time:s.formattedTime()},'GRP_'+e.ke);
                         s.userLog(e,{type:lang['Monitor Idling'],msg:lang.MonitorIdlingText});
                     }
                 }
@@ -1629,7 +1651,7 @@ module.exports = function(s,config,lang){
                     wantedStatusCode = 6
                 }
                 s.sendMonitorStatus({
-                    id: e.id,
+                    id: monitorId,
                     ke: e.ke,
                     status: wantedStatus,
                     code: wantedStatusCode,
@@ -1638,30 +1660,30 @@ module.exports = function(s,config,lang){
                     setTimeout(() => {
                         scanForOrphanedVideos({
                             ke: e.ke,
-                            mid: e.id,
+                            mid: monitorId,
                         },{
                             forceCheck: true,
                             checkMax: 2
                         })
                     },2000)
                 }
-                clearTimeout(s.group[e.ke].activeMonitors[e.id].onMonitorStartTimer)
+                clearTimeout(activeMonitor.onMonitorStartTimer)
                 s.onMonitorStopExtensions.forEach(function(extender){
-                    extender(Object.assign(s.group[e.ke].rawMonitorConfigurations[e.id],{}),e)
+                    extender(Object.assign(s.group[e.ke].rawMonitorConfigurations[monitorId],{}),e)
                 })
             break;
             case'start':case'record'://watch or record monitor url
                 monitorConfigurationMigrator(e)
-                s.initiateMonitorObject({ke:e.ke,mid:e.id})
-                const activeMonitor = s.group[e.ke].activeMonitors[e.id]
-                if(!s.group[e.ke].rawMonitorConfigurations[e.id]){s.group[e.ke].rawMonitorConfigurations[e.id]=s.cleanMonitorObject(e);}
+                s.initiateMonitorObject({ke:e.ke,mid:monitorId})
+                var activeMonitor = s.group[e.ke].activeMonitors[monitorId]
+                if(!s.group[e.ke].rawMonitorConfigurations[monitorId]){s.group[e.ke].rawMonitorConfigurations[monitorId]=s.cleanMonitorObject(e);}
                 if(activeMonitor.isStarted === true){
                     //stop action, monitor already started or recording
                     return
                 }
                 if(activeMonitor.masterSaysToStop === true){
                     s.sendMonitorStatus({
-                        id: e.id,
+                        id: monitorId,
                         ke: e.ke,
                         status: lang.Stopped,
                         code: 5,
@@ -1669,20 +1691,20 @@ module.exports = function(s,config,lang){
                     return;
                 }
                 if(config.probeMonitorOnStart === true){
-                    const probeResponse = await probeMonitor(s.group[e.ke].rawMonitorConfigurations[e.id],2000,true)
+                    const probeResponse = await probeMonitor(s.group[e.ke].rawMonitorConfigurations[monitorId],2000,true)
                     const probeStreams = getStreamInfoFromProbe(probeResponse.result)
                     activeMonitor.probeResult = probeStreams
-                    const warnings = createWarningsForConfiguration(s.group[e.ke].rawMonitorConfigurations[e.id],probeStreams)
+                    const warnings = createWarningsForConfiguration(s.group[e.ke].rawMonitorConfigurations[monitorId],probeStreams)
                     activeMonitor.warnings = warnings
                     if(warnings.length > 0){
                         const configPartial = buildMonitorConfigPartialFromWarnings(warnings)
                         applyPartialToConfiguration(e,configPartial)
                         applyPartialToConfiguration(activeMonitor,configPartial)
-                        applyPartialToConfiguration(s.group[e.ke].rawMonitorConfigurations[e.id],configPartial)
+                        applyPartialToConfiguration(s.group[e.ke].rawMonitorConfigurations[monitorId],configPartial)
                     }
                 }
                 s.sendMonitorStatus({
-                    id: e.id,
+                    id: monitorId,
                     ke: e.ke,
                     status: lang.Starting,
                     code: 1
@@ -1701,37 +1723,15 @@ module.exports = function(s,config,lang){
                 }
                 //set up fatal error handler
                 activeMonitor.errorFatalCount = 0;
-                //start drawing files
                 delete(activeMonitor.childNode)
                 if(e.details.detector_ptz_follow === '1'){
-                    setTimeout(() => {
-                        setPresetForCurrentPosition({
-                            ke: e.ke,
-                            id: e.id
-                        },(endData) => {
-                            if(endData.ok === false){
-                                setTimeout(() => {
-                                    setPresetForCurrentPosition({
-                                        ke: e.ke,
-                                        id: e.id
-                                    },(endData) => {
-                                        if(endData.ok === false){
-                                            setTimeout(() => {
-                                                setPresetForCurrentPosition({
-                                                    ke: e.ke,
-                                                    id: e.id
-                                                },(endData) => {
-                                                    console.log(endData)
-                                                })
-                                            },5000)
-                                        }
-                                    })
-                                },5000)
-                            }
-                        })
-                    },5000)
+                    await setHomePositionPreset(e)
                 }
-                launchMonitorProcesses(e)
+                try{
+                    await launchMonitorProcesses(e)
+                }catch(err){
+                    console.error(err)
+                }
             break;
             default:
                 console.log(x)

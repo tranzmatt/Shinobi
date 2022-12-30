@@ -59,7 +59,7 @@ module.exports = (s,config,lang) => {
             }
         })
     }
-    const cameraDestroy = function(e,p){
+    const cameraDestroy = async function(e,p){
         if(
             s.group[e.ke] &&
             s.group[e.ke].activeMonitors[e.id] &&
@@ -103,9 +103,9 @@ module.exports = (s,config,lang) => {
             clearInterval(activeMonitor.objectCountIntervals);
             clearTimeout(activeMonitor.timeoutToRestart)
             delete(activeMonitor.onvifConnection)
-            if(activeMonitor.onChildNodeExit){
-                activeMonitor.onChildNodeExit()
-            }
+            // if(activeMonitor.onChildNodeExit){
+            //     activeMonitor.onChildNodeExit()
+            // }
             try{
                 activeMonitor.spawn.stdio.forEach(function(stdio){
                   try{
@@ -130,13 +130,11 @@ module.exports = (s,config,lang) => {
             if(activeMonitor.childNode){
                 s.cx({f:'kill',d:s.cleanMonitorObject(e)},activeMonitor.childNodeId)
             }else{
-                processKill(proc).then((response) => {
-                    s.debugLog(`cameraDestroy`,response)
-                    activeMonitor.allowDestroySubstream = true
-                    destroySubstreamProcess(activeMonitor).then((response) => {
-                        if(response.hadSubStream)s.debugLog(`cameraDestroy`,response.closeResponse)
-                    })
-                })
+                const killResponse = await processKill(proc);
+                s.debugLog(`cameraDestroy`,killResponse)
+                activeMonitor.allowDestroySubstream = true
+                const killSubResponse = await destroySubstreamProcess(activeMonitor)
+                if(killSubResponse.hadSubStream)s.debugLog(`cameraDestroy`,killSubResponse.closeResponse)
             }
         }
     }
@@ -448,34 +446,6 @@ module.exports = (s,config,lang) => {
             s.userLog(e,{type:'Spawn Error',msg:er});fatalError(e,'Spawn Error')
         })
         s.userLog(e,{type:lang['Process Started'],msg:{cmd:s.group[e.ke].activeMonitors[e.id].ffmpeg}})
-        // if(s.isWin === false){
-            // var strippedHost = s.stripAuthFromHost(e)
-            // var sendProcessCpuUsage = function(){
-            //     s.getMonitorCpuUsage(e,function(percent){
-            //         s.group[e.ke].activeMonitors[e.id].currentCpuUsage = percent
-            //         s.tx({
-            //             f: 'camera_cpu_usage',
-            //             ke: e.ke,
-            //             id: e.id,
-            //             percent: percent
-            //         },'MON_STREAM_'+e.ke+e.id)
-            //     })
-            // }
-            // clearInterval(s.group[e.ke].activeMonitors[e.id].getMonitorCpuUsage)
-            // s.group[e.ke].activeMonitors[e.id].getMonitorCpuUsage = setInterval(function(){
-            //     if(e.details.skip_ping !== '1'){
-            //         connectionTester.test(strippedHost,e.port,2000,function(err,response){
-            //             if(response.success){
-            //                 sendProcessCpuUsage()
-            //             }else{
-            //                 launchMonitorProcesses(e)
-            //             }
-            //         })
-            //     }else{
-            //         sendProcessCpuUsage()
-            //     }
-            // },1000 * 60)
-        // }
     }
     async function deleteMonitorData(groupKey,monitorId){
         // deleteVideos

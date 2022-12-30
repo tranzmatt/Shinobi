@@ -38,7 +38,15 @@ function addCredentialsToUrl(options){
     const urlParts = streamUrl.split('://')
     return [urlParts[0],'://',`${username}:${password}@`,urlParts[1]].join('')
 }
+function asyncSetTimeout(timeoutAmount) {
+    return new Promise((resolve,reject) => {
+        setTimeout(function(){
+            resolve()
+        },timeoutAmount)
+    })
+}
 module.exports = {
+    asyncSetTimeout,
     addCredentialsToUrl,
     getBuffer: getBuffer,
     mergeDeep: mergeDeep,
@@ -57,6 +65,13 @@ module.exports = {
         return async.queue(function(action, callback) {
             setTimeout(function(){
                 action(callback)
+            },timeoutInSeconds * 1000 || 1000)
+        },queueItemsRunningInParallel || 3)
+    },
+    createQueueAwaited: (timeoutInSeconds, queueItemsRunningInParallel) => {
+        return async.queue(function(action, callback) {
+            setTimeout(function(){
+                action().then(callback)
             },timeoutInSeconds * 1000 || 1000)
         },queueItemsRunningInParallel || 3)
     },
