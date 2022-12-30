@@ -66,11 +66,17 @@ module.exports = (s,config,lang) => {
                 response.err = err
                 doResolve(response)
             }
+            function lastResort(){
+                treekill(proc.pid)
+                response.msg = 'treekill'
+                doResolve(response)
+            }
             try{
                 proc.on('exit',() => {
-                    response.msg = 'Exit Event Executed'
+                    response.msg = 'proc.on.exit'
                     clearTimeout(killTimer)
                     doResolve(response)
+                    treekill(proc.pid)
                 });
                 if(proc && proc.stdin) {
                     proc.stdin.write("q\r\n");
@@ -78,21 +84,13 @@ module.exports = (s,config,lang) => {
                 let killTimer = setTimeout(() => {
                     if(proc && proc.kill){
                         if(s.isWin){
+                            response.msg = 'taskkill'
                             spawn("taskkill", ["/pid", proc.pid, '/t'])
                         }else{
-                            response.msg = 'SIGTERM Executed'
+                            response.msg = 'SIGTERM'
                             proc.kill('SIGTERM')
                         }
-                        killTimer = setTimeout(function(){
-                            try{
-                                treekill(proc.pid)
-                                response.msg = 'treekill Executed'
-                                doResolve(response)
-                            }catch(err){
-                                s.debugLog(err)
-                                sendError(err)
-                            }
-                        },3000)
+                        killTimer = setTimeout(lastResort,3000)
                     }
                 },1000)
             }catch(err){
@@ -694,7 +692,7 @@ module.exports = (s,config,lang) => {
                 activeMonitor.delete = setTimeout(function(){
                     delete(s.group[e.ke].activeMonitors[monitorId]);
                     delete(s.group[e.ke].rawMonitorConfigurations[monitorId]);
-                },1000 * 10);
+                },1000 * 20);
             }
         }
         s.sendMonitorStatus({
