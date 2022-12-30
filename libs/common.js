@@ -38,15 +38,7 @@ function addCredentialsToUrl(options){
     const urlParts = streamUrl.split('://')
     return [urlParts[0],'://',`${username}:${password}@`,urlParts[1]].join('')
 }
-function asyncSetTimeout(timeoutAmount) {
-    return new Promise((resolve,reject) => {
-        setTimeout(function(){
-            resolve()
-        },timeoutAmount)
-    })
-}
 module.exports = {
-    asyncSetTimeout,
     addCredentialsToUrl,
     getBuffer: getBuffer,
     mergeDeep: mergeDeep,
