@@ -58,7 +58,6 @@ module.exports = function(s,config,lang){
         selectNodeForOperation,
         bindMonitorToChildNode
     } = require('./childNode/utils.js')(s,config,lang)
-    const startMonitorInQueue = createQueueAwaited(0.5, 1)
     s.initiateMonitorObject = function(e){
         if(!s.group[e.ke]){s.group[e.ke]={}};
         if(!s.group[e.ke].activeMonitors){s.group[e.ke].activeMonitors={}}
@@ -1201,7 +1200,8 @@ module.exports = function(s,config,lang){
     async function launchMonitorProcesses(e){
         const groupKey = e.ke
         const monitorId = e.mid || e.id
-        const activeMonitor = s.group[e.ke].activeMonitors[monitorId]
+        const theGroup = s.group[e.ke]
+        const activeMonitor = theGroup.activeMonitors[monitorId]
         const isMacOS = s.platform !== 'darwin';
         const isWatchOnly = e.functionMode === 'start'
         const isRecord = e.functionMode === 'record'
@@ -1213,8 +1213,9 @@ module.exports = function(s,config,lang){
         const typeIsMjpeg = e.type === 'mjpeg'
         const typeIsH264 = e.type === 'h264'
         const typeIsLocal = e.type === 'local'
-        const monitorConfig = s.group[e.ke].rawMonitorConfigurations[monitorId]
+        const monitorConfig = theGroup.rawMonitorConfigurations[monitorId]
         const doPingTest = e.type !== 'socket' && e.type !== 'dashcam' && e.protocol !== 'udp' && e.type !== 'local' && e.details.skip_ping !== '1';
+        const startMonitorInQueue = theGroup.startMonitorInQueue
         // e = monitor object
         clearTimeout(activeMonitor.resetFatalErrorCountTimer)
         activeMonitor.resetFatalErrorCountTimer = setTimeout(()=>{
@@ -1320,7 +1321,7 @@ module.exports = function(s,config,lang){
                                     clearTimeout(activeMonitor.onMonitorStartTimer)
                                     activeMonitor.onMonitorStartTimer = setTimeout(() => {
                                         s.onMonitorStartExtensions.forEach(function(extender){
-                                            extender(Object.assign(s.group[e.ke].rawMonitorConfigurations[monitorId],{}),e)
+                                            extender(Object.assign(theGroup.rawMonitorConfigurations[monitorId],{}),e)
                                         })
                                         resolve()
                                     },1000)
@@ -1332,7 +1333,7 @@ module.exports = function(s,config,lang){
                             }
                           }else{
                               s.onMonitorPingFailedExtensions.forEach(function(extender){
-                                  extender(Object.assign(s.group[e.ke].rawMonitorConfigurations[monitorId],{}),e)
+                                  extender(Object.assign(theGroup.rawMonitorConfigurations[monitorId],{}),e)
                               })
                               s.userLog(e,{type:lang["Ping Failed"],msg:lang.skipPingText1});
                               fatalError(e,"Ping Failed");return;
@@ -1360,7 +1361,7 @@ module.exports = function(s,config,lang){
                 s.cx({
                     f : 'cameraStart',
                     mode : e.functionMode,
-                    d : s.group[e.ke].rawMonitorConfigurations[monitorId]
+                    d : theGroup.rawMonitorConfigurations[monitorId]
                 },activeMonitor.childNodeId)
                 clearTimeout(activeMonitor.recordingChecker);
                 clearTimeout(activeMonitor.streamChecker);
