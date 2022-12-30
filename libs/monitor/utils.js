@@ -50,30 +50,44 @@ module.exports = (s,config,lang) => {
     const processKill = (proc) => {
         const response = {ok: true}
         return new Promise((resolve,reject) => {
-            if(!proc){
+            let alreadyResolved = false
+            function doResolve(response){
+                if(alreadyResolved)return;
+                alreadyResolved = true;
                 resolve(response)
+            }
+            if(!proc){
+                response.msg = 'No Process to Kill'
+                doResolve(response)
                 return
             }
             function sendError(err){
                 response.ok = false
                 response.err = err
-                resolve(response)
+                doResolve(response)
             }
             try{
+                proc.on('exit',() => {
+                    response.msg = 'Exit Event Executed'
+                    clearTimeout(killTimer)
+                    doResolve(response)
+                });
                 if(proc && proc.stdin) {
                     proc.stdin.write("q\r\n");
                 }
-                setTimeout(() => {
+                let killTimer = setTimeout(() => {
                     if(proc && proc.kill){
                         if(s.isWin){
                             spawn("taskkill", ["/pid", proc.pid, '/t'])
                         }else{
+                            response.msg = 'SIGTERM Executed'
                             proc.kill('SIGTERM')
                         }
-                        setTimeout(function(){
+                        killTimer = setTimeout(function(){
                             try{
                                 treekill(proc.pid)
-                                resolve(response)
+                                response.msg = 'treekill Executed'
+                                doResolve(response)
                             }catch(err){
                                 s.debugLog(err)
                                 sendError(err)
@@ -680,7 +694,7 @@ module.exports = (s,config,lang) => {
                 activeMonitor.delete = setTimeout(function(){
                     delete(s.group[e.ke].activeMonitors[monitorId]);
                     delete(s.group[e.ke].rawMonitorConfigurations[monitorId]);
-                },1000*60);
+                },1000 * 10);
             }
         }
         s.sendMonitorStatus({
