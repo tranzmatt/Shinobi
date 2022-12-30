@@ -17,13 +17,14 @@ module.exports = function(s,config,lang){
         splitForFFPMEG,
     } = require('./ffmpeg/utils.js')(s,config,lang)
     const {
+        processKill,
         monitorStop,
         monitorIdle,
         monitorStart,
         monitorRestart,
         monitorAddViewer,
         monitorRemoveViewer,
-        processKill,
+        checkObjectsInMonitorDetails,
     } = require('./monitor/utils.js')(s,config,lang)
     s.initiateMonitorObject = function(e){
         if(!s.group[e.ke]){s.group[e.ke]={}};
@@ -138,7 +139,7 @@ module.exports = function(s,config,lang){
         return cleanMonitor
     }
     s.cleanMonitorObject = function(e){
-        x={keys:Object.keys(e),ar:{}};
+        var x = {keys:Object.keys(e),ar:{}};
         x.keys.forEach(function(v){
             if(v!=='last_frame'&&v!=='record'&&v!=='spawn'&&v!=='running'&&(v!=='time'&&typeof e[v]!=='function')){x.ar[v]=e[v];}
         });
@@ -433,43 +434,6 @@ module.exports = function(s,config,lang){
         })
         return items
     }
-    const checkObjectsInDetails = function(e){
-        const groupKey = e.ke
-        const monitorId = e.mid || e.id
-        const activeMonitor = s.group[groupKey].activeMonitors[monitorId];
-        //parse Objects
-        (['detector_cascades','cords','detector_filters','input_map_choices']).forEach(function(v){
-            if(e.details && e.details[v]){
-                try{
-                    if(!e.details[v] || e.details[v] === '')e.details[v] = '{}'
-                    e.details[v] = s.parseJSON(e.details[v])
-                    if(!e.details[v])e.details[v] = {}
-                    activeMonitor.details = e.details
-                    switch(v){
-                        case'cords':
-                            activeMonitor.parsedObjects[v] = Object.values(s.parseJSON(e.details[v]))
-                        break;
-                        default:
-                            activeMonitor.parsedObjects[v] = s.parseJSON(e.details[v])
-                        break;
-                    }
-                }catch(err){
-
-                }
-            }
-        });
-        //parse Arrays
-        (['stream_channels','input_maps']).forEach(function(v){
-            if(e.details&&e.details[v]&&(e.details[v] instanceof Array)===false){
-                try{
-                    e.details[v]=JSON.parse(e.details[v]);
-                    if(!e.details[v])e.details[v]=[];
-                }catch(err){
-                    e.details[v]=[];
-                }
-            }
-        });
-    }
     s.cameraControlOptionsFromUrl = function(e,monitorConfig){
         URLobject = URL.parse(e)
         if(monitorConfig.details.control_url_method === 'ONVIF' && monitorConfig.details.control_base_url === ''){
@@ -697,7 +661,6 @@ module.exports = function(s,config,lang){
         })
     }
     s.camera = async (selectedMode,e,cn) => {
-        // x = function or mode
         // e = monitor object
         // cn = socket connection or callback or options (depends on function chosen)
         if(cn && cn.ke && !e.ke){e.ke = cn.ke}
@@ -706,7 +669,7 @@ module.exports = function(s,config,lang){
         e.functionMode = selectedMode
         if(!e.mode){e.mode = selectedMode}
         s.checkDetails(e)
-        checkObjectsInDetails(e)
+        checkObjectsInMonitorDetails(e)
         s.initiateMonitorObject({ke:e.ke,mid:monitorId})
         switch(e.functionMode){
             case'watch_on':
@@ -731,7 +694,7 @@ module.exports = function(s,config,lang){
                 console.log(selectedMode)
             break;
         }
-        if(typeof cn === 'function'){setTimeout(function(){cn()},1000)}
+        if(typeof cn === 'function'){cn()}
     }
     //
     s.activateMonitorStates = function(groupKey,stateName,user,callback){
