@@ -100,20 +100,23 @@ module.exports = (s,config,lang) => {
         })
     }
     const cameraDestroy = async function(e,p){
+        const groupKey = e.ke
+        const monitorId = e.mid || e.id
+        const theGroup = s.group[groupKey]
         if(
-            s.group[e.ke] &&
-            s.group[e.ke].activeMonitors[e.id] &&
-            s.group[e.ke].activeMonitors[e.id].spawn !== undefined
+            theGroup &&
+            theGroup.activeMonitors[e.id] &&
+            theGroup.activeMonitors[e.id].spawn !== undefined
         ){
-            const activeMonitor = s.group[e.ke].activeMonitors[e.id];
-            const proc = s.group[e.ke].activeMonitors[e.id].spawn;
+            const activeMonitor = s.group[groupKey].activeMonitors[e.id];
+            const proc = s.group[groupKey].activeMonitors[e.id].spawn;
             if(proc){
                 activeMonitor.allowStdinWrite = false
                 s.txToDashcamUsers({
                     f : 'disable_stream',
-                    ke : e.ke,
+                    ke : groupKey,
                     mid : e.id
-                },e.ke)
+                },groupKey)
     //            if(activeMonitor.p2pStream){activeMonitor.p2pStream.unpipe();}
                 try{
                     proc.removeListener('end',activeMonitor.spawn_exit);
@@ -165,7 +168,7 @@ module.exports = (s,config,lang) => {
                 })
             }
             if(config.childNodes.enabled === true && config.childNodes.mode === 'child' && config.childNodes.host){
-                s.cx({f:'clearCameraFromActiveList',ke:e.ke,id:e.id})
+                s.cx({f:'clearCameraFromActiveList',ke:groupKey,id:e.id})
             }
             if(activeMonitor.childNode){
                 s.cx({f:'kill',d:s.cleanMonitorObject(e)},activeMonitor.childNodeId)
@@ -177,6 +180,15 @@ module.exports = (s,config,lang) => {
                 if(killSubResponse.hadSubStream)s.debugLog(`cameraDestroy`,killSubResponse.closeResponse)
             }
         }
+    }
+    function copyMonitorConfiguration(groupKey,monitorId){
+        return Object.assign({},s.group[groupKey].rawMonitorConfigurations[monitorId])
+    }
+    function getMonitorConfiguration(groupKey,monitorId){
+        return s.group[groupKey].rawMonitorConfigurations[monitorId]
+    }
+    function getActiveMonitor(groupKey,monitorId){
+        return s.group[groupKey].activeMonitors[monitorId]
     }
     const createSnapshot = (options) => {
         const url = options.url
@@ -265,10 +277,10 @@ module.exports = (s,config,lang) => {
         // e = monitorConfig
         try{
             const groupKey = e.ke
-            const monitorId = e.mid
-            const monitorConfig = Object.assign({},s.group[groupKey].rawMonitorConfigurations[monitorId])
+            const monitorId = e.mid || e.id
+            const monitorConfig = copyMonitorConfiguration(groupKey,monitorId)
             const monitorDetails = monitorConfig.details
-            const activeMonitor = s.group[e.ke].activeMonitors[e.mid]
+            const activeMonitor = getActiveMonitor(groupKey,monitorId)
             const channelNumber = 1 + (monitorDetails.stream_channels || []).length
             const ffmpegCommand = [`-progress pipe:5`];
             const logLevel = monitorDetails.loglevel ? e.details.loglevel : 'warning'
@@ -291,8 +303,8 @@ module.exports = (s,config,lang) => {
             const ffmpegCommandParsed = splitForFFPMEG(ffmpegCommandString)
             activeMonitor.subStreamChannel = channelNumber;
             s.userLog({
-                ke: e.ke,
-                mid: e.mid,
+                ke: groupKey,
+                mid: monitorId,
             },
             {
                 type: lang["Substream Process"],
@@ -303,7 +315,7 @@ module.exports = (s,config,lang) => {
             });
             const subStreamProcess = spawn(config.ffmpegDir,ffmpegCommandParsed,{detached: true,stdio: stdioPipes})
             attachStreamChannelHandlers({
-                ke: e.ke,
+                ke: groupKey,
                 mid: e.mid,
                 fields: Object.assign({},inputAndConnectionFields,outputFields),
                 number: activeMonitor.subStreamChannel,
@@ -311,15 +323,15 @@ module.exports = (s,config,lang) => {
             })
             if(config.debugLog === true){
                 subStreamProcess.stderr.on('data',(data) => {
-                    console.log(`${e.ke} ${e.mid}`)
+                    console.log(`${groupKey} ${monitorId}`)
                     console.log(data.toString())
                 })
             }
             if(logLevel !== 'quiet'){
                 subStreamProcess.stderr.on('data',(data) => {
                     s.userLog({
-                        ke: e.ke,
-                        mid: e.mid,
+                        ke: groupKey,
+                        mid: monitorId,
                     },{
                         type: lang["Substream Process"],
                         msg: data.toString()
@@ -330,8 +342,8 @@ module.exports = (s,config,lang) => {
                 if(!activeMonitor.allowDestroySubstream){
                     subStreamProcess.stderr.on('data',(data) => {
                         s.userLog({
-                            ke: e.ke,
-                            mid: e.mid,
+                            ke: groupKey,
+                            mid: monitorId,
                         },
                         {
                             type: lang["Substream Process"],
@@ -346,10 +358,10 @@ module.exports = (s,config,lang) => {
             activeMonitor.subStreamProcess = subStreamProcess
             s.tx({
                 f: 'substream_start',
-                mid: e.mid,
-                ke: e.ke,
+                mid: monitorId,
+                ke: groupKey,
                 channel: activeMonitor.subStreamChannel
-            },'GRP_'+e.ke);
+            },'GRP_'+groupKey);
             return subStreamProcess
         }catch(err){
             s.systemLog(err)
@@ -465,27 +477,36 @@ module.exports = (s,config,lang) => {
         }
     }
     function attachMainProcessHandlers(e,fatalError){
-        s.group[e.ke].activeMonitors[e.id].spawn_exit = function(){
-            if(s.group[e.ke].activeMonitors[e.id].isStarted === true){
+        const groupKey = e.ke
+        const monitorId = e.mid || e.id
+        const activeMonitor = getActiveMonitor(groupKey,monitorId);
+        activeMonitor.spawn_exit = function(){
+            if(activeMonitor.isStarted === true){
                 if(e.details.loglevel!=='quiet'){
-                    s.userLog(e,{type:lang['Process Unexpected Exit'],msg:{msg:lang.unexpectedExitText,cmd:s.group[e.ke].activeMonitors[e.id].ffmpeg}});
+                    s.userLog(e,{type:lang['Process Unexpected Exit'],msg:{msg:lang.unexpectedExitText,cmd:activeMonitor.ffmpeg}});
                 }
                 fatalError(e,'Process Unexpected Exit');
                 scanForOrphanedVideos(e,{
                     forceCheck: true,
                     checkMax: 2
                 })
+                const monitorConfig = copyMonitorConfiguration(groupKey,monitorId);
                 s.onMonitorUnexpectedExitExtensions.forEach(function(extender){
-                    extender(Object.assign(s.group[e.ke].rawMonitorConfigurations[e.id],{}),e)
+                    extender(monitorConfig,e)
                 })
             }
         }
-        s.group[e.ke].activeMonitors[e.id].spawn.on('end',s.group[e.ke].activeMonitors[e.id].spawn_exit)
-        s.group[e.ke].activeMonitors[e.id].spawn.on('exit',s.group[e.ke].activeMonitors[e.id].spawn_exit)
-        s.group[e.ke].activeMonitors[e.id].spawn.on('error',function(er){
+        activeMonitor.spawn.on('end',activeMonitor.spawn_exit)
+        activeMonitor.spawn.on('exit',activeMonitor.spawn_exit)
+        activeMonitor.spawn.on('error',function(er){
             s.userLog(e,{type:'Spawn Error',msg:er});fatalError(e,'Spawn Error')
         })
-        s.userLog(e,{type:lang['Process Started'],msg:{cmd:s.group[e.ke].activeMonitors[e.id].ffmpeg}})
+        s.userLog(e,{
+            type: lang['Process Started'],
+            msg: {
+                cmd: activeMonitor.ffmpeg
+            }
+        })
     }
     async function deleteMonitorData(groupKey,monitorId){
         // deleteVideos
@@ -659,18 +680,22 @@ module.exports = (s,config,lang) => {
     async function monitorStop(e){
         const groupKey = e.ke
         const monitorId = e.mid || e.id
-        if(!s.group[e.ke]||!s.group[e.ke].activeMonitors[monitorId]){return}
-        const activeMonitor = s.group[e.ke].activeMonitors[monitorId];
-        const monitorOnChildNode = config.childNodes.enabled === true && config.childNodes.mode === 'master' && activeMonitor.childNode && s.childNodes[activeMonitor.childNode].activeCameras[e.ke+monitorId];
+        if(!s.group[groupKey]||!s.group[groupKey].activeMonitors[monitorId]){return}
+        const activeMonitor = getActiveMonitor(groupKey,monitorId);
+        const monitorConfig = copyMonitorConfiguration(groupKey,monitorId);
+        const monitorOnChildNode = config.childNodes.enabled === true && config.childNodes.mode === 'master' && activeMonitor.childNode && s.childNodes[activeMonitor.childNode].activeCameras[groupKey+monitorId];
         if(monitorOnChildNode){
             activeMonitor.isStarted = false
-            s.cx({f:'sync',sync:s.group[e.ke].rawMonitorConfigurations[monitorId],ke:e.ke,mid:monitorId},activeMonitor.childNodeId);
             s.cx({
-                //function
-                f : 'cameraStop',
-                //data, options
-                d : s.group[e.ke].rawMonitorConfigurations[monitorId]
-            },activeMonitor.childNodeId)
+                f:'sync',
+                sync: monitorConfig,
+                ke: groupKey,
+                mid: monitorId
+            },activeMonitor.childNodeId);
+            s.cx({
+                f: 'cameraStop',
+                d: monitorConfig
+            },activeMonitor.childNodeId);
         }else{
             closeEventBasedRecording(e)
             if(activeMonitor.fswatch){activeMonitor.fswatch.close();delete(activeMonitor.fswatch)}
@@ -684,27 +709,27 @@ module.exports = (s,config,lang) => {
             clearTimeout(activeMonitor.err_fatal_timeout);
             activeMonitor.isStarted = false
             activeMonitor.isRecording = false
-            s.tx({f:'monitor_stopping',mid:monitorId,ke:e.ke,time:s.formattedTime()},'GRP_'+e.ke);
-            s.cameraSendSnapshot({mid:monitorId,ke:e.ke,mon:e},{useIcon: true})
+            s.tx({f:'monitor_stopping',mid:monitorId,ke:groupKey,time:s.formattedTime()},'GRP_'+groupKey);
+            s.cameraSendSnapshot({mid:monitorId,ke:groupKey,mon:e},{useIcon: true})
             s.userLog(e,{type:lang['Monitor Stopped'],msg:lang.MonitorStoppedText});
             clearTimeout(activeMonitor.delete)
             if(e.delete === 1){
                 activeMonitor.delete = setTimeout(function(){
-                    delete(s.group[e.ke].activeMonitors[monitorId]);
-                    delete(s.group[e.ke].rawMonitorConfigurations[monitorId]);
+                    delete(s.group[groupKey].activeMonitors[monitorId]);
+                    delete(s.group[groupKey].rawMonitorConfigurations[monitorId]);
                 },1000 * 20);
             }
         }
         s.sendMonitorStatus({
             id: monitorId,
-            ke: e.ke,
+            ke: groupKey,
             status: lang.Stopped,
             code: 5,
         });
         if(isMasterNode){
             setTimeout(() => {
                 scanForOrphanedVideos({
-                    ke: e.ke,
+                    ke: groupKey,
                     mid: monitorId,
                 },{
                     forceCheck: true,
@@ -713,15 +738,15 @@ module.exports = (s,config,lang) => {
             },2000)
         }
         s.onMonitorStopExtensions.forEach(function(extender){
-            extender(Object.assign(s.group[e.ke].rawMonitorConfigurations[monitorId],{}),e)
+            extender(monitorConfig,e)
         })
     }
     function monitorIdle(e){
-        s.tx({f:'monitor_idle',mid:monitorId,ke:e.ke,time:s.formattedTime()},'GRP_'+e.ke);
+        s.tx({f:'monitor_idle',mid:monitorId,ke:groupKey,time:s.formattedTime()},'GRP_'+groupKey);
         s.userLog(e,{type:lang['Monitor Idling'],msg:lang.MonitorIdlingText});
         s.sendMonitorStatus({
             id: monitorId,
-            ke: e.ke,
+            ke: groupKey,
             status: lang.Idle,
             code: 6,
         })
@@ -741,7 +766,7 @@ module.exports = (s,config,lang) => {
     function monitorAddViewer(e,cn){
         const groupKey = e.ke
         const monitorId = e.mid || e.id
-        const activeMonitor = s.group[groupKey].activeMonitors[monitorId];
+        const activeMonitor = getActiveMonitor(groupKey,monitorId);
         if(!cn.monitorsCurrentlyWatching){cn.monitorsCurrentlyWatching = {}}
         if(!cn.monitorsCurrentlyWatching[monitorId]){cn.monitorsCurrentlyWatching[monitorId] = { ke: groupKey }}
         setActiveViewer(groupKey,monitorId,cn.id,true)
@@ -751,7 +776,7 @@ module.exports = (s,config,lang) => {
     function monitorRemoveViewer(e,cn){
         const groupKey = e.ke
         const monitorId = e.mid || e.id
-        const activeMonitor = s.group[groupKey].activeMonitors[monitorId];
+        const activeMonitor = getActiveMonitor(groupKey,monitorId);
         if(cn.monitorsCurrentlyWatching){delete(cn.monitorsCurrentlyWatching[monitorId])}
         setActiveViewer(groupKey,monitorId,cn.id,false)
         clearTimeout(activeMonitor.noViewerCountDisableSubstream)
@@ -765,10 +790,11 @@ module.exports = (s,config,lang) => {
     }
     function createRecordingDirectory(e,callback){
         var directory;
+        const groupKey = e.ke
         const monitorId = e.mid || e.id
         if(e.details && e.details.dir && e.details.dir !== '' && config.childNodes.mode !== 'child'){
             //addStorage choice
-            directory = s.checkCorrectPathEnding(e.details.dir) + e.ke + '/'
+            directory = s.checkCorrectPathEnding(e.details.dir) + groupKey + '/'
             fs.mkdir(directory,function(err){
                 s.handleFolderError(err)
                 directory = directory + monitorId + '/'
@@ -779,10 +805,10 @@ module.exports = (s,config,lang) => {
             })
         }else{
             //MAIN videos dir
-            directory = s.dir.videos + e.ke + '/'
+            directory = s.dir.videos + groupKey + '/'
             fs.mkdir(directory,function(err){
                 s.handleFolderError(err)
-                directory = s.dir.videos + e.ke + '/' + monitorId + '/'
+                directory = s.dir.videos + groupKey + '/' + monitorId + '/'
                 fs.mkdir(directory,function(err){
                     s.handleFolderError(err)
                     callback(err,directory)
@@ -798,11 +824,12 @@ module.exports = (s,config,lang) => {
         })
     }
     function createFileBinDirectory(e,callback){
+        const groupKey = e.ke
         const monitorId = e.mid || e.id
-        var directory = s.dir.fileBin + e.ke + '/'
+        var directory = s.dir.fileBin + groupKey + '/'
         fs.mkdir(directory,function(err){
             s.handleFolderError(err)
-            directory = s.dir.fileBin + e.ke + '/' + monitorId + '/'
+            directory = s.dir.fileBin + groupKey + '/' + monitorId + '/'
             fs.mkdir(directory,function(err){
                 s.handleFolderError(err)
                 callback(err,directory)
@@ -810,11 +837,12 @@ module.exports = (s,config,lang) => {
         })
     }
     function createStreamDirectory(e,callback){
+        const groupKey = e.ke
         const monitorId = e.mid || e.id
         callback = callback || function(){}
-        var directory = s.dir.streams + e.ke + '/'
+        var directory = s.dir.streams + groupKey + '/'
         fs.mkdir(directory,function(err){
-            directory = s.dir.streams + e.ke + '/' + monitorId + '/'
+            directory = s.dir.streams + groupKey + '/' + monitorId + '/'
             s.handleFolderError(err)
             fs.mkdir(directory,function(err){
                 if (err){
@@ -831,8 +859,9 @@ module.exports = (s,config,lang) => {
     function createCameraFolders(e,callback){
         return new Promise((resolve) => {
             //set the recording directory
+            const groupKey = e.ke
             const monitorId = e.mid || e.id
-            var activeMonitor = s.group[e.ke].activeMonitors[monitorId]
+            var activeMonitor = s.group[groupKey].activeMonitors[monitorId]
             createStreamDirectory(e,function(err,directory){
                 activeMonitor.sdir = directory
                 e.sdir = directory
@@ -852,21 +881,23 @@ module.exports = (s,config,lang) => {
         })
     }
     function forceMonitorRestart(monitor,restartMessage){
-        const monitorConfig = Object.assign(s.group[monitor.ke].rawMonitorConfigurations[monitor.mid],{})
+        const groupKey = monitor.ke
+        const monitorId = monitor.mid
+        const monitorConfig = copyMonitorConfiguration(groupKey,monitorId)
         s.sendMonitorStatus({
-            id: monitor.mid,
-            ke: monitor.ke,
+            id: monitorId,
+            ke: groupKey,
             status: lang.Restarting,
             code: 4,
         })
         launchMonitorProcesses(monitorConfig)
         s.userLog({
-            ke: monitor.ke,
-            mid: monitor.mid,
+            ke: groupKey,
+            mid: monitorId,
         },restartMessage)
         scanForOrphanedVideos({
-            ke: monitor.ke,
-            mid: monitor.mid,
+            ke: groupKey,
+            mid: monitorId,
         },{
             forceCheck: true,
             checkMax: 2
@@ -886,14 +917,15 @@ module.exports = (s,config,lang) => {
     function resetRecordingCheck(e){
         const groupKey = e.ke
         const monitorId = e.mid || e.id
-        const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
+        const activeMonitor = getActiveMonitor(groupKey,monitorId)
         clearTimeout(activeMonitor.recordingChecker)
         const segmentLengthInMinutes = !isNaN(parseFloat(e.details.cutoff)) ? parseFloat(e.details.cutoff) : '15'
         const segmentLength = e.type === 'dashcam' ? segmentLengthInMinutes * 100 : segmentLengthInMinutes
+        const monitorConfig = getMonitorConfiguration(groupKey,monitorId);
         activeMonitor.recordingChecker = setTimeout(function(){
-            if(activeMonitor.isStarted === true && s.group[e.ke].rawMonitorConfigurations[monitorId].mode === 'record'){
+            if(activeMonitor.isStarted === true && monitorConfig.mode === 'record'){
                 forceMonitorRestart({
-                    ke: e.ke,
+                    ke: groupKey,
                     mid: monitorId,
                 },{
                     type: lang['Camera is not recording'],
@@ -907,12 +939,12 @@ module.exports = (s,config,lang) => {
     function resetStreamCheck(e){
         const groupKey = e.ke
         const monitorId = e.mid || e.id
-        const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
+        const activeMonitor = getActiveMonitor(groupKey,monitorId)
         clearTimeout(activeMonitor.streamChecker)
         activeMonitor.streamChecker = setTimeout(function(){
             if(activeMonitor && activeMonitor.isStarted === true){
                 forceMonitorRestart({
-                    ke: e.ke,
+                    ke: groupKey,
                     mid: monitorId,
                 },{
                     type: lang['Camera is not streaming'],
@@ -925,11 +957,13 @@ module.exports = (s,config,lang) => {
     }
     function onDetectorJpegOutputAlone(e,d){
         if(s.isAtleatOneDetectorPluginConnected){
+            const groupKey = e.ke
             const monitorId = e.mid || e.id
+            const monitorConfig = getMonitorConfiguration(groupKey,monitorId);
             s.ocvTx({
                 f: 'frame',
-                mon: s.group[e.ke].rawMonitorConfigurations[monitorId].details,
-                ke: e.ke,
+                mon: monitorConfig.details,
+                ke: groupKey,
                 id: monitorId,
                 time: s.formattedTime(),
                 frame: d
@@ -938,8 +972,9 @@ module.exports = (s,config,lang) => {
     }
     function onDetectorJpegOutputSecondary(e,buffer){
         if(s.isAtleatOneDetectorPluginConnected){
+            const groupKey = e.ke
             const monitorId = e.mid || e.id
-            const activeMonitor = s.group[e.ke].activeMonitors[monitorId]
+            const activeMonitor = getActiveMonitor(groupKey,monitorId)
             const theArray = activeMonitor.pipe4BufferPieces
             theArray.push(buffer)
             if(buffer[buffer.length-2] === 0xFF && buffer[buffer.length-1] === 0xD9){
@@ -951,14 +986,14 @@ module.exports = (s,config,lang) => {
     async function createCameraFfmpegProcess(e){
         const groupKey = e.ke
         const monitorId = e.mid || e.id
-        const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
+        const activeMonitor = getActiveMonitor(groupKey,monitorId)
         //launch ffmpeg (main)
         s.tx({
             f: 'monitor_starting',
             mode: e.functionMode,
             mid: monitorId,
             time: s.formattedTime()
-        },'GRP_'+e.ke)
+        },'GRP_'+groupKey)
         activeMonitor.spawn = await s.ffmpeg(e)
         if(activeMonitor.spawn){
             attachMainProcessHandlers(e,fatalError)
@@ -1010,7 +1045,7 @@ module.exports = (s,config,lang) => {
     function createCameraStreamHandlers(e){
         const groupKey = e.ke
         const monitorId = e.mid || e.id
-        const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
+        const activeMonitor = getActiveMonitor(groupKey,monitorId)
         activeMonitor.spawn.stdio[5].on('data',function(data){
             resetStreamCheck(e)
         })
@@ -1044,7 +1079,7 @@ module.exports = (s,config,lang) => {
                 triggerEvent({
                     f: 'trigger',
                     id: monitorId,
-                    ke: e.ke,
+                    ke: groupKey,
                     name: 'db',
                     details:{
                         plug: 'audio',
@@ -1086,7 +1121,7 @@ module.exports = (s,config,lang) => {
             })
         }
         if(e.details.detector === '1'){
-            s.ocvTx({f:'init_monitor',id:monitorId,ke:e.ke})
+            s.ocvTx({f:'init_monitor',id:monitorId,ke:groupKey})
             //frames from motion detect
             if(e.details.detector_pam === '1'){
                // activeMonitor.spawn.stdio[3].pipe(activeMonitor.p2p).pipe(activeMonitor.pamDiff)
@@ -1163,7 +1198,7 @@ module.exports = (s,config,lang) => {
         if(e.details.stream_channels && e.details.stream_channels !== ''){
             e.details.stream_channels.forEach((fields,number) => {
                 attachStreamChannelHandlers({
-                    ke: e.ke,
+                    ke: groupKey,
                     mid: monitorId,
                     fields: fields,
                     number: number,
@@ -1175,8 +1210,8 @@ module.exports = (s,config,lang) => {
     function catchNewSegmentNames(e){
         const groupKey = e.ke
         const monitorId = e.mid || e.id
-        const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
-        const monitorConfig = s.group[e.ke].rawMonitorConfigurations[monitorId]
+        const activeMonitor = getActiveMonitor(groupKey,monitorId)
+        const monitorConfig = getMonitorConfiguration(groupKey,monitorId)
         const monitorDetails = monitorConfig.details
         const autoCompressionEnabled = monitorDetails.auto_compress_videos === '1'
         var checkLog = function(d,x){return d.indexOf(x)>-1}
@@ -1202,7 +1237,7 @@ module.exports = (s,config,lang) => {
                         }
                         s.deleteVideo({
                             filename : filename,
-                            ke : e.ke,
+                            ke : groupKey,
                             id : monitorId
                         })
                     }else if(autoCompressionEnabled){
@@ -1229,8 +1264,9 @@ module.exports = (s,config,lang) => {
     }
     function cameraFilterFfmpegLog(e){
         var checkLog = function(d,x){return d.indexOf(x)>-1}
+        const groupKey = e.ke
         const monitorId = e.mid || e.id
-        const activeMonitor = s.group[e.ke].activeMonitors[monitorId]
+        const activeMonitor = getActiveMonitor(groupKey,monitorId)
         activeMonitor.spawn.stderr.on('data',function(d){
             d=d.toString();
             switch(true){
@@ -1238,8 +1274,8 @@ module.exports = (s,config,lang) => {
                     activeMonitor.criticalErrors['453'] = true
                 break;
                 case checkLog(d,'No space left on device'):
-                    s.checkUserPurgeLock(e.ke)
-                    s.purgeDiskForGroup(e.ke)
+                    s.checkUserPurgeLock(groupKey)
+                    s.purgeDiskForGroup(groupKey)
                 break;
                 case checkLog(d,'error parsing AU headers'):
                     s.userLog(e,{type:lang['Error While Decoding'],msg:lang.ErrorWhileDecodingTextAudio});
@@ -1295,13 +1331,14 @@ module.exports = (s,config,lang) => {
         })
     }
     function setNoEventsDetector(e){
+        const groupKey = e.ke
         const monitorId = e.mid || e.id
         var detector_notrigger_timeout = (parseFloat(e.details.detector_notrigger_timeout) || 10) * 1000 * 60
-        var currentConfig = s.group[e.ke].rawMonitorConfigurations[monitorId].details
-        clearInterval(s.group[e.ke].activeMonitors[monitorId].detector_notrigger_timeout)
-        s.group[e.ke].activeMonitors[monitorId].detector_notrigger_timeout = setInterval(function(){
-            if(currentConfig.detector_notrigger_webhook === '1' && !s.group[e.ke].activeMonitors[monitorId].detector_notrigger_webhook){
-                s.group[e.ke].activeMonitors[monitorId].detector_notrigger_webhook = s.createTimeout('detector_notrigger_webhook',s.group[e.ke].activeMonitors[monitorId],currentConfig.detector_notrigger_webhook_timeout,10)
+        var currentConfig = getMonitorConfiguration(groupKey,monitorId).details
+        clearInterval(s.group[groupKey].activeMonitors[monitorId].detector_notrigger_timeout)
+        s.group[groupKey].activeMonitors[monitorId].detector_notrigger_timeout = setInterval(function(){
+            if(currentConfig.detector_notrigger_webhook === '1' && !s.group[groupKey].activeMonitors[monitorId].detector_notrigger_webhook){
+                s.group[groupKey].activeMonitors[monitorId].detector_notrigger_webhook = s.createTimeout('detector_notrigger_webhook',s.group[groupKey].activeMonitors[monitorId],currentConfig.detector_notrigger_webhook_timeout,10)
                 var detector_notrigger_webhook_url = addEventDetailsToString(e,currentConfig.detector_notrigger_webhook_url)
                 var webhookMethod = currentConfig.detector_notrigger_webhook_method
                 if(!webhookMethod || webhookMethod === '')webhookMethod = 'GET';
@@ -1311,8 +1348,8 @@ module.exports = (s,config,lang) => {
                     s.userLog(d,{type:lang["Event Webhook Error"],msg:{error:err,data:data}})
                 })
             }
-            if(currentConfig.detector_notrigger_command_enable === '1' && !s.group[e.ke].activeMonitors[monitorId].detector_notrigger_command){
-                s.group[e.ke].activeMonitors[monitorId].detector_notrigger_command = s.createTimeout('detector_notrigger_command',s.group[e.ke].activeMonitors[monitorId],currentConfig.detector_notrigger_command_timeout,10)
+            if(currentConfig.detector_notrigger_command_enable === '1' && !s.group[groupKey].activeMonitors[monitorId].detector_notrigger_command){
+                s.group[groupKey].activeMonitors[monitorId].detector_notrigger_command = s.createTimeout('detector_notrigger_command',s.group[groupKey].activeMonitors[monitorId],currentConfig.detector_notrigger_command_timeout,10)
                 var detector_notrigger_command = addEventDetailsToString(e,currentConfig.detector_notrigger_command)
                 if(detector_notrigger_command === '')return
                 exec(detector_notrigger_command,{detached: true},function(err){
@@ -1327,7 +1364,7 @@ module.exports = (s,config,lang) => {
     function setMotionLock(e){
         const monitorId = e.mid || e.id
         const groupKey = e.ke
-        const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
+        const activeMonitor = getActiveMonitor(groupKey,monitorId)
         if(e.details.detector_trigger === '1'){
             clearTimeout(activeMonitor.motion_lock)
             activeMonitor.motion_lock = setTimeout(function(){
@@ -1349,7 +1386,7 @@ module.exports = (s,config,lang) => {
     async function launchMonitorProcesses(e){
         const groupKey = e.ke
         const monitorId = e.mid || e.id
-        const theGroup = s.group[e.ke]
+        const theGroup = s.group[groupKey]
         const activeMonitor = theGroup.activeMonitors[monitorId]
         const isMacOS = s.platform !== 'darwin';
         const isWatchOnly = e.functionMode === 'start'
@@ -1372,7 +1409,7 @@ module.exports = (s,config,lang) => {
         },1000 * 60)
         s.sendMonitorStatus({
             id: monitorId,
-            ke: e.ke,
+            ke: groupKey,
             status: lang.Starting,
             code: 1
         });
@@ -1413,7 +1450,7 @@ module.exports = (s,config,lang) => {
                     resetStreamCheck(e)
                 })
             }
-            if(!activeMonitor.criticalErrors['453'])s.cameraSendSnapshot({mid:monitorId,ke:e.ke,mon:e},{useIcon: true});
+            if(!activeMonitor.criticalErrors['453'])s.cameraSendSnapshot({mid:monitorId,ke:groupKey,mon:e},{useIcon: true});
             //check host to see if has password and user in it
             clearTimeout(activeMonitor.recordingChecker)
             try{
@@ -1436,9 +1473,9 @@ module.exports = (s,config,lang) => {
                                             activeMonitor.allowStdinWrite = true
                                             s.txToDashcamUsers({
                                                 f : 'enable_stream',
-                                                ke : e.ke,
+                                                ke : groupKey,
                                                 mid : monitorId
-                                            },e.ke)
+                                            },groupKey)
                                         },30000)
                                     }
                                     if(
@@ -1453,14 +1490,14 @@ module.exports = (s,config,lang) => {
                                     if(isRecord){
                                         s.sendMonitorStatus({
                                             id: monitorId,
-                                            ke: e.ke,
+                                            ke: groupKey,
                                             status: lang.Recording,
                                             code: 3
                                         });
                                     }else{
                                         s.sendMonitorStatus({
                                             id: monitorId,
-                                            ke: e.ke,
+                                            ke: groupKey,
                                             status: lang.Watching,
                                             code: 2
                                         });
@@ -1472,7 +1509,7 @@ module.exports = (s,config,lang) => {
                                 resolve()
                             })
                         }catch(err){
-                            console.log('Failed to Load',monitorId,e.ke)
+                            console.log('Failed to Load',monitorId,groupKey)
                             console.log(err)
                             resolve()
                         }
@@ -1518,12 +1555,12 @@ module.exports = (s,config,lang) => {
         try{
             if(config.childNodes.enabled === true && config.childNodes.mode === 'master'){
                 const selectedNode = await selectNodeForOperation({
-                    ke: e.ke,
+                    ke: groupKey,
                     mid: monitorId,
                 });
                 if(selectedNode){
                     bindMonitorToChildNode({
-                        ke: e.ke,
+                        ke: groupKey,
                         mid: monitorId,
                         childNodeId: selectedNode,
                     })
@@ -1540,9 +1577,10 @@ module.exports = (s,config,lang) => {
         }
     }
     function fatalError(e,errorMessage){
+        const groupKey = e.ke
         const monitorId = e.mid || e.id
-        const activeMonitor = s.group[e.ke].activeMonitors[monitorId]
-        const monitorDetails = s.group[e.ke].rawMonitorConfigurations[monitorId].details
+        const activeMonitor = getActiveMonitor(groupKey,monitorId)
+        const monitorDetails = getMonitorConfiguration(groupKey,monitorId).details
         const maxCount = !monitorDetails.fatal_max || isNaN(monitorDetails.fatal_max) ? 0 : parseFloat(monitorDetails.fatal_max);
         clearTimeout(activeMonitor.err_fatal_timeout);
         ++activeMonitor.errorFatalCount;
@@ -1550,7 +1588,7 @@ module.exports = (s,config,lang) => {
             activeMonitor.err_fatal_timeout = setTimeout(function(){
                 if(maxCount !== 0 && activeMonitor.errorFatalCount > maxCount){
                     s.userLog(e,{type:lang["Fatal Error"],msg:lang.onFatalErrorExit});
-                    s.camera('stop',{mid:monitorId,ke:e.ke})
+                    s.camera('stop',{mid:monitorId,ke:groupKey})
                 }else{
                     launchMonitorProcesses(s.cleanMonitorObject(e))
                 };
@@ -1560,49 +1598,53 @@ module.exports = (s,config,lang) => {
         }
         s.sendMonitorStatus({
             id: monitorId,
-            ke: e.ke,
+            ke: groupKey,
             status: lang.Died,
             code: 7
         });
+        const monitorConfig = copyMonitorConfiguration(groupKey,monitorId)
         s.onMonitorDiedExtensions.forEach(function(extender){
-            extender(Object.assign(s.group[e.ke].rawMonitorConfigurations[monitorId],{}),e)
+            extender(monitorConfig,e)
         })
     }
     async function monitorStart(e){
         const groupKey = e.ke
         const monitorId = e.mid || e.id
+        const monitorConfig = getMonitorConfiguration(groupKey,monitorId);
         monitorConfigurationMigrator(e)
-        s.initiateMonitorObject({ke:e.ke,mid:monitorId})
-        const activeMonitor = s.group[e.ke].activeMonitors[monitorId]
-        if(!s.group[e.ke].rawMonitorConfigurations[monitorId]){s.group[e.ke].rawMonitorConfigurations[monitorId]=s.cleanMonitorObject(e);}
+        s.initiateMonitorObject({ke:groupKey,mid:monitorId})
+        const activeMonitor = getActiveMonitor(groupKey,monitorId)
+        if(!monitorConfig){
+            s.group[groupKey].rawMonitorConfigurations[monitorId] = s.cleanMonitorObject(e)
+        }
         if(activeMonitor.isStarted === true){
             return
         }
         if(activeMonitor.masterSaysToStop === true){
             s.sendMonitorStatus({
                 id: monitorId,
-                ke: e.ke,
+                ke: groupKey,
                 status: lang.Stopped,
                 code: 5,
             })
             return;
         }
         if(config.probeMonitorOnStart === true){
-            const probeResponse = await probeMonitor(s.group[e.ke].rawMonitorConfigurations[monitorId],2000,true)
+            const probeResponse = await probeMonitor(monitorConfig,2000,true)
             const probeStreams = getStreamInfoFromProbe(probeResponse.result)
             activeMonitor.probeResult = probeStreams
-            const warnings = createWarningsForConfiguration(s.group[e.ke].rawMonitorConfigurations[monitorId],probeStreams)
+            const warnings = createWarningsForConfiguration(monitorConfig,probeStreams)
             activeMonitor.warnings = warnings
             if(warnings.length > 0){
                 const configPartial = buildMonitorConfigPartialFromWarnings(warnings)
                 applyPartialToConfiguration(e,configPartial)
                 applyPartialToConfiguration(activeMonitor,configPartial)
-                applyPartialToConfiguration(s.group[e.ke].rawMonitorConfigurations[monitorId],configPartial)
+                applyPartialToConfiguration(s.group[groupKey].rawMonitorConfigurations[monitorId],configPartial)
             }
         }
         s.sendMonitorStatus({
             id: monitorId,
-            ke: e.ke,
+            ke: groupKey,
             status: lang.Starting,
             code: 1
         });
@@ -1633,7 +1675,7 @@ module.exports = (s,config,lang) => {
     function checkObjectsInMonitorDetails(e){
         const groupKey = e.ke
         const monitorId = e.mid || e.id
-        const activeMonitor = s.group[groupKey].activeMonitors[monitorId];
+        const activeMonitor = getActiveMonitor(groupKey,monitorId);
         //parse Objects
         (['detector_cascades','cords','detector_filters','input_map_choices']).forEach(function(v){
             if(e.details && e.details[v]){
@@ -1680,6 +1722,9 @@ module.exports = (s,config,lang) => {
         deleteMonitor,
         deleteMonitorData,
         checkObjectsInMonitorDetails,
+        getActiveMonitor,
+        copyMonitorConfiguration,
+        getMonitorConfiguration,
         cameraDestroy: cameraDestroy,
         createSnapshot: createSnapshot,
         processKill: processKill,
