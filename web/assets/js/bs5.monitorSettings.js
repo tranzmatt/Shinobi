@@ -900,7 +900,7 @@ var buildMonitorURL = function(){
             host: host,
             protocol: protocol,
             port: port,
-            path: encodeURIComponent(path),
+            path: encodeURI(path),
             type: type,
         });
     }
