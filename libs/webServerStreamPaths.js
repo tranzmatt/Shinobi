@@ -68,7 +68,7 @@ module.exports = function(s,config,lang,app){
                         config: s.getConfigWithBranding(req.hostname),
                         define: s.getDefinitonFile(user.details ? user.details.lang : config.lang),
                         $user: $user,
-                        mon: Object.assign(s.group[req.params.ke].rawMonitorConfigurations[req.params.id],{}),
+                        mon: Object.assign({},s.group[req.params.ke].rawMonitorConfigurations[req.params.id]),
                         originalURL: s.getOriginalUrl(req)
                     });
                 }else{
