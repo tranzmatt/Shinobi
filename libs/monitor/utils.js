@@ -1268,7 +1268,7 @@ module.exports = (s,config,lang) => {
         const groupKey = e.ke
         const monitorId = e.mid || e.id
         const activeMonitor = getActiveMonitor(groupKey,monitorId)
-        activeMonitor.spawn.stderr.on('data',function(d){
+        activeMonitor.spawn.stderr.on('data',async function(d){
             d=d.toString();
             switch(true){
                 case checkLog(d,'Not Enough Bandwidth'):
@@ -1308,7 +1308,7 @@ module.exports = (s,config,lang) => {
                     },1000)
                 break;
                 case checkLog(d,'Immediate exit requested'):
-                    cameraDestroy(e)
+                    await cameraDestroy(e)
                     activeMonitor.timeoutToRestart = setTimeout(() => {
                         launchMonitorProcesses(e)
                     },15000)
@@ -1316,13 +1316,13 @@ module.exports = (s,config,lang) => {
                 case checkLog(d,'mjpeg_decode_dc'):
                 case checkLog(d,'bad vlc'):
                 case checkLog(d,'error dc'):
-                    cameraDestroy(e)
+                    await cameraDestroy(e)
                     activeMonitor.timeoutToRestart = setTimeout(() => {
                         launchMonitorProcesses(e)
                     },15000)
                 break;
                 case checkLog(d,'No route to host'):
-                    cameraDestroy(e)
+                    await cameraDestroy(e)
                     activeMonitor.timeoutToRestart = setTimeout(() => {
                         launchMonitorProcesses(e)
                     },60000)
@@ -1574,7 +1574,7 @@ module.exports = (s,config,lang) => {
             console.log(err)
         }
     }
-    function fatalError(e,errorMessage){
+    async function fatalError(e,errorMessage){
         const groupKey = e.ke
         const monitorId = e.mid || e.id
         const activeMonitor = getActiveMonitor(groupKey,monitorId)
@@ -1592,7 +1592,7 @@ module.exports = (s,config,lang) => {
                 };
             },5000);
         }else{
-            cameraDestroy(e)
+            await cameraDestroy(e)
         }
         s.sendMonitorStatus({
             id: monitorId,
@@ -1616,6 +1616,7 @@ module.exports = (s,config,lang) => {
             s.group[groupKey].rawMonitorConfigurations[monitorId] = s.cleanMonitorObject(e)
         }
         if(activeMonitor.isStarted === true){
+            s.debugLog('Monitor Already Started!')
             return
         }
         if(activeMonitor.masterSaysToStop === true){
@@ -1640,12 +1641,6 @@ module.exports = (s,config,lang) => {
                 applyPartialToConfiguration(s.group[groupKey].rawMonitorConfigurations[monitorId],configPartial)
             }
         }
-        s.sendMonitorStatus({
-            id: monitorId,
-            ke: groupKey,
-            status: lang.Starting,
-            code: 1
-        });
         activeMonitor.isStarted = true
         if(e.details && e.details.dir && e.details.dir !== ''){
             activeMonitor.addStorageId = e.details.dir
