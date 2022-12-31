@@ -57,7 +57,7 @@ module.exports = (s,config,lang) => {
                 alreadyResolved = true;
                 resolve(response)
             }
-            if(!proc){
+            if(!proc || !processPID){
                 response.msg = 'No Process to Kill'
                 doResolve(response)
                 return
