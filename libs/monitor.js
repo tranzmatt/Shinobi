@@ -25,6 +25,7 @@ module.exports = function(s,config,lang){
         getMonitorConfiguration,
         copyMonitorConfiguration,
         checkObjectsInMonitorDetails,
+        isGroupBelowMaxMonitorCount,
     } = require('./monitor/utils.js')(s,config,lang)
     s.initiateMonitorObject = function(e){
         if(!s.group[e.ke]){s.group[e.ke]={}};
@@ -564,7 +565,7 @@ module.exports = function(s,config,lang){
                 ['mid','=',form.mid],
             ]
         });
-        const monitorExists = selectResponse.rows && selectResponse.rows[0]
+        const monitorExists = selectResponse.rows && selectResponse.rows[0];
         var affectMonitor = false
         var monitorQuery = {}
         var txData = {
@@ -602,11 +603,7 @@ module.exports = function(s,config,lang){
                 ]
             })
             affectMonitor = true
-        }else if(
-            !s.group[form.ke].init.max_camera ||
-            s.group[form.ke].init.max_camera === '' ||
-            Object.keys(s.group[form.ke].activeMonitors).length <= parseInt(s.group[form.ke].init.max_camera)
-        ){
+        }else if(isGroupBelowMaxMonitorCount(form.ke)){
             txData.new = true
             Object.keys(form).forEach(function(v){
                 if(form[v] && form[v] !== ''){
@@ -639,6 +636,7 @@ module.exports = function(s,config,lang){
             }else{
                 let monitorConfig = copyMonitorConfiguration(form.ke,form.mid)
                 await s.camera('stop',monitorConfig);
+                await asyncSetTimeout(2500)
                 await s.camera(form.mode,monitorConfig);
             }
             s.tx(txData,'STR_'+form.ke)
@@ -649,6 +647,7 @@ module.exports = function(s,config,lang){
         s.onMonitorSaveExtensions.forEach(function(extender){
             extender(monitorConfig,form,endData)
         })
+        return endData
     }
     s.camera = async (selectedMode,e,cn) => {
         // e = monitor object
@@ -721,9 +720,7 @@ module.exports = function(s,config,lang){
                             monitorPreset.details = Object.assign(monitor.details,monitorPreset.details)
                             monitor = s.cleanMonitorObjectForDatabase(Object.assign(monitor,monitorPreset))
                             monitor.details = JSON.stringify(monitor.details)
-                            s.addOrEditMonitor(Object.assign(monitor,{}),function(err,endData){
-
-                            },user)
+                            s.addOrEditMonitor(Object.assign({},monitor),null,user)
                         })
                         endData.ok = true
                         s.tx({f:'change_group_state',ke:groupKey,name:stateName},'GRP_'+groupKey)

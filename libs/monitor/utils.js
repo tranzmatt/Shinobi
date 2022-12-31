@@ -49,6 +49,7 @@ module.exports = (s,config,lang) => {
     const getUpdateableFields = require('./updatedFields.js')
     const processKill = (proc) => {
         const response = {ok: true}
+        const processPID = parseInt(`${proc.pid}`)
         return new Promise((resolve,reject) => {
             let alreadyResolved = false
             function doResolve(response){
@@ -67,7 +68,7 @@ module.exports = (s,config,lang) => {
                 doResolve(response)
             }
             function lastResort(){
-                treekill(proc.pid)
+                treekill(processPID)
                 response.msg = 'treekill'
                 doResolve(response)
             }
@@ -76,7 +77,7 @@ module.exports = (s,config,lang) => {
                     response.msg = 'proc.on.exit'
                     clearTimeout(killTimer)
                     doResolve(response)
-                    treekill(proc.pid)
+                    treekill(processPID)
                 });
                 if(proc && proc.stdin) {
                     proc.stdin.write("q\r\n");
@@ -85,7 +86,7 @@ module.exports = (s,config,lang) => {
                     if(proc && proc.kill){
                         if(s.isWin){
                             response.msg = 'taskkill'
-                            spawn("taskkill", ["/pid", proc.pid, '/t'])
+                            spawn("taskkill", ["/pid", processPID, '/t'])
                         }else{
                             response.msg = 'SIGTERM'
                             proc.kill('SIGTERM')
@@ -880,7 +881,7 @@ module.exports = (s,config,lang) => {
             })
         })
     }
-    function forceMonitorRestart(monitor,restartMessage){
+    async function forceMonitorRestart(monitor,restartMessage){
         const groupKey = monitor.ke
         const monitorId = monitor.mid
         const monitorConfig = copyMonitorConfiguration(groupKey,monitorId)
@@ -890,7 +891,7 @@ module.exports = (s,config,lang) => {
             status: lang.Restarting,
             code: 4,
         })
-        launchMonitorProcesses(monitorConfig)
+        await launchMonitorProcesses(monitorConfig)
         s.userLog({
             ke: groupKey,
             mid: monitorId,
@@ -1436,11 +1437,8 @@ module.exports = (s,config,lang) => {
                 });
             }
             if(
-                //is MacOS
                 isMacOS &&
-                //is Watch-Only or Record
                 isWatchOnlyOrRecord &&
-                //if JPEG API enabled or Stream Type is HLS
                 (streamTypeIsJPEG || streamTypeIsHLS || jpegApiEnabled)
             ){
                 if(activeMonitor.fswatchStream && activeMonitor.fswatchStream.close){
@@ -1709,6 +1707,12 @@ module.exports = (s,config,lang) => {
             }
         });
     }
+    function isGroupBelowMaxMonitorCount(groupKey){
+        const theGroup = s.group[groupKey];
+        const initData = theGroup.init;
+        const maxCamerasAllowed = parseInt(initData.max_camera) || false;
+        return (!maxCamerasAllowed || Object.keys(theGroup.activeMonitors).length <= parseInt(maxCamerasAllowed))
+    }
     return {
         monitorStop,
         monitorIdle,
@@ -1725,6 +1729,7 @@ module.exports = (s,config,lang) => {
         getActiveMonitor,
         copyMonitorConfiguration,
         getMonitorConfiguration,
+        isGroupBelowMaxMonitorCount,
         cameraDestroy: cameraDestroy,
         createSnapshot: createSnapshot,
         processKill: processKill,
