@@ -481,12 +481,12 @@ module.exports = (s,config,lang) => {
         const groupKey = e.ke
         const monitorId = e.mid || e.id
         const activeMonitor = getActiveMonitor(groupKey,monitorId);
-        activeMonitor.spawn_exit = function(){
+        activeMonitor.spawn_exit = async function(){
             if(activeMonitor.isStarted === true){
-                if(e.details.loglevel!=='quiet'){
+                if(e.details.loglevel !== 'quiet'){
                     s.userLog(e,{type:lang['Process Unexpected Exit'],msg:{msg:lang.unexpectedExitText,cmd:activeMonitor.ffmpeg}});
                 }
-                fatalError(e,'Process Unexpected Exit');
+                await fatalError(e,'Process Unexpected Exit');
                 scanForOrphanedVideos(e,{
                     forceCheck: true,
                     checkMax: 2
@@ -1516,8 +1516,9 @@ module.exports = (s,config,lang) => {
                               extender(Object.assign(theGroup.rawMonitorConfigurations[monitorId],{}),e)
                           })
                           s.userLog(e,{type:lang["Ping Failed"],msg:lang.skipPingText1});
-                          fatalError(e,"Ping Failed");
-                          resolve();
+                          fatalError(e,"Ping Failed").then(() => {
+                              resolve();
+                          });
                       }
                 })
             }
