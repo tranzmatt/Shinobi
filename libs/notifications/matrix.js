@@ -18,8 +18,9 @@ module.exports = function(s,config,lang,getSnapshot){
                 } = file;
                 client.uploadContent({
                     file: buffer,
-                    name: name,
-                    rawResponse: false,
+                    opts: {
+                        name: name,
+                    }
                 }).then(function(url) {
                     const content = {
                         msgtype: type || "m.file",
