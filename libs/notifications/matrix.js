@@ -1,6 +1,7 @@
 const fs = require("fs")
-const sdk = require("matrix-js-sdk")
+const fetch = require("node-fetch")
 module.exports = function(s,config,lang,getSnapshot){
+    const sdk = require("matrix-js-sdk")
     const {
         getEventBasedRecordingUponCompletion,
     } = require('../events/utils.js')(s,config,lang)
