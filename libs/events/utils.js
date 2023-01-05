@@ -21,7 +21,8 @@ module.exports = (s,config,lang,app,io) => {
         moveCameraPtzToMatrix
     } = require('../control/ptz.js')(s,config,lang)
     const {
-        cutVideoLength
+        cutVideoLength,
+        reEncodeVideoAndBinOriginalAddToQueue
     } = require('../video/utils.js')(s,config,lang)
     const {
         isEven,
@@ -70,6 +71,9 @@ module.exports = (s,config,lang,app,io) => {
         var newString = string + ''
         var d = Object.assign(eventData,addOps)
         var detailString = s.stringJSON(d.details)
+        var tag = detailString.matrices
+            && detailString.matrices[0]
+            && detailString.matrices[0].tag;
         newString = newString
             .replace(/{{TIME}}/g,d.currentTimestamp)
             .replace(/{{REGION_NAME}}/g,d.details.name)
@@ -77,7 +81,10 @@ module.exports = (s,config,lang,app,io) => {
             .replace(/{{MONITOR_ID}}/g,d.id)
             .replace(/{{MONITOR_NAME}}/g,s.group[d.ke].rawMonitorConfigurations[d.id].name)
             .replace(/{{GROUP_KEY}}/g,d.ke)
-            .replace(/{{DETAILS}}/g,detailString)
+            .replace(/{{DETAILS}}/g,detailString);
+        if(tag){
+            newString = newString.replace(/{{TAG}}/g,tag)
+        }
         if(d.details.confidence){
             newString = newString
             .replace(/{{CONFIDENCE}}/g,d.details.confidence)
@@ -343,19 +350,20 @@ module.exports = (s,config,lang,app,io) => {
         }
         return true
     }
-    const runMultiTrigger = (monitorConfig,eventDetails, d, triggerEvent) => {
-        s.getCamerasForMultiTrigger(monitorConfig).forEach(function(monitor){
-            if(monitor.mid !== d.id){
-                triggerEvent({
-                    id: monitor.mid,
-                    ke: monitor.ke,
-                    details: {
-                        confidence: 100,
-                        name: "multiTrigger",
-                        plug: eventDetails.plug,
-                        reason: eventDetails.reason
-                    }
-                })
+    const runMultiEventBasedRecord = (monitorConfig, triggerTags, eventTime) => {
+        triggerTags.forEach(function(monitorId){
+            const groupKey = monitorConfig.ke
+            const monitor = s.group[groupKey].rawMonitorConfigurations[monitorId]
+            if(monitorId !== monitorConfig.mid && monitor){
+                const monitorDetails = monitor.details
+                if(
+                    monitorDetails.detector_trigger === '1' &&
+                    monitor.mode === 'start' &&
+                    (monitorDetails.detector_record_method === 'sip' || monitorDetails.detector_record_method === 'hot')
+                ){
+                    const secondBefore = (parseInt(monitorDetails.detector_buffer_seconds_before) || 5) + 1
+                    createEventBasedRecording(monitor,moment(eventTime).subtract(secondBefore,'seconds').format('YYYY-MM-DDTHH-mm-ss'))
+                }
             }
         })
     }
@@ -381,8 +389,9 @@ module.exports = (s,config,lang,app,io) => {
         if(monitorDetails.detector_ptz_follow === '1'){
             moveCameraPtzToMatrix(d,monitorDetails.detector_ptz_follow_target)
         }
-        if(monitorDetails.det_multi_trig === '1'){
-            runMultiTrigger(monitorConfig,eventDetails, d, triggerEvent)
+        if(monitorDetails.det_trigger_tags){
+            const triggerTags = monitorDetails.det_trigger_tags.split(',')
+            runMultiEventBasedRecord(monitorConfig, triggerTags, eventTime)
         }
         //save this detection result in SQL, only coords. not image.
         if(d.frame){
@@ -488,6 +497,10 @@ module.exports = (s,config,lang,app,io) => {
                             }
                         }
                         resolve(response)
+                        for (var i = 0; i < s.onEventBasedRecordingCompleteExtensions.length; i++) {
+                            const extender = s.onEventBasedRecordingCompleteExtensions[i]
+                            await extender(response,monitorConfig)
+                        }
                     },1000)
                 })
             }else{
@@ -498,8 +511,10 @@ module.exports = (s,config,lang,app,io) => {
     const createEventBasedRecording = function(d,fileTime){
         if(!fileTime)fileTime = s.formattedTime()
         const logTitleText = lang["Traditional Recording"]
-        const activeMonitor = s.group[d.ke].activeMonitors[d.id]
-        const monitorConfig = s.group[d.ke].rawMonitorConfigurations[d.id]
+        const groupKey = d.ke
+        const monitorId = d.mid || d.id
+        const activeMonitor = s.group[groupKey].activeMonitors[monitorId]
+        const monitorConfig = s.group[groupKey].rawMonitorConfigurations[monitorId]
         const monitorDetails = monitorConfig.details
         if(monitorDetails.detector !== '1'){
             return
@@ -534,6 +549,10 @@ module.exports = (s,config,lang,app,io) => {
                     type: logTitleText,
                     msg: lang["Started"]
                 })
+                for (var i = 0; i < s.onEventBasedRecordingStartExtensions.length; i++) {
+                    const extender = s.onEventBasedRecordingStartExtensions[i]
+                    extender(monitorConfig,filename)
+                }
                 //-t 00:'+s.timeObject(new Date(detector_timeout * 1000 * 60)).format('mm:ss')+'
                 if(
                     monitorDetails.detector_buffer_acodec &&
@@ -542,7 +561,9 @@ module.exports = (s,config,lang,app,io) => {
                 ){
                     outputMap += `-map 0:1 `
                 }
-                const ffmpegCommand = `-loglevel warning -live_start_index -99999 -analyzeduration ${analyzeDuration} -probesize ${probeSize} -re -i "${s.dir.streams+d.ke+'/'+d.id}/detectorStream.m3u8" ${outputMap}-movflags faststart+frag_keyframe+empty_moov -fflags +igndts -c:v copy -c:a aac -strict -2 -strftime 1 -y "${s.getVideoDirectory(monitorConfig) + filename}"`
+                const secondsBefore = parseInt(monitorDetails.detector_buffer_seconds_before) || 5
+                let LiveStartIndex = parseInt(secondsBefore / 2 + 1)
+                const ffmpegCommand = `-loglevel warning -live_start_index -${LiveStartIndex} -analyzeduration ${analyzeDuration} -probesize ${probeSize} -re -i "${s.dir.streams+groupKey+'/'+monitorId}/detectorStream.m3u8" ${outputMap}-movflags faststart -fflags +igndts -c:v copy -c:a aac -strict -2 -strftime 1 -y "${s.getVideoDirectory(monitorConfig) + filename}"`
                 s.debugLog(ffmpegCommand)
                 activeMonitor.eventBasedRecording.process = spawn(
                     config.ffmpegDir,
@@ -563,9 +584,28 @@ module.exports = (s,config,lang,app,io) => {
                         runRecord()
                         return
                     }
+                    const secondBefore = (parseInt(monitorDetails.detector_buffer_seconds_before) || 5) + 1
                     s.insertCompletedVideo(monitorConfig,{
                         file : filename,
-                    })
+                        endTime: moment(new Date()).subtract(secondBefore,'seconds')._d,
+                    },function(err,response){
+                        const autoCompressionEnabled = monitorDetails.auto_compress_videos === '1';
+                        if(autoCompressionEnabled){
+                            reEncodeVideoAndBinOriginalAddToQueue({
+                                video: response.insertQuery,
+                                targetVideoCodec: 'vp9',
+                                targetAudioCodec: 'libopus',
+                                targetQuality: '-q:v 1 -q:a 1',
+                                targetExtension: 'webm',
+                                doSlowly: false,
+                                automated: true,
+                            }).then((encodeResponse) => {
+                                s.debugLog('Complete Automatic Compression',encodeResponse)
+                            }).catch((err) => {
+                                console.log(err)
+                            })
+                        }
+                    });
                     s.userLog(d,{
                         type: logTitleText,
                         msg: lang["Detector Recording Complete"]
@@ -659,12 +699,13 @@ module.exports = (s,config,lang,app,io) => {
         if(!monitorConfig){
             return s.systemLog(lang['No Monitor Found, Ignoring Request'])
         }
+        const activeMonitor = s.group[d.ke].activeMonitors[d.id]
         const monitorDetails = monitorConfig.details
         s.onEventTriggerBeforeFilterExtensions.forEach(function(extender){
             extender(d,filter)
         })
         const eventDetails = d.details
-        const passedEventFilters = checkEventFilters(d,monitorDetails,filter)
+        const passedEventFilters = checkEventFilters(d,activeMonitor.details,filter)
         if(!passedEventFilters)return;
         const eventTime = new Date()
         if(
@@ -738,7 +779,7 @@ module.exports = (s,config,lang,app,io) => {
         hasMatrices: hasMatrices,
         checkEventFilters: checkEventFilters,
         checkMotionLock: checkMotionLock,
-        runMultiTrigger: runMultiTrigger,
+        runMultiEventBasedRecord: runMultiEventBasedRecord,
         checkForObjectsInRegions: checkForObjectsInRegions,
         runEventExecutions: runEventExecutions,
         createEventBasedRecording: createEventBasedRecording,

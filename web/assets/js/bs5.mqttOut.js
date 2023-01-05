@@ -31,6 +31,14 @@ $(document).ready(function(){
                 label: lang['Detection Event'],
             },
             {
+                value: 'insertCompletedVideoExtender',
+                label: lang['Recording Complete'],
+            },
+            {
+                value: 'onEventBasedRecordingComplete',
+                label: lang['Event-Based Recording'],
+            },
+            {
                 value: 'onDetectorNoTriggerTimeout',
                 label: lang['No Trigger'],
             },
@@ -61,6 +69,7 @@ $(document).ready(function(){
             <div class="px-1 py-2">
                 <input placeholder="${lang.Username}" class="form-control form-control-sm mb-2" mqtt-param="username" value="${row.username || ''}">
                 <input placeholder="${lang.Password}" class="form-control form-control-sm" mqtt-param="password" value="${row.password || ''}">
+                <input placeholder="${lang['Client ID']}" class="form-control form-control-sm" mqtt-param="clientId" value="${row.clientId || ''}">
             </div>
             <div class="px-1 py-2">
                 <select multiple class="form-control form-control-sm" mqtt-param="msgFor">

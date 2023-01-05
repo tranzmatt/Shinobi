@@ -2,6 +2,7 @@ const fs = require('fs');
 const treekill = require('tree-kill');
 const spawn = require('child_process').spawn;
 const events = require('events');
+const URL = require('url');
 const Mp4Frag = require('mp4frag');
 const streamViewerCountTimeouts = {}
 module.exports = (s,config,lang) => {
@@ -43,13 +44,13 @@ module.exports = (s,config,lang) => {
                         }
                         setTimeout(function(){
                             try{
-                                proc.kill()
+                                treekill(proc.pid)
                                 resolve(response)
                             }catch(err){
                                 s.debugLog(err)
                                 sendError(err)
                             }
-                        },1000)
+                        },3000)
                     }
                 },1000)
             }catch(err){
@@ -100,6 +101,7 @@ module.exports = (s,config,lang) => {
             clearTimeout(activeMonitor.recordingSnapper);
             clearInterval(activeMonitor.getMonitorCpuUsage);
             clearInterval(activeMonitor.objectCountIntervals);
+            clearTimeout(activeMonitor.timeoutToRestart)
             delete(activeMonitor.onvifConnection)
             if(activeMonitor.onChildNodeExit){
                 activeMonitor.onChildNodeExit()
@@ -150,7 +152,7 @@ module.exports = (s,config,lang) => {
             }
             const completeRequest = () => {
                 fs.readFile(temporaryImageFile,(err,imageBuffer) => {
-                    fs.unlink(temporaryImageFile,(err) => {
+                    fs.rm(temporaryImageFile,(err) => {
                         if(err){
                             s.debugLog(err)
                         }
@@ -569,7 +571,86 @@ module.exports = (s,config,lang) => {
         await deleteFromTable('Files')
         await deletePath(binDir)
     }
+    async function deleteMonitor(options){
+        const response = { ok: true }
+        try{
+            const user = options.user
+            const userId = user.uid
+            const groupKey = options.ke
+            const monitorId = options.id || options.mid
+            const deleteFiles = options.deleteFiles === undefined ? true : options.deleteFiles
+            s.userLog({
+                ke: groupKey,
+                mid: monitorId
+            },{
+                type: lang.monitorDeleted,
+                msg: `${lang.byUser} : ${userId}`
+            });
+            s.camera('stop', {
+                ke: groupKey,
+                mid: monitorId,
+                delete: 1,
+            });
+            s.tx({
+                f: 'monitor_delete',
+                uid: userId,
+                mid: monitorId,
+                ke: groupKey
+            },`GRP_${groupKey}`);
+            await s.knexQueryPromise({
+                action: "delete",
+                table: "Monitors",
+                where: {
+                    ke: groupKey,
+                    mid: monitorId,
+                }
+            });
+            if(deleteFiles){
+                await deleteMonitorData(groupKey,monitorId)
+                s.debugLog(`Deleted Monitor Data`,{
+                    ke: groupKey,
+                    mid: monitorId,
+                });
+            }
+            response.msg = `${lang.monitorDeleted} ${lang.byUser} : ${userId}`
+        }catch(err){
+            response.ok = false
+            response.err = err
+            s.systemLog(err)
+        }
+        return response
+    }
+    function getUrlProtocol(urlString){
+        let modifiedUrlString = `${urlString}`.split('://')
+        const originalProtocol = `${modifiedUrlString[0]}`
+        return originalProtocol
+    }
+    function modifyUrlProtocol(urlString,newProtocol){
+        let modifiedUrlString = `${urlString}`.split('://')
+        const originalProtocol = `${modifiedUrlString[0]}`
+        modifiedUrlString[0] = newProtocol;
+        modifiedUrlString = modifiedUrlString.join('://')
+        return modifiedUrlString
+    }
+    function getUrlParts(urlString){
+        const originalProtocol = getUrlProtocol(urlString)
+        const modifiedUrlString = modifyUrlProtocol(urlString,'http')
+        const url = URL.parse(modifiedUrlString)
+        const data = {}
+        Object.keys(url).forEach(function(key){
+            const value = url[key];
+            if(value && typeof value !== 'function')data[key] = url[key];
+        });
+        data.href = `${urlString}`
+        data.origin = modifyUrlProtocol(data.origin,originalProtocol)
+        data.protocol = `${originalProtocol}:`
+        return data
+    }
     return {
+        getUrlProtocol,
+        modifyUrlProtocol,
+        getUrlParts,
+        deleteMonitor,
         deleteMonitorData,
         cameraDestroy: cameraDestroy,
         createSnapshot: createSnapshot,

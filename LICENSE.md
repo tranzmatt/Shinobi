@@ -1,10 +1,9 @@
 SHINOBI OPEN SOURCE SOFTWARE LICENSE AGREEMENT
 ==============================================
-	Version 1, 04 June 2018
 
- Copyright (C) 2018 [Shinobi Systems](https://shinobi.systems)
+Copyright (C) 2023 [Shinobi Systems](https://shinobi.systems)
 
- *We'll try to keep it simple. Thanks for using Shinobi Software!*
+*We'll try to keep it simple. Thanks for using Shinobi Software!*
 
 Definitions.
 -----------
@@ -58,7 +57,7 @@ If you fall under any conditions for "Commercial Use" none of the following can 
 - Use in a non commercial area
 - Used for non commercial purposes
 - When used for research or educational purposes
-- Testing Purposes
+- Testing Purposes (5 Cameras Maximum, 14 Days)
 - Usage by Primary Education or Secondary Education Schools
 - Use for Emergency Services and facilities associated like Search and Rescue Services or
 Ambulance Services with less than 50 cameras
@@ -91,9 +90,10 @@ provided with subscription plans provided.
 This software is property of Shinobi Systems. LICENSEE must keep all copyright notices
 unchanged.
 
+This software contains or uses other software with their own licenses attached. See "List of Included Software" at the bottom of this document.
+
 #### Modification of this Software Product.
-LICENSEE may modify code for but must provide these changes upon request from
-Shinobi Systems or an authorized Shinobi representative. LICENSEE may not alter or change
+LICENSEE may modify source code. LICENSEE may not alter or change
 copyright notices. All code changes by LICENSEE shall fall under the copyright of Shinobi
 Systems in the case code modified by LICENSEE is integrated into the official Shinobi code base.
 

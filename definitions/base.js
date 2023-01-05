@@ -22,6 +22,34 @@ module.exports = function(s,config,lang){
        "Monitor Settings": {
           "section": "Monitor Settings",
           "blocks": {
+              "Page Control": {
+                 name: lang.Monitor,
+                 headerTitle: `<div id="tab-monitorSettings-title">Monitor Settings : <span>Add New</span></div>`,
+                "color": "blue",
+                 isSection: false,
+                "info": [
+                    {
+                        "field": lang.Monitor,
+                        "fieldType": "select",
+                        "class": "monitors_list",
+                        "possible": [
+                            {
+                               "name": lang['Add New'],
+                               "value": ""
+                            },
+                            {
+                               "name": lang.Saved,
+                               "optgroup": []
+                            },
+                        ]
+                    },
+                    {
+                       "fieldType": "btn",
+                       "class": `btn-success reset-monitor-settings-form`,
+                       "btnContent": `<i class="fa fa-refresh"></i> &nbsp; ${lang['Reset Form']}`,
+                    },
+                ]
+             },
              "Identity": {
                 "name": lang.Identity,
                 "color": "grey",
@@ -74,6 +102,11 @@ module.exports = function(s,config,lang){
                       "example": "Home-Front"
                    },
                    {
+                      "name": "tags",
+                      "field": lang['Tags'],
+                      "description": lang.tagsFieldText,
+                   },
+                   {
                       "name": "detail=max_keep_days",
                       "field": lang["Number of Days to keep"] + ' ' + lang['Videos'],
                       "placeholder": "Default is Global value.",
@@ -91,45 +124,24 @@ module.exports = function(s,config,lang){
                       "description": lang["fieldTextDir"],
                       "fieldType": "select",
                       "possible": s.listOfStorage
+                  },
+                  {
+                     "name": "detail=auto_compress_videos",
+                     "field": lang['Compress Completed Videos'],
+                     "description": lang.compressCompletedVideosFieldText,
+                     "fieldType": "select",
+                     "possible": [
+                         {
+                            "name": lang.No,
+                            "value": "0"
+                         },
+                         {
+                            "name": lang.Yes,
+                            "value": "1"
+                         }
+                     ]
                   }
                 ]
-             },
-             "Presets": {
-                id: "monSectionPresets",
-               "section-class": "am_notice am_notice_edit",
-               "name": lang.Presets,
-               "color": "purple",
-                isSection: true,
-               "info": [
-                   {
-                       "name": lang['Add New'],
-                       "color": "grey",
-                       isFormGroupGroup: true,
-                       "info": [
-                           {
-                              "id": "monitorPresetsName",
-                              "field": lang['Preset Name'],
-                          },
-                           {
-                              "fieldType": "btn",
-                              "class": `btn-success add-new`,
-                              "btnContent": `<i class="fa fa-plus"></i> &nbsp; ${lang['Add']}`,
-                           },
-                       ]
-                   },
-                   {
-                       "fieldType": 'div',
-                       "id": "monitorPresetsSelection",
-                       "style": "max-height:400px;overflow:auto;",
-                       "class": "mdl-list"
-                   },
-                   {
-                      "fieldType": "btn",
-                      "attribute": `page-open="schedules"`,
-                      "class": `btn-info`,
-                      "btnContent": `<i class="fa fa-clock-o"></i> &nbsp; ${lang['Schedules']}`,
-                   },
-               ],
              },
              "Connection": {
                 "name": lang.Connection,
@@ -397,9 +409,7 @@ module.exports = function(s,config,lang){
                        "name": "detail=fatal_max",
                        "field": lang['Retry Connection'],
                        "description": lang["fieldTextFatalMax"],
-                       "default": "10",
-                       "example": "",
-                       "possible": "",
+                       "example": "10",
                     },
                     {
                        "name": "detail=skip_ping",
@@ -1037,7 +1047,7 @@ module.exports = function(s,config,lang){
                               "value": "1"
                            },
                            {
-                              "name": lang["90 Clockwise and Vertical Flip"],
+                              "name": lang["90 Counter Clockwise"],
                               "value": "2"
                            },
                            {
@@ -1823,7 +1833,7 @@ module.exports = function(s,config,lang){
                                       "value": "1"
                                    },
                                    {
-                                      "name": lang["90 Clockwise and Vertical Flip"],
+                                      "name": lang["90 Counter Clockwise"],
                                       "value": "2"
                                    },
                                    {
@@ -2206,8 +2216,8 @@ module.exports = function(s,config,lang){
                               "value": "1"
                            },
                            {
-                              "name": lang["90 Clockwise and Vertical Flip"],
-                              "value": "2"
+                               "name": lang["90 Counter Clockwise"],
+                               "value": "2"
                            },
                            {
                               "name": lang["90 Clockwise and Vertical Flip"],
@@ -2631,7 +2641,6 @@ module.exports = function(s,config,lang){
                       ]
                    },
                    {
-                       isAdvanced: true,
                       "name": "detail=use_detector_filters",
                       "field": lang['Event Filters'],
                       "description": lang.fieldTextEventFilters,
@@ -2652,12 +2661,10 @@ module.exports = function(s,config,lang){
                       ]
                    },
                    {
-                       isAdvanced: true,
                       "name": "detail=use_detector_filters_object",
                       "field": lang['Filter for Objects only'],
                       "description": "",
                       "default": "0",
-                      "example": "",
                       "fieldType": "select",
                       "form-group-class": "h_det_fil_input h_det_fil_1",
                       "form-group-class-pre-layer": "h_det_input h_det_1",
@@ -2775,6 +2782,12 @@ module.exports = function(s,config,lang){
                       ]
                    },
                    {
+                       hidden: true,
+                      "name": "detail=det_trigger_tags",
+                      "field": lang['Trigger Group to Record'],
+                      "form-group-class": "h_det_input h_det_1",
+                   },
+                   {
                        isAdvanced: true,
                       "name": "detail=detector_http_api",
                       "field": lang["Allow API Trigger"],
@@ -2888,54 +2901,6 @@ module.exports = function(s,config,lang){
                    {
                        hidden: true,
                       "name": "detail=detector_filters",
-                   },
-                   {
-                       isAdvanced: true,
-                       hidden: true,
-                      "name": "detail=det_multi_trig",
-                      "field": lang['Trigger Camera Groups'],
-                      "description": "",
-                      "default": "1",
-                      "example": "",
-                      "selector": "det_multi_trig",
-                      "form-group-class": "h_det_input h_det_1",
-                      "fieldType": "select",
-                      "possible": [
-                         {
-                            "name": lang.No,
-                            "value": "0"
-                         },
-                         {
-                            "name": lang.Yes,
-                            "value": "1"
-                         }
-                      ]
-                   },
-                   {
-                       isAdvanced: true,
-                       hidden: true,
-                       id: "monSectionDetectorGroupMulti",
-                      "name": lang['Trigger Camera Groups'],
-                      "color": "forestgreen",
-                       isFormGroupGroup: true,
-                      "section-class": "det_multi_trig_input det_multi_trig_1",
-                      "section-pre-class": "h_det_input h_det_1",
-                      "info": [
-                          {
-                              "fieldType": 'ul',
-                              "id": "monitor_group_detector_multi",
-                              "class": "mdl-list"
-                          },
-                          {
-                             hidden: true,
-                             "name": "detail=group_detector_multi",
-                             "field": "",
-                             "description": "",
-                             "default": "0",
-                             "example": "",
-                             "possible": ""
-                          },
-                      ],
                    },
                    {
                        hidden: true,
@@ -3841,7 +3806,6 @@ module.exports = function(s,config,lang){
                        ]
                     },
                     {
-                        isAdvanced: true,
                        "name": "detail=detector_ptz_follow_target",
                        "field": lang['PTZ Tracking Target'],
                        "description": "",
@@ -4097,6 +4061,24 @@ module.exports = function(s,config,lang){
                       ]
                    },
                    {
+                      "field": lang['Compress Completed Videos'],
+                      "default": "0",
+                      "fieldType": "select",
+                      "attribute": `copy="field=detail=auto_compress_videos"`,
+                      "form-group-class": "h_copy_settings_input h_copy_settings_1",
+                      "form-group-class-pre-layer": "col-md-6",
+                      "possible": [
+                         {
+                            "name": lang.No,
+                            "value": "0"
+                         },
+                         {
+                            "name": lang.Yes,
+                            "value": "1"
+                         }
+                      ]
+                   },
+                   {
                       "field": lang['Stream Channels'],
                       "description": "",
                       "default": "0",
@@ -4243,6 +4225,23 @@ module.exports = function(s,config,lang){
                       "example": "",
                       "fieldType": "select",
                       "attribute": `copy="#monSectionDetector,#monSectionDetectorBuffer,#monSectionLisencePlateDetector,#monSectionNoMotionDetector"`,
+                      "form-group-class": "h_copy_settings_input h_copy_settings_1",
+                      "form-group-class-pre-layer": "col-md-6",
+                      "possible": [
+                         {
+                            "name": lang.No,
+                            "value": "0"
+                         },
+                         {
+                            "name": lang.Yes,
+                            "value": "1"
+                         }
+                      ]
+                   },
+                   {
+                      "field": lang['Regions'],
+                      "fieldType": "select",
+                      "attribute": `copy="field=detail=cords"`,
                       "form-group-class": "h_copy_settings_input h_copy_settings_1",
                       "form-group-class-pre-layer": "col-md-6",
                       "possible": [
@@ -4446,22 +4445,22 @@ module.exports = function(s,config,lang){
                    {
                        hidden: true,
                       "name": "detail=cust_snap",
-                      "field": "Snapshot Flags",
+                      "field": lang["JPEG API Flags"],
                       "description": lang["fieldTextCustSnap"],
-                      "default": "",
-                      "example": "",
                       "form-group-class": "h_sn_input h_sn_1",
-                      "possible": ""
+                   },
+                   {
+                       hidden: true,
+                      "name": "detail=cust_snap_raw",
+                      "field": lang["Snapshot Flags"],
+                      "description": lang["fieldTextCustSnap"],
                    },
                    {
                        hidden: true,
                       "name": "detail=cust_record",
                       "field": lang["Recording Flags"],
                       "description": lang["fieldTextCustRecord"],
-                      "default": "",
-                      "example": "",
                       "form-group-class": "h_m_input h_m_record",
-                      "possible": ""
                    },
                    {
                        hidden: true,
@@ -4478,10 +4477,7 @@ module.exports = function(s,config,lang){
                       "name": "detail=cust_detect_object",
                       "field": lang["Object Detector Flags"],
                       "description": lang["fieldTextCustDetectObject"],
-                      "default": "",
-                      "example": "",
                       "form-group-class": "shinobi-detector",
-                      "possible": ""
                    },
                    {
                        hidden: true,
@@ -4595,15 +4591,7 @@ module.exports = function(s,config,lang){
                     {
                        "name": "details",
                        "preFill": "{}",
-                    },
-                    {
-                       "name": "shto",
-                       "preFill": "[]",
-                    },
-                    {
-                       "name": "shfr",
-                       "preFill": "[]",
-                    },
+                    }
                 ]
              }
           }
@@ -4853,59 +4841,6 @@ module.exports = function(s,config,lang){
                   }
                 ]
              },
-             "Monitor Groups": {
-                "notForSubAccount": true,
-                "name": lang["Monitor Groups"],
-                "color": "blue",
-                "headerClass": "mon_groups",
-                "headerButtons": [
-                    {
-                        "icon": "plus",
-                        "class": "btn-success add"
-                    },
-                    {
-                        "icon": "trash-o",
-                        "class": "btn-danger delete"
-                    }
-                ],
-                "info": [
-                   {
-                      "field": lang["Monitor Groups"],
-                      "id":"settings_mon_groups",
-                      "description": "",
-                      "default": "",
-                      "example": "",
-                      "fieldType": "select",
-                      "possible": []
-                   },
-                   {
-                      "field": lang["Group Name"],
-                      "description": "Name of selected group.",
-                      "attribute":"group=\"name\"",
-                      "default": "",
-                      "example": "",
-                      "possible": ""
-                   },
-                   {
-                      "hidden": true,
-                      "field": "Group ID",
-                      "description": "",
-                      "attribute":"group=\"id\"",
-                      "default": "",
-                      "example": "",
-                      "possible": ""
-                   },
-                   {
-                      "hidden": true,
-                      "field": "mon_groups",
-                      "name": "detail=mon_groups",
-                      "description": "",
-                      "default": "",
-                      "example": "",
-                      "possible": ""
-                   }
-                ]
-             },
              "Uploaders": {
                 "name": lang["Uploaders"],
                 "color": "forestgreen",
@@ -5022,7 +4957,6 @@ module.exports = function(s,config,lang){
                   {
                       "field": lang.Themes,
                       "name": "detail=theme",
-                      attribute:'localStorage="showThumbnail"',
                       "description": "",
                       "default": "0",
                       "example": "",
@@ -5856,79 +5790,199 @@ module.exports = function(s,config,lang){
          "section": "Region Editor",
          "blocks": {
              "Regions": {
-                "name": lang["Regions"],
-                "headerTitle": `<span class="cord_name">&nbsp;</span>
-                  <div class="pull-right">
-                      <a href=# class="btn btn-success btn-sm add"><i class="fa fa-plus"></i></a>
-                      <a href=# class="btn btn-danger btn-sm erase"><i class="fa fa-trash-o"></i></a>
-                  </div>`,
-                "color": "orange",
-                "section-pre-class": "col-md-6",
-                "section-class": "where",
-                "box-wrapper-class": "row",
-                "info": [
-                    {
-                       "field": lang["Monitor"],
-                       "id": "region_editor_monitors",
-                       "fieldType": "select",
-                       "form-group-class": "col-md-6",
-                    },
-                    {
-                       "id": "regions_list",
-                       "field": lang["Regions"],
-                       "fieldType": "select",
-                       "possible": [],
-                       "form-group-class": "col-md-6",
-                   },
-                    {
-                       "name": "name",
-                       "field": lang['Region Name'],
-                    },
-                    {
-                       "name": "sensitivity",
-                       "field": lang['Minimum Change'],
-                       "form-group-class": "col-md-6",
-                    },
-                    {
-                       "name": "max_sensitivity",
-                       "field": lang['Maximum Change'],
-                       "form-group-class": "col-md-6",
-                    },
-                    {
-                       "name": "threshold",
-                       "field": lang['Trigger Threshold'],
-                       "form-group-class": "col-md-6",
-                    },
-                    {
-                       "name": "color_threshold",
-                       "field": lang['Color Threshold'],
-                       "form-group-class": "col-md-6",
-                    },
-                    {
-                        hidden: true,
-                        id: "regions_points",
-                        "fieldType": "table",
-                        "class": 'table table-striped',
-                    },
-                    {
-                        "class": 'col-md-12',
-                        "fieldType": 'div',
-                        info: [
+                 "color": "green",
+                 isFormGroupGroup: true,
+                 "noHeader": true,
+                 "section-class": "col-md-6",
+                 "noDefaultSectionClasses": true,
+                 "info": [
+                     {
+                        "name": lang["Regions"],
+                        "headerTitle": `<span class="cord_name">&nbsp;</span>
+                          <div class="pull-right">
+                              <a href=# class="btn btn-success btn-sm add"><i class="fa fa-plus"></i></a>
+                              <a href=# class="btn btn-danger btn-sm erase"><i class="fa fa-trash-o"></i></a>
+                          </div>`,
+                        "color": "orange",
+                        "box-wrapper-class": "row",
+                        isFormGroupGroup: true,
+                        "info": [
                             {
-                               "fieldType": "btn",
-                               attribute: "href=#",
-                               "class": `btn-info toggle-region-still-image`,
-                               "btnContent": `<i class="fa fa-retweet"></i> &nbsp; ${lang['Live Stream Toggle']}`,
+                               "field": lang["Monitor"],
+                               "id": "region_editor_monitors",
+                               "fieldType": "select",
+                               "form-group-class": "col-md-6",
                             },
                             {
-                               "fieldType": "btn",
-                               forForm: true,
-                               attribute: "href=#",
-                               "class": `btn-success`,
-                               "btnContent": `<i class="fa fa-check"></i> &nbsp; ${lang['Save']}`,
+                               "id": "regions_list",
+                               "field": lang["Regions"],
+                               "fieldType": "select",
+                               "possible": [],
+                               "form-group-class": "col-md-6",
+                           },
+                            {
+                               "name": "name",
+                               "field": lang['Region Name'],
+                            },
+                            {
+                               "name": "sensitivity",
+                               "field": lang['Minimum Change'],
+                               "form-group-class": "col-md-6",
+                            },
+                            {
+                               "name": "max_sensitivity",
+                               "field": lang['Maximum Change'],
+                               "form-group-class": "col-md-6",
+                            },
+                            {
+                               "name": "threshold",
+                               "field": lang['Trigger Threshold'],
+                               "form-group-class": "col-md-6",
+                            },
+                            {
+                               "name": "color_threshold",
+                               "field": lang['Color Threshold'],
+                               "form-group-class": "col-md-6",
+                            },
+                            {
+                                hidden: true,
+                                id: "regions_points",
+                                "fieldType": "table",
+                                "class": 'table table-striped',
+                            },
+                            {
+                                "class": 'col-md-12',
+                                "fieldType": 'div',
+                                info: [
+                                    {
+                                       "fieldType": "btn",
+                                       attribute: "href=#",
+                                       "class": `btn-info toggle-region-still-image`,
+                                       "btnContent": `<i class="fa fa-retweet"></i> &nbsp; ${lang['Live Stream Toggle']}`,
+                                    },
+                                    {
+                                       "fieldType": "btn",
+                                       forForm: true,
+                                       attribute: "href=#",
+                                       "class": `btn-success`,
+                                       "btnContent": `<i class="fa fa-check"></i> &nbsp; ${lang['Save']}`,
+                                    },
+                                ]
                             },
                         ]
                     },
+                    {
+                       "name": lang["Primary"],
+                       "color": "blue",
+                       "section-class": "hide-box-wrapper",
+                       "box-wrapper-class": "row",
+                       isFormGroupGroup: true,
+                       "info": [
+                           {
+                              "name": "detail=detector_sensitivity",
+                              "field": lang['Minimum Change'],
+                              "description": "The motion confidence rating must exceed this value to be seen as a trigger. This number correlates directly to the confidence rating returned by the motion detector. This option was previously named \"Indifference\".",
+                              "default": "10",
+                              "example": "10",
+                           },
+                           {
+                              "name": "detail=detector_max_sensitivity",
+                              "field": lang["Maximum Change"],
+                              "description": "The motion confidence rating must be lower than this value to be seen as a trigger. Leave blank for no maximum. This option was previously named \"Max Indifference\".",
+                              "default": "",
+                              "example": "75",
+                           },
+                           {
+                              "name": "detail=detector_threshold",
+                              "field": lang["Trigger Threshold"],
+                              "description": lang["fieldTextDetectorThreshold"],
+                              "default": "1",
+                              "example": "3",
+                              "possible": "Any non-negative integer."
+                           },
+                           {
+                              "name": "detail=detector_color_threshold",
+                              "field": lang["Color Threshold"],
+                              "description": lang["fieldTextDetectorColorThreshold"],
+                              "default": "9",
+                              "example": "9",
+                              "possible": "Any non-negative integer."
+                           },
+                           {
+                              "name": "detail=detector_frame",
+                              "field": lang["Full Frame Detection"],
+                              "description": lang["fieldTextDetectorFrame"],
+                              "default": "1",
+                              "fieldType": "select",
+                              "possible": [
+                                 {
+                                    "name": lang.No,
+                                    "value": "0"
+                                 },
+                                 {
+                                    "name": lang.Yes,
+                                    "value": "1"
+                                 }
+                              ]
+                           },
+                           {
+                              "name": "detail=detector_motion_tile_mode",
+                              "field": lang['Accuracy Mode'],
+                              "default": "1",
+                              "example": "",
+                              "fieldType": "select",
+                              "possible": [
+                                 {
+                                    "name": lang.No,
+                                    "value": "0"
+                                 },
+                                 {
+                                    "name": lang.Yes,
+                                    "value": "1"
+                                 }
+                              ]
+                           },
+                           {
+                              "name": "detail=detector_tile_size",
+                              "field": lang["Tile Size"],
+                              "description": lang.fieldTextTileSize,
+                              "default": "20",
+                           },
+                           {
+                              "name": "detail=use_detector_filters",
+                              "field": lang['Event Filters'],
+                              "description": lang.fieldTextEventFilters,
+                              "default": "0",
+                              "fieldType": "select",
+                              "possible": [
+                                 {
+                                    "name": lang.No,
+                                    "value": "0"
+                                 },
+                                 {
+                                    "name": lang.Yes,
+                                    "value": "1"
+                                 }
+                              ]
+                           },
+                           {
+                              "name": "detail=use_detector_filters_object",
+                              "field": lang['Filter for Objects only'],
+                              "default": "0",
+                              "fieldType": "select",
+                              "possible": [
+                                 {
+                                    "name": lang.No,
+                                    "value": "0"
+                                 },
+                                 {
+                                    "name": lang.Yes,
+                                    "value": "1"
+                                 }
+                              ]
+                           },
+                       ]
+                   },
                 ]
             },
             "Points": {
@@ -6109,7 +6163,7 @@ module.exports = function(s,config,lang){
                        "fieldType": "btn",
                        "attribute": `page-open="schedules"`,
                        "class": `btn-primary`,
-                       "btnContent": `<i class="fa fa-clock"></i> &nbsp; ${lang["Schedules"]}`,
+                       "btnContent": `<i class="fa fa-clock-o"></i> &nbsp; ${lang["Schedules"]}`,
                     },
                 ]
              },
@@ -6207,6 +6261,7 @@ module.exports = function(s,config,lang){
                            },
                            {
                               "fieldType": "btn-group",
+                              "class": "mb-3",
                               "btns": [
                                   {
                                       "fieldType": "btn",
@@ -6215,17 +6270,29 @@ module.exports = function(s,config,lang){
                                   },
                                   {
                                       "fieldType": "btn",
-                                      "class": `btn-success download_mp4`,
+                                      "class": `btn-secondary download_mp4`,
                                       "btnContent": `${lang['Download']}`,
                                   },
                               ],
-                           }
+                          },
+                          {
+                             "fieldType": "btn-group",
+                             "btns": [
+                                 {
+                                     "fieldType": "btn",
+                                     "class": `btn-success fill refresh-data mb-3`,
+                                     "icon": `refresh`,
+                                     "btnContent": `${lang['Refresh']}`,
+                                 },
+                             ],
+                          },
                       ]
                     },
                     {
                        isFormGroupGroup: true,
                        "headerTitle": `
-                         <a href=# class="btn btn-danger btn-sm delete-selected"><i class="fa fa-trash-o"></i> ${lang['Delete selected']}</a>
+                         <a class="btn btn-danger btn-sm delete-selected-frames">${lang['Delete selected']}</a>
+                         <a class="btn btn-primary btn-sm zip-selected-frames">${lang['Zip and Download']}</a>
                          <div class="pull-right">
                              <input type="checkbox" class="form-check-input select-all">
                          </div>`,
@@ -6627,8 +6694,8 @@ module.exports = function(s,config,lang){
                      }
                  ]
              },
-           }
-         },
+         }
+     },
      "Log Viewer": {
           "section": "Log Viewer",
           "blocks": {
@@ -7312,8 +7379,8 @@ module.exports = function(s,config,lang){
                                 "value": "1"
                              },
                              {
-                                "name": lang["90 Clockwise and Vertical Flip"],
-                                "value": "2"
+                                 "name": lang["90 Counter Clockwise"],
+                                 "value": "2"
                              },
                              {
                                 "name": lang["90 Clockwise and Vertical Flip"],
@@ -7355,7 +7422,8 @@ module.exports = function(s,config,lang){
            streamBlockHudControlsHtml: `<span title="${lang['Currently viewing']}" class="label label-default">
                 <span class="viewers"></span>
            </span>
-           <a class="btn btn-sm badge btn-warning run-monitor-detection-trigger-test">${lang['Trigger Event']}</a>
+           <a class="btn btn-sm badge btn-warning run-monitor-detection-trigger-test">${lang['Test Object Event']}</a>
+           <a class="btn btn-sm badge btn-warning run-monitor-detection-trigger-test-motion">${lang['Test Motion Event']}</a>
            `,
            gridBlockAfterContentHtml: `<div class="mdl-card__supporting-text text-center">
                <div class="indifference detector-fade">
@@ -7365,24 +7433,66 @@ module.exports = function(s,config,lang){
                </div>
                <div class="monitor_details">
                    <div class="pull-left">
-                       <a title="${lang['Options']}" class="btn btn-sm badge btn-secondary toggle-live-grid-monitor-menu"><i class="fa fa-bars"></i></a>
-                       <a title="${lang['Edit']}" class="btn btn-sm badge btn-primary open-monitor-settings"><i class="fa fa-wrench"></i></a>
-                       <a title="${lang['Toggle Substream']}" class="btn btn-sm badge btn-secondary toggle-monitor-substream"><i class="fa fa-eye"></i></a>
-                       <a title="${lang['Snapshot']}" class="btn btn-sm badge btn-warning snapshot-live-grid-monitor"><i class="fa fa-camera"></i></a>
-                       <a title="${lang['Videos List']}" class="btn btn-sm badge btn-secondary open-videosTable"><i class="fa fa-film"></i></a>
-                       <a title="${lang['Reconnect Stream']}" class="btn btn-sm badge btn-success signal reconnect-live-grid-monitor"><i class="fa fa-plug"></i></a>
-                       <a title="${lang['Show Logs']}" class="btn btn-sm badge btn-warning toggle-live-grid-monitor-logs"><i class="fa fa-exclamation-triangle"></i></a>
-                       <a title="${lang['Close']}" class="btn btn-sm badge btn-danger close-live-grid-monitor"><i class="fa fa-times"></i></a>
+                        $QUICKLINKS
                   </div>
                    <div><span class="monitor_name">$MONITOR_NAME</span></div>
                </div>
-           </div>
-           <div class="mdl-data_window pull-right">
-               <div class="d-flex flex-row" style="height: 100%;">
-                   <div class="data-menu col-md-6 p-2 videos-mini scrollable"></div>
-                   <div class="data-menu col-md-6 p-2 logs scrollable"></div>
-               </div>
            </div>`,
+           quickLinks: {
+               "Options": {
+                  "label": lang['Options'],
+                  "class": "default toggle-live-grid-monitor-menu",
+                  "icon": "bars"
+               },
+               "Fullscreen": {
+                  "label": lang['Fullscreen'],
+                  "class": "default toggle-live-grid-monitor-fullscreen",
+                  "icon": "arrows-alt"
+               },
+               "Monitor Settings": {
+                  "label": lang['Monitor Settings'],
+                  "class": "default open-monitor-settings",
+                  "icon": "wrench",
+                  eval: `!isSubAccount || isSubAccount && permissionCheck('monitor_edit',monitorId)`,
+               },
+               "Toggle Substream": {
+                  "label": lang['Toggle Substream'],
+                  "class": "warning toggle-monitor-substream",
+                  "icon": "eye"
+               },
+               "Snapshot": {
+                  "label": lang['Snapshot'],
+                  "class": "primary snapshot-live-grid-monitor",
+                  "icon": "camera"
+               },
+               "Videos List": {
+                  "label": lang['Videos List'],
+                  "class": "default open-videosTable",
+                  "icon": "film",
+                  eval: `!isSubAccount || isSubAccount && permissionCheck('video_view',monitorId)`,
+               },
+               "Reconnect Stream": {
+                  "label": lang['Reconnect Stream'],
+                  "class": "success signal reconnect-live-grid-monitor",
+                  "icon": "plug"
+               },
+               "Control": {
+                  "label": lang['Control'],
+                  "class": "default toggle-live-grid-monitor-ptz-controls",
+                  "icon": "arrows",
+                  eval: `monitor.details.control === '1'`,
+               },
+               "Show Logs": {
+                  "label": lang['Show Logs'],
+                  "class": "warning toggle-live-grid-monitor-logs",
+                  "icon": "exclamation-triangle"
+               },
+               "Close": {
+                  "label": lang['Close'],
+                  "class": "danger close-live-grid-monitor",
+                  "icon": "times"
+               }
+           },
            links: {
               "Mute Audio": {
                   "label": lang['Mute Audio'],
@@ -7400,7 +7510,7 @@ module.exports = function(s,config,lang){
                  "class": "warning toggle-live-grid-monitor-logs",
                  "icon": "exclamation-triangle"
               },
-              "Show Logs": {
+              "Toggle Substream": {
                  "label": lang['Toggle Substream'],
                  "class": "warning toggle-monitor-substream",
                  "icon": "eye"
@@ -7408,7 +7518,8 @@ module.exports = function(s,config,lang){
               "Control": {
                  "label": lang['Control'],
                  "class": "default toggle-live-grid-monitor-ptz-controls",
-                 "icon": "arrows"
+                 "icon": "arrows",
+                 eval: `monitor.details.control === '1'`,
               },
               "Reconnect Stream": {
                  "label": lang['Reconnect Stream'],
@@ -7442,7 +7553,8 @@ module.exports = function(s,config,lang){
                  "label": lang['Time-lapse'],
                  "attr": `monitor="timelapseJpeg"`,
                  "class": "default",
-                 "icon": "angle-double-right"
+                 "icon": "angle-double-right",
+                 eval: `!isSubAccount || isSubAccount && permissionCheck('video_view',monitorId)`,
               },
               // "Video Grid": {
               //    "label": "Video Grid",
@@ -7453,12 +7565,14 @@ module.exports = function(s,config,lang){
               "Videos List": {
                  "label": lang['Videos List'],
                  "class": "default open-videosTable",
-                 "icon": "film"
+                 "icon": "film",
+                 eval: `!isSubAccount || isSubAccount && permissionCheck('video_view',monitorId)`,
               },
               "Monitor Settings": {
                  "label": lang['Monitor Settings'],
                  "class": "default open-monitor-settings",
-                 "icon": "wrench"
+                 "icon": "wrench",
+                 eval: `!isSubAccount || isSubAccount && permissionCheck('monitor_edit',monitorId)`,
               },
               "Fullscreen": {
                  "label": lang['Fullscreen'],
@@ -7527,7 +7641,7 @@ module.exports = function(s,config,lang){
                               {
                                   label: lang['Stream in Background'],
                                   class: 'cursor-pointer',
-                                  attributes: 'shinobi-switch="backgroundStream" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
+                                  attributes: 'shinobi-switch="backgroundStream" ui-change-target=".dot" on-class="dot-grey" off-class="dot-green"',
                                   color: 'grey',
                               },
                               {
@@ -7554,6 +7668,15 @@ module.exports = function(s,config,lang){
                           icon: 'film',
                           label: `${lang['Videos']}`,
                           pageOpen: 'videosTableView',
+                          addUl: true,
+                          ulItems: [
+                              {
+                                  label: lang[`Save Compressed Video on Completion`],
+                                  class: 'cursor-pointer',
+                                  attributes: 'shinobi-switch="saveCompressedVideo" ui-change-target=".dot" on-class="dot-green" off-class="dot-grey"',
+                                  color: 'grey',
+                              },
+                          ]
                       },
                       {
                           icon: 'map-marker',
@@ -7592,31 +7715,37 @@ module.exports = function(s,config,lang){
                           label: `${lang['Monitor Settings']}`,
                           pageOpen: 'monitorSettings',
                           addUl: true,
+                          eval: `!$user.details.sub || $user.details.monitor_create !== 0`,
                       },
                       {
                           icon: 'grav',
                           label: `${lang['Region Editor']}`,
                           pageOpen: 'regionEditor',
+                          eval: `!$user.details.sub`,
                       },
                       {
                           icon: 'filter',
                           label: `${lang['Event Filters']}`,
                           pageOpen: 'eventFilters',
+                          eval: `!$user.details.sub`,
                       },
                       {
                           icon: 'align-right',
                           label: `${lang['Monitor States']}`,
                           pageOpen: 'monitorStates',
+                          eval: `!$user.details.sub`,
                       },
                       {
-                          icon: 'clock',
+                          icon: 'clock-o',
                           label: `${lang['Schedules']}`,
                           pageOpen: 'schedules',
+                          eval: `!$user.details.sub`,
                       },
                       {
                           icon: 'exclamation-triangle',
                           label: `${lang['Logs']}`,
                           pageOpen: 'logViewer',
+                          eval: `!$user.details.sub || $user.details.view_logs !== 0`,
                       },
                       {
                           divider: true,
@@ -7625,6 +7754,7 @@ module.exports = function(s,config,lang){
                           icon: 'gears',
                           label: `${lang['Account Settings']}`,
                           pageOpen: 'accountSettings',
+                          eval: `!$user.details.sub || $user.details.user_change !== 0`,
                           addUl: true,
                       },
                       {
@@ -7632,6 +7762,7 @@ module.exports = function(s,config,lang){
                           label: `${lang.subAccountManager}`,
                           pageOpen: 'subAccountManager',
                           addUl: true,
+                          eval: `!$user.details.sub`,
                       },
                       {
                           icon: 'key',
@@ -7645,12 +7776,14 @@ module.exports = function(s,config,lang){
                           icon: 'search',
                           label: `${lang['ONVIF Scanner']}`,
                           pageOpen: 'onvifScanner',
-                          addUl:true
+                          addUl:true,
+                          eval: `!$user.details.sub || $user.details.monitor_create !== 0`,
                       },
                       {
                           icon: 'opera',
                           label: `${lang['ONVIF Device Manager']}`,
                           pageOpen: 'onvifDeviceManager',
+                          eval: `!$user.details.sub || $user.details.monitor_create !== 0`,
                       },
                       {
                           icon: 'eyedropper',
@@ -7662,6 +7795,7 @@ module.exports = function(s,config,lang){
                           label: `${lang['ShinobiHub']}`,
                           pageOpen: 'configFinder',
                           addUl: true,
+                          eval: `!$user.details.sub || $user.details.monitor_create !== 0`,
                       },
                       {
                           divider: true,
@@ -7741,7 +7875,7 @@ module.exports = function(s,config,lang){
                                  info: [
                                      {
                                          "fieldType": "indicatorBar",
-                                         "icon": "hdd",
+                                         "icon": "hdd-o",
                                          "name": "disk",
                                          "bars": 3,
                                          "color0": "info",
@@ -7750,7 +7884,7 @@ module.exports = function(s,config,lang){
                                          "title1": lang["Timelapse Frames Share"],
                                          "color2": "warning",
                                          "title2": lang["FileBin Share"],
-                                         "label": `<span class="diskUsed" style="letter-spacing:2px;font-weight:100"></span>`,
+                                         "label": `<span class="diskUsed" style="text-transform:capitalize">${lang.Primary}</span> : <span class="value"></span>`,
                                      },
                                  ]
                              },
@@ -7937,6 +8071,11 @@ module.exports = function(s,config,lang){
                       "style": "overflow-y:auto;max-height:200px;",
                   },
                   {
+                     "id": "powerVideo_tag_search",
+                     "field": lang["Search Object Tags"],
+                     "example": "person",
+                  },
+                  {
                      "id": "powerVideoDateRange",
                      "field": lang['Date Range'],
                   },
@@ -7958,11 +8097,15 @@ module.exports = function(s,config,lang){
                       possible:[
                         {
                             "name": lang.Local,
-                           "value": "local"
+                           "value": ""
                         },
                         {
                            "name": lang.Cloud,
                            "value": "cloud"
+                        },
+                        {
+                            "name": lang.Archive,
+                           "value": "archive"
                         },
                      ]
                   },
@@ -7983,6 +8126,81 @@ module.exports = function(s,config,lang){
           },
          }
       },
+      "Studio": {
+           "section": lang["Studio"],
+           "blocks": {
+            "Video Playback": {
+                id: "studioVideoPlayback",
+                noHeader: true,
+                noDefaultSectionClasses: true,
+               "color": "green",
+               "section-pre-class": "col-md-8 search-parent",
+               "info": [
+                   {
+                      "id": "studioViewingCanvas",
+                      "fieldType": "div",
+                   },
+                   {
+                       "id": "studioMonitorControls",
+                       "color": "blue",
+                       noHeader: true,
+                       isSection: true,
+                       isFormGroupGroup: true,
+                       'section-class': 'text-center',
+                       "info": [
+                           {
+                              "fieldType": "btn-group",
+                              "normalWidth": true,
+                              "btns": [
+                                  {
+                                      "fieldType": "btn",
+                                      "class": `btn-default btn-sm play-preview`,
+                                      "attribute": `title="${lang['Play']}"`,
+                                      "btnContent": `<i class="fa fa-play"></i>`,
+                                  },
+                                  {
+                                      "fieldType": "btn",
+                                      "class": `btn-default btn-sm slice-video`,
+                                      "attribute": `title="${lang['Slice']}"`,
+                                      "btnContent": `<i class="fa fa-scissors"></i>`,
+                                  },
+                              ],
+                           },
+                       ]
+                   },
+                   {
+                       "color": "bg-gradient-blue text-white",
+                       noHeader: true,
+                       isSection: true,
+                       isFormGroupGroup: true,
+                       'section-class': 'text-center',
+                       "info": [
+                           {
+                              "id": "studioTimelineStrip",
+                              "fieldType": "div",
+                              "divContent": `
+                                  <div id="studio-time-ticks"></div>
+                                  <div id="studio-seek-tick"></div>
+                                  <div id="studio-slice-selection" style="width: 80%;left: 10%;"></div>
+                              `,
+                           },
+                       ]
+                   },
+               ]
+           },
+           "Container2": {
+               noHeader: true,
+              "section-pre-class": "col-md-4",
+              "noDefaultSectionClasses": true,
+              "info": [
+                  {
+                     "id": "studio-completed-videos",
+                     "fieldType": "div",
+                  },
+              ]
+          }
+         }
+      },
       "Calendar": {
           "section": "Calendar",
           "blocks": {
@@ -8000,6 +8218,17 @@ module.exports = function(s,config,lang){
                      {
                          "class": "date_selector",
                          "field": lang.Date,
+                     },
+                     {
+                        "fieldType": "btn-group",
+                        "btns": [
+                            {
+                                "fieldType": "btn",
+                                "class": `btn-success fill refresh-data mb-3`,
+                                "icon": `refresh`,
+                                "btnContent": `${lang['Refresh']}`,
+                            },
+                        ],
                      }
                 ]
             },
@@ -8033,6 +8262,17 @@ module.exports = function(s,config,lang){
                      {
                          "class": "date_selector",
                          "field": lang.Date,
+                     },
+                     {
+                        "fieldType": "btn-group",
+                        "btns": [
+                            {
+                                "fieldType": "btn",
+                                "class": `btn-success fill refresh-data mb-3`,
+                                "icon": `refresh`,
+                                "btnContent": `${lang['Refresh']}`,
+                            }
+                        ],
                      },
                      {
                          "fieldType": "div",
@@ -8079,10 +8319,41 @@ module.exports = function(s,config,lang){
                          "field": lang.Date,
                      },
                      {
+                         id:'videosTable_cloudVideos',
+                         field: lang['Video Set'],
+                         default:'local',
+                         "fieldType": "select",
+                         possible:[
+                           {
+                               "name": lang.Local,
+                              "value": "local"
+                           },
+                           {
+                               "name": lang.Archive,
+                              "value": "archive"
+                           },
+                           {
+                              "name": lang.Cloud,
+                              "value": "cloud"
+                           },
+                        ]
+                     },
+                     {
+                        "fieldType": "btn-group",
+                        "btns": [
+                            {
+                                "fieldType": "btn",
+                                "class": `btn-success fill refresh-data mb-3`,
+                                "icon": `refresh`,
+                                "btnContent": `${lang['Refresh']}`,
+                            },
+                        ],
+                     },
+                     {
                          "fieldType": "div",
                          "id": "videosTable_preview_area",
                          "divContent": ""
-                     }
+                     },
                 ]
             },
             "theTable": {
@@ -8449,35 +8720,284 @@ module.exports = function(s,config,lang){
              "Editor": {
                 noHeader: true,
                 "color": "grey",
+                "noDefaultSectionClasses": true,
+                "box-wrapper-class": "row",
                 "info": [
                     {
-                       "name": "mail",
-                       "field": lang.Email,
+                        isFormGroupGroup: true,
+                        "noHeader": true,
+                        "section-pre-class": "col-md-6",
+                        info: [
+                            {
+                               "name": "mail",
+                               "field": lang.Email,
+                            },
+                            {
+                               "name": "pass",
+                               "type": "password",
+                               "fieldType": "password",
+                               "field": lang['Password'],
+                            },
+                            {
+                               "name": "pass_again",
+                               "type": "password",
+                               "fieldType": "password",
+                               "field": lang['Password Again'],
+                            },
+                            {
+                               "fieldType": "btn-group",
+                               "btns": [
+                                   {
+                                       "fieldType": "btn",
+                                       "class": `submit btn-success`,
+                                       "btnContent": `${lang['Save']}`,
+                                   },
+                               ],
+                            },
+                        ]
                     },
                     {
-                       "name": "pass",
-                       "type": "password",
-                       "fieldType": "password",
-                       "field": lang['Password'],
-                    },
-                    {
-                       "name": "pass_again",
-                       "type": "password",
-                       "fieldType": "password",
-                       "field": lang['Password Again'],
-                    },
-                    {
-                       "fieldType": "btn-group",
-                       "btns": [
-                           {
-                               "fieldType": "btn",
-                               "class": `submit btn-success`,
-                               "btnContent": `${lang['Save']}`,
-                           },
-                       ],
+                        isFormGroupGroup: true,
+                        "name": lang["API Keys"],
+                        "section-pre-class": "col-md-6",
+                        info: [
+                            {
+                               "fieldType": "btn-group",
+                               "btns": [
+                                   {
+                                       "fieldType": "btn",
+                                       "class": `new-token btn-success`,
+                                       "btnContent": `${lang['Add']}`,
+                                   },
+                               ],
+                            },
+                            {
+                               "id": "super-tokens",
+                               "fieldType": "div",
+                            },
+                        ]
                     },
                 ]
             }
+        }
+    },
+    "Help Window": {
+           "section": "Help Window",
+           "blocks": {
+               "Column1": {
+                   "name": lang["Helping Hand"],
+                  "color": "navy",
+                  "blockquote": lang.helpFinderDescription,
+                  "section-pre-class": "col-md-4",
+                  "info": [
+                       {
+                         "id": "helpinghand-options",
+                         "field": lang["Active Tutorial"],
+                         "fieldType": "select",
+                         "possible": [
+                             // {
+                             //    "name": lang['Date Updated'],
+                             //    "value": "dateUpdated"
+                             // },
+                         ]
+                      },
+                      {
+                          "field": lang["Monitor"],
+                          "form-group-class": "helping-hand-target-monitor",
+                          "fieldType": "select",
+                          "class": "monitors_list",
+                     },
+                     {
+                         "fieldType": "btn",
+                         "class": `btn-primary fill watch-helping-hand mb-1`,
+                         "btnContent": lang.Run,
+                     },
+                     {
+                         "id": "helpinghand-results",
+                         "fieldType": "div",
+                     },
+                 ]
+             },
+             "Column2": {
+                noHeader: true,
+                "color": "blue",
+                "section-pre-class": "col-md-8",
+                "noDefaultSectionClasses": true,
+                "box-wrapper-class": "row",
+                "info": [
+                    {
+                        title: "New to Shinobi?",
+                        info: `Try reading over some of these links to get yourself started.`,
+                        buttons: [
+                            {
+                                icon: 'newspaper-o',
+                                color: 'default',
+                                text: 'After Installation Guides',
+                                href: 'https://shinobi.video/docs/configure',
+                                class: ''
+                            },
+                            {
+                                icon: 'plus',
+                                color: 'default',
+                                text: 'Adding an H.264 Camera',
+                                href: 'https://shinobi.video/docs/configure#content-adding-an-h264h265-camera',
+                                class: ''
+                            },
+                            {
+                                icon: 'plus',
+                                color: 'default',
+                                text: 'Adding an MJPEG Camera',
+                                href: 'https://shinobi.video/articles/2018-09-19-how-to-add-an-mjpeg-camera',
+                                class: ''
+                            },
+                            {
+                                icon: 'gears',
+                                color: 'default',
+                                text: 'RTSP Camera Optimization',
+                                href: 'https://shinobi.video/articles/2017-07-29-how-i-optimized-my-rtsp-camera',
+                                class: ''
+                            },
+                            {
+                                icon: 'comments-o',
+                                color: 'info',
+                                text: 'Community Chat',
+                                href: 'https://discord.gg/ehRd8Zz',
+                                class: ''
+                            },
+                            {
+                                icon: 'reddit',
+                                color: 'info',
+                                text: 'Forum on Reddit',
+                                href: 'https://www.reddit.com/r/ShinobiCCTV',
+                                class: ''
+                            },
+                            {
+                                icon: 'file-o',
+                                color: 'primary',
+                                text: 'Documentation',
+                                href: 'http://shinobi.video/docs',
+                                class: ''
+                            }
+                        ]
+                    },
+                    {
+                        bigIcon: "smile-o",
+                        title: "It's a proven fact",
+                        info: `Generosity makes you a happier person, please consider supporting the development.`,
+                        buttons: [
+                            {
+                                icon: 'share-square-o',
+                                color: 'default',
+                                text: 'ShinobiShop Subscriptions',
+                                href: 'https://licenses.shinobi.video/subscribe',
+                                class: ''
+                            },
+                            {
+                                icon: 'paypal',
+                                color: 'default',
+                                text: 'Donate by PayPal',
+                                href: 'https://www.paypal.me/ShinobiCCTV',
+                                class: ''
+                            },
+                            {
+                                icon: 'bank',
+                                color: 'default',
+                                text: 'University of Zurich (UZH)',
+                                href: 'https://www.zora.uzh.ch/id/eprint/139275/',
+                                class: ''
+                            },
+                        ]
+                    },
+                    {
+                        title: "Shinobi Mobile",
+                        info: `Your subscription key can unlock features for <a href="https://cdn.shinobi.video/installers/ShinobiMobile/" target="_blank"><b>Shinobi Mobile</b></a> running on iOS and Android today!`,
+                        buttons: [
+                            {
+                                icon: 'star',
+                                color: 'success',
+                                text: 'Join Public Beta',
+                                href: 'https://shinobi.video/mobile',
+                                class: ''
+                            },
+                            {
+                                icon: 'comments-o',
+                                color: 'primary',
+                                text: '<b>#mobile-client</b> Chat',
+                                href: 'https://discord.gg/ehRd8Zz',
+                                class: ''
+                            },
+                        ]
+                    },
+                    {
+                        title: "Support the Development",
+                        info: `Subscribe to any of the following to boost development! Once subscribed put your Subscription ID in at the Super user panel, then restart Shinobi to Activate your installation, thanks! <i class="fa fa-smile-o"></i>`,
+                        buttons: [
+                            {
+                                icon: 'share-square-o',
+                                color: 'default',
+                                text: 'Shinobi Mobile License ($5/m)',
+                                href: 'https://licenses.shinobi.video/subscribe?planSubscribe=plan_G31AZ9mknNCa6z',
+                                class: ''
+                            },
+                            {
+                                icon: 'share-square-o',
+                                color: 'default',
+                                text: 'Tiny Support Subscription ($10/m)',
+                                href: 'https://licenses.shinobi.video/subscribe?planSubscribe=plan_G42jNgIqXaWmIC',
+                                class: ''
+                            },
+                            {
+                                icon: 'share-square-o',
+                                color: 'default',
+                                text: 'Shinobi Pro License ($75/m)',
+                                href: 'https://licenses.shinobi.video/subscribe?planSubscribe=plan_G3LGdNwA8lSmQy',
+                                class: ''
+                            },
+                        ]
+                    },
+                    {
+                        title: "Donations, One-Time Boost",
+                        info: `Sometimes a subscription isn't practical for people. In which case you may show support through a PayPal donation. And as a thank you for doing so your <b>PayPal Transaction ID</b> can be used as a <code>subscriptionId</code> in your Shinobi configuration file. <br><br>Each 5 USD/EUR or 7 CAD will provide one month of activated usage. <i>Meaning, a $20 USD donation today makes this popup go away (or activates the mobile app) for 4 months.</i>`,
+                        width: 12,
+                        buttons: [
+                            {
+                                icon: 'paypal',
+                                color: 'default',
+                                text: 'Donate by PayPal',
+                                href: 'https://www.paypal.me/ShinobiCCTV',
+                                class: ''
+                            },
+                        ]
+                    },
+                ].map((block) => {
+                    var parsedButtons = block.buttons.map((btn) => {
+                        return {
+                            "fieldType": "btn",
+                            "class": `btn-${btn.color} fill mb-1`,
+                            "icon": btn.icon,
+                            "attribute": `href="${btn.href}" target="_blank"`,
+                            "btnContent": btn.text,
+                        }
+                    });
+                    return {
+                       noHeader: true,
+                       isFormGroupGroup: true,
+                       "section-pre-class": `col-md-${block.width || '6'} mb-3`,
+                       "info": [
+                           {
+                               "fieldType": "div",
+                               divContent: `<h3>${block.title}</h3>`
+                           },
+                           {
+                               "fieldType": "div",
+                               class: 'mb-3',
+                               divContent: block.info
+                           },
+                           ...parsedButtons
+                       ]
+                    }
+                })
+            },
         }
     },
   })

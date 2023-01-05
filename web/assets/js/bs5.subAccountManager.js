@@ -152,9 +152,9 @@ $(document).ready(function(){
     ];
     var drawSelectableForPermissionForm = function(){
         var html = ''
-        $.each(loadedMonitors,function(n,monitor){
+        $.each(getLoadedMonitorsAlphabetically(),function(n,monitor){
             html += `<div class="form-group permission-view">`
-                html += `<div><label>${monitor.name} (${monitor.mid})</label></div>`
+                html += `<div><label class="mb-2">${monitor.name} (${monitor.mid})</label></div>`
                 html += `<div><select class="form-control" multiple monitor="${monitor.mid}">`
                     $.each(permissionTypeNames,function(n,permission){
                         html += `<option value="${permission.name}">${permission.label}</option>`
@@ -198,7 +198,7 @@ $(document).ready(function(){
     var writePermissionsFromFieldsToString = function(){
         var foundSelected = {}
         var detailsElement = theWindowForm.find('[name="details"]')
-        var details = JSON.parse(detailsElement.val())
+        var details = safeJsonParse(detailsElement.val())
         details = details ? details : {sub: 1, allmonitors: "1"}
         // base privileges
         permissionsSection.find('[detail]').each(function(n,v){
@@ -209,13 +209,18 @@ $(document).ready(function(){
         permissionsSection.find('.permission-view select').each(function(n,v){
             var el = $(v)
             var monitorId = el.attr('monitor')
-            var value = el.val()
+            var value = el.val() // permissions selected
             $.each(value,function(n,permissionNameSelected){
                 if(!foundSelected[permissionNameSelected])foundSelected[permissionNameSelected] = []
                 foundSelected[permissionNameSelected].push(monitorId)
             })
         })
-        details = Object.assign(details,foundSelected)
+        details = Object.assign(details,{
+            'monitors': [],
+            'monitor_edit': [],
+            'video_view': [],
+            'video_delete': [],
+        },foundSelected)
         detailsElement.val(JSON.stringify(details))
     }
     var getCompleteForm = function(){
@@ -246,6 +251,17 @@ $(document).ready(function(){
         </div>`
         currentlyActiveUsersList.html(html)
     }
+    function resetAccountForm(){
+        permissionsSection.find('[detail]').each(function(n,v){
+            var el = $(v)
+            var key = el.attr('detail')
+            var defaultValue = el.attr('data-default')
+            el.val(defaultValue)
+        })
+        drawSelectableForPermissionForm()
+        setSubmitButtonState(lang['Add New'],'plus')
+        theWindowForm.find('input').val('')
+    }
     //add new
     submitButtons.click(function(){
         theWindowForm.submit()
@@ -254,15 +270,15 @@ $(document).ready(function(){
         e.preventDefault();
         var formValues = getCompleteForm()
         var uid = formValues.uid
-        console.log(formValues)
         if(formValues.uid){
-            console.log('edit')
             editSubaccount(uid,formValues,function(data){
                 console.log(data)
             })
         }else{
             addSubAccount(formValues,function(data){
-                console.log(data)
+                if(data.ok){
+                    resetAccountForm()
+                }
             })
         }
         return false;
@@ -280,17 +296,7 @@ $(document).ready(function(){
         openSubAccountEditor(uid)
         setSubmitButtonState(lang['Save Changes'],'check')
     })
-    theWindow.on('click','.reset-form',function(e){
-        permissionsSection.find('[detail]').each(function(n,v){
-            var el = $(v)
-            var key = el.attr('detail')
-            var defaultValue = el.attr('data-default')
-            el.val(defaultValue)
-        })
-        drawSelectableForPermissionForm()
-        setSubmitButtonState(lang['Add New'],'plus')
-        theWindowForm.find('[name="pass"],[name="password_again"]').val('')
-    })
+    theWindow.on('click','.reset-form',resetAccountForm)
 
     permissionsSection.on('click','[check]',function(e){
         $(this).parents('.form-group-group').find('select').val($(this).attr('check')).first().change()
@@ -307,6 +313,9 @@ $(document).ready(function(){
         }else{
             el.show()
         }
+    })
+    addOnTabOpen('subAccountManager', function () {
+        resetAccountForm()
     })
     onWebSocketEvent(function(d){
         switch(d.f){

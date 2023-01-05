@@ -171,7 +171,7 @@ drawBlock = function(monitorSettings){
                        if(btn.attribute){
                            btnAttributes.push(btn.attribute)
                        }
-                       fieldBtnContent += `<${btnBaseElement} class="btn ${btnClass.join(' ')}" ${btnAttributes.join(' ')}>${btn.btnContent}</${btnBaseElement}>`
+                       fieldBtnContent += `<${btnBaseElement} class="btn ${btnClass.join(' ')}" ${btnAttributes.join(' ')}>${btn.icon ? `<i class="fa fa-${btn.icon}"></i> ` : ''}${btn.btnContent}</${btnBaseElement}>`
                    })
                    fieldElement = `<div class="btn-group ${field.normalWidth ? '' : 'btn-group-justified'} ${fieldClass.join(' ')}" ${attributes.join(' ')}>${fieldBtnContent}</div>`
              break;

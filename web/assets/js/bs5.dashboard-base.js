@@ -1,4 +1,5 @@
 PNotify.prototype.options.styling = "fontawesome";
+var isSubAccount = !!$user.details.sub
 var loadedMonitors = {}
 var tabTree = null
 var pageLoadingData = {}
@@ -71,8 +72,47 @@ function base64ArrayBuffer(arrayBuffer) {
 
       return base64
 }
+function stringContains(find,string,toLowerCase){
+    var newString = string + ''
+    if(toLowerCase)newString = newString.toLowerCase()
+    return newString.indexOf(find) > -1
+}
 function getLocationPathName(){
     return location.pathname.endsWith('/') ? location.pathname : location.pathname + '/'
+}
+function getUrlProtocol(urlString){
+    let modifiedUrlString = `${urlString}`.split('://')
+    const originalProtocol = `${modifiedUrlString[0]}`
+    return originalProtocol
+}
+function modifyUrlProtocol(urlString,newProtocol){
+    let modifiedUrlString = `${urlString}`.split('://')
+    const originalProtocol = `${modifiedUrlString[0]}`
+    modifiedUrlString[0] = newProtocol;
+    modifiedUrlString = modifiedUrlString.join('://')
+    return modifiedUrlString
+}
+function getUrlParts(urlString){
+    const originalProtocol = getUrlProtocol(urlString)
+    const modifiedUrlString = modifyUrlProtocol(urlString,'http')
+    const url = new URL(modifiedUrlString)
+    const data = {}
+    $.each(url,function(key,value){
+        data[key] = value
+    });
+    data.href = `${urlString}`
+    data.origin = modifyUrlProtocol(data.origin,originalProtocol)
+    data.protocol = `${originalProtocol}:`
+    delete(data.toString)
+    delete(data.toJSON)
+    return data
+}
+function addCredentialsToUrl(streamUrl,username,password){
+    const urlParts = streamUrl.split('://')
+    return [urlParts[0],'://',`${username}:${password}@`,urlParts[1]].join('')
+}
+function mergeConcattedJsonString(textData){
+    return textData.replace(/[\r\n]/gm, '').replace('}{',',')
 }
 function getFullOrigin(withoutTrailingSlash){
     var url = location.origin + getLocationPathName()
@@ -87,6 +127,9 @@ function generateId(x){
     for( var i=0; i < x; i++ )
         t += p.charAt(Math.floor(Math.random() * p.length));
     return t;
+}
+function removeSpecialCharacters(stringToReplace){
+    return stringToReplace.replace(/[^\w\s]/gi, '').replace(/\s+/g, '');
 }
 const mergeDeep = function(...objects) {
   const isObject = obj => obj && typeof obj === 'object';
@@ -111,7 +154,7 @@ const mergeDeep = function(...objects) {
   }, {});
 }
 function dashboardOptions(r,rr,rrr){
-    if(!rrr){rrr={};};if(typeof rrr === 'string'){rrr={n:rrr}};if(!rrr.n){rrr.n='ShinobiOptions_'+location.host}
+    if(!rrr){rrr={};};if(typeof rrr === 'string'){rrr={n:rrr}};if(!rrr.n){rrr.n='ShinobiOptions_'+location.host+'_'+$user.ke+$user.uid}
     ii={o:localStorage.getItem(rrr.n)};try{ii.o=JSON.parse(ii.o)}catch(e){ii.o={}}
     if(!ii.o){ii.o={}}
     if(r&&rr&&!rrr.x){
@@ -153,17 +196,22 @@ function formattedTime(time,twelveHourClock,utcConvert){
 
 function durationBetweenTimes(start,end){
     var duration = moment.duration(moment(end).diff(moment(start)));
-    console.log(duration)
     var hours = duration.asMinutes().toFixed(0);
     return hours
 }
-
 function formattedTimeForFilename(time,utcConvert,timeFormat){
     var theMoment = moment(time)
     if(utcConvert)theMoment = theMoment.clone().utc()
     return theMoment.format(timeFormat ? timeFormat : 'YYYY-MM-DDTHH:mm:ss')
 }
-
+function convertTZ(date) {
+    return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", {timeZone: serverTimezone}));
+}
+function setPromiseTimeout(timeoutAmount){
+    return new Promise((resolve) => {
+        setTimeout(resolve,timeoutAmount)
+    })
+}
 function checkCorrectPathEnding(x){
     var length=x.length
     if(x.charAt(length-1)!=='/'){
@@ -220,8 +268,8 @@ function compileConnectUrl(options){
     if(options.port && options.port !== ''){
         porty = ':' + options.port
     }
-    var url = options.protocol + '://' + options.host + porty
-    return options.url
+    var url = options.protocol + '://' + options.host + porty + options.path
+    return url
 }
 
 function jsonToHtmlBlock(target){
@@ -678,13 +726,25 @@ function permissionCheck(toCheck,monitorId){
     }
     return false
 }
-
+function getLoadedMonitorsAlphabetically(){
+    return Object.values(loadedMonitors).sort(function( a, b ) {
+        const aName = a.name.toLowerCase()
+        const bName = b.name.toLowerCase()
+        if ( aName < bName ){
+            return -1;
+        }
+        if ( aName > bName ){
+            return 1;
+        }
+        return 0;
+    });
+}
 function drawMonitorListToSelector(jqTarget,selectFirst,showId,addAllMonitorsOption){
     var html = ''
-    $.each(loadedMonitors,function(n,v){
+    $.each(getLoadedMonitorsAlphabetically(),function(n,v){
         html += createOptionHtml({
             value: v.mid,
-            label: v.name + (showId ? ` (${v.mid})` : ''),
+            label: v.name + (showId === 'host' ? ` (${v.host})` : showId ? ` (${v.mid})` : ''),
         })
     })
     addAllMonitorsOption ? jqTarget.html(`
@@ -821,6 +881,15 @@ function downloadFile(downloadUrl,fileName){
     a.download = fileName
     a.click()
 }
+function notifyIfActionFailed(data){
+    if(data.ok === false){
+        new PNotify({
+            title: lang['Action Failed'],
+            text: data.msg,
+            type: 'danger'
+        })
+    }
+}
 function convertKbToHumanSize(theNumber){
     var amount = theNumber / 1048576
     var unit = amount / 1000 >= 1000 ? 'TB' : amount >= 1000 ? 'GB' : 'MB'
@@ -850,14 +919,76 @@ function drawIndicatorBar(item){
     </div>`
     $('.disk-indicator-bars').append(html)
 }
+function updateInterfaceStatus(data){
+    // Updated status of interface in loaded Monitors
+    loadedMonitors[data.id].code = data.code
+    // Update counters in status bar
+    setInterfaceCounts()
+}
 function setInterfaceCounts(monitors){
     var data = monitors || Object.values(loadedMonitors)
+    var allCameraCount = data.length
     var activeCameraCount = data.filter((monitor) => {
         var monCode = parseInt(monitor.code)
         return monCode === 9 || monCode === 2 || monCode === 3
     }).length
-    $('.activeCameraCount').text(activeCameraCount)
-    $('.cameraCount').text(data.length)
+    var percentActive = (activeCameraCount/allCameraCount)*100
+    // Update Camera count in Monitors menu
+    $('.cameraCount').text(allCameraCount)
+    // Update Camera count in status bar
+    var el = $(`#indicator-activeCameraCount`)
+    var count = el.find('.indicator-percent')
+    count.text(`${activeCameraCount} / ${allCameraCount}`)
+    el.find('.progress-bar').css('width', `${percentActive}%`)
+}
+function getSelectedTime(dateSelector){
+    var dateRange = dateSelector.data('daterangepicker')
+    var clonedStartDate = dateRange.startDate.clone()
+    var clonedEndDate = dateRange.endDate.clone()
+    var isNotValidDate = !clonedStartDate._d || convertTZ(clonedStartDate._d) == 'Invalid Date';
+    var startDate = moment(isNotValidDate ? convertTZ(clonedStartDate) : convertTZ(clonedStartDate._d))
+    var endDate = moment(isNotValidDate ? convertTZ(clonedEndDate) : convertTZ(clonedEndDate._d))
+    var stringStartDate = startDate.format('YYYY-MM-DDTHH:mm:ss')
+    var stringEndDate = endDate.format('YYYY-MM-DDTHH:mm:ss')
+    if(isNotValidDate){
+        console.error(`isNotValidDate detected, Didn't use ._d`,startDate,endDate,new Error());
+    }
+    return {
+        startDateMoment: startDate,
+        endDateMoment: endDate,
+        startDate: stringStartDate,
+        endDate: stringEndDate
+    }
+}
+function loadDateRangePicker(dateSelector,options){
+    dateSelector.daterangepicker(Object.assign({
+        startDate: moment().subtract(moment.duration("24:00:00")),
+        endDate: moment().add(moment.duration("24:00:00")),
+        timePicker: true,
+        locale: {
+            format: 'YYYY/MM/DD hh:mm:ss A'
+        }
+    },options || {},{ onChange: undefined }), options.onChange)
+}
+function setPreviewedVideoHighlight(buttonEl,tableEl){
+    tableEl.find('tr').removeClass('bg-gradient-blue')
+    buttonEl.parents('tr').addClass('bg-gradient-blue')
+}
+function convertJsonToAccordionHtml(theJson){
+    var finalHtml = ''
+    function recurseJson(innerJson,hideByDefault){
+        const keys = Object.keys(innerJson)
+        let html = `<ul class="accordion-list" style="list-style:none;${hideByDefault ? `display:none;` : 'padding-left:0px;'}">`
+        keys.forEach((key) => {
+            var value = innerJson[key]
+            var isObject = typeof value === 'object' || typeof value === 'array'
+            if(value)html += `<li><a class="badge btn btn-sm ${isObject ? `toggle-accordion-list btn-primary` : `btn-default`}"><i class="fa fa-${isObject ? `plus` : `circle`}"></i></a> ${key} ${isObject ? recurseJson(value,true) : `: ${value}`}</li>`
+        })
+        html += `</ul>`
+        return html
+    }
+    finalHtml = recurseJson(theJson,false)
+    return finalHtml
 }
 // on page load
 var readyFunctions = []
@@ -869,12 +1000,17 @@ function onDashboardReadyExecute(theAction){
         theAction()
     })
 }
+function popImage(imageSrc){
+    $('body').append(`<div class="popped-image"><img src="${imageSrc}"></div>`)
+}
 $(document).ready(function(){
-    loadMonitorsIntoMemory(function(data){
-        setInterfaceCounts(data)
-        openTab('initial')
-        onDashboardReadyExecute()
-    })
+    onInitWebsocket(function(){
+        loadMonitorsIntoMemory(function(data){
+            setInterfaceCounts(data)
+            openTab('initial')
+            onDashboardReadyExecute()
+        })
+    });
     $('body')
     // .on('tab-away',function(){
     //
@@ -882,9 +1018,40 @@ $(document).ready(function(){
     // .on('tab-close',function(){
     //
     // })
+    .on('click','.toggle-accordion-list',function(e){
+        e.preventDefault();
+        var el = $(this)
+        var iconEl = el.find('i')
+        var targetEl = el.parent().find('.accordion-list').first()
+        targetEl.toggle()
+        el.toggleClass('btn-primary btn-success')
+        iconEl.toggleClass('fa-plus fa-minus')
+        return false;
+    })
+    .on('click','.toggle-display-of-el',function(e){
+        e.preventDefault();
+        var el = $(this)
+        var target = el.attr('data-target')
+        var targetFirstOnly = el.attr('data-get') === 'first'
+        var startIsParent = el.attr('data-start') === 'parent'
+        var targetEl = startIsParent ? el.parent().find(target) : $(target)
+        if(targetFirstOnly){
+            targetEl = targetEl.first()
+        }
+        targetEl.toggle()
+        return false;
+    })
     .on('click','.pop-image',function(){
         var imageSrc = $(this).attr('src')
-        $('body').append(`<div class="popped-image"><img src="${imageSrc}"></div>`)
+        if(!imageSrc){
+            new PNotify({
+                title: lang['Action Failed'],
+                text: lang['No Image'],
+                type: 'warning'
+            })
+            return;
+        };
+        popImage(imageSrc)
     })
     .on('click','.popped-image',function(){
         $(this).remove()

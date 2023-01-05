@@ -1,4 +1,4 @@
-FROM node:16.13-buster-slim
+FROM node:16-buster-slim
 
 ENV DB_USER=majesticflame \
     DB_PASSWORD='' \
@@ -93,13 +93,12 @@ RUN npm i npm@latest -g && \
 COPY ./Docker/pm2.yml ./
 
 # Copy default configuration files
-# COPY ./config/conf.json ./config/super.json /home/Shinobi/
+COPY ./config/conf.json ./config/super.json /home/Shinobi/
 RUN chmod -f +x /home/Shinobi/Docker/init.sh
 RUN sed -i -e 's/\r//g' /home/Shinobi/Docker/init.sh
 # RUN chmod -f +x /home/Shinobi/shinobi
 
 VOLUME ["/home/Shinobi/videos"]
-VOLUME ["/home/Shinobi/plugins"]
 VOLUME ["/home/Shinobi/libs/customAutoLoad"]
 VOLUME ["/config"]
 VOLUME ["/var/lib/mysql"]

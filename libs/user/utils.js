@@ -20,28 +20,26 @@ module.exports = (s,config,lang) => {
                 }
                 if(whereGroup.length > 0)queryGroup.__separator = 'or'
                 whereGroup.push(queryGroup)
-                fs.chmod(video.dir,0o777,function(err){
-                    fs.unlink(video.dir,function(err){
-                        ++completedCheck
-                        if(err){
-                            fs.stat(video.dir,function(err){
-                                if(!err){
-                                    s.file('delete',video.dir)
-                                }
-                            })
-                        }
-                        const whereGroupLength = whereGroup.length
-                        if(whereGroupLength > 0 && whereGroupLength === completedCheck){
-                            whereQuery[1] = whereGroup
-                            s.knexQuery({
-                                action: "delete",
-                                table: "Videos",
-                                where: whereQuery
-                            },(err,info) => {
-                                setTimeout(reRunCheck,1000)
-                            })
-                        }
-                    })
+                fs.rm(video.dir,function(err){
+                    ++completedCheck
+                    if(err){
+                        fs.stat(video.dir,function(err){
+                            if(!err){
+                                fs.unlink(video.dir)
+                            }
+                        })
+                    }
+                    const whereGroupLength = whereGroup.length
+                    if(whereGroupLength > 0 && whereGroupLength === completedCheck){
+                        whereQuery[1] = whereGroup
+                        s.knexQuery({
+                            action: "delete",
+                            table: "Videos",
+                            where: whereQuery
+                        },(err,info) => {
+                            setTimeout(reRunCheck,1000)
+                        })
+                    }
                 })
                 if(storageIndex){
                     s.setDiskUsedForGroupAddStorage(groupKey,{
@@ -92,12 +90,12 @@ module.exports = (s,config,lang) => {
                 }
                 if(whereGroup.length > 0)queryGroup.__separator = 'or'
                 whereGroup.push(queryGroup)
-                fs.unlink(fileLocationMid,function(err){
+                fs.rm(fileLocationMid,function(err){
                     ++completedCheck
                     if(err){
                         fs.stat(fileLocationMid,function(err){
                             if(!err){
-                                s.file('delete',fileLocationMid)
+                                fs.unlink(fileLocationMid)
                             }
                         })
                     }
@@ -150,7 +148,6 @@ module.exports = (s,config,lang) => {
         var completedCheck = 0
         if(files){
             files.forEach(function(file){
-
                 var dir = s.getFileBinDirectory(file)
                 s.debugLog(`deleting FileBin File`,`${file}`,dir)
                 var fileLocationMid = `${dir}` + file.name
@@ -160,12 +157,12 @@ module.exports = (s,config,lang) => {
                 }
                 if(whereGroup.length > 0)queryGroup.__separator = 'or'
                 whereGroup.push(queryGroup)
-                fs.unlink(fileLocationMid,function(err){
+                fs.rm(fileLocationMid,function(err){
                     ++completedCheck
                     if(err){
                         fs.stat(fileLocationMid,function(err){
                             if(!err){
-                                s.file('delete',fileLocationMid)
+                                fs.unlink(fileLocationMid)
                             }
                         })
                     }
@@ -221,7 +218,7 @@ module.exports = (s,config,lang) => {
                         where: [
                             ['ke','=',groupKey],
                             ['status','!=','0'],
-                            ['details','NOT LIKE',`%"archived":"1"%`],
+                            ['archive','!=',`1`],
                             ['details','LIKE',`%"dir":"${storage.value}"%`],
                         ],
                         orderBy: ['time','asc'],
@@ -266,7 +263,7 @@ module.exports = (s,config,lang) => {
                 where: [
                     ['ke','=',groupKey],
                     ['status','!=','0'],
-                    ['details','NOT LIKE',`%"archived":"1"%`],
+                    ['archive','!=',`1`],
                     ['details','NOT LIKE',`%"dir"%`],
                 ],
                 orderBy: ['time','asc'],
@@ -298,7 +295,7 @@ module.exports = (s,config,lang) => {
                 table: "Timelapse Frames",
                 where: [
                     ['ke','=',groupKey],
-                    ['details','NOT LIKE',`%"archived":"1"%`],
+                    ['archive','!=',`1`],
                 ],
                 orderBy: ['time','asc'],
                 limit: 3
@@ -326,6 +323,7 @@ module.exports = (s,config,lang) => {
                     table: "Files",
                     where: [
                         ['ke','=',groupKey],
+                        ['archive','!=',`1`],
                     ],
                     orderBy: ['time','asc'],
                     limit: 1
@@ -408,7 +406,6 @@ module.exports = (s,config,lang) => {
                 table: "Cloud Timelapse Frames",
                 where: [
                     ['ke','=',groupKey],
-                    ['details','NOT LIKE',`%"archived":"1"%`],
                 ],
                 orderBy: ['time','asc'],
                 limit: 3

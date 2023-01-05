@@ -102,7 +102,7 @@ $(document).ready(function(){
     }
     function loadMonitorsFromMemory(options,callback){
         theList.empty();
-        $.each(loadedMonitors,function(n,row){
+        $.each(getLoadedMonitorsAlphabetically(),function(n,row){
             drawRowToList(row)
         })
     }
@@ -239,6 +239,13 @@ $(document).ready(function(){
     addOnTabReopen('monitorsList', function () {
         loadMonitorsFromMemory()
         drawMonitorsListApiKeyList()
+    })
+    onWebSocketEvent(function (d){
+        switch(d.f){
+            case'monitor_edit':
+                loadMonitorsFromMemory()
+            break;
+        }
     })
     // $('#monitors_list_search').keyup(function(){
     //     var monitorBlocks = $('.monitor_block');

@@ -1,5 +1,6 @@
 module.exports = function(s,config,lang,app,io){
     s.uploaderFields = []
+    s.cloudDisksLoaded = []
     require('./uploaders/loader.js')(s,config,lang,app,io)
     const loadedLibraries = {
         //cloud storage

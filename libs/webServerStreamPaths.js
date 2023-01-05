@@ -10,6 +10,24 @@ var httpProxy = require('http-proxy');
 var proxy = httpProxy.createProxyServer({})
 var ejs = require('ejs');
 module.exports = function(s,config,lang,app){
+    function cantLiveStreamPermission(user,monitorId,permission){
+        const {
+            monitorPermissions,
+            monitorRestrictions,
+        } = s.getMonitorsPermitted(user.details,monitorId)
+        const {
+            isRestricted,
+            isRestrictedApiKey,
+            apiKeyPermissions,
+        } = s.checkPermission(user)
+        if(
+            isRestrictedApiKey && apiKeyPermissions[`${permission}_disallowed`] ||
+            isRestricted && !monitorPermissions[`${monitorId}_monitors`]
+        ){
+            return true
+        }
+        return false
+    }
     var noCache = function(res){
         res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate')
         res.setHeader('Expires', '-1')
@@ -21,7 +39,13 @@ module.exports = function(s,config,lang,app){
     app.get([config.webPaths.apiPrefix+':auth/embed/:ke/:id',config.webPaths.apiPrefix+':auth/embed/:ke/:id/:addon'], function (req,res){
         req.params.protocol=req.protocol;
         s.auth(req.params,function(user){
-            noCache(res)
+            const authKey = req.params.auth
+            const groupKey = req.params.ke
+            const monitorId = req.params.id
+            if(cantLiveStreamPermission(user,monitorId,'watch_stream')){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
+                return;
+            }
             if(user.permissions.watch_stream==="0"||user.details.sub&&user.details.allmonitors!=='1'&&user.details.monitors.indexOf(req.params.id)===-1){
                 res.end(user.lang['Not Permitted'])
                 return
@@ -29,8 +53,24 @@ module.exports = function(s,config,lang,app){
             if(s.group[req.params.ke]&&s.group[req.params.ke].activeMonitors[req.params.id]){
                 if(s.group[req.params.ke].activeMonitors[req.params.id].isStarted === true){
                     req.params.uid=user.uid;
-                    s.renderPage(req,res,config.renderPaths.embed,{data:req.params,baseUrl:req.protocol+'://'+req.hostname,config: s.getConfigWithBranding(req.hostname),lang:user.lang,mon:Object.assign(s.group[req.params.ke].rawMonitorConfigurations[req.params.id],{}),originalURL:s.getOriginalUrl(req)});
-                    res.end()
+                    var $user = {
+                        auth_token: authKey,
+                        ke: groupKey,
+                        uid: user.uid,
+                        mail: user.mail,
+                        details: {},
+                    };
+                    s.renderPage(req,res,config.renderPaths.embed,{
+                        forceUrlPrefix: req.query.host || '',
+                        data: req.params,
+                        protocol: req.protocol,
+                        baseUrl: req.protocol+'://'+req.hostname,
+                        config: s.getConfigWithBranding(req.hostname),
+                        define: s.getDefinitonFile(user.details ? user.details.lang : config.lang),
+                        $user: $user,
+                        mon: Object.assign(s.group[req.params.ke].rawMonitorConfigurations[req.params.id],{}),
+                        originalURL: s.getOriginalUrl(req)
+                    });
                 }else{
                     res.end(user.lang['Cannot watch a monitor that isn\'t running.'])
                 }
@@ -44,6 +84,11 @@ module.exports = function(s,config,lang,app){
      */
     app.get([config.webPaths.apiPrefix+':auth/mp4/:ke/:id/:channel/s.mp4',config.webPaths.apiPrefix+':auth/mp4/:ke/:id/s.mp4',config.webPaths.apiPrefix+':auth/mp4/:ke/:id/:channel/s.ts',config.webPaths.apiPrefix+':auth/mp4/:ke/:id/s.ts'], function (req, res) {
         s.auth(req.params,function(user){
+            const monitorId = req.params.id
+            if(cantLiveStreamPermission(user,monitorId,'watch_stream')){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
+                return;
+            }
             if(!s.group[req.params.ke] || !s.group[req.params.ke].activeMonitors[req.params.id]){
                 res.status(404);
                 res.end('404 : Monitor not found');
@@ -66,7 +111,6 @@ module.exports = function(s,config,lang,app){
                             res.end('404 : Not Found : '+errorMessage);
                         } else {
                             res.locals.mp4frag = mp4frag
-                            res.set('Access-Control-Allow-Origin', '*')
                             res.set('Connection', 'close')
                             res.set('Cache-Control', 'private, no-cache, no-store, must-revalidate')
                             res.set('Expires', '-1')
@@ -108,6 +152,11 @@ module.exports = function(s,config,lang,app){
             res.end()
         }else{
             s.auth(req.params,function(user){
+                const monitorId = req.params.id
+                if(cantLiveStreamPermission(user,monitorId,'watch_stream')){
+                    s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
+                    return;
+                }
                 s.checkChildProxy(req.params,function(){
                     if(s.group[req.params.ke]&&s.group[req.params.ke].activeMonitors[req.params.id]){
                         if(user.permissions.watch_stream==="0"||user.details.sub&&user.details.allmonitors!=='1'&&user.details.monitors.indexOf(req.params.id)===-1){
@@ -169,6 +218,11 @@ module.exports = function(s,config,lang,app){
     */
     app.get([config.webPaths.apiPrefix+':auth/hls/:ke/:id/:file',config.webPaths.apiPrefix+':auth/hls/:ke/:id/:channel/:file'], function (req,res){
         s.auth(req.params,function(user){
+            const monitorId = req.params.id
+            if(cantLiveStreamPermission(user,monitorId,'watch_stream')){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
+                return;
+            }
             s.checkChildProxy(req.params,function(){
                 noCache(res)
                 if(user.permissions.watch_stream==="0"||user.details.sub&&user.details.allmonitors!=='1'&&user.details.monitors.indexOf(req.params.id)===-1){
@@ -195,6 +249,11 @@ module.exports = function(s,config,lang,app){
     */
     app.get(config.webPaths.apiPrefix+':auth/jpeg/:ke/:id/s.jpg', function(req,res){
         s.auth(req.params,function(user){
+            const monitorId = req.params.id
+            if(cantLiveStreamPermission(user,monitorId,'watch_snapshot')){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
+                return;
+            }
             s.checkChildProxy(req.params,function(){
                 noCache(res)
                 if(user.details.sub&&user.details.allmonitors!=='1'&&user.details.monitors&&user.details.monitors.indexOf(req.params.id)===-1){
@@ -221,9 +280,10 @@ module.exports = function(s,config,lang,app){
     */
     app.get(config.webPaths.apiPrefix+':auth/icon/:ke/:id', function(req,res){
         s.auth(req.params,async (user) => {
-            if(user.details.sub&&user.details.allmonitors!=='1'&&user.details.monitors&&user.details.monitors.indexOf(req.params.id)===-1){
-                res.end(user.lang['Not Permitted'])
-                return
+            const monitorId = req.params.id
+            if(cantLiveStreamPermission(user,monitorId,'watch_snapshot')){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
+                return;
             }
             const flags = req.query.noflags ? '' : req.query.flags || '-s 200x200'
             res.writeHead(200, {
@@ -245,6 +305,10 @@ module.exports = function(s,config,lang,app){
     */
     app.get([config.webPaths.apiPrefix+':auth/flv/:ke/:id/s.flv',config.webPaths.apiPrefix+':auth/flv/:ke/:id/:channel/s.flv'], function(req,res) {
         s.auth(req.params,function(user){
+            if(cantLiveStreamPermission(user,monitorId,'watch_stream')){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
+                return;
+            }
             s.checkChildProxy(req.params,function(){
                 noCache(res)
                 var Emitter,chunkChannel
@@ -260,7 +324,6 @@ module.exports = function(s,config,lang,app){
                     var contentWriter
                     //set headers
                     res.setHeader('Content-Type', 'video/x-flv');
-                    res.setHeader('Access-Control-Allow-Origin','*');
                     //write first frame on stream
                     res.write(s.group[req.params.ke].activeMonitors[req.params.id].firstStreamChunk[chunkChannel])
                     var ip = s.getClientIp(req)
@@ -302,6 +365,10 @@ module.exports = function(s,config,lang,app){
         config.webPaths.apiPrefix+':auth/h264/:ke/:id'
     ], function (req, res) {
         s.auth(req.params,function(user){
+            if(cantLiveStreamPermission(user,monitorId,'watch_stream')){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
+                return;
+            }
             s.checkChildProxy(req.params,function(){
                 noCache(res)
                 if(!req.query.feed){req.query.feed='1'}

@@ -239,7 +239,6 @@ if [ "${mysqlDefaultData^}" = "Y" ]; then
 	echo "Inserting database tables"
 	#Connect to the database and insert the default database
     sudo mysql -h "$sqlhost" -P "$sqlport" -u "$sqluser" -p"$sqlpass" -e "source sql/user.sql" || true
-    sudo mysql -h "$sqlhost" -P "$sqlport" -u "$sqluser" -p"$sqlpass" -e "source sql/framework.sql" || true
 else
 	echo "========================================================="
     echo "Skipping database installation..."
@@ -306,7 +305,7 @@ read -p "Start Shinobi now? Y/N " startShinobi
 
 if [ "${startShinobi^}" = "Y" ]; then
     sudo pm2 start camera.js
-    sudo pm2 start cron.js
+    #sudo pm2 start cron.js
 fi
 
 ipaddress=$(hostname -I)

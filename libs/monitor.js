@@ -7,7 +7,6 @@ const onvif = require("shinobi-onvif");
 const treekill = require('tree-kill');
 const connectionTester = require('connection-tester')
 const SoundDetection = require('shinobi-sound-detection')
-const async = require("async");
 const URL = require('url')
 const {
   Worker
@@ -49,7 +48,8 @@ module.exports = function(s,config,lang){
         setPresetForCurrentPosition
     } = require('./control/ptz.js')(s,config,lang)
     const {
-        scanForOrphanedVideos
+        scanForOrphanedVideos,
+        reEncodeVideoAndBinOriginalAddToQueue,
     } = require('./video/utils.js')(s,config,lang)
     const {
         selectNodeForOperation,
@@ -92,6 +92,7 @@ module.exports = function(s,config,lang){
         })
     }
     s.sendMonitorStatus = function(e){
+        if(!e.status || !e.code)console.error(JSON.stringify(e),new Error());
         s.group[e.ke].activeMonitors[e.id].monitorStatus = `${e.status}`
         s.group[e.ke].activeMonitors[e.id].monitorStatusCode = `${e.code}`
         s.tx(Object.assign(e,{f:'monitor_status'}),'GRP_'+e.ke)
@@ -139,7 +140,24 @@ module.exports = function(s,config,lang){
     }
     s.cleanMonitorObjectForDatabase = function(dirtyMonitor){
         var cleanMonitor = {}
-        var acceptedFields = ['mid','ke','name','shto','shfr','details','type','ext','protocol','host','path','port','fps','mode','width','height']
+        var acceptedFields = [
+            'mid',
+            'ke',
+            'name',
+            'details',
+            'type',
+            'ext',
+            'protocol',
+            'host',
+            'path',
+            'port',
+            'fps',
+            'mode',
+            'saveDir',
+            'tags',
+            'width',
+            'height'
+        ];
         Object.keys(dirtyMonitor).forEach(function(key){
             if(acceptedFields.indexOf(key) > -1){
                 cleanMonitor[key] = dirtyMonitor[key]
@@ -161,13 +179,14 @@ module.exports = function(s,config,lang){
         return new Promise((resolve,reject) => {
             options = options instanceof Object ? options : {flags: ''}
             s.checkDetails(monitor)
+            let isDetectorStream = false
             var inputOptions = []
             var outputOptions = []
             var streamDir = s.dir.streams + monitor.ke + '/' + monitor.mid + '/'
             var url = options.url
             var secondsInward = options.secondsInward || '0'
-            if(secondsInward.length === 1)secondsInward = '0' + secondsInward
-	    var dynamicTimeout = (secondsInward * 1000) + 5000
+            if(secondsInward.length === 1 && !isNaN(secondsInward))secondsInward = '0' + secondsInward;
+            var dynamicTimeout = (secondsInward * 1000) + 5000;
             if(options.flags)outputOptions.push(options.flags)
             const checkExists = function(streamDir,callback){
                 s.fileStats(streamDir,function(err){
@@ -189,7 +208,7 @@ module.exports = function(s,config,lang){
                                  screenShot: buffer,
                                  isStaticFile: false
                              })
-                             fs.unlink(temporaryImageFile,function(){})
+                             fs.rm(temporaryImageFile,function(){})
                          }else{
                              resolve({
                                  screenShot: null,
@@ -199,10 +218,11 @@ module.exports = function(s,config,lang){
                       })
                     }
                     try{
-                        var snapBuffer = []
                         var temporaryImageFile = streamDir + s.gid(5) + '.jpg'
                         var iconImageFile = streamDir + 'icon.jpg'
-                        var ffmpegCmd = splitForFFPMEG(`-y -loglevel warning -re ${inputOptions.join(' ')} -i "${url}" ${outputOptions.join(' ')} -f image2 -an -frames:v 1 "${temporaryImageFile}"`)
+                        const snapRawFilters = monitor.details.cust_snap_raw
+                        if(snapRawFilters)outputOptions.push(snapRawFilters);
+                        var ffmpegCmd = splitForFFPMEG(`-y -loglevel warning ${isDetectorStream ? '-live_start_index 2' : ''} -re ${inputOptions.join(' ')} -i "${url}" ${outputOptions.join(' ')} -f image2 -an -frames:v 1 "${temporaryImageFile}"`)
                         checkExists(streamDir, function(success) {
                             if (success === false) {
                                 fs.mkdirSync(streamDir, {recursive: true}, (err) => {s.debugLog(err)})
@@ -270,6 +290,7 @@ module.exports = function(s,config,lang){
                                         runExtraction()
                                     })
                                 }else{
+                                    isDetectorStream = true
                                     outputOptions.push(`-ss 00:00:${secondsInward}`)
                                     url = streamDir + 'detectorStream.m3u8'
                                     runExtraction()
@@ -769,12 +790,6 @@ module.exports = function(s,config,lang){
                 s.group[e.ke].activeMonitors[e.id].spawn = s.ffmpeg(e)
             },3000)
         }
-        s.sendMonitorStatus({
-            id: e.id,
-            ke: e.ke,
-            status: e.wantedStatus,
-            code: e.wantedStatusCode
-        });
         //on unexpected exit restart
         if(s.group[e.ke].activeMonitors[e.id].spawn)attachMainProcessHandlers(e,fatalError)
         return s.group[e.ke].activeMonitors[e.id].spawn
@@ -983,6 +998,9 @@ module.exports = function(s,config,lang){
         }
     }
     const catchNewSegmentNames = function(e){
+        const monitorConfig = s.group[e.ke].rawMonitorConfigurations[e.id]
+        const monitorDetails = monitorConfig.details
+        const autoCompressionEnabled = monitorDetails.auto_compress_videos === '1'
         var checkLog = function(d,x){return d.indexOf(x)>-1}
         s.group[e.ke].activeMonitors[e.id].spawn.stdio[8].on('data',function(d){
             d=d.toString();
@@ -991,7 +1009,7 @@ module.exports = function(s,config,lang){
                 s.insertCompletedVideo(e,{
                     file: filename,
                     events: s.group[e.ke].activeMonitors[e.id].detector_motion_count
-                },function(err){
+                },function(err,response){
                     s.userLog(e,{type:lang['Video Finished'],msg:{filename:d}})
                     if(
                         e.details.detector === '1' &&
@@ -1009,6 +1027,21 @@ module.exports = function(s,config,lang){
                             ke : e.ke,
                             id : e.id
                         })
+                    }else if(autoCompressionEnabled){
+                        s.debugLog('Queue Automatic Compression',response.insertQuery)
+                        reEncodeVideoAndBinOriginalAddToQueue({
+                            video: response.insertQuery,
+                            targetVideoCodec: 'vp9',
+                            targetAudioCodec: 'libopus',
+                            targetQuality: '-q:v 1 -q:a 1',
+                            targetExtension: 'webm',
+                            doSlowly: false,
+                            automated: true,
+                        }).then((encodeResponse) => {
+                            s.debugLog('Complete Automatic Compression',encodeResponse)
+                        }).catch((err) => {
+                            console.log(err)
+                        })
                     }
                     s.group[e.ke].activeMonitors[e.id].detector_motion_count = []
                 })
@@ -1018,11 +1051,12 @@ module.exports = function(s,config,lang){
     }
     const cameraFilterFfmpegLog = function(e){
         var checkLog = function(d,x){return d.indexOf(x)>-1}
-        s.group[e.ke].activeMonitors[e.id].spawn.stderr.on('data',function(d){
+        const activeMonitor = s.group[e.ke].activeMonitors[e.id]
+        activeMonitor.spawn.stderr.on('data',function(d){
             d=d.toString();
             switch(true){
                 case checkLog(d,'Not Enough Bandwidth'):
-                    s.group[e.ke].activeMonitors[e.id].criticalErrors['453'] = true
+                    activeMonitor.criticalErrors['453'] = true
                 break;
                 case checkLog(d,'No space left on device'):
                     s.checkUserPurgeLock(e.ke)
@@ -1034,10 +1068,10 @@ module.exports = function(s,config,lang){
                 case checkLog(d,'error while decoding'):
                     s.userLog(e,{type:lang['Error While Decoding'],msg:lang.ErrorWhileDecodingText});
                 break;
+                case checkLog(d,'pkt->duration = 0'):
                 case checkLog(d,'[hls @'):
                 case checkLog(d,'Past duration'):
                 case checkLog(d,'Last message repeated'):
-                case checkLog(d,'pkt->duration = 0'):
                 case checkLog(d,'Non-monotonous DTS'):
                 case checkLog(d,'NULL @'):
                 case checkLog(d,'RTP: missed'):
@@ -1052,17 +1086,30 @@ module.exports = function(s,config,lang){
                 case checkLog(d,'Connection refused'):
                 case checkLog(d,'Connection timed out'):
                     //restart
-                    setTimeout(function(){
+                    activeMonitor.timeoutToRestart = setTimeout(function(){
                         s.userLog(e,{type:lang['Connection timed out'],msg:lang['Retrying...']});
                         fatalError(e,'Connection timed out');
                     },1000)
                 break;
-                // case checkLog(d,'Immediate exit requested'):
+                case checkLog(d,'Immediate exit requested'):
+                    cameraDestroy(e)
+                    activeMonitor.timeoutToRestart = setTimeout(() => {
+                        launchMonitorProcesses(e)
+                    },15000)
+                break;
                 case checkLog(d,'mjpeg_decode_dc'):
                 case checkLog(d,'bad vlc'):
                 case checkLog(d,'error dc'):
+                    cameraDestroy(e)
+                    activeMonitor.timeoutToRestart = setTimeout(() => {
+                        launchMonitorProcesses(e)
+                    },15000)
+                break;
                 case checkLog(d,'No route to host'):
-                    launchMonitorProcesses(e)
+                    cameraDestroy(e)
+                    activeMonitor.timeoutToRestart = setTimeout(() => {
+                        launchMonitorProcesses(e)
+                    },60000)
                 break;
             }
             s.userLog(e,{type:"FFMPEG STDERR",msg:d})
@@ -1107,6 +1154,12 @@ module.exports = function(s,config,lang){
         activeMonitor.resetFatalErrorCountTimer = setTimeout(()=>{
             activeMonitor.errorFatalCount = 0
         },1000 * 60)
+        s.sendMonitorStatus({
+            id: e.id,
+            ke: e.ke,
+            status: lang.Starting,
+            code: 1
+        });
         //create host string without username and password
         var strippedHost = s.stripAuthFromHost(e)
         var doOnThisMachine = function(callback){
@@ -1222,6 +1275,21 @@ module.exports = function(s,config,lang){
                                         catchNewSegmentNames(e)
                                         cameraFilterFfmpegLog(e)
                                     }
+                                    if(e.mode === 'record'){
+                                        s.sendMonitorStatus({
+                                            id: e.id,
+                                            ke: e.ke,
+                                            status: lang.Recording,
+                                            code: 3
+                                        });
+                                    }else{
+                                        s.sendMonitorStatus({
+                                            id: e.id,
+                                            ke: e.ke,
+                                            status: lang.Watching,
+                                            code: 2
+                                        });
+                                    }
                                 }
                                 clearTimeout(activeMonitor.onMonitorStartTimer)
                                 activeMonitor.onMonitorStartTimer = setTimeout(() => {
@@ -1312,13 +1380,16 @@ module.exports = function(s,config,lang){
             console.log(err)
         }
     }
-    const fatalError = function(e,errorMessage){
+    function fatalError(e,errorMessage){
         const activeMonitor = s.group[e.ke].activeMonitors[e.id]
+        const monitorDetails = s.group[e.ke].rawMonitorConfigurations[e.id].details
+        const maxCount = !monitorDetails.fatal_max || isNaN(monitorDetails.fatal_max) ? 0 : parseFloat(monitorDetails.fatal_max);
         clearTimeout(activeMonitor.err_fatal_timeout);
         ++activeMonitor.errorFatalCount;
         if(activeMonitor.isStarted === true){
             activeMonitor.err_fatal_timeout = setTimeout(function(){
-                if(e.details.fatal_max !== 0 && activeMonitor.errorFatalCount > e.details.fatal_max){
+                if(maxCount !== 0 && activeMonitor.errorFatalCount > maxCount){
+                    s.userLog(e,{type:lang["Fatal Error"],msg:lang.onFatalErrorExit});
                     s.camera('stop',{id:e.id,ke:e.ke})
                 }else{
                     launchMonitorProcesses(s.cleanMonitorObject(e))
@@ -1332,7 +1403,7 @@ module.exports = function(s,config,lang){
             ke: e.ke,
             status: lang.Died,
             code: 7
-        })
+        });
         clearTimeout(activeMonitor.onMonitorStartTimer)
         s.onMonitorDiedExtensions.forEach(function(extender){
             extender(Object.assign(s.group[e.ke].rawMonitorConfigurations[e.id],{}),e)
@@ -1360,108 +1431,112 @@ module.exports = function(s,config,lang){
     //     return false
     // }
     s.addOrEditMonitor = function(form,callback,user){
-        var endData = {
-            ok: false
-        }
-        if(!form.mid){
-            endData.msg = lang['No Monitor ID Present in Form']
-            callback(endData)
-            return
-        }
-        form.mid = form.mid.replace(/[^\w\s]/gi,'').replace(/ /g,'')
-        form = s.cleanMonitorObjectForDatabase(form)
-        s.knexQuery({
-            action: "select",
-            columns: "*",
-            table: "Monitors",
-            where: [
-                ['ke','=',form.ke],
-                ['mid','=',form.mid],
-            ]
-        },(err,r) => {
-            var affectMonitor = false
-            var monitorQuery = {}
-            var txData = {
-                f: 'monitor_edit',
-                mid: form.mid,
-                ke: form.ke,
-                mon: form
+        return new Promise((resolve) => {
+            var endData = {
+                ok: false
             }
-            if(r&&r[0]){
-                txData.new = false
-                Object.keys(form).forEach(function(v){
-                    if(
-                        form[v] !== undefined &&
-                        form[v] !== `undefined` &&
-                        form[v] !== null &&
-                        form[v] !== `null` &&
-                        form[v] !== false &&
-                        form[v] !== `false`
-                    ){
-                        if(form[v] instanceof Object){
-                            form[v] = s.s(form[v])
-                        }
-                        monitorQuery[v] = form[v]
-                    }
-                })
-                s.userLog(form,{type:'Monitor Updated',msg:'by user : '+user.uid})
-                endData.msg = user.lang['Monitor Updated by user']+' : '+user.uid
-                s.knexQuery({
-                    action: "update",
-                    table: "Monitors",
-                    update: monitorQuery,
-                    where: [
-                        ['ke','=',form.ke],
-                        ['mid','=',form.mid],
-                    ]
-                })
-                affectMonitor = true
-            }else if(
-                !s.group[form.ke].init.max_camera ||
-                s.group[form.ke].init.max_camera === '' ||
-                Object.keys(s.group[form.ke].activeMonitors).length <= parseInt(s.group[form.ke].init.max_camera)
-            ){
-                txData.new = true
-                Object.keys(form).forEach(function(v){
-                    if(form[v] && form[v] !== ''){
-                        if(form[v] instanceof Object){
-                            form[v] = s.s(form[v])
-                        }
-                        monitorQuery[v] = form[v]
-                    }
-                })
-                s.userLog(form,{type:'Monitor Added',msg:'by user : '+user.uid})
-                endData.msg = user.lang['Monitor Added by user']+' : '+user.uid
-                s.knexQuery({
-                    action: "insert",
-                    table: "Monitors",
-                    insert: monitorQuery
-                })
-                affectMonitor = true
-            }else{
-                txData.f = 'monitor_edit_failed'
-                txData.ff = 'max_reached'
-                endData.msg = user.lang.monitorEditFailedMaxReached
+            if(!form.mid){
+                endData.msg = lang['No Monitor ID Present in Form']
+                if(callback)callback(endData);
+                resolve(endData)
+                return
             }
-            if(affectMonitor === true){
-                form.details = JSON.parse(form.details)
-                endData.ok = true
-                s.initiateMonitorObject({mid:form.mid,ke:form.ke})
-                s.group[form.ke].rawMonitorConfigurations[form.mid] = s.cleanMonitorObject(form)
-                if(form.mode === 'stop'){
-                    s.camera('stop',form)
-                }else{
-                    s.camera('stop',Object.assign(s.group[form.ke].rawMonitorConfigurations[form.mid]))
-                    setTimeout(function(){
-                        s.camera(form.mode,Object.assign(s.group[form.ke].rawMonitorConfigurations[form.mid]))
-                    },5000)
+            form.mid = form.mid.replace(/[^\w\s]/gi,'').replace(/ /g,'')
+            form = s.cleanMonitorObjectForDatabase(form)
+            s.knexQuery({
+                action: "select",
+                columns: "*",
+                table: "Monitors",
+                where: [
+                    ['ke','=',form.ke],
+                    ['mid','=',form.mid],
+                ]
+            },(err,r) => {
+                var affectMonitor = false
+                var monitorQuery = {}
+                var txData = {
+                    f: 'monitor_edit',
+                    mid: form.mid,
+                    ke: form.ke,
+                    mon: form
                 }
-                s.tx(txData,'STR_'+form.ke)
-            }
-            s.tx(txData,'GRP_'+form.ke)
-            callback(!endData.ok,endData)
-            s.onMonitorSaveExtensions.forEach(function(extender){
-                extender(Object.assign(s.group[form.ke].rawMonitorConfigurations[form.mid],{}),form,endData)
+                if(r&&r[0]){
+                    txData.new = false
+                    Object.keys(form).forEach(function(v){
+                        if(
+                            form[v] !== undefined &&
+                            form[v] !== `undefined` &&
+                            form[v] !== null &&
+                            form[v] !== `null` &&
+                            form[v] !== false &&
+                            form[v] !== `false`
+                        ){
+                            if(form[v] instanceof Object){
+                                form[v] = s.s(form[v])
+                            }
+                            monitorQuery[v] = form[v]
+                        }
+                    })
+                    s.userLog(form,{type:'Monitor Updated',msg:'by user : '+user.uid})
+                    endData.msg = user.lang['Monitor Updated by user']+' : '+user.uid
+                    s.knexQuery({
+                        action: "update",
+                        table: "Monitors",
+                        update: monitorQuery,
+                        where: [
+                            ['ke','=',form.ke],
+                            ['mid','=',form.mid],
+                        ]
+                    })
+                    affectMonitor = true
+                }else if(
+                    !s.group[form.ke].init.max_camera ||
+                    s.group[form.ke].init.max_camera === '' ||
+                    Object.keys(s.group[form.ke].activeMonitors).length <= parseInt(s.group[form.ke].init.max_camera)
+                ){
+                    txData.new = true
+                    Object.keys(form).forEach(function(v){
+                        if(form[v] && form[v] !== ''){
+                            if(form[v] instanceof Object){
+                                form[v] = s.s(form[v])
+                            }
+                            monitorQuery[v] = form[v]
+                        }
+                    })
+                    s.userLog(form,{type:'Monitor Added',msg:'by user : '+user.uid})
+                    endData.msg = user.lang['Monitor Added by user']+' : '+user.uid
+                    s.knexQuery({
+                        action: "insert",
+                        table: "Monitors",
+                        insert: monitorQuery
+                    })
+                    affectMonitor = true
+                }else{
+                    txData.f = 'monitor_edit_failed'
+                    txData.ff = 'max_reached'
+                    endData.msg = user.lang.monitorEditFailedMaxReached
+                }
+                if(affectMonitor === true){
+                    form.details = JSON.parse(form.details)
+                    endData.ok = true
+                    s.initiateMonitorObject({mid:form.mid,ke:form.ke})
+                    s.group[form.ke].rawMonitorConfigurations[form.mid] = s.cleanMonitorObject(form)
+                    if(form.mode === 'stop'){
+                        s.camera('stop',form)
+                    }else{
+                        s.camera('stop',Object.assign(s.group[form.ke].rawMonitorConfigurations[form.mid]))
+                        setTimeout(function(){
+                            s.camera(form.mode,Object.assign(s.group[form.ke].rawMonitorConfigurations[form.mid]))
+                        },5000)
+                    }
+                    s.tx(txData,'STR_'+form.ke)
+                }
+                s.tx(txData,'GRP_'+form.ke)
+                if(callback)callback(!endData.ok,endData);
+                resolve(endData)
+                s.onMonitorSaveExtensions.forEach(function(extender){
+                    extender(Object.assign(s.group[form.ke].rawMonitorConfigurations[form.mid],{}),form,endData)
+                })
             })
         })
     }
@@ -1499,7 +1574,7 @@ module.exports = function(s,config,lang){
                 s.sendMonitorStatus({
                     id: e.id,
                     ke: e.ke,
-                    status: 'Restarting',
+                    status: lang.Restarting,
                     code: 4,
                 });
                 s.camera('stop',e)
@@ -1619,21 +1694,12 @@ module.exports = function(s,config,lang){
                     activeMonitor.addStorageId = null
                 }
                 //set recording status
-                e.wantedStatus = lang.Watching
-                e.wantedStatusCode = 2
                 if(e.functionMode === 'record'){
-                    e.wantedStatus = lang.Recording
-                    e.wantedStatusCode = 3
                     activeMonitor.isRecording = true
                 }else{
                     activeMonitor.isRecording = false
                 }
                 //set up fatal error handler
-                if(e.details.fatal_max === ''){
-                    e.details.fatal_max = 0
-                }else{
-                    e.details.fatal_max = parseFloat(e.details.fatal_max)
-                }
                 activeMonitor.errorFatalCount = 0;
                 //start drawing files
                 delete(activeMonitor.childNode)
@@ -1773,6 +1839,7 @@ module.exports = function(s,config,lang){
                         monitorRestrictions.push(['or','mid','=',v])
                     }
                 })
+                console.log(monitorRestrictions)
             }catch(er){
             }
         }else if(
@@ -1790,20 +1857,108 @@ module.exports = function(s,config,lang){
         ){}
         return monitorRestrictions
     }
-    // s.checkViewerConnectionsForMonitor = function(monitorObject){
-    //     var monitorConfig = s.group[monitorObject.ke].rawMonitorConfigurations[monitorObject.mid]
-    //     if(monitorConfig.mode === 'start'){
-    //
-    //     }
-    // }
-    // s.addViewerConnectionForMonitor = function(monitorObject,viewerDetails){
-    //     s.group[monitorObject.ke].activeMonitors[monitorObject.mid].viewerConnection[viewerDetails.viewerId] = viewerDetails
-    //     s.group[monitorObject.ke].activeMonitors[monitorObject.mid].viewerConnectionCount += 1
-    //     return s.group[monitorObject.ke].activeMonitors[monitorObject.mid].viewerConnectionCount
-    // }
-    // s.removeViewerConnectionForMonitor = function(monitorObject,viewerDetails){
-    //     delete(s.group[monitorObject.ke].activeMonitors[monitorObject.mid].viewerConnection[viewerDetails.viewerId])
-    //     s.group[monitorObject.ke].activeMonitors[monitorObject.mid].viewerConnectionCount -= 1
-    //     return s.group[monitorObject.ke].activeMonitors[monitorObject.mid].viewerConnectionCount
-    // }
+    s.checkPermission = (user) => {
+        // provide "user" object given from "s.auth"
+        const isSubAccount = !!user.details.sub
+        const isApiKey = !user.login_type;
+        const isSessionKey = user.isSessionKey;
+        const response = {
+            isSubAccount,
+            hasAllPermissions: isSubAccount && user.details.allmonitors === '1',
+            isRestricted: isSubAccount && user.details.allmonitors !== '1',
+            isRestrictedApiKey: false,
+            apiKeyPermissions: {},
+            userPermissions: {},
+        }
+        const permissions = user.permissions
+        const details = user.details;
+        [
+            'auth_socket',
+            'get_monitors',
+            'control_monitors',
+            'get_logs',
+            'watch_stream',
+            'watch_snapshot',
+            'watch_videos',
+            'delete_videos',
+        ].forEach((key) => {
+            const permissionOff = !isSessionKey && isApiKey && permissions[key] !== '1';
+            response.apiKeyPermissions[key] = isSessionKey || permissions[key] === '1';
+            response.apiKeyPermissions[`${key}_disallowed`] = permissionOff;
+            response.isRestrictedApiKey = response.isRestrictedApiKey || permissionOff;
+        });
+        // Base Level Permissions
+            // allmonitors : All Monitors and Privileges
+            // monitor_create : Can Create and Delete Monitors
+            // user_change : Can Change User Settings
+            // view_logs : Can View Logs
+        [
+            'allmonitors',
+            'monitor_create',
+            'user_change',
+            'view_logs',
+        ].forEach((key) => {
+            response.userPermissions[key] = details[key] === '1' || !details[key];
+            response.userPermissions[`${key}_disallowed`] = details[key] === '0';
+        });
+        return response
+    }
+    s.getMonitorsPermitted = (userDetails,monitorId,permissionTarget) => {
+        const monitorRestrictions = []
+        const monitors = {}
+        permissionTarget = permissionTarget || 'monitors'
+        const permissionSet = s.parseJSON(userDetails[permissionTarget]) || []
+        // const viewOnlyCheck = permissionTarget === 'monitors'
+        function setMonitorPermissions(mid){
+            // monitors : Can View Monitor
+            // monitor_edit : Can Edit Monitor (Delete as well)
+            // video_view : Can View Videos and Events
+            // video_delete : Can Delete Videos and Events
+            [
+                'monitors',
+                'monitor_edit',
+                'video_view',
+                'video_delete',
+            ].forEach((key) => {
+                monitors[`${mid}_${key}`] = userDetails[key] && userDetails[key].indexOf(mid) > -1 || false;
+            });
+            return true
+        }
+        function addToQuery(mid,n){
+            if(n === 0){
+                monitorRestrictions.push(['mid','=',mid])
+            }else{
+                monitorRestrictions.push(['or','mid','=',mid])
+            }
+        };
+        if(
+            !monitorId &&
+            userDetails.sub &&
+            permissionSet &&
+            userDetails.allmonitors !== '1'
+        ){
+            try{
+                permissionSet.forEach(function(v,n){
+                    setMonitorPermissions(v)
+                    addToQuery(v,n)
+                })
+            }catch(err){
+                s.debugLog(err)
+            }
+        }else if(
+            monitorId && (
+                !userDetails.sub ||
+                userDetails.allmonitors !== '0' ||
+                permissionSet.indexOf(monitorId) >- 1
+            )
+        ){
+            setMonitorPermissions(monitorId)
+            addToQuery(monitorId,0)
+        }
+        return {
+            monitorPermissions: monitors,
+            // queryConditions
+            monitorRestrictions: monitorRestrictions,
+        }
+    }
 }

@@ -6,14 +6,10 @@ else
 fi
 cd "$installationDirectory" || exit
 currentBuild=$(git show --oneline -s)
-gitOrigin=$(git remote show origin)
+# gitOrigin=$(git remote show origin)
 splitBuildString=($currentBuild)
 currentCommitNumber=${splitBuildString[0]}
-if [[ $gitOrigin == *'ShinobiCE'* ]]; then
-    repo="CE"
-else
-    repo="Pro"
-fi
+repo="Pro"
 if [[ $@ == *'help'* ]] || [ ! "$1" ]; then
     echo "========================================================="
     echo "==!! Shinobi : The Open Source CCTV and NVR Solution !!=="
@@ -49,10 +45,10 @@ if [[ $@ == *'help'* ]] || [ ! "$1" ]; then
     echo "|--> Update via Git."
     echo "-"
     echo "| getMaster :"
-    echo "|--> Switch to the Master Branch (For Pro Repo only)."
+    echo "|--> Switch to the Master Branch."
     echo "-"
     echo "| getDev :"
-    echo "|--> Switch to the Development Branch (For Pro Repo only)."
+    echo "|--> Switch to the Development Branch."
     echo "-"
     echo "| clear, flush :"
     echo "|--> Clear all PM2 logs."
@@ -70,35 +66,17 @@ if [[ $@ == *'clear'* ]] || [[ $@ == *'flush'* ]]; then
     pm2 flush
 fi
 if [[ $@ == *'restart'* ]]; then
-    proccessAlive=$(pm2 list | grep camera)
-    if [ "$proccessAlive" ]; then
-        pm2 restart "$installationDirectory"/camera.js
-        pm2 restart "$installationDirectory"/cron.js
-    else
-        echo "Shinobi process is not running."
-    fi
+    pm2 restart camera
 else
     if [[ $@ == *'start'* ]] || [[ $@ == *'now'* ]]; then
-        proccessAlive=$(pm2 list | grep camera | grep online)
-        if [ "$proccessAlive" ]; then
-            echo "Shinobi process is already running."
-        else
-            if [ -e "$installationDirectory/INSTALL/installed.txt" ]; then
-                echo "Starting Shinobi"
-                pm2 start "$installationDirectory"/camera.js
-                pm2 start "$installationDirectory"/cron.js
-            fi
-            if [ ! -e "$installationDirectory/INSTALL/installed.txt" ]; then
-                chmod +x "$installationDirectory"/INSTALL/now.sh&&INSTALL/now.sh
-            fi
-        fi
+        echo "Starting Shinobi"
+        pm2 start camera
     fi
 fi
 if [[ $@ == *'stop'* ]] || [[ $@ == *'exit'* ]]; then
     proccessAlive=$(pm2 list | grep camera)
     if [ "$proccessAlive" ]; then
-        pm2 stop "$installationDirectory"/camera.js
-        pm2 stop "$installationDirectory"/cron.js
+        pm2 stop camera
     else
         echo "Shinobi process is not running."
     fi
@@ -121,20 +99,12 @@ if [[ $@ == *'bootupDisable'* ]] || [[ $@ == *'bootupdisable'* ]]; then
     pm2 save
 fi
 if [[ $@ == *'getDev'* ]] || [[ $@ == *'getdev'* ]]; then
-    if [[ $repo == "Pro" ]]; then
-        git checkout dev
-        echo "Shinobi - Restart Shinobi to make the changes take affect."
-    else
-        echo "Shinobi - Cannot use \"getDev\" with Shinobi CE"
-    fi
+    git checkout dev
+    echo "Shinobi - Restart Shinobi to make the changes take affect."
 fi
 if [[ $@ == *'getMaster'* ]] || [[ $@ == *'getmaster'* ]]; then
-    if [[ $repo == "Pro" ]]; then
-        git checkout master
-        echo "Shinobi - Restart Shinobi to make the changes take affect."
-    else
-        echo "Shinobi - Cannot use \"getMaster\" with Shinobi CE"
-    fi
+    git checkout master
+    echo "Shinobi - Restart Shinobi to make the changes take affect."
 fi
 if [[ $@ == *'update'* ]]; then
     echo "============="
@@ -143,14 +113,10 @@ if [[ $@ == *'update'* ]]; then
     read -r updateshinobi
     if [ "$updateshinobi" = "y" ] || [ "$updateshinobi" = "Y" ]; then
         echo "Beginning Update Process..."
-        pm2 stop "$installationDirectory"/camera.js
-        pm2 stop "$installationDirectory"/cron.js
-        npm install --unsafe-perm
-        # npm audit fix --force
-        git reset --hard
-        git pull
-        pm2 start "$installationDirectory"/camera.js
-        pm2 start "$installationDirectory"/cron.js
+        pm2 stop camera.js
+        rm -rf node_modules
+        sh UPDATE.sh
+        pm2 start camera.js
     else
         echo "Cancelled Update Process."
     fi

@@ -1,9 +1,15 @@
 const fs = require('fs')
 const { spawn } = require('child_process')
+const async = require('async');
 module.exports = (s,config,lang) => {
     const {
+        ffprobe,
         splitForFFPMEG,
     } = require('../ffmpeg/utils.js')(s,config,lang)
+    const {
+        copyFile,
+        hmsToSeconds,
+    } = require('../basic/utils.js')(process.cwd(),config)
     // orphanedVideoCheck : new function
     const checkIfVideoIsOrphaned = (monitor,videosDirectory,filename) => {
         const response = {ok: true}
@@ -62,7 +68,7 @@ module.exports = (s,config,lang) => {
                 // const findCmd = [videosDirectory].concat(options.flags || ['-maxdepth','1'])
                 fs.writeFileSync(
                     tempDirectory + 'orphanCheck.sh',
-                    `find "${videosDirectory}" -maxdepth 1 -type f -exec stat -c "%n" {} + | sort -r | head -n ${options.checkMax}`
+                    `find "${s.checkCorrectPathEnding(videosDirectory,true)}" -maxdepth 1 -type f -exec stat -c "%n" {} + | sort -r | head -n ${options.checkMax}`
                 );
                 let listing = spawn('sh',[tempDirectory + 'orphanCheck.sh'])
                 // const onData = options.onData ? options.onData : () => {}
@@ -186,15 +192,22 @@ module.exports = (s,config,lang) => {
             const monitorId = options.mid
             const groupKey = options.ke
             const cutLength = options.cutLength || 10
+            const startTime = options.startTime
             const tempDirectory = s.getStreamsDirectory(options)
             let fileExt = inputFilePath.split('.')
             fileExt = fileExt[fileExt.length -1]
             const filename = `${s.gid(10)}.${fileExt}`
             const videoOutPath = `${tempDirectory}${filename}`
-            const cuttingProcess = spawn(config.ffmpegDir,['-loglevel','warning','-i', inputFilePath, '-c','copy','-t',`${cutLength}`,videoOutPath])
+            const ffmpegCmd = ['-loglevel','warning','-i', inputFilePath, '-c','copy','-t',`${cutLength}`,videoOutPath]
+            if(startTime){
+                ffmpegCmd.splice(2, 0, "-ss")
+                ffmpegCmd.splice(3, 0, `${startTime}`)
+                s.debugLog(`cutVideoLength ffmpegCmd with startTime`,ffmpegCmd)
+            }
+            const cuttingProcess = spawn(config.ffmpegDir,ffmpegCmd)
             cuttingProcess.stderr.on('data',(data) => {
                 const err = data.toString()
-                s.debugLog('cutVideoLength',options,err)
+                s.debugLog('cutVideoLength STDERR',options,err)
             })
             cuttingProcess.on('close',(data) => {
                 fs.stat(videoOutPath,(err) => {
@@ -257,7 +270,7 @@ module.exports = (s,config,lang) => {
         })
     }
     const fixingAlready = {}
-    async function reEncodeVideoAndReplace(videoRow){
+    function reEncodeVideoAndReplace(videoRow){
         return new Promise((resolve,reject) => {
             const response = {ok: true}
             const fixingId = `${videoRow.ke}${videoRow.mid}${videoRow.time}`
@@ -306,12 +319,291 @@ module.exports = (s,config,lang) => {
             }
         })
     }
+    const reEncodeVideoAndBinOriginalQueue = {}
+    function reEncodeVideoAndBinOriginalAddToQueue(data){
+        const groupKey = data.video.ke
+        if(!reEncodeVideoAndBinOriginalQueue[groupKey]){
+            reEncodeVideoAndBinOriginalQueue[groupKey] = async.queue(async function(data, callback) {
+                const response = await reEncodeVideoAndBinOriginal(data)
+                callback(response)
+            }, 1);
+        }
+        return new Promise((resolve) => {
+            reEncodeVideoAndBinOriginalQueue[groupKey].push(data,(response) => {
+                resolve(response)
+            })
+        })
+    }
+    function reEncodeVideoAndBinOriginal({
+        video,
+        targetVideoCodec,
+        targetAudioCodec,
+        targetQuality,
+        targetExtension,
+        doSlowly,
+        onPercentChange,
+        automated,
+    }){
+        targetVideoCodec = targetVideoCodec || `copy`
+        targetAudioCodec = targetAudioCodec || `copy`
+        targetQuality = targetQuality || ``
+        onPercentChange = onPercentChange || function(){};
+        if(!targetVideoCodec || !targetAudioCodec){
+            switch(targetExtension){
+                case'mp4':
+                    targetVideoCodec = `libx264`
+                    targetAudioCodec = `aac -strict -2`
+                    targetQuality = `-crf 1`
+                break;
+                case'webm':
+                case'mkv':
+                    targetVideoCodec = `vp9`
+                    targetAudioCodec = `libopus`
+                    targetQuality = `-q:v 1 -q:a 1`
+                break;
+            }
+        }
+        const response = {ok: true}
+        const groupKey = video.ke
+        const monitorId = video.mid
+        const filename = s.formattedTime(video.time)+'.'+video.ext
+        const tempFilename = s.formattedTime(video.time)+'.reencoding.'+ targetExtension
+        const finalFilename = s.formattedTime(video.time)+'.'+ targetExtension
+        const tempFolder = s.getStreamsDirectory(video)
+        const videoFolder = s.getVideoDirectory(video)
+        const fileBinFolder = s.getFileBinDirectory(video)
+        const inputFilePath = `${videoFolder}${filename}`
+        const fileBinFilePath = `${fileBinFolder}${filename}`
+        const outputFilePath = `${tempFolder}${tempFilename}`
+        const finalFilePath = `${videoFolder}${finalFilename}`
+        const fixingId = `${video.ke}${video.mid}${video.time}`
+        return new Promise(async (resolve,reject) => {
+            function completeResolve(data){
+                s.tx({
+                    f: 'video_compress_completed',
+                    ke: groupKey,
+                    mid: monitorId,
+                    oldName: filename,
+                    name: finalFilename,
+                    automated: !!automated,
+                    success: !!data.ok,
+                },'GRP_'+groupKey);
+                resolve(data)
+            }
+            try{
+                if(fixingAlready[fixingId]){
+                    response.ok = false
+                    response.msg = lang['Already Processing']
+                    resolve(response)
+                }else{
+                    const inputFileStats = await fs.promises.stat(inputFilePath)
+                    const originalFileInfo = (await ffprobe(inputFilePath,inputFilePath)).result
+                    const videoDuration = originalFileInfo.format.duration
+                    const commandString = `-y ${doSlowly ? `-re -threads 1` : ''} -i "${inputFilePath}" -c:v ${targetVideoCodec} -c:a ${targetAudioCodec} ${targetQuality} "${outputFilePath}"`
+                    fixingAlready[fixingId] = true
+                    s.tx({
+                        f: 'video_compress_started',
+                        ke: groupKey,
+                        mid: monitorId,
+                        oldName: filename,
+                        name: finalFilename,
+                    },'GRP_'+groupKey);
+                    const videoBuildProcess = spawn(config.ffmpegDir,splitForFFPMEG(commandString))
+                    videoBuildProcess.stdout.on('data',function(data){
+                        s.debugLog('stdout',outputFilePath,data.toString())
+                    })
+                    videoBuildProcess.stderr.on('data',function(data){
+                        const text = data.toString()
+                        if(text.includes('frame=')){
+                            const durationSoFar = hmsToSeconds(text.split('time=')[1].trim().split(/(\s+)/)[0])
+                            const percent = (durationSoFar / videoDuration * 100).toFixed(1)
+                            s.tx({
+                                f: 'video_compress_percent',
+                                ke: groupKey,
+                                mid: monitorId,
+                                oldName: filename,
+                                name: finalFilename,
+                                percent: percent,
+                            },'GRP_'+groupKey);
+                            onPercentChange(percent)
+                            s.debugLog('stderr',outputFilePath,`${percent}%`)
+                        }
+                    })
+                    videoBuildProcess.on('exit',async function(data){
+                        fixingAlready[fixingId] = false
+                        try{
+                            // check that new file is existing
+                            const newFileStats = await fs.promises.stat(outputFilePath)
+                            // move old file to fileBin
+                            await copyFile(inputFilePath,fileBinFilePath)
+                            const fileBinInsertQuery = {
+                                ke: video.ke,
+                                mid: video.mid,
+                                name: filename,
+                                size: video.size,
+                                details: video.details,
+                                status: video.status,
+                                time: video.time,
+                            }
+                            await s.insertFileBinEntry(fileBinInsertQuery)
+                            // delete original
+                            await s.deleteVideo(video)
+                            // copy temp file to final path
+                            await copyFile(outputFilePath,finalFilePath)
+                            await fs.promises.rm(outputFilePath)
+                            s.insertCompletedVideo({
+                                id: video.mid,
+                                mid: video.mid,
+                                ke: video.ke,
+                                ext: targetExtension,
+                            },{
+                                file: finalFilename,
+                                objects: video.objects,
+                                endTime: video.end,
+                                ext: targetExtension,
+                            },function(){
+                                completeResolve({
+                                    ok: true,
+                                    path: finalFilePath,
+                                    time: video.time,
+                                    fileBin: fileBinInsertQuery,
+                                    videoCodec: targetVideoCodec,
+                                    audioCodec: targetAudioCodec,
+                                    videoQuality: targetQuality,
+                                })
+                            })
+                        }catch(err){
+                            response.ok = false
+                            response.err = err
+                            completeResolve(response)
+                        }
+                    })
+                }
+            }catch(err){
+                response.ok = false
+                response.err = err
+                completeResolve(response)
+            }
+        })
+    }
+    function archiveVideo(video,unarchive){
+        return new Promise((resolve) => {
+            s.knexQuery({
+                action: "update",
+                table: 'Videos',
+                update: {
+                    archive: unarchive ? '0' : 1
+                },
+                where: {
+                    ke: video.ke,
+                    mid: video.mid,
+                    time: video.time,
+                }
+            },function(errVideos){
+                s.knexQuery({
+                    action: "update",
+                    table: 'Events',
+                    update: {
+                        archive: unarchive ? '0' : 1
+                    },
+                    where: [
+                        ['ke','=',video.ke],
+                        ['mid','=',video.mid],
+                        ['time','>=',video.time],
+                        ['time','<=',video.end],
+                    ]
+                },function(errEvents){
+                    s.knexQuery({
+                        action: "update",
+                        table: 'Timelapse Frames',
+                        update: {
+                            archive: unarchive ? '0' : 1
+                        },
+                        limit: 1,
+                        where: [
+                            ['ke','=',video.ke],
+                            ['mid','=',video.mid],
+                            ['time','>=',video.time],
+                            ['time','<=',video.end],
+                        ]
+                    },function(errTimelapseFrames){
+                        resolve({
+                            ok: !errVideos && !errEvents && !errTimelapseFrames,
+                            err: errVideos || errEvents || errTimelapseFrames ? {
+                                errVideos,
+                                errEvents,
+                                errTimelapseFrames,
+                            } : undefined,
+                            archived: !unarchive
+                        })
+                    })
+                })
+            })
+        })
+    }
+    async function sliceVideo(video,{
+        startTime,
+        endTime,
+    }){
+        const response = {ok: false}
+        if(!startTime || !endTime){
+            response.msg = 'Missing startTime or endTime!'
+            return response
+        }
+        try{
+            const groupKey = video.ke
+            const monitorId = video.mid
+            const filename = s.formattedTime(video.time) + '.' + video.ext
+            const finalFilename = s.formattedTime(video.time) + `-sliced-${s.gid(5)}.` + video.ext
+            const videoFolder = s.getVideoDirectory(video)
+            const fileBinFolder = s.getFileBinDirectory(video)
+            const inputFilePath = `${videoFolder}${filename}`
+            const fileBinFilePath = `${fileBinFolder}${finalFilename}`
+            const cutLength = parseFloat(endTime) - parseFloat(startTime);
+            s.debugLog(`sliceVideo start slice...`)
+            const cutProcessResponse = await cutVideoLength({
+                ke: groupKey,
+                mid: monitorId,
+                cutLength,
+                startTime,
+                filePath: inputFilePath,
+            });
+            s.debugLog(`sliceVideo cutProcessResponse`,cutProcessResponse)
+            const newFilePath = cutProcessResponse.filePath
+            const copyResponse = await copyFile(newFilePath,fileBinFilePath)
+            const fileSize = (await fs.promises.stat(fileBinFilePath)).size
+            s.debugLog(`sliceVideo copyResponse`,copyResponse)
+            const fileBinInsertQuery = {
+                ke: groupKey,
+                mid: monitorId,
+                name: finalFilename,
+                size: fileSize,
+                details: video.details,
+                status: 1,
+                time: video.time,
+            }
+            await s.insertFileBinEntry(fileBinInsertQuery)
+            s.tx(Object.assign({
+                f: 'fileBin_item_added',
+                slicedVideo: true,
+            },fileBinInsertQuery),'GRP_'+video.ke);
+            response.ok = true
+        }catch(err){
+            response.err = err
+            s.debugLog('sliceVideo ERROR',err)
+        }
+        return response
+    }
     return {
         reEncodeVideoAndReplace,
         stitchMp4Files,
-        orphanedVideoCheck: orphanedVideoCheck,
-        scanForOrphanedVideos: scanForOrphanedVideos,
-        cutVideoLength: cutVideoLength,
-        getVideosBasedOnTagFoundInMatrixOfAssociatedEvent: getVideosBasedOnTagFoundInMatrixOfAssociatedEvent,
+        orphanedVideoCheck,
+        scanForOrphanedVideos,
+        cutVideoLength,
+        getVideosBasedOnTagFoundInMatrixOfAssociatedEvent,
+        reEncodeVideoAndBinOriginal,
+        reEncodeVideoAndBinOriginalAddToQueue,
+        archiveVideo,
+        sliceVideo,
     }
 }

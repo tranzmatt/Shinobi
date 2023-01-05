@@ -6,8 +6,8 @@ echo "If your OS is not on the list please refer to the docs."
 echo "========"
 echo "1. Ubuntu - Fast and Touchless"
 echo "2. Ubuntu - Advanced"
-echo "3. CentOS"
-echo "4. CentOS - Quick Install"
+echo "3. Rocky 9 / CentOS 8 - Fast and Touchless"
+echo "4. CentOS"
 echo "5. MacOS"
 echo "6. FreeBSD"
 echo "7. OpenSUSE"
@@ -23,8 +23,8 @@ chmod +x INSTALL/ubuntu.sh
 sh INSTALL/ubuntu.sh
   ;;
 "3")
-chmod +x INSTALL/centos.sh
-sh INSTALL/centos.sh
+chmod +x INSTALL/rocky9-touchless.sh
+sh INSTALL/rocky9-touchless.sh
   ;;
 "4")
 chmod +x "INSTALL/CentOS - Quick Install.sh"

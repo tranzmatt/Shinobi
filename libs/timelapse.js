@@ -95,12 +95,12 @@ module.exports = function(s,config,lang,app,io){
             })
         }
     }
-    s.deleteTimelapseFrameFromCloud = function(e){
+    s.deleteTimelapseFrameFromCloud = function(e,cloudType){
         // e = video object
-        s.checkDetails(e)
         var frameSelector = {
             ke: e.ke,
             mid: e.id,
+            type: cloudType,
             time: new Date(e.time),
         }
         s.knexQuery({
@@ -118,7 +118,7 @@ module.exports = function(s,config,lang,app,io){
                     where: frameSelector,
                     limit: 1
                 },function(){
-                    s.onDeleteTimelapseFrameFromCloudExtensionsRunner(e,r)
+                    s.onDeleteTimelapseFrameFromCloudExtensionsRunner(e,details.type || r.type || 's3',r)
                 })
             }else{
 //                    console.log('Delete Failed',e)
@@ -154,7 +154,7 @@ module.exports = function(s,config,lang,app,io){
                     const fileDirectory = getFileDirectory(folderPath);
                     const folderIsEmpty = (await fs.promises.readdir(folderPath)).filter(file => file.indexOf('.jpg') > -1).length === 0;
                     if(folderIsEmpty){
-                        await fs.rmdir(folderPath, { recursive: true })
+                        await fs.rm(folderPath, { recursive: true })
                     }
                 })
             }else{
@@ -350,7 +350,6 @@ module.exports = function(s,config,lang,app,io){
             const timeNow = new Date()
             const fileStats = await fs.promises.stat(finalMp4OutputLocation)
             const details = {
-                video: true,
                 start: frames[0].time,
                 end: frames[frames.length - 1].time,
             }
@@ -428,25 +427,44 @@ module.exports = function(s,config,lang,app,io){
         config.webPaths.apiPrefix+':auth/timelapse/:ke',
         config.webPaths.apiPrefix+':auth/timelapse/:ke/:id',
         config.webPaths.apiPrefix+':auth/timelapse/:ke/:id/:date',
+        config.webPaths.apiPrefix+':auth/cloudTimelapse/:ke',
+        config.webPaths.apiPrefix+':auth/cloudTimelapse/:ke/:id',
+        config.webPaths.apiPrefix+':auth/cloudTimelapse/:ke/:id/:date',
     ], function (req,res){
         res.setHeader('Content-Type', 'application/json');
         s.auth(req.params,function(user){
-            var hasRestrictions = user.details.sub && user.details.allmonitors !== '1'
+            const monitorId = req.params.id
+            const groupKey = req.params.ke
+            const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(user.details,monitorId)
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+            } = s.checkPermission(user);
             if(
-                user.permissions.watch_videos==="0" ||
-                hasRestrictions &&
-                (
-                    !user.details.video_view ||
-                    user.details.video_view.indexOf(req.params.id) === -1
+                isRestrictedApiKey && apiKeyPermissions.watch_videos_disallowed ||
+                isRestricted && (
+                    monitorId && !monitorPermissions[`${monitorId}_video_view`] ||
+                    monitorRestrictions.length === 0
                 )
             ){
-                s.closeJsonResponse(res,[])
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized'], frames: []});
                 return
             }
-            const monitorRestrictions = s.getMonitorRestrictions(user.details,req.params.id)
+            var origURL = req.originalUrl.split('/')
+            var videoParam = origURL[origURL.indexOf(req.params.auth) + 1]
+            var dataSet = 'Timelapse Frames'
+            switch(videoParam){
+                case'cloudTimelapse':
+                    dataSet = 'Cloud Timelapse Frames'
+                break;
+            }
             s.getDatabaseRows({
                 monitorRestrictions: monitorRestrictions,
-                table: 'Timelapse Frames',
+                table: dataSet,
                 groupKey: req.params.ke,
                 date: req.query.date,
                 startDate: req.query.start,
@@ -474,23 +492,21 @@ module.exports = function(s,config,lang,app,io){
         s.auth(req.params,function(user){
             const groupKey = req.params.ke
             const monitorId = req.params.id
-            var hasRestrictions = user.details.sub && user.details.allmonitors !== '1'
+            const actionParameter = !!req.params.action
+            const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(user.details,monitorId)
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+            } = s.checkPermission(user)
             if(
-                user.permissions.watch_videos==="0" ||
-                hasRestrictions &&
-                (
-                    !user.details.video_view ||
-                    user.details.video_view.indexOf(req.params.id) === -1
-                )
+                isRestrictedApiKey && apiKeyPermissions.delete_videos_disallowed ||
+                isRestricted && !monitorPermissions[`${monitorId}_video_delete`]
             ){
-                s.closeJsonResponse(res,[])
-                return
-            }
-            const monitorRestrictions = s.getMonitorRestrictions(user.details,req.params.id)
-            if(monitorRestrictions.length === 0){
-                s.closeJsonResponse(res,{
-                    ok: false
-                })
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
                 return
             }
             const framesPerSecond = s.getPostData(req, 'fps')
@@ -514,15 +530,31 @@ module.exports = function(s,config,lang,app,io){
     ], function (req,res){
         res.setHeader('Content-Type', 'application/json');
         s.auth(req.params,function(user){
-            var hasRestrictions = user.details.sub && user.details.allmonitors !== '1'
+            const groupKey = req.params.ke
+            const monitorId = req.params.id
+            const actionParameter = !!req.params.action
+            const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(user.details,monitorId)
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+            } = s.checkPermission(user)
             if(
-                user.permissions.watch_videos==="0" ||
-                hasRestrictions && (!user.details.video_view || user.details.video_view.indexOf(req.params.id)===-1)
+                actionParameter && (
+                    isRestrictedApiKey && apiKeyPermissions.delete_videos_disallowed ||
+                    isRestricted && !monitorPermissions[`${monitorId}_video_delete`]
+                ) ||
+                !actionParameter && (
+                    isRestrictedApiKey && apiKeyPermissions.watch_videos_disallowed ||
+                    isRestricted && monitorId && !monitorPermissions[`${monitorId}_video_view`]
+                )
             ){
-                res.end(s.prettyPrint([]))
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
                 return
             }
-            const monitorRestrictions = s.getMonitorRestrictions(user.details,req.params.id)
             const cacheKey = req.params.ke + req.params.id + req.params.filename
             const processFrame = (frame) => {
                 var fileLocation
@@ -536,7 +568,7 @@ module.exports = function(s,config,lang,app,io){
                     selectedDate = req.params.filename.split('T')[0]
                 }
                 fileLocation = `${fileLocation}${frame.ke}/${frame.mid}_timelapse/${selectedDate}/${req.params.filename}`
-                if(req.params.action === 'delete'){
+                if(actionParameter === 'delete'){
                     deleteTimelapseFrame({
                         ke: frame.ke,
                         mid: frame.mid,

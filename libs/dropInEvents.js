@@ -1,6 +1,16 @@
 var fs = require('fs')
 var exec = require('child_process').exec
 module.exports = function(s,config,lang,app,io){
+    const base64Prefix = '=?UTF-8?B?';
+    function isBase64String(theString){
+        return theString.startsWith(base64Prefix)
+    }
+    function convertBase64ToTextString(theString){
+        let data = theString.replace(base64Prefix,'');
+        let buff = Buffer.from(data, 'base64');
+        let text = buff.toString('ascii');
+        return text
+    }
     const {
         triggerEvent,
     } = require('./events/utils.js')(s,config,lang)
@@ -29,7 +39,7 @@ module.exports = function(s,config,lang,app,io){
             var filename = getFileNameFromPath(filePath)
             if(search(filename,'.jpg') || search(filename,'.jpeg')){
                 var snapPath = s.dir.streams + ke + '/' + mid + '/s.jpg'
-                fs.unlink(snapPath,function(err){
+                fs.rm(snapPath,function(err){
                     fs.createReadStream(filePath).pipe(fs.createWriteStream(snapPath))
                     triggerEvent({
                         id: mid,
@@ -266,7 +276,7 @@ module.exports = function(s,config,lang,app,io){
                 var split = address.address.split('@')
                 var monitorId = split[0]
                 var ke = session.user
-                if(s.group[ke] && s.group[ke].rawMonitorConfigurations[monitorId] && s.group[ke].activeMonitors[monitorId].isStarted === true){
+                if(s.group[ke] && s.group[ke].activeMonitors[monitorId] && s.group[ke].activeMonitors[monitorId].isStarted === true){
                     session.monitorId = monitorId
                 }else{
                     return callback(new Error(lang['No Monitor Exists with this ID.']))
@@ -278,7 +288,7 @@ module.exports = function(s,config,lang,app,io){
                     var ke = session.user
                     var monitorId = session.monitorId
                     var details = s.group[ke].rawMonitorConfigurations[monitorId].details
-                    var reasonTag = 'smtpServer'
+                    var reasonTag = ''
                     var text = ''
                     stream.on('data',function(data){
                         text += data.toString()
@@ -301,10 +311,12 @@ module.exports = function(s,config,lang,app,io){
                             if(parsed['content-type'] && parsed['content-type'].indexOf('image/jpeg') > -1){
                                 // console.log(lines)
                             }
+                            if(reasonTag)return;
                             if(parsed['alarm event']){
                                 reasonTag = parsed['alarm event']
                             }else if(parsed.subject){
-                                reasonTag = parsed.subject
+                                const subjectString = parsed.subject;
+                                reasonTag = isBase64String(subjectString) ? convertBase64ToTextString(subjectString) : subjectString
                             }
                         })
                         triggerEvent({
@@ -314,7 +326,7 @@ module.exports = function(s,config,lang,app,io){
                                 confidence: 100,
                                 name: 'smtpServer',
                                 plug: "dropInEvent",
-                                reason: reasonTag
+                                reason: reasonTag || 'smtpServer'
                             },
                         },config.dropInEventForceSaveEvent)
                         callback()

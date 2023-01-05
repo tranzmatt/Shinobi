@@ -115,9 +115,14 @@ module.exports = (s,config,lang,app,io) => {
         s.group[user.ke].googleDrive = null
         s.group[user.ke].googleDriveOAuth2Client = null
     }
-    var deleteVideoFromGoogleDrive = function(groupKey,video,callback){
+    var deleteVideoFromGoogleDrive = function(e,video,callback){
         // e = user
+        const groupKey = e.ke
         var videoDetails = s.parseJSON(video.details)
+        if(video.type !== 'googd'){
+            callback()
+            return
+        }
         s.group[groupKey].googleDrive.files.delete({
             fileId: videoDetails.id
         }, function(err, resp){
@@ -165,8 +170,8 @@ module.exports = (s,config,lang,app,io) => {
                                 ke: e.ke,
                                 time: k.startTime,
                                 status: 1,
+                                type: 'googd',
                                 details: s.s({
-                                    type: 'googd',
                                     id: data.id
                                 }),
                                 size: k.filesize,
@@ -218,8 +223,8 @@ module.exports = (s,config,lang,app,io) => {
                             mid: queryInfo.mid,
                             ke: queryInfo.ke,
                             time: queryInfo.time,
+                            type : 'googd',
                             details: s.s({
-                                type : 'googd',
                                 id : data.id,
                             }),
                             size: queryInfo.size,
@@ -238,7 +243,7 @@ module.exports = (s,config,lang,app,io) => {
     var onDeleteTimelapseFrameFromCloud = function(e,frame,callback){
         // e = user
         var frameDetails = s.parseJSON(frame.details)
-        if(frameDetails.type !== 'googd'){
+        if(frame.type !== 'googd'){
             return
         }
         s.group[e.ke].googleDrive.files.delete({
@@ -252,9 +257,6 @@ module.exports = (s,config,lang,app,io) => {
         // e = user
         var videoDetails = s.parseJSON(video.details)
         const fileId = videoDetails.id
-        if(videoDetails.type !== 'googd'){
-            return
-        }
         return new Promise((resolve, reject) => {
             s.group[video.ke].googleDrive.files
                 .get({fileId, alt: 'media'}, {responseType: 'stream'})
@@ -293,8 +295,8 @@ module.exports = (s,config,lang,app,io) => {
         cloudDiskUseStartupExtensions: cloudDiskUseStartupForGoogleDrive,
         beforeAccountSave: beforeAccountSaveForGoogleDrive,
         onAccountSave: cloudDiskUseStartupForGoogleDrive,
-        onInsertTimelapseFrame: onInsertTimelapseFrame,
-        onDeleteTimelapseFrameFromCloud: onDeleteTimelapseFrameFromCloud,
+        onInsertTimelapseFrame: (() => {}) || onInsertTimelapseFrame,
+        onDeleteTimelapseFrameFromCloud: (() => {}) || onDeleteTimelapseFrameFromCloud,
         onGetVideoData: onGetVideoData
     })
     return {

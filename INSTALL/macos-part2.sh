@@ -9,7 +9,6 @@ read -r mysqlagreeData
 if [ "$mysqlagreeData" = "y" ]; then
     echo "Shinobi will now use root for database installation..."
     sudo mysql -e "source sql/user.sql" || true
-    sudo mysql -e "source sql/framework.sql" || true
 fi
 echo "============="
 echo "Shinobi - Install NPM Libraries"

@@ -87,7 +87,7 @@ module.exports = function(s,config,lang,io){
                                     status: 'Stopped',
                                     code: 5
                                 });
-                                var monObj = Object.assign(monitor,{id : monitor.mid})
+                                const monObj = Object.assign({},monitor,{id : monitor.mid})
                                 s.camera(monitor.mode,monObj)
                                 checkAnother()
                             },1000)
@@ -265,11 +265,15 @@ module.exports = function(s,config,lang,io){
                 },function(err,frames) {
                     if(frames && frames[0]){
                         frames.forEach(function(frame){
-                            var storageType = JSON.parse(frame.details).type
-                            if(!storageType)storageType = 's3'
-                            var frameSize = frame.size / 1048576
-                            user.cloudDiskUse[storageType].usedSpace += frameSize
-                            user.cloudDiskUse[storageType].usedSpaceTimelapseFrames += frameSize
+                            try{
+                                var storageType = JSON.parse(frame.details).type
+                                if(!storageType)storageType = 's3'
+                                var frameSize = frame.size / 1048576
+                                user.cloudDiskUse[storageType].usedSpace += frameSize
+                                user.cloudDiskUse[storageType].usedSpaceTimelapseFrames += frameSize
+                            }catch(err){
+                                s.debugLog(err)
+                            }
                         })
                     }
                     callback()
@@ -329,9 +333,7 @@ module.exports = function(s,config,lang,io){
                 }
                 if(files && files[0]){
                     files.forEach(function(file){
-                        if(video.details.dir === storage.value){
-                            usedSpaceFilebin += file.size
-                        }
+                        usedSpaceFilebin += file.size
                     })
                 }
                 storageIndex.usedSpace = (usedSpaceVideos + usedSpaceTimelapseFrames + usedSpaceFilebin) / 1048576
@@ -411,27 +413,28 @@ module.exports = function(s,config,lang,io){
             //sql/database connection with knex
             s.databaseEngine = require('knex')(s.databaseOptions)
             //run prerequsite queries
-            s.preQueries()
-            setTimeout(async () => {
-                await checkForStaticUsers()
-                //check for subscription
-                checkSubscription(config.subscriptionId,function(hasSubcribed){
-                    config.userHasSubscribed = hasSubcribed
-                    //check terminal commander
-                    checkForTerminalCommands(function(){
-                        //load administrators (groups)
-                        loadAdminUsers(function(){
-                            //load monitors (for groups)
-                            loadMonitors(function(){
-                                //check for orphaned videos
-                                checkForOrphanedVideos(async () => {
-                                    s.processReady()
+            s.preQueries().then(() => {
+                setTimeout(async () => {
+                    await checkForStaticUsers()
+                    //check for subscription
+                    checkSubscription(config.subscriptionId,function(hasSubcribed){
+                        config.userHasSubscribed = hasSubcribed
+                        //check terminal commander
+                        checkForTerminalCommands(function(){
+                            //load administrators (groups)
+                            loadAdminUsers(function(){
+                                //load monitors (for groups)
+                                loadMonitors(function(){
+                                    //check for orphaned videos
+                                    checkForOrphanedVideos(() => {
+                                        s.processReady()
+                                    })
                                 })
                             })
                         })
                     })
-                })
-            },1500)
+                },1500)
+            })
         }
     })
 }

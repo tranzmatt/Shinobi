@@ -55,10 +55,16 @@ snapProcess.stdout.on('data',(data)=>{
 })
 snapProcess.on('close',function(data){
   if(useIcon){
-    var fileCopy = fs.createReadStream(temporaryImageFile).pipe(fs.createWriteStream(iconImageFile))
-    fileCopy.on('close',function(){
+    var iconStream = fs.createWriteStream(iconImageFile);
+    var fileCopy = fs.createReadStream(temporaryImageFile).pipe(iconStream)
+    var closeTimeout = setTimeout(() => {iconStream.end()}, 2000);
+    function endProcess(){
+        clearTimeout(closeTimeout)
         process.exit();
-    })
+    }
+    fileCopy
+        .on('close', endProcess)
+        .on('error', endProcess);
   }else{
     process.exit();
   }

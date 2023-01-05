@@ -26,10 +26,26 @@ module.exports = function(s,config,lang,app,io){
      */
     app.get(config.webPaths.apiPrefix+':auth/onvifDeviceManager/:ke/:id',function (req,res){
         s.auth(req.params,async (user) => {
+            const groupKey = req.params.ke
+            const monitorId = req.params.id
+            const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(user.details,monitorId)
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+            } = s.checkPermission(user)
+            if(
+                isRestrictedApiKey && apiKeyPermissions.get_monitors_disallowed ||
+                isRestricted && !monitorPermissions[`${monitorId}_monitors`]
+            ){
+                s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
+                return
+            }
             const endData = {ok: true}
             try{
-                const groupKey = req.params.ke
-                const monitorId = req.params.id
                 const onvifDevice = await getOnvifDevice(groupKey,monitorId)
                 const cameraInfo = await getUIFieldValues(onvifDevice)
                 endData.onvifData = cameraInfo
@@ -46,11 +62,29 @@ module.exports = function(s,config,lang,app,io){
      */
     app.post(config.webPaths.apiPrefix+':auth/onvifDeviceManager/:ke/:id/save',function (req,res){
         s.auth(req.params,async (user) => {
+            const groupKey = req.params.ke
+            const monitorId = req.params.id
+            const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(user.details,monitorId);
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+            } = s.checkPermission(user);
+            if(
+                isRestrictedApiKey && apiKeyPermissions.control_monitors_disallowed
+            ){
+                s.closeJsonResponse(res,{
+                    ok: false,
+                    msg: lang['Not Authorized']
+                });
+                return
+            }
             const endData = {ok: true}
             const responses = {}
             try{
-                const groupKey = req.params.ke
-                const monitorId = req.params.id
                 const onvifDevice = await getOnvifDevice(groupKey,monitorId)
                 const form = s.getPostData(req)
                 const videoToken = form.VideoConfiguration && form.VideoConfiguration.videoToken ? form.VideoConfiguration.videoToken : null
@@ -100,10 +134,28 @@ module.exports = function(s,config,lang,app,io){
      */
     app.get(config.webPaths.apiPrefix+':auth/onvifDeviceManager/:ke/:id/reboot',function (req,res){
         s.auth(req.params,async (user) => {
+            const groupKey = req.params.ke
+            const monitorId = req.params.id
+            const {
+                monitorPermissions,
+                monitorRestrictions,
+            } = s.getMonitorsPermitted(user.details,monitorId);
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+            } = s.checkPermission(user);
+            if(
+                isRestrictedApiKey && apiKeyPermissions.control_monitors_disallowed
+            ){
+                s.closeJsonResponse(res,{
+                    ok: false,
+                    msg: lang['Not Authorized']
+                });
+                return
+            }
             const endData = {ok: true}
             try{
-                const groupKey = req.params.ke
-                const monitorId = req.params.id
                 const onvifDevice = await getOnvifDevice(groupKey,monitorId)
                 const cameraInfo = await rebootCamera(onvifDevice)
                 endData.onvifData = cameraInfo

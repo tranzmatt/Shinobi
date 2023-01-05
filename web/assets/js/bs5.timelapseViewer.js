@@ -50,45 +50,35 @@ $(document).ready(function(e){
     var openTimelapseWindow = function(monitorId,startDate,endDate){
         drawTimelapseWindowElements(monitorId,startDate,endDate)
     }
-    var getSelectedTime = function(asUtc){
-        var dateRange = dateSelector.data('daterangepicker')
-        var startDate = dateRange.startDate.clone()
-        var endDate = dateRange.endDate.clone()
-        if(asUtc){
-            startDate = startDate.utc()
-            endDate = endDate.utc()
+    loadDateRangePicker(dateSelector,{
+        onChange: function(start, end, label) {
+            drawTimelapseWindowElements()
         }
-        startDate = startDate.format('YYYY-MM-DDTHH:mm:ss')
-        endDate = endDate.format('YYYY-MM-DDTHH:mm:ss')
-        return {
-            startDate: startDate,
-            endDate: endDate
-        }
-    }
-
-    dateSelector.daterangepicker({
-        startDate: moment().utc().subtract(2, 'days'),
-        endDate: moment().utc(),
-        timePicker: true,
-        locale: {
-            format: 'YYYY/MM/DD hh:mm:ss A'
-        }
-    }, function(start, end, label) {
-        drawTimelapseWindowElements()
     })
     monitorsList.change(function(){
         drawTimelapseWindowElements()
-        getLiveStream()
+        // getLiveStream()
+    })
+    timelapseWindow.find('.refresh-data').click(function(){
+        drawTimelapseWindowElements()
+        // getLiveStream()
     })
     var getLiveStream = function(){
         var selectedMonitor = monitorsList.val()
-        liveStreamView.html(`<iframe src="${apiBaseUrl + '/embed/' + $user.ke + '/' + selectedMonitor + '/jquery|fullscreen'}"></iframe>`)
+        liveStreamView.html(`<iframe src="${apiBaseUrl + '/embed/' + $user.ke + '/' + selectedMonitor + '/jquery|fullscreen'}?host=${location.pathname}"></iframe>`)
         liveStreamView.find('iframe').width(playBackViewImage.width())
 
     }
+    function getSelectedRows(){
+        var checkedBoxes = frameIcons.serializeObject()
+        var fileNames = Object.values(checkedBoxes)
+        return fileNames.map((filename) => {
+            return currentPlaylist[filename]
+        });
+    }
     function drawTimelapseWindowElements(selectedMonitor,startDate,endDate){
         setDownloadButtonLabel(lang['Build Video'], 'database')
-        var dateRange = getSelectedTime(false)
+        var dateRange = getSelectedTime(dateSelector)
         if(!startDate)startDate = dateRange.startDate
         if(!endDate)endDate = dateRange.endDate
         if(!selectedMonitor)selectedMonitor = monitorsList.val()
@@ -237,10 +227,10 @@ $(document).ready(function(e){
         var href = currentPlaylist[selectedFrame].href
         setPlayBackFrame(href)
     })
-    timelapseWindow.on('click','.playPause',function(){
+    .on('click','.playPause',function(){
         togglePlayPause()
     })
-    timelapseWindow.on('click','.frame .delete',function(e){
+    .on('click','.frame .delete',function(e){
         e.stopPropagation()
         var el = $(this).parents('.frame')
         var filename = el.attr('data-filename')
@@ -260,22 +250,28 @@ $(document).ready(function(e){
             }
         })
     })
-    timelapseWindow.on('click','.delete-selected',function(e){
+    .on('click','.delete-selected-frames',function(e){
         deleteSelectedFrames()
     })
-    selectAllBox.click(function(e){
-        toggleSelectOnAllFrames()
+    .on('click','.zip-selected-frames',function(e){
+        e.preventDefault()
+        var frames = getSelectedRows(true)
+        zipVideosAndDownloadWithConfirm(frames)
+        return false;
     })
-    timelapseWindow.on('click','.frame input',function(e){
+    .on('click','.frame input',function(e){
         e.stopPropagation()
         const checked = $(this).is(':checked')
         if(!checked){
             selectAllBox.prop('checked',false)
         }
-    })
+    });
+    selectAllBox.click(function(e){
+        toggleSelectOnAllFrames()
+    });
     downloadButton.click(function(){
         var fps = fpsSelector.val()
-        var dateRange = getSelectedTime(false)
+        var dateRange = getSelectedTime(dateSelector)
         var startDate = dateRange.startDate
         var endDate = dateRange.endDate
         var selectedMonitor = monitorsList.val()
@@ -312,12 +308,8 @@ $(document).ready(function(e){
             }
         })
     }
-    function buildFileBinUrl(data){
-        return apiBaseUrl + '/fileBin/' + data.ke + '/' + data.mid + '/' + data.name
-    }
-    function downloadTimelapseVideo(data){
-        var downloadUrl = buildFileBinUrl(data)
-        downloadFile(downloadUrl,data.name)
+    function downloadTimelapseFrame(frame){
+        downloadFile(frame.href,frame.filename)
     }
     function onTimelapseVideoBuildComplete(data){
         var saveBuiltVideo = dashboardOptions().switches.timelapseSaveBuiltVideo
@@ -376,18 +368,20 @@ $(document).ready(function(e){
                 window.askedForTimelapseVideoBuild = false
             break;
             case'fileBin_item_added':
-                var saveBuiltVideo = dashboardOptions().switches.timelapseSaveBuiltVideo
-                let statusText = `${lang['Done!']}`
-                onTimelapseVideoBuildComplete(data)
-                if(data.timelapseVideo && saveBuiltVideo === 1){
-                    downloadTimelapseVideo(data)
-                    statusText = lang['Downloaded!']
+                if(data.timelapseVideo){
+                    var saveBuiltVideo = dashboardOptions().switches.timelapseSaveBuiltVideo
+                    let statusText = `${lang['Done!']}`
+                    onTimelapseVideoBuildComplete(data)
+                    if(saveBuiltVideo === 1){
+                        downloadTimelapseVideo(data)
+                        statusText = lang['Downloaded!']
+                    }
+                    setDownloadButtonLabel(statusText, '')
+                    var progressItem = sideLinkListBox.find(`[data-mid="${data.mid}"][data-ke="${data.mid}"][data-name="${data.name}"]`)
+                    progressItem.find('.row-status').text(statusText)
+                    progressItem.find('.dot').removeClass('dot-orange').addClass('dot-green')
+                    progressItem.find('.download-button').show()
                 }
-                setDownloadButtonLabel(statusText, '')
-                var progressItem = sideLinkListBox.find(`[data-mid="${data.mid}"][data-ke="${data.mid}"][data-name="${data.name}"]`)
-                progressItem.find('.row-status').text(statusText)
-                progressItem.find('.dot').removeClass('dot-orange').addClass('dot-green')
-                progressItem.find('.download-button').show()
             break;
             case'timelapse_build_percent':
                 var progressItem = sideLinkListBox.find(`[data-mid="${data.mid}"][data-ke="${data.mid}"][data-name="${data.name}"]`)
