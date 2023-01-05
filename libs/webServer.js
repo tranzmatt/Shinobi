@@ -5,6 +5,7 @@ const https = require('https');
 const express = require('express');
 const app = express()
 module.exports = function(s,config,lang,io){
+    app.disable('x-powered-by');
     //get page URL
     if(!config.baseURL){
         config.baseURL = ""
@@ -55,6 +56,36 @@ module.exports = function(s,config,lang,io){
         if(config.renderPaths.cycle === undefined){config.renderPaths.cycle='pages/cycle'}
     // Use uws/cws
     if(config.useUWebsocketJs === undefined){config.useUWebsocketJs=true}
+    if(config.webBlocksPreloaded === undefined){
+        config.webBlocksPreloaded = [
+            'home/initial',
+            'home/videoPlayer',
+            'home/monitorsList',
+            'home/subAccountManager',
+            'home/accountSettings',
+            'home/apiKeys',
+            'home/monitorSettings',
+            'home/schedules',
+            'home/monitorStates',
+            'home/liveGrid',
+            'home/regionEditor',
+            'home/timelapseViewer',
+            'home/eventFilters',
+            'home/cameraProbe',
+            'home/powerVideo',
+            'home/onvifScanner',
+            'home/onvifDeviceManager',
+            'home/configFinder',
+            'home/logViewer',
+            'home/calendar',
+            'home/eventListWithPics',
+            'home/fileBin',
+            'home/videosTable',
+            'home/studio',
+            'confirm',
+            'home/help',
+        ]
+    }
     //SSL options
     var wellKnownDirectory = s.mainDirectory + '/web/.well-known'
     if(fs.existsSync(wellKnownDirectory))app.use('/.well-known',express.static(wellKnownDirectory))

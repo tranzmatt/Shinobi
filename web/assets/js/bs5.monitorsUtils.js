@@ -1,4 +1,3 @@
-var availableMonitorGroups = {}
 var monitorGroupSelections = $('#monitor-group-selections')
 var onGetSnapshotByStreamExtensions = []
 function onGetSnapshotByStream(callback){
@@ -51,73 +50,85 @@ function setCosmeticMonitorInfo(monitorConfig){
 }
 
 function getSnapshot(options,cb){
-    var image_data
-    var url
-    var monitor = options.mon || options.monitor || options
-    var targetElement = $(options.targetElement || `[data-mid="${monitor.mid}"].monitor_item .stream-element`)
-    var details = safeJsonParse(monitor.details)
-    var streamType = details.stream_type;
-    if(window.jpegModeOn !== true){
-        function completeAction(image_data,width,height){
-            var len = image_data.length
-            var arraybuffer = new Uint8Array( len )
-            for (var i = 0; i < len; i++)        {
-                arraybuffer[i] = image_data.charCodeAt(i)
-            }
-            try {
-                var blob = new Blob([arraybuffer], {type: 'application/octet-stream'})
-            } catch (e) {
-                var bb = new (window.WebKitBlobBuilder || window.MozBlobBuilder)
-                bb.append(arraybuffer);
-                var blob = bb.getBlob('application/octet-stream');
-            }
-            url = (window.URL || window.webkitURL).createObjectURL(blob)
-            cb(url,image_data,width,height)
-            try{
-                setTimeout(function(){
-                    URL.revokeObjectURL(url)
-                },10000)
-            }catch(er){}
+    return new Promise((resolve,reject) => {
+        function endAction(url,image_data,width,height,fileSize){
+            if(cb)cb(url,image_data,width,height,fileSize);
+            resolve({
+                url,
+                image_data,
+                width,
+                height,
+                fileSize
+            });
         }
-        switch(streamType){
-            case'hls':
-            case'flv':
-            case'mp4':
-                getVideoSnapshot(targetElement[0],function(base64,video_data,width,height){
-                    completeAction(video_data,width,height)
-                })
-            break;
-            case'mjpeg':
-                $('#temp').html('<canvas></canvas>')
-                var c = $('#temp canvas')[0]
-                var img = $('img',targetElement.contents())[0]
-                c.width = img.width
-                c.height = img.height
-                var ctx = c.getContext('2d')
-                ctx.drawImage(img, 0, 0,c.width,c.height)
-                completeAction(atob(c.toDataURL('image/jpeg').split(',')[1]),c.width,c.height)
-            break;
-            case'b64':
-                var c = targetElement[0]
-                var ctx = c.getContext('2d')
-                completeAction(atob(c.toDataURL('image/jpeg').split(',')[1]),c.width,c.height)
-            break;
-            case'jpeg':
-                url = targetElement.attr('src')
-                image_data = new Image()
-                image_data.src = url
-                cb(url,image_data,image_data.width,image_data.height)
-            break;
+        var image_data
+        var url
+        var monitor = options.mon || options.monitor || options
+        var targetElement = $(options.targetElement || `[data-mid="${monitor.mid}"].monitor_item .stream-element`)
+        var details = safeJsonParse(monitor.details)
+        var streamType = details.stream_type;
+        if(window.jpegModeOn !== true){
+            function completeAction(image_data,width,height){
+                var len = image_data.length
+                var arraybuffer = new Uint8Array( len )
+                for (var i = 0; i < len; i++)        {
+                    arraybuffer[i] = image_data.charCodeAt(i)
+                }
+                try {
+                    var blob = new Blob([arraybuffer], {type: 'application/octet-stream'})
+                } catch (e) {
+                    var bb = new (window.WebKitBlobBuilder || window.MozBlobBuilder)
+                    bb.append(arraybuffer);
+                    var blob = bb.getBlob('application/octet-stream');
+                }
+                url = (window.URL || window.webkitURL).createObjectURL(blob)
+                endAction(url,image_data,width,height,arraybuffer.length)
+                try{
+                    setTimeout(function(){
+                        URL.revokeObjectURL(url)
+                    },10000)
+                }catch(er){}
+            }
+            switch(streamType){
+                case'hls':
+                case'flv':
+                case'mp4':
+                    getVideoSnapshot(targetElement[0],function(base64,video_data,width,height){
+                        completeAction(video_data,width,height)
+                    })
+                break;
+                case'mjpeg':
+                    $('#temp').html('<canvas></canvas>')
+                    var c = $('#temp canvas')[0]
+                    var img = $('img',targetElement.contents())[0]
+                    c.width = img.width
+                    c.height = img.height
+                    var ctx = c.getContext('2d')
+                    ctx.drawImage(img, 0, 0,c.width,c.height)
+                    completeAction(atob(c.toDataURL('image/jpeg').split(',')[1]),c.width,c.height)
+                break;
+                case'b64':
+                    var c = targetElement[0]
+                    var ctx = c.getContext('2d')
+                    completeAction(atob(c.toDataURL('image/jpeg').split(',')[1]),c.width,c.height)
+                break;
+                case'jpeg':
+                    url = targetElement.attr('src')
+                    image_data = new Image()
+                    image_data.src = url
+                    endAction(url,image_data,image_data.width,image_data.height,0)
+                break;
+            }
+            $.each(onGetSnapshotByStreamExtensions,function(n,extender){
+                extender(streamType,targetElement,completeAction,cb)
+            })
+        }else{
+            url = targetElement.attr('src')
+            image_data = new Image()
+            image_data.src = url
+            endAction(url,image_data,image_data.width,image_data.height,0)
         }
-        $.each(onGetSnapshotByStreamExtensions,function(n,extender){
-            extender(streamType,targetElement,completeAction,cb)
-        })
-    }else{
-        url = targetElement.attr('src')
-        image_data = new Image()
-        image_data.src = url
-        cb(url,image_data,image_data.width,image_data.height)
-    }
+    })
 }
 function getVideoSnapshot(videoElement,cb){
     var image_data
@@ -171,10 +182,30 @@ function runPtzMove(monitorId,switchChosen,doMove){
         ke: $user.ke
     })
 }
-function runTestDetectionTrigger(monitorId,callback){
-    $.getJSON(getApiPrefix() + '/motion/'+$user.ke+'/'+monitorId+'/?data={"plug":"manual_trigger","name":"Manual Trigger","reason":"Manual","confidence":100}',function(d){
-        debugLog(d)
-        if(callback)callback()
+function runTestDetectionTrigger(monitorId,customData){
+    return new Promise((resolve,reject) => {
+        var detectionData = Object.assign({
+            "plug":"dashboard",
+            "name":"Test Object",
+            "reason":"object",
+            "confidence": 80,
+            imgHeight: 640,
+            imgWidth: 480,
+            matrices: [
+                {
+                    x: 15,
+                    y: 15,
+                    width: 50,
+                    height: 50,
+                    tag: 'Object Test',
+                    confidence: 100,
+                }
+            ]
+        },customData || {});
+        $.getJSON(getApiPrefix() + '/motion/'+$user.ke+'/'+monitorId+'/?data=' + JSON.stringify(detectionData),function(d){
+            debugLog(d)
+            resolve(d)
+        })
     })
 }
 function toggleSubStream(monitorId,callback){
@@ -260,8 +291,6 @@ function getDbColumnsForMonitor(monitor){
         'mid',
         'ke',
         'name',
-        'shto',
-        'shfr',
         'details',
         'type',
         'ext',
@@ -271,6 +300,8 @@ function getDbColumnsForMonitor(monitor){
         'port',
         'fps',
         'mode',
+        'saveDir',
+        'tags',
         'width',
         'height'
     ]
@@ -297,10 +328,6 @@ function downloadMonitorConfigurationsToDisk(monitorIds){
         [0].click()
 }
 
-function importShinobiMonitor(monitor){
-
-}
-
 function importM3u8Playlist(textData){
     var m3u8List = textData.replace('#EXTM3U','').trim().split('\n')
     var parsedList = {}
@@ -313,9 +340,9 @@ function importM3u8Playlist(textData){
         }
     })
     $.each(parsedList,function(name,url){
-        var link = getUrlPieces(url)
+        var link = getUrlParts(url)
         var newMon = generateDefaultMonitorSettings()
-        newMon.details = JSON.parse(newMon.details)
+        newMon.details = safeJsonParse(newMon.details)
         newMon.mid = 'HLS' + name.toLowerCase()
         newMon.name = name
         newMon.port = link.port
@@ -336,26 +363,139 @@ function importM3u8Playlist(textData){
         postMonitor(newMon)
     })
 }
-
+function convertZoneMinderZonesToCords(rows,width,height){
+    var coordinates = {}
+    const defaultDetectionWidth = 640
+    const defaultDetectionHeight = 480
+    rows.forEach((row) => {
+        const zone = row.Zone || row
+        let widthRatio = width > defaultDetectionWidth ? defaultDetectionWidth / width : 1
+        let heightRatio = height > defaultDetectionHeight ? defaultDetectionHeight / height : 1
+        const points = zone.Coords.split(' ').map((item) => {
+            let points = item.split(',').map((num) => parseInt(num));
+            points[0] = parseInt(points[0] * widthRatio);
+            points[1] = parseInt(points[1] * heightRatio);
+            return points
+        })
+        const monitorId = zone.MonitorId
+        coordinates[generateId(5)] = {
+           "name": `${zone.Id}-${monitorId}`,
+           "sensitivity": "5",
+           "max_sensitivity": "",
+           "threshold": 1,
+           "color_threshold": 9,
+           "points": points
+        }
+    })
+    return coordinates
+}
+function mergeZoneMinderZonesIntoMonitors(data){
+    const monitors = data.monitors
+    const singleMonitor = data.monitor && data.monitor.Monitor ? data.monitor.Monitor : null
+    const zones = data.zones
+    const targetMonitors = singleMonitor ? [singleMonitor] : monitors
+    targetMonitors.forEach((row) => {
+        const monitor = row.Monitor
+        const width = parseInt(monitor.Width)
+        const height = parseInt(monitor.Height)
+        const monitorZones = zones.filter(zone => {
+            return zone.Zone.MonitorId === monitor.Id
+        })
+        monitor.Zones = convertZoneMinderZonesToCords(monitorZones,width,height) || {}
+    })
+    if(singleMonitor){
+        data.monitor.Monitor = targetMonitors[0]
+    }
+}
 function importZoneMinderMonitor(Monitor){
     var newMon = generateDefaultMonitorSettings()
-    newMon.details = JSON.parse(newMon.details)
-    newMon.details.stream_type = 'jpeg'
+    newMon.details = safeJsonParse(newMon.details)
     switch(Monitor.Type.toLowerCase()){
         case'ffmpeg':case'libvlc':
+            const url = getUrlParts(Monitor.Path)
+            const username = url.username || Monitor.User || Monitor.ONVIF_Username
+            const password = url.password || Monitor.Pass || Monitor.ONVIF_Password
+            const host = addCredentialsToUrl(url.origin,username,password)
+            const monitorIdSuffix = removeSpecialCharacters(Monitor.Name).toLowerCase().substring(0,15)
+            newMon.name = Monitor.Name + ` (ZM)`
+            newMon.mid = `zm${monitorIdSuffix}`;
+            newMon.host = host
+            newMon.protocol = `${url.protocol}//`
+            newMon.port = url.port || Monitor.Port
+            newMon.path = url.pathname + url.search
             newMon.details.auto_host_enable = '1'
             newMon.details.auto_host = Monitor.Path
-            if(newMon.auto_host.indexOf('rtsp://') > -1 || newMon.auto_host.indexOf('rtmp://') > -1 || newMon.auto_host.indexOf('rtmps://') > -1){
+            newMon.details.muser = username
+            newMon.details.mpass = password
+            newMon.details.stream_type = 'hls'
+            newMon.details.detector_buffer_acodec = 'auto'
+            newMon.type = 'h264'
+            if(Monitor.Zones){
+                newMon.details.cords = JSON.stringify(Monitor.Zones)
+            }
+            switch(Monitor.Function){
+                case'None':
+                    // The monitor is currently disabled.
+                    newMon.mode = 'stop'
+                break;
+                case'Monitor':
+                    // The monitor is only available for live streaming.
+                    // No image analysis is done so no alarms or events will be generated
+                    // nothing will be recorded.
+                    newMon.mode = 'start'
+                    newMon.details.detector = '0'
+                break;
+                case'Modect':
+                    // (Monitor) or MOtion DEteCTtion.
+                    // All captured images will be analysed
+                    // events generated with recorded video where motion is detected.
+                    newMon.mode = 'start'
+                    newMon.details.detector = '1'
+                    newMon.details.detector_http_api = '1'
+                    newMon.details.detector_send_frames = '1'
+                break;
+                case'Record':
+                    // The monitor will be continuously recorded.
+                    // No motion detection takes place in this mode.
+                    newMon.mode = 'record'
+                    newMon.details.detector = '0'
+                break;
+                case'Mocord':
+                    // The monitor will be continuously recorded
+                    // motion being highlighted within those events.
+                    newMon.mode = 'record'
+                    newMon.details.detector = '1'
+                    newMon.details.detector_http_api = '1'
+                    newMon.details.detector_send_frames = '1'
+                break;
+                case'Nodect':
+                    // (Mocord) or No DEteCTtion.
+                    // This is a special mode designed to be used with external triggers.
+                    // In Nodect no motion detection takes place but events are recorded if external triggers require it.
+                    newMon.mode = 'start'
+                    newMon.details.detector = '1'
+                    newMon.details.detector_send_frames = '0'
+                    newMon.details.detector_http_api = '1'
+                break;
+            }
+            if(
+                url.protocol === 'rtsp:' ||
+                url.protocol === 'rtmp:' ||
+                url.protocol === 'rtmps:'
+            ){
                 newMon.type = 'h264'
             }else{
-                $.ccio.init('note',{title:lang['Please Check Your Settings'],text:lang.migrateText1,type:'error'})
+                new PNotify({
+                    title: lang['Please Check Your Settings'],
+                    text: lang.migrateText1,type:'error'
+                })
             }
         break;
-        case'local':
-            newMon.details.auto_host = Monitor.Device
-        break;
-        case'remote':
-
+        default:
+            new PNotify({
+                title: lang['Please Check Your Settings'],
+                text: lang.migrateText1,type:'error'
+            })
         break;
     }
     newMon.details = JSON.stringify(newMon.details)
@@ -364,7 +504,7 @@ function importZoneMinderMonitor(Monitor){
 
 function importMonitor(textData){
     try{
-        var parsedData = textData instanceof Object ? textData : safeJsonParse(textData)
+        var parsedData = textData instanceof Object ? textData : safeJsonParse(mergeConcattedJsonString(textData))
         function postMonitor(v){
             var monitorId = v.mid
             $.post(`${getApiPrefix('configureMonitor')}/${monitorId}`,{
@@ -375,10 +515,12 @@ function importMonitor(textData){
         }
         //zoneminder one monitor
         if(parsedData.monitor){
+            mergeZoneMinderZonesIntoMonitors(parsedData)
             postMonitor(importZoneMinderMonitor(parsedData.monitor.Monitor))
         }else
         //zoneminder multiple monitors
         if(parsedData.monitors){
+            mergeZoneMinderZonesIntoMonitors(parsedData)
             $.each(parsedData.monitors,function(n,v){
                 postMonitor(importZoneMinderMonitor(v.Monitor))
             })
@@ -418,7 +560,7 @@ function deleteMonitors(monitorsSelected,afterDelete){
                 callback:function(){
                     $.each(monitorsSelected,function(n,monitor){
                         $.getJSON(`${getApiPrefix(`configureMonitor`)}/${monitor.mid}/delete`,function(data){
-                            console.log(data)
+                            notifyIfActionFailed(data)
                             if(monitorsSelected.length === n + 1){
                                 //last
                                 if(afterDelete)afterDelete(monitorsSelected)
@@ -433,7 +575,7 @@ function deleteMonitors(monitorsSelected,afterDelete){
                 callback:function(){
                     $.each(monitorsSelected,function(n,monitor){
                         $.getJSON(`${getApiPrefix(`configureMonitor`)}/${monitor.mid}/delete?deleteFiles=true`,function(data){
-                            console.log(data)
+                            notifyIfActionFailed(data)
                             if(monitorsSelected.length === n + 1){
                                 //last
                                 if(afterDelete)afterDelete(monitorsSelected)
@@ -461,7 +603,7 @@ function launchImportMonitorWindow(callback){
                 title: lang['Import'],
                 class: 'btn-primary',
                 callback: function(){
-                    var textData = safeJsonParse($.confirm.e.find('textarea').val())
+                    var textData = safeJsonParse(mergeConcattedJsonString($.confirm.e.find('textarea').val()))
                     if(callback){
                         callback(textData)
                     }else{
@@ -537,47 +679,31 @@ function muteMonitorAudio(monitorId,buttonEl){
     var volumeIcon = monitorMutes[monitorId] !== 1 ? 'volume-up' : 'volume-off'
     if(buttonEl)buttonEl.find('i').removeClass('fa-volume-up fa-volume-off').addClass('fa-' + volumeIcon)
 }
-function getAvailableMonitorGroups(){
-    var theGroups = {}
-    $.each(loadedMonitors,function(n,monitor){
-        var monitorsGroups = safeJsonParse(monitor.details.groups)
-        $.each(monitorsGroups,function(m,groupId){
-            if(!theGroups[groupId])theGroups[groupId]={}
-            theGroups[groupId][monitor.mid] = monitor
-        })
-    })
-    availableMonitorGroups = theGroups
-    return theGroups;
-}
-function drawMonitorGroupList(){
-    var html = ''
-    getAvailableMonitorGroups()
-    $.each(availableMonitorGroups,function(groupId,v){
-        if($user.mon_groups[groupId]){
-           html += `<li class="cursor-pointer"><a class="dropdown-item" monitor-group="${groupId}">${$user.mon_groups[groupId].name}</a></li>`
+function getListOfTagsFromMonitors(){
+    var listOftags = {}
+    $.each(loadedMonitors,function(monitorId,monitor){
+        if(monitor.tags){
+           monitor.tags.split(',').forEach((tag) => {
+               if(!listOftags[tag])listOftags[tag] = [];
+               listOftags[tag].push(monitorId)
+           })
         }
     })
-    monitorGroupSelections.html(html)
+    return listOftags
 }
-function loadMonitorGroup(groupId){
-    $.each(dashboardOptions().watch_on,function(groupKey,groupData){
-      $.each(groupData,function(monitorId,isOn){
-          if(isOn)mainSocket.f({
-              f: 'monitor',
-              ff: 'watch_off',
-              id: monitorId,
-              ke: $user.ke
-          })
-      })
+function buildMonitorGroupListFromTags(){
+    var html = ``
+    var listOftags = getListOfTagsFromMonitors()
+    $.each(listOftags,function(tagName,monitorIds){
+        html += `<li class="cursor-pointer"><a class="dropdown-item monitor-live-group-open" monitor-ids="${monitorIds.join(',')}">${tagName}</a></li>`
     })
-    $.each(availableMonitorGroups[groupId],function(n,monitor){
-      mainSocket.f({
-          f: 'monitor',
-          ff: 'watch_on',
-          id: monitor.mid,
-          ke: $user.ke
-      })
-    })
+    return html
+}
+function drawMonitorGroupList(){
+    var html = `<li><hr class="dropdown-divider"></li>
+    <li class="pl-4"><small class="text-muted">${lang.Tags}</small></li>`
+    html += buildMonitorGroupListFromTags()
+    monitorGroupSelections.html(html)
 }
 function buildDefaultMonitorMenuItems(){
     return `
@@ -768,22 +894,6 @@ var miniCardSettingsFields = [
             fieldType: 'toggle',
         }
     },
-    function(monitorAlreadyAdded){
-        var monitorGroups = Object.values($user.mon_groups).map(function(item){
-            return {
-                value: item.id,
-                name: item.name,
-                selected: monitorAlreadyAdded.details.groups.indexOf(item.id) > -1,
-            }
-        });
-        return  {
-            label: lang['Grouping'],
-            name: `monitor-groups-selected="${monitorAlreadyAdded.mid}"`,
-            fieldType: 'select',
-            attributes: 'multiple',
-            possible: monitorGroups,
-        }
-    },
 ]
 function buildMiniMonitorCardBody(monitorAlreadyAdded,monitorConfigPartial,additionalInfo,doOpenVideosInsteadOfDelete){
     if(!monitorConfigPartial)monitorConfigPartial = monitorAlreadyAdded;
@@ -884,6 +994,9 @@ function getRowsMonitorId(rowEl){
     var monitorId = el.attr('data-mid')
     return monitorId
 }
+function getMonitorEmbedLink(monitorConfig){
+    return `${getApiPrefix('embed')}/${monitorConfig.mid}/fullscreen|jquery|relative`
+}
 $(document).ready(function(){
     $('body')
     .on('click','[system]',function(){
@@ -920,10 +1033,4 @@ $(document).ready(function(){
         parent.find(`[card-page-container="${pageSelection}"]`).show()
         return false;
     });
-    monitorGroupSelections
-    .on('click','[monitor-group]',function(){
-        var groupId = $(this).attr('monitor-group');
-        loadMonitorGroup(groupId)
-        openLiveGrid()
-    })
 })

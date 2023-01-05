@@ -2,6 +2,8 @@ const fs = require('fs-extra');
 const express = require('express')
 const unzipper = require('unzipper')
 const spawn = require('child_process').spawn
+const exec = require('child_process').execSync
+const treekill = require('tree-kill');
 const {
   Worker
 } = require('worker_threads');
@@ -74,12 +76,10 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
                     name: moduleName
                 }
             }
-            if(newModule.properties.disabled === undefined){
-                newModule.properties.disabled = true
-            }
             //conf.json
             newModule.config = getModuleConfiguration(moduleName)
             newModule.hasInstaller = hasInstaller
+            newModule.installerRunning = !!runningInstallProcesses[moduleName]
         }
         return newModule
     }
@@ -92,7 +92,11 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
     }
     const downloadModule = (downloadUrl,packageName) => {
         const downloadPath = modulesBasePath + packageName
-        fs.mkdirSync(downloadPath)
+        try{
+            fs.mkdirSync(downloadPath)
+        }catch(err){
+            s.debugLog(err)
+        }
         return new Promise(async (resolve, reject) => {
             fs.mkdir(downloadPath, () => {
                 fetchDownloadAndWrite(downloadUrl,downloadPath + '.zip', 1)
@@ -117,6 +121,7 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
                         fs.remove(downloadPath + '.zip', () => {})
                         resolve()
                     })
+                    .catch(reject)
                 })
             })
         })
@@ -138,31 +143,37 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
                 const installerPath = modulePath + `INSTALL.sh`
                 const propertiesPath = modulePath + 'package.json'
                 var installProcess
-                // check for INSTALL.sh (ubuntu only)
+                const tempRunPath = `${process.cwd()}/plugin-install-${name}.sh`
                 if(fs.existsSync(installerPath)){
-                    installProcess = spawn(`sh`,[installerPath])
+                    // check for INSTALL.sh (ubuntu only)
+                    fs.writeFileSync(tempRunPath,`cd "${modulePath}" && sh INSTALL.sh && echo "Done!"`)
                 }else if(fs.existsSync(propertiesPath)){
                     // no INSTALL.sh found, check for package.json and do `npm install --unsafe-perm`
-                    installProcess = spawn(`npm`,['install','--unsafe-perm','--prefix',modulePath])
+                    fs.writeFileSync(tempRunPath,`cd "${modulePath}" && npm install && echo "Done!"`)
+                }else{
+                    fs.writeFileSync(tempRunPath,`echo "No Installer Found"`)
                 }
+                installProcess = spawn(`sh`,[tempRunPath])
+                fs.rm(tempRunPath,function(err){s.debugLog(err)})
                 if(installProcess){
                     const sendData = (data,channel) => {
                         const clientData = {
                             f: 'plugin-info',
                             module: name,
                             process: 'install-' + channel,
-                            data: data.toString(),
+                            data: data,
                         }
                         s.tx(clientData,'$')
                         s.debugLog(clientData)
                     }
                     installProcess.stderr.on('data',(data) => {
-                        sendData(data,'stderr')
+                        sendData(data.toString(),'stderr')
                     })
                     installProcess.stdout.on('data',(data) => {
-                        sendData(data,'stdout')
+                        sendData(data.toString(),'stdout')
                     })
                     installProcess.on('exit',(data) => {
+                        sendData('#END_PROCESS','stdout')
                         runningInstallProcesses[name] = null;
                     })
                     runningInstallProcesses[name] = installProcess
@@ -173,28 +184,61 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
             }
         })
     }
-    const disableModule = (name,status) => {
+    const runModuleCommand = (name,scriptName) => {
+        return new Promise((resolve, reject) => {
+            if(!runningInstallProcesses[name]){
+                //depending on module this may only work for Ubuntu
+                const modulePath = getModulePath(name)
+                const properties = getModuleProperties(name);
+                const theCmd = properties.addCmd[scriptName].cmd
+                var installProcess
+                const tempRunPath = `${process.cwd()}/plugin-install-${name}.sh`
+                fs.writeFileSync(tempRunPath,`cd "${modulePath}" && ${theCmd}`)
+                installProcess = spawn(`sh`,[tempRunPath])
+                fs.rm(tempRunPath,function(err){s.debugLog(err)})
+                if(installProcess){
+                    const sendData = (data,channel) => {
+                        const clientData = {
+                            f: 'plugin-info',
+                            module: name,
+                            process: 'install-' + channel,
+                            data: data,
+                        }
+                        s.tx(clientData,'$')
+                        s.debugLog(clientData)
+                    }
+                    installProcess.stderr.on('data',(data) => {
+                        sendData(data.toString(),'stderr')
+                    })
+                    installProcess.stdout.on('data',(data) => {
+                        sendData(data.toString(),'stdout')
+                    })
+                    installProcess.on('exit',(data) => {
+                        sendData('#END_PROCESS','stdout')
+                        runningInstallProcesses[name] = null;
+                    })
+                    runningInstallProcesses[name] = installProcess
+                }
+                resolve()
+            }else{
+                resolve(lang['Already Installing...'])
+            }
+        })
+    }
+    const enableModule = (name,status) => {
         // set status to `false` to enable
         const modulePath = getModulePath(name)
-        const properties = getModuleProperties(name);
-        const propertiesPath = modulePath + 'package.json'
-        var packageJson = {
-            name: name
-        }
-        try{
-            packageJson = JSON.parse(fs.readFileSync(propertiesPath))
-        }catch(err){
-
-        }
-        packageJson.disabled = status;
-        fs.writeFileSync(propertiesPath,s.prettyPrint(packageJson))
+        const confJson = getModuleConfiguration(name)
+        const confPath = modulePath + 'conf.json'
+        confJson.enabled = status;
+        fs.writeFileSync(confPath,s.prettyPrint(confJson))
     }
     const deleteModule = (name) => {
         // requires restart for changes to take effect
         try{
             const modulePath = modulesBasePath + name
             fs.remove(modulePath, (err) => {
-                console.log(err)
+                if(err)console.log(err)
             })
             return true
         }catch(err){
@@ -267,10 +311,10 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
         });
         runningPluginWorkers[moduleName] = worker
     }
-    const moveModuleToNameInProperties = (modulePath,packageRoot,properties) => {
+    const moveModuleToNameInProperties = (modulePath,packageRoot) => {
         return new Promise((resolve,reject) => {
             const packageRootParts = packageRoot.split('/')
-            const filename = packageRootParts[packageRootParts.length - 1]
+            const filename = `dl_${packageRootParts[packageRootParts.length - 1]}`
             fs.move(modulePath + packageRoot,modulesBasePath + filename,(err) => {
                 if(packageRoot){
                     fs.remove(modulePath, (err) => {
@@ -288,7 +332,7 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
             if(!err && folderContents.length > 0){
                 var moduleList = getModules(true)
                 moduleList.forEach((shinobiModule) => {
-                    if(!shinobiModule || shinobiModule.properties.disabled || shinobiModule.properties.disabled === undefined){
+                    if(!shinobiModule || !shinobiModule.config.enabled){
                         return;
                     }
                     loadModule(shinobiModule)
@@ -320,16 +364,21 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
                 const packageName = req.body.packageName || extractNameFromPackage(url)
                 const modulePath = getModulePath(packageName)
                 await downloadModule(url,packageName)
-                const properties = getModuleProperties(packageName)
-                const newName = await moveModuleToNameInProperties(modulePath,packageRoot,properties)
+                s.debugLog('Downloaded',packageName,url)
+                const newName = await moveModuleToNameInProperties(modulePath,packageRoot)
+                const properties = getModuleProperties(newName)
+                s.debugLog('properties',properties)
+                s.debugLog('moveModuleToNameInProperties',newName)
                 const chosenName = newName ? newName : packageName
-                disableModule(chosenName,true)
+                enableModule(chosenName,false)
+                s.debugLog('Plugin Ready to Use!',newName,url)
                 s.closeJsonResponse(res,{
                     ok: true,
                     moduleName: chosenName,
                     newModule: getModule(chosenName)
                 })
             }catch(err){
+                console.error(err)
                 s.closeJsonResponse(res,{
                     ok: false,
                     error: err
@@ -352,7 +401,7 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
     //             const newName = await moveModuleToNameInProperties(modulePath,packageRoot,properties)
     //             const chosenName = newName ? newName : packageName
     //
-    //             disableModule(chosenName,true)
+    //             enableModule(chosenName,true)
     //             s.closeJsonResponse(res,{
     //                 ok: true,
     //                 moduleName: chosenName,
@@ -375,9 +424,31 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
             const cancelInstall = req.body.cancelInstall === 'true' ? true : false
             const response = {ok: true}
             if(runningInstallProcesses[packageName] && cancelInstall){
-                runningInstallProcesses[packageName].kill('SIGTERM')
+                treekill(runningInstallProcesses[packageName].pid)
+            }else if(cancelInstall){
+                // response.msg = ''
             }else{
                 const error = await installModule(packageName)
+                if(error){
+                    response.ok = false
+                    response.msg = error
+                }
+            }
+            s.closeJsonResponse(res,response)
+        },res,req)
+    })
+    /**
+    * API : Superuser : Custom Auto Load Package Install.
+    */
+    app.post(config.webPaths.superApiPrefix+':auth/plugins/run', (req,res) => {
+        s.superAuth(req.params, async (resp) => {
+            const packageName = req.body.packageName
+            const scriptName = req.body.scriptName
+            const response = {ok: true}
+            if(runningInstallProcesses[packageName]){
+                treekill(runningInstallProcesses[packageName].pid)
+            }else{
+                const error = await runModuleCommand(packageName,scriptName)
                 if(error){
                     response.ok = false
                     response.msg = error
@@ -448,7 +519,7 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
             const packageName = req.body.packageName
             const selection = status == 'true' ? true : false
             const theModule = getModule(packageName)
-            disableModule(packageName,selection)
+            enableModule(packageName,selection)
             if(theModule.config.hotLoadable === true){
                 if(!selection){
                     loadModule(theModule)
@@ -478,6 +549,8 @@ module.exports = async (s,config,lang,app,io,currentUse) => {
             s.closeJsonResponse(res,{ok: true})
         },res,req)
     })
-    // Initialize Modules on Start
-    await initializeAllModules();
+    s.onProcessReady(async () => {
+        // Initialize Modules on Start
+        await initializeAllModules();
+    })
 }

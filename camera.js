@@ -93,4 +93,8 @@ require('./libs/ffmpeg.js')(s,config,lang, async () => {
     await require('./libs/startup.js')(s,config,lang)
     //p2p, commander
     require('./libs/commander.js')(s,config,lang,app)
+    //cron
+    require('./libs/cron.js')(s,config,lang)
+    //video browser functions
+    require('./libs/videoBrowser.js')(s,config,lang,app,io)
 })

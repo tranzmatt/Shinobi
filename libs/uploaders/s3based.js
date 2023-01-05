@@ -1,15 +1,37 @@
-var fs = require('fs');
+// https://us-east-1.console.aws.amazon.com/iamv2/home#/users
+
+const fs = require('fs');
+const { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } = require("@aws-sdk/client-s3");
+
 module.exports = function(s,config,lang){
-    //Wasabi Hot Cloud Storage
-    var beforeAccountSaveForWasabiHotCloudStorage = function(d){
+    const genericRequest = async (groupKey,requestOptions) => {
+        const response = {ok: true}
+        try {
+            await s.group[groupKey].whcs.send(requestOptions);
+        } catch (err) {
+            console.error('AMZ genericRequest',groupKey,requestOptions)
+            response.ok = false
+            response.err = err
+        }
+        return response;
+    };
+    const deleteObject = async (groupKey,options) => {
+        return await genericRequest(groupKey,new DeleteObjectCommand(options))
+    };
+    const uploadObject = async (groupKey,options) => {
+        return await genericRequest(groupKey,new PutObjectCommand(options))
+    };
+    const getObject = async (groupKey,options) => {
+        // returns createReadStream
+        return await s.group[groupKey].whcs.send(new GetObjectCommand(options))
+    };
+    function beforeAccountSave(d){
         //d = save event
         d.formDetails.whcs_use_global=d.d.whcs_use_global
         d.formDetails.use_whcs=d.d.use_whcs
     }
-    var cloudDiskUseStartupForWasabiHotCloudStorage = function(group,userDetails){
-        group.cloudDiskUse = group.cloudDiskUse || {}
-        group.cloudDiskUse['whcs'] = group.cloudDiskUse['whcs'] || {}
-        group.cloudDiskUse['whcs'].name = 'Wasabi Hot Cloud Storage'
+    function cloudDiskUseStartup(group,userDetails){
+        group.cloudDiskUse['whcs'].name = 'S3-Based Network Storage'
         group.cloudDiskUse['whcs'].sizeLimitCheck = (userDetails.use_whcs_size_limit === '1')
         if(!userDetails.whcs_size_limit || userDetails.whcs_size_limit === ''){
             group.cloudDiskUse['whcs'].sizeLimit = 10000
@@ -17,9 +39,9 @@ module.exports = function(s,config,lang){
             group.cloudDiskUse['whcs'].sizeLimit = parseFloat(userDetails.whcs_size_limit)
         }
     }
-    var loadWasabiHotCloudStorageForUser = function(e){
+    function loadGroupApp(e){
         // e = user
-        var userDetails = s.parseJSON(e.details)
+        var userDetails = JSON.parse(e.details)
         if(userDetails.whcs_use_global === '1' && config.cloudUploaders && config.cloudUploaders.WasabiHotCloudStorage){
             // {
             //     whcs_accessKeyId: "",
@@ -30,8 +52,9 @@ module.exports = function(s,config,lang){
             // }
             userDetails = Object.assign(userDetails,config.cloudUploaders.WasabiHotCloudStorage)
         }
-        //Wasabi Hot Cloud Storage
-        if(!s.group[e.ke].whcs &&
+        //S3-Based Network Storage
+        if(
+           !s.group[e.ke].whcs &&
            userDetails.whcs !== '0' &&
            userDetails.whcs_accessKeyId !== ''&&
            userDetails.whcs_secretAccessKey &&
@@ -41,116 +64,98 @@ module.exports = function(s,config,lang){
             if(!userDetails.whcs_dir || userDetails.whcs_dir === '/'){
                 userDetails.whcs_dir = ''
             }
-            if(userDetails.whcs_dir !== ''){
+            if(userDetails.whcs_dir){
                 userDetails.whcs_dir = s.checkCorrectPathEnding(userDetails.whcs_dir)
             }
-            if(userDetails.use_whcs_endpoint_select && userDetails.use_whcs_endpoint_select !== ''){
-                userDetails.whcs_endpoint = userDetails.use_whcs_endpoint_select
-            }
-            if(!userDetails.whcs_endpoint || userDetails.whcs_endpoint === ''){
+            if(!userDetails.whcs_endpoint ){
                 userDetails.whcs_endpoint = 's3.wasabisys.com'
             }
-            var whcs_region = null
-            if(userDetails.whcs_region && userDetails.whcs_region !== ''){
-                whcs_region = userDetails.whcs_region
-            }
-            var endpointSplit = userDetails.whcs_endpoint.split('.')
-            if(endpointSplit.length > 2){
-                endpointSplit.shift()
-            }
-            var locationUrl = endpointSplit.join('.')
-            var AWS = new require("aws-sdk")
-            s.group[e.ke].whcs = AWS
-            var wasabiEndpoint = new AWS.Endpoint(userDetails.whcs_endpoint)
-            s.group[e.ke].whcs.config = new s.group[e.ke].whcs.Config({
-                endpoint: wasabiEndpoint,
-                accessKeyId: userDetails.whcs_accessKeyId,
-                secretAccessKey: userDetails.whcs_secretAccessKey,
-                region: whcs_region
-            })
-            s.group[e.ke].whcs = new s.group[e.ke].whcs.S3();
+            s.group[e.ke].whcs = new S3Client({
+                endpoint: userDetails.whcs_endpoint,
+                credentials: {
+                    accessKeyId: userDetails.whcs_accessKeyId,
+                    secretAccessKey: userDetails.whcs_secretAccessKey,
+                },
+                region: userDetails.whcs_region || null
+            });
         }
     }
-    var unloadWasabiHotCloudStorageForUser = function(user){
+    function unloadGroupApp(user){
         s.group[user.ke].whcs = null
     }
-    var deleteVideoFromWasabiHotCloudStorage = function(e,video,callback){
+    function deleteVideo(e,video,callback){
         // e = user
         try{
             var videoDetails = JSON.parse(video.details)
         }catch(err){
             var videoDetails = video.details
         }
-        if(!videoDetails.location){
-            videoDetails.location = video.href.split(locationUrl)[1]
+        if(video.type !== 'whcs'){
+            callback()
+            return
         }
-        s.group[e.ke].whcs.deleteObject({
-            Bucket: s.group[e.ke].init.whcs_bucket,
+        deleteObject(video.ke,{
+            Bucket: s.group[video.ke].init.whcs_bucket,
             Key: videoDetails.location,
-        }, function(err, data) {
-            if (err) console.log(err);
+        }).then((response) => {
+            if (response.err){
+                console.error('S3-Based Network Storage DELETE Error')
+                console.error(err);
+            }
             callback()
         });
     }
-    var uploadVideoToWasabiHotCloudStorage = function(e,k){
+    function uploadVideo(e,k,insertQuery){
         //e = video object
         //k = temporary values
         if(!k)k={};
-        //cloud saver - Wasabi Hot Cloud Storage
-        if(s.group[e.ke].whcs && s.group[e.ke].init.use_whcs !== '0' && s.group[e.ke].init.whcs_save === '1'){
-            var ext = k.filename.split('.')
-            ext = ext[ext.length - 1]
-            var fileStream = fs.createReadStream(k.dir+k.filename);
+        //cloud saver - S3-Based Network Storage
+        const groupKey = insertQuery.ke
+        if(s.group[groupKey].whcs && s.group[groupKey].init.use_whcs !== '0' && s.group[groupKey].init.whcs_save === '1'){
+            const filename = `${s.formattedTime(insertQuery.time)}.${insertQuery.ext}`
+            var fileStream = fs.createReadStream(k.dir+filename);
             fileStream.on('error', function (err) {
                 console.error(err)
             })
-            var bucketName = s.group[e.ke].init.whcs_bucket
-            var saveLocation = s.group[e.ke].init.whcs_dir+e.ke+'/'+e.mid+'/'+k.filename
-            // gcp does not support multipart.  Set queueSize to 1 and a big enough partSize
-            var options = s.group[e.ke].whcs.endpoint.href.includes("https://storage.googleapis.com") ? {
-                queueSize: 1,
-                partSize: 300 * 1024 * 1024
-            } : {}
-            s.group[e.ke].whcs.upload({
-                Bucket: bucketName,
+            var saveLocation = s.group[groupKey].init.whcs_dir+groupKey+'/'+e.mid+'/'+filename
+            uploadObject(groupKey,{
+                Bucket: s.group[groupKey].init.whcs_bucket,
                 Key: saveLocation,
                 Body: fileStream,
-                ContentType: 'video/'+ext
-            },options,function(err,data){
-                if(err){
-                    console.error(err)
-                    s.userLog(e,{type:lang['Wasabi Hot Cloud Storage Upload Error'],msg:err})
+                ContentType: 'video/'+e.ext
+            }).then((response) => {
+                if(response.err){
+                    s.userLog(e,{type:lang['S3-Based Network Storage Upload Error'],msg:response.err})
                 }
-                if(s.group[e.ke].init.whcs_log === '1' && data && data.Location){
-                    var cloudLink = data.Location
-                    cloudLink = fixCloudianUrl(e,cloudLink)
+                if(s.group[groupKey].init.whcs_log === '1' && response.ok){
                     s.knexQuery({
                         action: "insert",
                         table: "Cloud Videos",
                         insert: {
                             mid: e.mid,
-                            ke: e.ke,
-                            time: k.startTime,
+                            ke: groupKey,
+                            ext: insertQuery.ext,
+                            time: insertQuery.time,
                             status: 1,
+                            type : 'whcs',
                             details: s.s({
-                                type : 'whcs',
                                 location : saveLocation
                             }),
                             size: k.filesize,
                             end: k.endTime,
-                            href: cloudLink
+                            href: ''
                         }
                     })
-                    s.setCloudDiskUsedForGroup(e.ke,{
-                        amount : k.filesizeMB,
-                        storageType : 'whcs'
+                    s.setCloudDiskUsedForGroup(groupKey,{
+                        amount: k.filesizeMB,
+                        storageType: 'whcs'
                     })
                     s.purgeCloudDiskForGroup(e,'whcs')
                 }
-            })
+            });
         }
     }
-    var onInsertTimelapseFrame = function(monitorObject,queryInfo,filePath){
+    function onInsertTimelapseFrame(monitorObject,queryInfo,filePath){
         var e = monitorObject
         if(s.group[e.ke].whcs && s.group[e.ke].init.use_whcs !== '0' && s.group[e.ke].init.whcs_save === '1'){
             var fileStream = fs.createReadStream(filePath)
@@ -158,17 +163,16 @@ module.exports = function(s,config,lang){
                 console.error(err)
             })
             var saveLocation = s.group[e.ke].init.whcs_dir + e.ke + '/' + e.mid + '_timelapse/' + queryInfo.filename
-            s.group[e.ke].whcs.upload({
+            uploadObject(e.ke,{
                 Bucket: s.group[e.ke].init.whcs_bucket,
                 Key: saveLocation,
                 Body: fileStream,
-                ACL:'public-read',
                 ContentType:'image/jpeg'
-            },function(err,data){
-                if(err){
-                    s.userLog(e,{type:lang['Wasabi Hot Cloud Storage Upload Error'],msg:err})
+            }).then((response) => {
+                if(response.err){
+                    s.userLog(e,{type:lang['Wasabi Hot Cloud Storage Upload Error'],msg:response.err})
                 }
-                if(s.group[e.ke].init.whcs_log === '1' && data && data.Location){
+                if(s.group[e.ke].init.whcs_log === '1' && response.ok){
                     s.knexQuery({
                         action: "insert",
                         table: "Cloud Timelapse Frames",
@@ -176,13 +180,13 @@ module.exports = function(s,config,lang){
                             mid: queryInfo.mid,
                             ke: queryInfo.ke,
                             time: queryInfo.time,
-			                filename: queryInfo.filename,
+                            filename: queryInfo.filename,
+                            type : 'whcs',
                             details: s.s({
-                                type : 'whcs',
                                 location : saveLocation
                             }),
                             size: queryInfo.size,
-                            href: data.Location
+                            href: ''
                         }
                     })
                     s.setCloudDiskUsedForGroup(e.ke,{
@@ -194,68 +198,55 @@ module.exports = function(s,config,lang){
             })
         }
     }
-    var onDeleteTimelapseFrameFromCloud = function(e,frame,callback){
+    function onDeleteTimelapseFrameFromCloud(e,frame,callback){
         // e = user
         try{
             var frameDetails = JSON.parse(frame.details)
         }catch(err){
             var frameDetails = frame.details
         }
-        if(frameDetails.type !== 'whcs'){
+        if(video.type !== 'whcs'){
+            callback()
             return
         }
         if(!frameDetails.location){
             frameDetails.location = frame.href.split(locationUrl)[1]
         }
-        s.group[e.ke].whcs.deleteObject({
+        deleteObject(e.ke,{
             Bucket: s.group[e.ke].init.whcs_bucket,
             Key: frameDetails.location,
-        }, function(err, data) {
-            if (err) console.log(err);
+        }).then((response) => {
+            if (response.err){
+                console.error('S3-Based Network Storage DELETE Error')
+                console.error(err);
+            }
             callback()
         });
     }
-    var fixCloudianUrl = function(e,cloudLink){
-        if(cloudLink.indexOf('http') === -1){
-            var bucketName = s.group[e.ke].init.whcs_bucket
-            var endPointSplit = s.group[e.ke].init.whcs_endpoint.split('://')
-            endPoint = endPointSplit[1] || endPointSplit[0]
-            var protocol = `https`
-            if(endPointSplit[1])protocol = endPointSplit[0]
-            var cloudLinkPrefix = `${protocol}://${bucketName}.${endPoint}`
-            var truncatedLink = cloudLink.substring(0, bucketName.length + 3)
-            if(truncatedLink.indexOf(`${bucketName}/`) > -1){
-                cloudLink = cloudLink.replace(`${bucketName}/`,'')
-            }
-            cloudLink = s.checkCorrectPathEnding(cloudLinkPrefix) + cloudLink
-        }
-        return cloudLink
-    }
-    function onGetVideoData(video){
+    async function onGetVideoData(video){
         const videoDetails = s.parseJSON(video.details)
-        return new Promise((resolve, reject) => {
-            const saveLocation = videoDetails.location
-            var fileStream = s.group[video.ke].whcs.getObject({
-                Bucket: s.group[video.ke].init.whcs_bucket,
-                Key: saveLocation,
-            }).createReadStream();
-            resolve(fileStream)
-        })
+        const saveLocation = videoDetails.location
+        var fileStream = await getObject(video.ke,{
+            Bucket: s.group[video.ke].init.whcs_bucket,
+            Key: saveLocation,
+        });
+        return fileStream.Body
     }
-    //wasabi
+    //S3-Based Network Storage
     s.addCloudUploader({
         name: 'whcs',
-        loadGroupAppExtender: loadWasabiHotCloudStorageForUser,
-        unloadGroupAppExtender: unloadWasabiHotCloudStorageForUser,
-        insertCompletedVideoExtender: uploadVideoToWasabiHotCloudStorage,
-        deleteVideoFromCloudExtensions: deleteVideoFromWasabiHotCloudStorage,
-        cloudDiskUseStartupExtensions: cloudDiskUseStartupForWasabiHotCloudStorage,
-        beforeAccountSave: beforeAccountSaveForWasabiHotCloudStorage,
-        onAccountSave: cloudDiskUseStartupForWasabiHotCloudStorage,
-        onInsertTimelapseFrame: onInsertTimelapseFrame,
-        onDeleteTimelapseFrameFromCloud: onDeleteTimelapseFrameFromCloud,
+        loadGroupAppExtender: loadGroupApp,
+        unloadGroupAppExtender: unloadGroupApp,
+        insertCompletedVideoExtender: uploadVideo,
+        deleteVideoFromCloudExtensions: deleteVideo,
+        cloudDiskUseStartupExtensions: cloudDiskUseStartup,
+        beforeAccountSave: beforeAccountSave,
+        onAccountSave: cloudDiskUseStartup,
+        onInsertTimelapseFrame: (() => {}) || onInsertTimelapseFrame,
+        onDeleteTimelapseFrameFromCloud: (() => {}) || onDeleteTimelapseFrameFromCloud,
         onGetVideoData
     })
+    //return fields that will appear in settings
     return {
        "evaluation": "details.use_whcs !== '0'",
        "name": lang["S3-Based Network Storage"],
@@ -282,35 +273,11 @@ module.exports = function(s,config,lang){
            },
            {
                "hidden": true,
-              "name": "detail=use_whcs_endpoint_select",
-              "selector":"h_whcs_endpoint",
-              "field": lang.Endpoint,
-              "description": "",
-              "default": "",
-              "example": "",
-              "fieldType": "select",
-              "possible": [
-                  {
-                     "name": "Custom Endpoint",
-                     "value": ""
-                  },
-                  {
-                     "name": lang['Wasabi Hot Cloud Storage'],
-                     "value": "s3.wasabisys.com"
-                  }
-              ]
-           },
-           {
-              "hidden": true,
-              "field": lang['Endpoint Address'],
-              "name": "detail=whcs_endpoint",
-              "placeholder": "s3.wasabisys.com",
-              "form-group-class": "autosave_whcs_input autosave_whcs_1",
-              "form-group-class-pre-layer":"h_whcs_endpoint_input h_whcs_endpoint_",
-              "description": "",
-              "default": "",
-              "example": "",
-              "possible": ""
+               "field": lang['Endpoint Address'],
+               "name": "detail=whcs_endpoint",
+               "placeholder": "s3.wasabisys.com",
+               "form-group-class": "autosave_whcs_input autosave_whcs_1",
+               "form-group-class-pre-layer":"h_whcs_endpoint_input h_whcs_endpoint_"
            },
            {
               "hidden": true,
@@ -354,7 +321,7 @@ module.exports = function(s,config,lang){
               "description": "",
               "default": "",
               "example": "",
-              "possible": [
+              "possible":  [
                    {
                       "name": lang['No Region'],
                       "value": ""
@@ -431,7 +398,7 @@ module.exports = function(s,config,lang){
                       "name": "South America 1",
                       "value": "sa-east-1"
                    }
-                ]
+              ]
           },
           {
               "hidden": true,

@@ -1,4 +1,5 @@
 var loadedVideosInMemory = {}
+var loadedEventsInMemory = {}
 var loadedFramesMemory = {}
 var loadedFramesMemoryTimeout = {}
 var loadedFramesLock = {}
@@ -66,7 +67,7 @@ function createVideoLinks(video,options){
         video.ext = video.href.split('.')
         video.ext = video.ext[video.ext.length - 1]
     }
-    video.filename = formattedTimeForFilename(video.time,null,`YYYY-MM-DDTHH-mm-ss`) + '.' + video.ext;
+    video.filename = formattedTimeForFilename(convertTZ(video.time, serverTimezone),null,`YYYY-MM-DDTHH-mm-ss`) + '.' + video.ext;
     var href = getApiPrefix('videos') + '/'+video.mid+'/'+video.filename;
     video.actionUrl = href
     video.links = {
@@ -262,48 +263,50 @@ function getPercentOfTimePositionFromVideo(video,theEvent){
     return percentChanged
 }
 function createVideoRow(row,classOverride){
+    var objectTagsHtml = ``
     var eventMatrixHtml = ``
+    if(row.objects && row.objects.length > 0){
+        $.each(row.objects.split(','),function(n,objectTag){
+            eventMatrixHtml += `<span class="badge badge-primary badge-sm">${objectTag}</span>`
+        })
+    }
     if(row.events && row.events.length > 0){
         $.each(row.events,function(n,theEvent){
             var leftPercent = getPercentOfTimePositionFromVideo(row,theEvent)
-            eventMatrixHtml += `<div class="video-time-needle video-time-needle-event" style="left:${leftPercent}%"></div>`
+            eventMatrixHtml += `<div title="Event at ${theEvent.time}" class="video-time-needle video-time-needle-event" style="left:${leftPercent}%"></div>`
         })
     }
     var videoEndpoint = getApiPrefix(`videos`) + '/' + row.mid + '/' + row.filename
     return `
-    <div class="video-row ${classOverride ? classOverride : `col-md-12 col-lg-6 mb-3`} search-row" data-mid="${row.mid}" data-time="${row.time}" data-time-formed="${new Date(row.time)}">
+    <div class="video-row ${classOverride ? classOverride : `col-md-12 col-lg-6 mb-3`} search-row" data-mid="${row.mid}" data-time="${row.time}" data-type="${row.type}" data-time-formed="${new Date(row.time)}">
         <div class="video-time-card shadow-lg px-0 btn-default">
-            <div class="card-header d-flex flex-row">
-                <div class="flex-grow-1 ${definitions.Theme.isDark ? 'text-white' : ''}">
-                    ${loadedMonitors[row.mid] ? loadedMonitors[row.mid].name : row.mid}
+            <div class="card-header">
+                <div class="${definitions.Theme.isDark ? 'text-white' : ''}">
+                    ${moment(row.time).fromNow()}
                 </div>
-                <div>
-                    <a class="badge btn btn-primary open-video mr-1" title="${lang['Watch']}"><i class="fa fa-play-circle"></i></a>
+                <small class="text-muted">~${durationBetweenTimes(row.time,row.end)} ${lang.Minutes}</small>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <a class="badge btn btn-primary open-video" title="${lang['Watch']}"><i class="fa fa-play-circle"></i></a>
                     <a class="badge btn btn-success" download href="${videoEndpoint}" title="${lang['Download']}"><i class="fa fa-download"></i></a>
                     <a class="badge btn btn-danger delete-video" title="${lang['Delete']}"><i class="fa fa-trash-o"></i></a>
                 </div>
-            </div>
-            <div class="video-time-img">
-                <div class="card-body">
-                    <div title="${row.time}" class="d-flex flex-row">
-                        <div class="flex-grow-1">
-                            ${moment(row.time).fromNow()}
-                        </div>
-                        <div>
-                            <small class="text-muted">~${durationBetweenTimes(row.time,row.end)} ${lang.Minutes}</small>
-                        </div>
+                <div title="${row.time}" class="border-bottom-dotted border-bottom-dark mb-2">
+                    <div>
+                        <div title="${row.time}"><small class="text-muted">${lang.Started} : ${formattedTime(row.time,true)}</small></div>
+                        <div title="${row.end}"><small class="text-muted">${lang.Ended} : ${formattedTime(row.end,true)}</small></div>
                     </div>
-                    <div title="${row.time}" class="d-flex flex-row border-bottom-dotted border-bottom-dark mb-2">
-                        <div>
-                            <div title="${row.time}"><small class="text-muted">${lang.Started} : ${formattedTime(row.time,true)}</small></div>
-                            <div title="${row.end}"><small class="text-muted">${lang.Ended} : ${formattedTime(row.end,true)}</small></div>
-                        </div>
-                    </div>
+                    <small>
+                        ${loadedMonitors[row.mid] ? loadedMonitors[row.mid].name : row.mid}
+                    </small>
+                </div>
+                <div class="mb-2">
+                    ${objectTagsHtml}
                 </div>
             </div>
             <div class="video-time-strip card-footer p-0">
                 ${eventMatrixHtml}
-                <div class="video-time-needle video-time-needle-seeker" style="z-index: 2"></div>
             </div>
         </div>
     </div>`
@@ -340,13 +343,17 @@ function getAllDays(videos,frames){
     })
     videos.forEach(function(video){
         var videoTime = new Date(video.time)
+        var monitorId = video.mid
         var theDayKey = `${videoTime.getDate()}-${videoTime.getMonth()}-${videoTime.getFullYear()}`
-        listOfDays[video.mid][theDayKey] = []
+        if(!listOfDays[monitorId])listOfDays[monitorId] = {};
+        listOfDays[monitorId][theDayKey] = []
     })
     frames.forEach(function(frame){
         var frameTime = new Date(frame.time)
+        var monitorId = frame.mid
         var theDayKey = `${frameTime.getDate()}-${frameTime.getMonth()}-${frameTime.getFullYear()}`
-        listOfDays[frame.mid][theDayKey] = []
+        if(!listOfDays[monitorId])listOfDays[monitorId] = {};
+        listOfDays[monitorId][theDayKey] = []
     })
     return listOfDays
 }
@@ -431,9 +438,16 @@ function drawVideoRowsToList(targetElement,rows){
     })
     liveStamp()
 }
-function loadVideoData(video){
-    delete(video.f)
-    loadedVideosInMemory[`${video.mid}${video.time}`] = video
+function loadVideosData(newVideos){
+    $.each(newVideos,function(n,video){
+        delete(video.f)
+        loadedVideosInMemory[`${video.mid}${video.time}${video.type}`] = video
+    })
+}
+function loadEventsData(videoEvents){
+    videoEvents.forEach((anEvent) => {
+        loadedEventsInMemory[`${anEvent.mid}${anEvent.time}`] = anEvent
+    })
 }
 function getVideos(options,callback){
     return new Promise((resolve,reject) => {
@@ -441,6 +455,8 @@ function getVideos(options,callback){
         var searchQuery = options.searchQuery
         var requestQueries = []
         var monitorId = options.monitorId
+        var archived = options.archived
+        var customVideoSet = options.customVideoSet
         var limit = options.limit || 300
         var eventStartTime
         var eventEndTime
@@ -457,15 +473,25 @@ function getVideos(options,callback){
         if(searchQuery){
             requestQueries.push(`search=${searchQuery}`)
         }
-        $.getJSON(`${getApiPrefix(searchQuery ? `videosByEventTag` : `videos`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`noLimit=1`]).join('&')}`,function(data){
-            var videos = data.videos
+        if(archived){
+            requestQueries.push(`archived=1`)
+        }
+        $.getJSON(`${getApiPrefix(customVideoSet ? customVideoSet : searchQuery ? `videosByEventTag` : `videos`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`noLimit=1`]).join('&')}`,function(data){
+            var videos = data.videos.map((video) => {
+                return Object.assign({},video,{
+                    href: getFullOrigin(true) + video.href
+                })
+            })
             $.getJSON(`${getApiPrefix(`timelapse`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`noLimit=1`]).join('&')}`,function(timelapseFrames){
                 $.getJSON(`${getApiPrefix(`events`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`limit=${limit}`]).join('&')}`,function(eventData){
-                    var newVideos = applyDataListToVideos(videos,eventData)
-                    newVideos = applyTimelapseFramesListToVideos(newVideos,timelapseFrames,'timelapseFrames',true)
-                    $.each(newVideos,function(n,video){
-                        loadVideoData(video)
+                    var theEvents = eventData.events || eventData;
+                    var newVideos = applyDataListToVideos(videos,theEvents)
+                    newVideos = applyTimelapseFramesListToVideos(newVideos,timelapseFrames.frames || timelapseFrames,'timelapseFrames',true).map((video) => {
+                        video.videoSet = customVideoSet
+                        return video
                     })
+                    loadEventsData(theEvents)
+                    loadVideosData(newVideos)
                     if(callback)callback({videos: newVideos, frames: timelapseFrames});
                     resolve({videos: newVideos, frames: timelapseFrames})
                 })
@@ -474,33 +500,38 @@ function getVideos(options,callback){
     })
 }
 function getEvents(options,callback){
-    options = options ? options : {}
-    var requestQueries = []
-    var monitorId = options.monitorId
-    var limit = options.limit || 5000
-    var eventStartTime
-    var eventEndTime
-    // var startDate = options.startDate
-    // var endDate = options.endDate
-    if(options.startDate){
-        eventStartTime = formattedTimeForFilename(options.startDate,false)
-        requestQueries.push(`start=${eventStartTime}`)
-    }
-    if(options.endDate){
-        eventEndTime = formattedTimeForFilename(options.endDate,false)
-        requestQueries.push(`end=${eventEndTime}`)
-    }
-    if(options.onlyCount){
-        requestQueries.push(`onlyCount=1`)
-    }
-    $.getJSON(`${getApiPrefix(`events`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.join('&')}`,function(eventData){
-        callback(eventData)
+    return new Promise((resolve,reject) => {
+        options = options ? options : {}
+        var requestQueries = []
+        var monitorId = options.monitorId
+        var limit = options.limit || 5000
+        var eventStartTime
+        var eventEndTime
+        // var startDate = options.startDate
+        // var endDate = options.endDate
+        if(options.startDate){
+            eventStartTime = formattedTimeForFilename(options.startDate,false)
+            requestQueries.push(`start=${eventStartTime}`)
+        }
+        if(options.endDate){
+            eventEndTime = formattedTimeForFilename(options.endDate,false)
+            requestQueries.push(`end=${eventEndTime}`)
+        }
+        if(options.onlyCount){
+            requestQueries.push(`onlyCount=1`)
+        }
+        $.getJSON(`${getApiPrefix(`events`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.join('&')}`,function(eventData){
+            var theEvents = eventData.events || eventData
+            if(callback)callback(theEvents)
+            resolve(theEvents)
+        })
     })
 }
 function deleteVideo(video,callback){
     return new Promise((resolve,reject) => {
         var videoEndpoint = getApiPrefix(`videos`) + '/' + video.mid + '/' + video.filename
         $.getJSON(videoEndpoint + '/delete',function(data){
+            notifyIfActionFailed(data)
             if(callback)callback(data)
             resolve(data)
         })
@@ -522,8 +553,122 @@ async function downloadVideos(videos){
         await downloadVideo(video)
     }
 }
+function compressVideo(video,callback){
+    if(video.filename.includes('.webm')){
+        console.log('Already Compressed')
+        if(callback)callback('Already Compressed')
+        return
+    }
+    return new Promise((resolve) => {
+        var videoEndpoint = getApiPrefix(`videos`) + '/' + video.mid + '/' + video.filename
+        $.getJSON(videoEndpoint + '/compress',function(data){
+            if(data.ok){
+                console.log('Video Compressing')
+            }else{
+                console.log('Video Not Compressing',data,videoEndpoint)
+            }
+            if(callback)callback()
+            resolve()
+        })
+    })
+}
+async function compressVideos(videos){
+    for (let i = 0; i < videos.length; i++) {
+        var video = videos[i];
+        await compressVideo(video)
+    }
+}
+function getArchiveButtons(video,isFileBin){
+    return $(`[data-mid="${video.mid}"][data-ke="${video.ke}"][data-time="${video.time}"] .archive-${isFileBin ? `file` : 'video'}`)
+}
+var currentlyArchiving = {}
+function archiveVideo(video,unarchive,isFileBin){
+    return new Promise((resolve) => {
+        var videoEndpoint = getApiPrefix(isFileBin ? `fileBin` : `videos`) + '/' + video.mid + '/' + (isFileBin ? video.name : video.filename)
+        // var currentlyArchived = video.archive === 1
+        if(currentlyArchiving[videoEndpoint]){
+            resolve({ok: false})
+            return;
+        }
+        currentlyArchiving[videoEndpoint] = true
+        $.getJSON(videoEndpoint + '/archive' + `${unarchive ? `?unarchive=1` : ''}`,function(data){
+            if(data.ok){
+                var archiveButtons = getArchiveButtons(video,isFileBin)
+                var classToRemove = 'btn-default'
+                var classToAdd = 'btn-success status-archived'
+                var iconToRemove = 'fa-unlock-alt'
+                var iconToAdd = 'fa-lock'
+                var elTitle = `${lang.Unarchive}`
+                if(!data.archived){
+                    console.log('Video Unarchived',unarchive)
+                    classToRemove = 'btn-success status-archived'
+                    classToAdd = 'btn-default'
+                    iconToRemove = 'fa-lock'
+                    iconToAdd = 'fa-unlock-alt'
+                    elTitle = `${lang.Archive}`
+                }else{
+                    console.log('Video Archived',unarchive)
+                }
+                archiveButtons.removeClass(classToRemove).addClass(classToAdd).attr('title',elTitle)
+                archiveButtons.find('i').removeClass(iconToRemove).addClass(iconToAdd)
+                archiveButtons.find('span').text(elTitle)
+                video.archive = data.archived ? 1 : 0
+            }else{
+                console.log('Video Archive status unchanged',data,videoEndpoint)
+            }
+            delete(currentlyArchiving[videoEndpoint])
+            resolve(data)
+        })
+    })
+}
+async function archiveVideos(videos){
+    for (let i = 0; i < videos.length; i++) {
+        var video = videos[i];
+        await archiveVideo(video)
+    }
+}
+function unarchiveVideo(video){
+    return archiveVideo(video,true)
+}
+async function unarchiveVideos(videos){
+    for (let i = 0; i < videos.length; i++) {
+        var video = videos[i];
+        await unarchiveVideo(video)
+    }
+}
+function buildDefaultVideoMenuItems(file,options){
+    var isLocalVideo = !file.videoSet || file.videoSet === 'videos'
+    var href = file.href + `${!isLocalVideo ? `?type=${file.type}` : ''}`
+    options = options ? options : {play: true}
+    return `
+    <li><a class="dropdown-item" href="${href}" download>${lang.Download}</a></li>
+    ${options.play ? `<li><a class="dropdown-item open-video" href="${href}">${lang.Play}</a></li>` : ``}
+    <li><hr class="dropdown-divider"></li>
+    ${isLocalVideo && permissionCheck('video_delete',file.mid) ? `<li><a class="dropdown-item open-video-studio" href="${href}">${lang.Slice}</a></li>` : ``}
+    ${permissionCheck('video_delete',file.mid) ? `<li><a class="dropdown-item delete-video" href="${href}">${lang.Delete}</a></li>` : ``}
+    ${isLocalVideo && permissionCheck('video_delete',file.mid) ? `<li><a class="dropdown-item compress-video" href="${href}">${lang.Compress}</a></li>` : ``}
+`
+}
+function setVideoStatus(video,toStatus){
+    return new Promise((resolve,reject) => {
+        toStatus = toStatus || 2
+        if(video.status != toStatus){
+            $.get(`${video.actionUrl}/status/${toStatus}`,function(data){
+                resolve(data)
+            })
+        }
+    })
+}
 onWebSocketEvent(function(d){
     switch(d.f){
+        case'video_edit':case'video_archive':
+            var video = loadedVideosInMemory[`${d.mid}${d.time}${d.type}`]
+            if(video){
+                let filename = `${formattedTimeForFilename(convertTZ(d.time),false,`YYYY-MM-DDTHH-mm-ss`)}.${video.ext || 'mp4'}`
+                loadedVideosInMemory[`${d.mid}${d.time}${d.type}`].status = d.status
+                $(`[data-mid="${d.mid}"][data-filename="${filename}"]`).attr('data-status',d.status);
+            }
+        break;
         case'video_delete':
             $('[file="'+d.filename+'"][mid="'+d.mid+'"]:not(.modal)').remove();
             $('[data-file="'+d.filename+'"][data-mid="'+d.mid+'"]:not(.modal)').remove();
@@ -533,15 +678,6 @@ onWebSocketEvent(function(d){
                 goBackOneTab()
             }
             deleteTab(videoPlayerId)
-            // if($.powerVideoWindow.currentDataObject&&$.powerVideoWindow.currentDataObject[d.filename]){
-            //     delete($.timelapse.currentVideos[$.powerVideoWindow.currentDataObject[d.filename].position])
-            //     $.powerVideoWindow.drawTimeline(false)
-            // }
-            // if($.timelapse.currentVideos&&$.timelapse.currentVideos[d.filename]){
-            //     delete($.timelapse.currentVideosArray.videos[$.timelapse.currentVideos[d.filename].position])
-            //     $.timelapse.drawTimeline(false)
-            // }
-            // if($.vidview.loadedVideos && $.vidview.loadedVideos[d.filename])delete($.vidview.loadedVideos[d.filename])
         break;
     }
 })
@@ -552,8 +688,9 @@ $(document).ready(function(){
         var el = $(this).parents('[data-mid]')
         var monitorId = el.attr('data-mid')
         var videoTime = el.attr('data-time')
-        var video = loadedVideosInMemory[`${monitorId}${videoTime}`]
+        var video = loadedVideosInMemory[`${monitorId}${videoTime}${undefined}`]
         createVideoPlayerTab(video)
+        setVideoStatus(video)
         return false;
     })
     .on('click','[video-time-seeked-video-position]',function(){
@@ -561,7 +698,7 @@ $(document).ready(function(){
         var monitorId = el.attr('data-mid')
         var videoTime = el.attr('video-time-seeked-video-position')
         var timeInward = (parseInt(el.attr('video-slice-seeked')) / 1000) - 2
-        var video = loadedVideosInMemory[`${monitorId}${videoTime}`]
+        var video = loadedVideosInMemory[`${monitorId}${videoTime}${undefined}`]
         timeInward = timeInward < 0 ? 0 : timeInward
         createVideoPlayerTab(video,timeInward)
     })
@@ -570,27 +707,80 @@ $(document).ready(function(){
         var el = $(this).parents('[data-mid]')
         var monitorId = el.attr('data-mid')
         var videoTime = el.attr('data-time')
-        var video = loadedVideosInMemory[`${monitorId}${videoTime}`]
+        var type = el.attr('data-type')
+        var video = loadedVideosInMemory[`${monitorId}${videoTime}${type}`]
+        var videoSet = video.videoSet
         var ext = video.filename.split('.')
         ext = ext[ext.length - 1]
-        var videoEndpoint = getApiPrefix(`videos`) + '/' + video.mid + '/' + video.filename
+        var isCloudVideo = videoSet === 'cloudVideos'
+        var videoEndpoint = getApiPrefix(videoSet || 'videos') + '/' + video.mid + '/' + video.filename
+        var endpointType = isCloudVideo ? `?type=${video.type}` : ''
         $.confirm.create({
             title: lang["Delete Video"] + ' : ' + video.filename,
-            body: `${lang.DeleteVideoMsg}<br><br><div class="row"><video class="video_video" autoplay loop controls><source src="${videoEndpoint}" type="video/${ext}"></video></div>`,
+            body: `${lang.DeleteVideoMsg}<br><br><div class="row"><video class="video_video" autoplay loop controls><source src="${videoEndpoint}${endpointType}" type="video/${ext}"></video></div>`,
             clickOptions: {
                 title: '<i class="fa fa-trash-o"></i> ' + lang.Delete,
                 class: 'btn-danger btn-sm'
             },
             clickCallback: function(){
-                $.getJSON(videoEndpoint + '/delete',function(data){
+                $.getJSON(videoEndpoint + '/delete' + endpointType,function(data){
                     if(data.ok){
                         console.log('Video Deleted')
                     }else{
-                        console.log('Video Not Deleted',data,videoEndpoint)
+                        console.log('Video Not Deleted',data,videoEndpoint + endpointType)
                     }
                 })
             }
         });
+        return false;
+    })
+    .on('click','.compress-video',function(e){
+        e.preventDefault()
+        var el = $(this).parents('[data-mid]')
+        var monitorId = el.attr('data-mid')
+        var videoTime = el.attr('data-time')
+        var video = loadedVideosInMemory[`${monitorId}${videoTime}${undefined}`]
+        var ext = video.filename.split('.')
+        ext = ext[ext.length - 1]
+        var videoEndpoint = getApiPrefix(`videos`) + '/' + video.mid + '/' + video.filename
+        $.confirm.create({
+            title: lang["Compress"] + ' : ' + video.filename,
+            body: `${lang.CompressVideoMsg}<br><br><div class="row"><video class="video_video" autoplay loop controls><source src="${videoEndpoint}" type="video/${ext}"></video></div>`,
+            clickOptions: {
+                title: '<i class="fa fa-compress"></i> ' + lang.Compress,
+                class: 'btn-primary btn-sm'
+            },
+            clickCallback: function(){
+                compressVideo(video)
+            }
+        });
+        return false;
+    })
+    .on('click','.archive-video',function(e){
+        e.preventDefault()
+        var el = $(this).parents('[data-mid]')
+        var monitorId = el.attr('data-mid')
+        var videoTime = el.attr('data-time')
+        var unarchive = $(this).hasClass('status-archived')
+        var video = loadedVideosInMemory[`${monitorId}${videoTime}${undefined}`]
+        var ext = video.filename.split('.')
+        ext = ext[ext.length - 1]
+        var videoEndpoint = getApiPrefix(`videos`) + '/' + video.mid + '/' + video.filename
+        if(unarchive){
+            unarchiveVideo(video)
+        }else{
+            // $.confirm.create({
+            //     title: lang["Archive"] + ' : ' + video.filename,
+            //     body: `${lang.ArchiveVideoMsg}<br><br><div class="row"><video class="video_video" autoplay loop controls><source src="${videoEndpoint}" type="video/${ext}"></video></div>`,
+            //     clickOptions: {
+            //         title: '<i class="fa fa-lock"></i> ' + lang.Archive,
+            //         class: 'btn-primary btn-sm'
+            //     },
+            //     clickCallback: function(){
+                    archiveVideo(video)
+            //     }
+            // });
+        }
         return false;
     })
     .on('click','.fix-video',function(e){
@@ -598,7 +788,7 @@ $(document).ready(function(){
         var el = $(this).parents('[data-mid]')
         var monitorId = el.attr('data-mid')
         var videoTime = el.attr('data-time')
-        var video = loadedVideosInMemory[`${monitorId}${videoTime}`]
+        var video = loadedVideosInMemory[`${monitorId}${videoTime}${undefined}`]
         var ext = video.filename.split('.')
         ext = ext[ext.length - 1]
         var videoEndpoint = getApiPrefix(`videos`) + '/' + video.mid + '/' + video.filename

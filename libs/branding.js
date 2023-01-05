@@ -14,7 +14,7 @@ module.exports = function(s,config,lang,app,io){
     if(!config.logoLocation196x196)config.logoLocation196x196 = 'libs/img/icon/favicon-196x196.png';
     if(config.logoLocation76x76Link === undefined){config.logoLocation76x76Link='https://shinobi.video'}
     if(config.logoLocation76x76Style === undefined){config.logoLocation76x76Style='border-radius:50%'}
-    if(config.loginScreenBackground === undefined){config.loginScreenBackground='https://shinobi.video/libs/assets/backgrounds/7.jpg'}
+    if(config.loginScreenBackground === undefined){config.loginScreenBackground='assets/img/splash.avif'}
     if(config.showLoginSelector === undefined){config.showLoginSelector=true}
     if(config.defaultTheme === undefined)config.defaultTheme = 'Ice-v3';
     if(config.socialLinks === undefined){

@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.4.2-cudnn8-runtime-ubuntu20.04
+FROM nvidia/cuda:11.7.1-cudnn8-runtime-ubuntu20.04
 
 ENV DB_USER=majesticflame \
     DB_PASSWORD='' \
@@ -106,7 +106,6 @@ RUN sed -i -e 's/\r//g' /home/Shinobi/Docker/init.sh
 # RUN chmod -f +x /home/Shinobi/shinobi
 
 VOLUME ["/home/Shinobi/videos"]
-VOLUME ["/home/Shinobi/plugins"]
 VOLUME ["/home/Shinobi/libs/customAutoLoad"]
 VOLUME ["/config"]
 VOLUME ["/var/lib/mysql"]

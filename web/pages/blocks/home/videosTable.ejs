@@ -22,6 +22,11 @@
               </button>
               <ul class="dropdown-menu <%- `${define.Theme.isDark ? 'dropdown-menu-dark bg-dark text-white' : 'bg-light text-dark'}` %> shadow-lg" aria-labelledby="monitorsListOptions">
                 <li><a class="dropdown-item download-selected-videos cursor-pointer"><%- lang.Download %></a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item archive-selected-videos cursor-pointer"><%- lang.Archive %></a></li>
+                <li><a class="dropdown-item unarchive-selected-videos cursor-pointer"><%- lang.Unarchive %></a></li>
+                <li><a class="dropdown-item compress-selected-videos cursor-pointer"><%- lang.Compress %></a></li>
+                <li><a class="dropdown-item zip-selected-videos cursor-pointer"><%- lang['Zip and Download'] %></a></li>
                 <!-- <li><a class="dropdown-item merge-selected-videos cursor-pointer"><%- lang.Merge %></a></li> -->
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item delete-selected-videos cursor-pointer"><%- lang.Delete %></a></li>

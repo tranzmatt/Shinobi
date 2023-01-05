@@ -7,7 +7,7 @@ var ramIndicatorUsed = ramIndicator.find('.used')
 var ramIndicatorPercentText = ramIndicator.find('.indicator-percent')
 var diskIndicator = $('#indicator-disk')
 var diskIndicatorBar = diskIndicator.find('.progress-bar')
-var diskIndicatorBarUsed = diskIndicator.find('.diskUsed')
+var diskIndicatorBarUsed = diskIndicator.find('.value')
 var diskIndicatorPercentText = diskIndicator.find('.indicator-percent')
 var loadedIndicators = {}
 function loadHiddenSectionsInForms(){
@@ -20,14 +20,17 @@ function loadHiddenSectionsInForms(){
 }
 function loadSwitchStates(){
     var theSwitches = dashboardOptions().switches;
-    if(theSwitches){
-        $.each(theSwitches,function(systemSwitch,toggleState){
-            setSwitchUIState(systemSwitch,toggleState)
-            runDashboardSwitchCallback(systemSwitch)
-        })
-    }else{
-        dashboardOptions('switches',{notifyHide:0})
+    if(!theSwitches){
+        theSwitches = {
+            notifyHide: 0,
+            monitorMuteAudio: 1,
+        }
+        dashboardOptions('switches',theSwitches)
     }
+    $.each(theSwitches,function(systemSwitch,toggleState){
+        setSwitchUIState(systemSwitch,toggleState)
+        runDashboardSwitchCallback(systemSwitch)
+    })
 }
 function loadClassToggleStates(){
     var theClassToggles = dashboardOptions().class_toggle;
@@ -88,7 +91,7 @@ function loadBoxWrappers() {
 function drawAddStorageIndicators(){
     $.each(addStorage,function(n,storage){
         drawIndicatorBar({
-            icon: 'hdd',
+            icon: 'hdd-o',
             name: storage.name,
             label: `<span style="text-transform:capitalize">${storage.name}</span> : <span class="value"></span>`,
         })
@@ -208,6 +211,9 @@ onWebSocketEvent(function (d){
                     loadedIndicators[storage.name].progressBar.css('width',percent)
                 })
             }
+        break;
+        case'monitor_status':
+            updateInterfaceStatus(d);
         break;
     }
 })

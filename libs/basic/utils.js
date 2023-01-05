@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const moment = require('moment');
 const fetch  = require('node-fetch');
+const FormData = require('form-data');
 const { AbortController } = require('node-abort-controller')
 const DigestFetch = require('digest-fetch')
 module.exports = (processCwd,config) => {
@@ -110,16 +111,18 @@ module.exports = (processCwd,config) => {
         let theRequester;
         const hasUsernameAndPassword = options.username && typeof options.password === 'string'
         const requestOptions = {
-            method : options.method || 'GET'
+            method : options.method || 'GET',
+            headers: {'Content-Type': 'application/json'}
         }
         if(typeof options.postData === 'object'){
-            const formData = new fetch.FormData()
-            const formKeys = Object.keys(options.postData)
-            formKeys.forEach(function(key){
-                const value = formKeys[key]
-                formData.set(key, value)
-            })
-            requestOptions.body = formData
+            requestOptions.body = JSON.stringify(options.postData)
+        } else if(typeof options.postData === 'string'){
+            try{
+                JSON.parse(options.postData)
+                requestOptions.body = options.postData
+            }catch(err){
+                
+            }
         }
         if(hasUsernameAndPassword && hasDigestAuthEnabled){
             theRequester = (new DigestFetch(options.username, options.password)).fetch
@@ -167,6 +170,7 @@ module.exports = (processCwd,config) => {
             }).catch((err) => {
                 if(err)console.log(err)
                 subscriptionFailed()
+                callback(false)
             })
         }else{
             var i;
@@ -193,6 +197,35 @@ module.exports = (processCwd,config) => {
             },timeoutAmount)
         })
     }
+    function copyFile(inputFilePath,outputFilePath) {
+        const response = {ok: true}
+        return new Promise((resolve,reject) => {
+            function failed(err){
+                response.ok = false
+                response.err = err
+                resolve(response)
+            }
+            const readStream = fs.createReadStream(inputFilePath)
+            const writeStream = fs.createWriteStream(outputFilePath)
+            writeStream.on('finish', () => {
+                resolve(response)
+            })
+            writeStream.on('error', failed)
+            readStream.on('error', failed)
+            readStream.pipe(writeStream)
+        })
+    }
+    function hmsToSeconds(str) {
+        var p = str.split(':'),
+            s = 0, m = 1;
+
+        while (p.length > 0) {
+            s += m * parseFloat(p.pop(), 10);
+            m *= 60;
+        }
+
+        return s;
+    }
     return {
         parseJSON: parseJSON,
         stringJSON: stringJSON,
@@ -211,5 +244,7 @@ module.exports = (processCwd,config) => {
         fetchDownloadAndWrite: fetchDownloadAndWrite,
         fetchWithAuthentication: fetchWithAuthentication,
         asyncSetTimeout: asyncSetTimeout,
+        copyFile: copyFile,
+        hmsToSeconds,
     }
 }

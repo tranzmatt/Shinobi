@@ -78,36 +78,34 @@ module.exports = function(s,config,lang){
             var isSessionKey = false
             if(apiKey){
                 var sessionKey = params.auth
-                createSession(apiKey,{
-                    auth: sessionKey,
-                    permissions: s.parseJSON(apiKey.details),
-                    details: {}
-                })
                 getUserByUid(apiKey,'mail,details',function(err,user){
                     if(user){
-                        try{
-                            editSession({
-                                auth: sessionKey
-                            },{
-                                mail: user.mail,
-                                details: s.parseJSON(user.details),
-                                lang: s.getLanguageFile(user.details.lang)
-                            })
-                        }catch(er){
-                            console.log('FAILED TO EDIT',er)
-                        }
+                        createSession(apiKey,{
+                            auth: sessionKey,
+                            permissions: s.parseJSON(apiKey.details),
+                            mail: user.mail,
+                            details: s.parseJSON(user.details),
+                            lang: s.getLanguageFile(user.details.lang)
+                        })
+                    }else{
+                        createSession(apiKey,{
+                            auth: sessionKey,
+                            permissions: s.parseJSON(apiKey.details),
+                            details: {}
+                        })
                     }
                     callback(err,s.api[params.auth])
                 })
             }else{
                 getUserBySessionKey(params,function(err,user){
                     if(user){
-                        isSessionKey = true
-                        createSession(apiKey,{
+                        createSession(user,{
+                            auth: params.auth,
                             details: JSON.parse(user.details),
+                            isSessionKey: true,
                             permissions: {}
                         })
-                        callback(err,user,isSessionKey)
+                        callback(err,user,true)
                     }
                 })
             }
@@ -125,16 +123,14 @@ module.exports = function(s,config,lang){
             }
             user.details = s.parseJSON(user.details)
             user.permissions = {}
-            s.api[generatedId] = Object.assign(user,additionalData)
+            s.api[generatedId] = Object.assign({},user,additionalData)
             return generatedId
         }
     }
     var editSession = function(user,additionalData){
         if(user){
             if(!additionalData)additionalData = {}
-            Object.keys(additionalData).forEach(function(value,key){
-                s.api[user.auth][key] = value
-            })
+            Object.assign(s.api[user.auth], additionalData)
         }
     }
     var failHttpAuthentication = function(res,req,message){
@@ -211,9 +207,6 @@ module.exports = function(s,config,lang){
             loginWithApiKey(params,function(err,user,isSessionKey){
                 if(isSessionKey)resetActiveSessionTimer(s.api[params.auth])
                 if(user){
-                    createSession(user,{
-                        auth: params.auth
-                    })
                     onSuccess(s.api[params.auth])
                 }else{
                     onFail()

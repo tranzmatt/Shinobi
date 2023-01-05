@@ -3,6 +3,7 @@ const {
     stringToSqlTime,
 } = require('../common.js')
 module.exports = function(s,config){
+    const isMySQL = config.databaseType === 'mysql';
     const runQuery = async.queue(function(data, callback) {
         s.databaseEngine
         .raw(data.query,data.values)
@@ -87,11 +88,11 @@ module.exports = function(s,config){
     const knexError = (dbQuery,options,err) => {
         console.error('knexError----------------------------------- START')
         if(config.debugLogVerbose && config.debugLog === true){
-            s.debugLog('s.knexQuery QUERY',JSON.stringify(options,null,3))
             s.debugLog('STACK TRACE, NOT AN ',new Error())
         }
         console.error(err)
-        console.error(dbQuery.toString())
+        // CANNOT USE `dbQuery.toString()` because it breaks the query
+        console.error(options)
         console.error('knexError----------------------------------- END')
     }
     const knexQuery = (options,callback) => {
@@ -149,7 +150,8 @@ module.exports = function(s,config){
                 }
             }
             if(config.debugLog === true){
-                console.log(dbQuery.toString())
+                // CANNOT USE `dbQuery.toString()` because it breaks the query
+                console.log(JSON.stringify(options,null,3))
             }
             if(callback || options.update || options.insert || options.action === 'delete'){
                 dbQuery.asCallback(function(err,r) {
@@ -212,7 +214,7 @@ module.exports = function(s,config){
            whereQuery.push(monitorRestrictions)
        }
        if(options.archived){
-           whereQuery.push(['details','LIKE',`%"archived":"1"%`])
+           whereQuery.push(['archive','=',`1`])
        }
        if(options.filename){
            whereQuery.push(['filename','=',options.filename])
@@ -330,7 +332,7 @@ module.exports = function(s,config){
         var endTimeOperator = options.endTimeOperator
         var startTime = options.startTime
         var limitString = `${options.limit}`
-        const monitorRestrictions = s.getMonitorRestrictions(options.user.details,monitorId)
+        const  monitorRestrictions = options.monitorRestrictions || s.getMonitorsPermitted(user.details,monitorId).monitorRestrictions
         getDatabaseRows({
             monitorRestrictions: monitorRestrictions,
             table: theTableSelected,
@@ -419,6 +421,49 @@ module.exports = function(s,config){
     const connectDatabase = function(){
         s.databaseEngine = require('knex')(s.databaseOptions)
     }
+    function currentTimestamp(){
+        return s.databaseEngine.fn.now()
+    }
+    async function addColumn(tableName,columns){
+        try{
+            for (let i = 0; i < columns.length; i++) {
+                const column = columns[i]
+                if(!column)return;
+                await s.databaseEngine.schema.table(tableName, table => {
+                    const action = table[column.type](column.name,column.length)
+                    if(column.defaultTo !== null && column.defaultTo !== undefined){
+                        action.defaultTo(column.defaultTo)
+                    }
+                })
+            }
+        }catch(err){
+            if(err && err.code !== 'ER_DUP_FIELDNAME'){
+                s.debugLog(err)
+            }
+        }
+    }
+    async function createTable(tableName,columns,onSuccess){
+        try{
+            const exists = await s.databaseEngine.schema.hasTable(tableName)
+            if (!exists) {
+                console.log(`Creating Table "${tableName}"`)
+                await s.databaseEngine.schema.createTable(tableName, (table) => {
+                    columns.forEach((column) => {
+                        if(!column)return;
+                        const action = table[column.type](column.name,column.length)
+                        if(column.defaultTo !== null && column.defaultTo !== undefined){
+                            action.defaultTo(column.defaultTo)
+                        }
+                    })
+                })
+                if(onSuccess)await onSuccess();
+            }
+        }catch(err){
+            if(err && err.code !== 'ER_TABLE_EXISTS_ERROR'){
+                s.debugLog(err)
+            }
+        }
+    }
     return {
         knexQuery: knexQuery,
         knexQueryPromise: knexQueryPromise,
@@ -431,5 +476,9 @@ module.exports = function(s,config){
         sqlQuery: sqlQuery,
         connectDatabase: connectDatabase,
         sqlQueryBetweenTimesWithPermissions: sqlQueryBetweenTimesWithPermissions,
+        currentTimestamp,
+        createTable,
+        addColumn,
+        isMySQL,
     }
 }

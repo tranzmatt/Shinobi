@@ -21,7 +21,6 @@ module.exports = function(s,config){
     createExtension(`loadGroupExtender`,`loadGroupExtensions`)
     createExtension(`loadGroupAppExtender`,`loadGroupAppExtensions`)
     createExtension(`unloadGroupAppExtender`,`unloadGroupAppExtensions`)
-    createExtension(`cloudDisksLoader`,`cloudDisksLoaded`)
     createExtension(`onAccountSave`)
     createExtension(`beforeAccountSave`)
     createExtension(`onTwoFactorAuthCodeNotification`)
@@ -60,6 +59,8 @@ module.exports = function(s,config){
     createExtension(`onHttpRequestUpgrade`,null,true)
     /////// VIDEOS ////////
     createExtension(`insertCompletedVideoExtender`,`insertCompletedVideoExtensions`)
+    createExtension(`onEventBasedRecordingComplete`)
+    createExtension(`onEventBasedRecordingStart`)
     createExtension(`onBeforeInsertCompletedVideo`)
     /////// TIMELAPSE ////////
     createExtension(`onInsertTimelapseFrame`)

@@ -11,7 +11,9 @@ module.exports = function(s,config,lang,getSnapshot){
                 let mqttEndpoint = options.host
                 const username = options.username || ''
                 const password = options.password || ''
+                const clientId = options.clientId || `shinobi_${Math.random().toString(16).substr(2, 8)}`
                 const subKey = options.subKey
+                const pubKey = options.pubKey
                 const groupKey = options.ke
                 const onData = options.onData || function(){}
                 function mqttUserLog(type,data){
@@ -31,7 +33,7 @@ module.exports = function(s,config,lang,getSnapshot){
                     clean: true,
                     username: username,
                     password: password,
-                    clientId: `shinobi_${Math.random().toString(16).substr(2, 8)}`,
+                    clientId: clientId,
                     reconnectPeriod: 10000, // 10 seconds
                 });
                 client.on('reconnect', (e) => mqttUserLog(`MQTT Reconnected`))
@@ -40,7 +42,7 @@ module.exports = function(s,config,lang,getSnapshot){
                 client.on('error', (e) => mqttUserLog(`MQTT Error`,e))
                 client.on('connect', function () {
                     mqttUserLog('Connected! ' + mqttEndpoint)
-                    client.subscribe(subKey, function (err) {
+                    client.subscribe(pubKey, function (err) {
                         if (err) {
                             s.debugLog(err)
                             s.userLog({
@@ -100,7 +102,7 @@ module.exports = function(s,config,lang,getSnapshot){
                     sendToMqttConnections(groupKey,'onDetectorNoTriggerTimeout',[e],true)
                 }
             }
-            const onEventTrigger = (d,filter) => {
+            const onEventTrigger = async (d,filter) => {
                 const monitorConfig = s.group[d.ke].rawMonitorConfigurations[d.id]
                 if((filter.mqttout || monitorConfig.details.notify_mqttout === '1') && !s.group[d.ke].activeMonitors[d.id].detector_mqttout){
                     var detector_mqttout_timeout
@@ -115,7 +117,10 @@ module.exports = function(s,config,lang,getSnapshot){
                     },detector_mqttout_timeout)
                     //
                     const groupKey = d.ke
-                    sendToMqttConnections(groupKey,'onEventTrigger',[d,filter],true)
+                    await getSnapshot(d,monitorConfig)
+                    sendToMqttConnections(groupKey,'onEventTrigger',[Object.assign({},d,{
+                        screenshotBuffer: d.screenshotBuffer.toString('base64')
+                    }),filter],true)
                 }
             }
             const onMonitorSave = (monitorConfig) => {
@@ -133,6 +138,16 @@ module.exports = function(s,config,lang,getSnapshot){
             const onMonitorDied = (monitorConfig) => {
                 const groupKey = monitorConfig.ke
                 sendToMqttConnections(groupKey,'onMonitorDied',[monitorConfig],true)
+            }
+            const onEventBasedRecordingComplete = (response,monitorConfig) => {
+                const groupKey = monitorConfig.ke
+                sendToMqttConnections(groupKey,'onEventBasedRecordingComplete',[monitorConfig],true)
+            }
+            const insertCompletedVideoExtender = (activeMonitor,temp,insertQuery,response) => {
+                const groupKey = insertQuery.ke
+                const monitorId = insertQuery.mid
+                const monitorConfig = s.group[groupKey].rawMonitorConfigurations[monitorId]
+                sendToMqttConnections(groupKey,'insertCompletedVideoExtender',[monitorConfig],true)
             }
             const onAccountSave = (activeGroup,userDetails,user) => {
                 const groupKey = user.ke
@@ -171,6 +186,7 @@ module.exports = function(s,config,lang,getSnapshot){
                             mqttSubs[mqttSubId].client = createMqttSubscription({
                                 username: row.username,
                                 password: row.password,
+                                clientId: row.clientId,
                                 host: row.host,
                                 pubKey: row.pubKey,
                                 ke: groupKey,
@@ -186,6 +202,8 @@ module.exports = function(s,config,lang,getSnapshot){
                                 onMonitorStop: lang['Monitor Stop'],
                                 onMonitorDied: lang['Monitor Died'],
                                 onEventTrigger: lang['Event'],
+                                insertCompletedVideoExtender: lang['Recording Complete'],
+                                onEventBasedRecordingComplete: lang['Event-Based Recording'],
                                 onDetectorNoTriggerTimeout: lang['"No Motion" Detector'],
                                 onAccountSave: lang['Account Save'],
                                 onUserLog: lang['User Log'],
@@ -194,6 +212,30 @@ module.exports = function(s,config,lang,getSnapshot){
                             eventsToAttachTo.forEach(function(eventName){
                                 let theAction = function(){}
                                 switch(eventName){
+                                    case'insertCompletedVideoExtender':
+                                        theAction = function(activeMonitor,temp,insertQuery,response){
+                                            sendMessage(msgOptions,{
+                                                title: titleLegend[eventName],
+                                                name: eventName,
+                                                data: insertQuery,
+                                                time: new Date(),
+                                            })
+                                        }
+                                    break;
+                                    case'onEventBasedRecordingComplete':
+                                        theAction = function(response,monitorConfig){
+                                            sendMessage(msgOptions,{
+                                                title: titleLegend[eventName],
+                                                name: eventName,
+                                                data: {
+                                                    ke: monitorConfig.ke,
+                                                    mid: monitorConfig.mid,
+                                                    response: response,
+                                                },
+                                                time: new Date(),
+                                            })
+                                        }
+                                    break;
                                     case'onEventTrigger':
                                         theAction = function(d,filter){
                                             const eventObject = Object.assign({},d)
@@ -306,6 +348,8 @@ module.exports = function(s,config,lang,getSnapshot){
             s.onMonitorStart(onMonitorStart)
             s.onMonitorStop(onMonitorStop)
             s.onMonitorDied(onMonitorDied)
+            s.insertCompletedVideoExtender(insertCompletedVideoExtender)
+            s.onEventBasedRecordingComplete(onEventBasedRecordingComplete)
             s.onUserLog(onUserLog)
             s.definitions["Monitor Settings"].blocks["Notifications"].info[0].info.push(
                 {

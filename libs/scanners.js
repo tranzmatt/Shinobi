@@ -21,6 +21,20 @@ module.exports = function(s,config,lang,app,io){
      */
     app.get(config.webPaths.apiPrefix+':auth/probe/:ke',function (req,res){
         s.auth(req.params,function(user){
+            const {
+                isRestricted,
+                isRestrictedApiKey,
+                apiKeyPermissions,
+            } = s.checkPermission(user);
+            if(
+                isRestrictedApiKey && apiKeyPermissions.control_monitors_disallowed
+            ){
+                s.closeJsonResponse(res,{
+                    ok: false,
+                    msg: lang['Not Authorized']
+                });
+                return
+            }
             ffprobe(req.query.url,req.params.auth,(endData) => {
                 s.closeJsonResponse(res,endData)
             })

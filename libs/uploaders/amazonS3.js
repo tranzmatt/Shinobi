@@ -1,6 +1,30 @@
-var fs = require('fs');
+// https://us-east-1.console.aws.amazon.com/iamv2/home#/users
+
+const fs = require('fs');
+const { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } = require("@aws-sdk/client-s3");
+
 module.exports = function(s,config,lang){
-    //Amazon S3
+    const genericRequest = async (groupKey,requestOptions) => {
+        const response = {ok: true}
+        try {
+            await s.group[groupKey].aws_s3.send(requestOptions);
+        } catch (err) {
+            console.error('AMZ genericRequest',groupKey,requestOptions)
+            response.ok = false
+            response.err = err
+        }
+        return response;
+    };
+    const deleteObject = async (groupKey,options) => {
+        return await genericRequest(groupKey,new DeleteObjectCommand(options))
+    };
+    const uploadObject = async (groupKey,options) => {
+        return await genericRequest(groupKey,new PutObjectCommand(options))
+    };
+    const getObject = async (groupKey,options) => {
+        // returns createReadStream
+        return await s.group[groupKey].aws_s3.send(new GetObjectCommand(options))
+    };
     function beforeAccountSave(d){
         //d = save event
         d.formDetails.aws_use_global=d.d.aws_use_global
@@ -29,7 +53,7 @@ module.exports = function(s,config,lang){
             userDetails = Object.assign(userDetails,config.cloudUploaders.AmazonS3)
         }
         //Amazon S3
-        if(!s.group[e.ke].aws &&
+        if(
            !s.group[e.ke].aws_s3 &&
            userDetails.aws_s3 !== '0' &&
            userDetails.aws_accessKeyId !== ''&&
@@ -45,17 +69,16 @@ module.exports = function(s,config,lang){
             if(userDetails.aws_s3_dir !== ''){
                 userDetails.aws_s3_dir = s.checkCorrectPathEnding(userDetails.aws_s3_dir)
             }
-            s.group[e.ke].aws = new require("aws-sdk")
-            s.group[e.ke].aws.config = new s.group[e.ke].aws.Config({
-                accessKeyId: userDetails.aws_accessKeyId,
-                secretAccessKey: userDetails.aws_secretAccessKey,
+            s.group[e.ke].aws_s3 = new S3Client({
+                credentials: {
+                    accessKeyId: userDetails.aws_accessKeyId,
+                    secretAccessKey: userDetails.aws_secretAccessKey,
+                },
                 region: userDetails.aws_region
-            })
-            s.group[e.ke].aws_s3 = new s.group[e.ke].aws.S3();
+            });
         }
     }
     function unloadGroupApp(user){
-        s.group[user.ke].aws = null
         s.group[user.ke].aws_s3 = null
     }
     function deleteVideo(e,video,callback){
@@ -68,47 +91,55 @@ module.exports = function(s,config,lang){
         if(!videoDetails.location){
             videoDetails.location = video.href.split('.amazonaws.com')[1]
         }
-        s.group[e.ke].aws_s3.deleteObject({
-            Bucket: s.group[e.ke].init.aws_s3_bucket,
+        if(video.type !== 's3'){
+            callback()
+            return
+        }
+        deleteObject(video.ke,{
+            Bucket: s.group[video.ke].init.aws_s3_bucket,
             Key: videoDetails.location,
-        }, function(err, data) {
-            if (err) console.log(err);
+        }).then((response) => {
+            if (response.err){
+                console.error('Amazon S3 DELETE Error')
+                console.error(err);
+            }
             callback()
         });
     }
-    function uploadVideo(e,k){
+    function uploadVideo(e,k,insertQuery){
         //e = video object
         //k = temporary values
         if(!k)k={};
         //cloud saver - amazon s3
-        if(s.group[e.ke].aws_s3 && s.group[e.ke].init.use_aws_s3 !== '0' && s.group[e.ke].init.aws_s3_save === '1'){
-            var ext = k.filename.split('.')
-            ext = ext[ext.length - 1]
-            var fileStream = fs.createReadStream(k.dir+k.filename);
+        const groupKey = insertQuery.ke
+        if(s.group[groupKey].aws_s3 && s.group[groupKey].init.use_aws_s3 !== '0' && s.group[groupKey].init.aws_s3_save === '1'){
+            const filename = `${s.formattedTime(insertQuery.time)}.${insertQuery.ext}`
+            var fileStream = fs.createReadStream(k.dir+filename);
             fileStream.on('error', function (err) {
                 console.error(err)
             })
-            var saveLocation = s.group[e.ke].init.aws_s3_dir+e.ke+'/'+e.mid+'/'+k.filename
-            s.group[e.ke].aws_s3.upload({
-                Bucket: s.group[e.ke].init.aws_s3_bucket,
+            var saveLocation = s.group[groupKey].init.aws_s3_dir+groupKey+'/'+e.mid+'/'+filename
+            uploadObject(groupKey,{
+                Bucket: s.group[groupKey].init.aws_s3_bucket,
                 Key: saveLocation,
                 Body: fileStream,
-                ContentType: 'video/'+ext
-            },function(err,data){
-                if(err){
-                    s.userLog(e,{type:lang['Amazon S3 Upload Error'],msg:err})
+                ContentType: 'video/'+e.ext
+            }).then((response) => {
+                if(response.err){
+                    s.userLog(e,{type:lang['Amazon S3 Upload Error'],msg:response.err})
                 }
-                if(s.group[e.ke].init.aws_s3_log === '1' && data && data.Location){
+                if(s.group[groupKey].init.aws_s3_log === '1' && response.ok){
                     s.knexQuery({
                         action: "insert",
                         table: "Cloud Videos",
                         insert: {
                             mid: e.mid,
-                            ke: e.ke,
-                            time: k.startTime,
+                            ke: groupKey,
+                            ext: insertQuery.ext,
+                            time: insertQuery.time,
                             status: 1,
+                            type : 's3',
                             details: s.s({
-                                type : 's3',
                                 location : saveLocation
                             }),
                             size: k.filesize,
@@ -116,13 +147,13 @@ module.exports = function(s,config,lang){
                             href: ''
                         }
                     })
-                    s.setCloudDiskUsedForGroup(e.ke,{
+                    s.setCloudDiskUsedForGroup(groupKey,{
                         amount: k.filesizeMB,
                         storageType: 's3'
                     })
                     s.purgeCloudDiskForGroup(e,'s3')
                 }
-            })
+            });
         }
     }
     function onInsertTimelapseFrame(monitorObject,queryInfo,filePath){
@@ -133,17 +164,16 @@ module.exports = function(s,config,lang){
                 console.error(err)
             })
             var saveLocation = s.group[e.ke].init.aws_s3_dir + e.ke + '/' + e.mid + '_timelapse/' + queryInfo.filename
-            s.group[e.ke].aws_s3.upload({
+            uploadObject(e.ke,{
                 Bucket: s.group[e.ke].init.aws_s3_bucket,
                 Key: saveLocation,
                 Body: fileStream,
-                ACL:'public-read',
                 ContentType:'image/jpeg'
-            },function(err,data){
-                if(err){
-                    s.userLog(e,{type:lang['Wasabi Hot Cloud Storage Upload Error'],msg:err})
+            }).then((response) => {
+                if(response.err){
+                    s.userLog(e,{type:lang['Wasabi Hot Cloud Storage Upload Error'],msg:response.err})
                 }
-                if(s.group[e.ke].init.aws_s3_log === '1' && data && data.Location){
+                if(s.group[e.ke].init.aws_s3_log === '1' && response.ok){
                     s.knexQuery({
                         action: "insert",
                         table: "Cloud Timelapse Frames",
@@ -152,12 +182,12 @@ module.exports = function(s,config,lang){
                             ke: queryInfo.ke,
                             time: queryInfo.time,
                             filename: queryInfo.filename,
+                            type : 's3',
                             details: s.s({
-                                type : 's3',
                                 location : saveLocation
                             }),
                             size: queryInfo.size,
-                            href: data.Location
+                            href: ''
                         }
                     })
                     s.setCloudDiskUsedForGroup(e.ke,{
@@ -176,30 +206,32 @@ module.exports = function(s,config,lang){
         }catch(err){
             var frameDetails = frame.details
         }
-        if(frameDetails.type !== 's3'){
+        if(video.type !== 's3'){
+            callback()
             return
         }
         if(!frameDetails.location){
             frameDetails.location = frame.href.split(locationUrl)[1]
         }
-        s.group[e.ke].aws_s3.deleteObject({
+        deleteObject(e.ke,{
             Bucket: s.group[e.ke].init.aws_s3_bucket,
             Key: frameDetails.location,
-        }, function(err, data) {
-            if (err) console.log(err);
+        }).then((response) => {
+            if (response.err){
+                console.error('Amazon S3 DELETE Error')
+                console.error(err);
+            }
             callback()
         });
     }
-    function onGetVideoData(video){
+    async function onGetVideoData(video){
         const videoDetails = s.parseJSON(video.details)
-        return new Promise((resolve, reject) => {
-            const saveLocation = videoDetails.location
-            var fileStream = s.group[video.ke].aws_s3.getObject({
-                Bucket: s.group[video.ke].init.aws_s3_bucket,
-                Key: saveLocation,
-            }).createReadStream();
-            resolve(fileStream)
-        })
+        const saveLocation = videoDetails.location
+        var fileStream = await getObject(video.ke,{
+            Bucket: s.group[video.ke].init.aws_s3_bucket,
+            Key: saveLocation,
+        });
+        return fileStream.Body
     }
     //amazon s3
     s.addCloudUploader({
@@ -211,8 +243,8 @@ module.exports = function(s,config,lang){
         cloudDiskUseStartupExtensions: cloudDiskUseStartup,
         beforeAccountSave: beforeAccountSave,
         onAccountSave: cloudDiskUseStartup,
-        onInsertTimelapseFrame: onInsertTimelapseFrame,
-        onDeleteTimelapseFrameFromCloud: onDeleteTimelapseFrameFromCloud,
+        onInsertTimelapseFrame: (() => {}) || onInsertTimelapseFrame,
+        onDeleteTimelapseFrameFromCloud: (() => {}) || onDeleteTimelapseFrameFromCloud,
         onGetVideoData
     })
     //return fields that will appear in settings

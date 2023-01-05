@@ -80,7 +80,6 @@ if [ "$mysqlagreeData" = "y" ] || [ "$mysqlagreeData" = "Y" ]; then
     echo "What is your SQL Password?"
     read -r sqlpass
     sudo mysql -u "$sqluser" -p"$sqlpass" -e "source sql/user.sql" || true
-    sudo mysql -u "$sqluser" -p"$sqlpass" -e "source sql/framework.sql" || true
 fi
 echo "============="
 echo "Shinobi - Install NPM Libraries"
@@ -100,7 +99,7 @@ echo "(y)es or (N)o"
 read -r startShinobi
 if [ "$startShinobi" = "y" ] || [ "$startShinobi" = "Y" ]; then
     sudo pm2 start camera.js
-    sudo pm2 start cron.js
+    #sudo pm2 start cron.js
     sudo pm2 startup
     sudo pm2 save
     sudo pm2 list

@@ -12,8 +12,8 @@ module.exports = function (s, config, lang, getSnapshot) {
                     s.userLog(
                         { ke: groupKey, mid: '$USER' },
                         {
-                            type: lang.NotifyErrorText,
-                            msg: lang.DiscordNotEnabledText,
+                            type: lang.PushoverNotifyErrorText,
+                            msg: lang.PushoverNotEnabledText,
                         }
                     );
                     return;

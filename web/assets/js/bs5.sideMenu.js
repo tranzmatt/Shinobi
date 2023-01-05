@@ -40,6 +40,7 @@ function drawMonitorIconToMenu(item){
     monitorSideList.append(html)
 }
 function drawMonitors(){
+    monitorSideList.empty()
     $.each(loadedMonitors,function(n,item){
         drawMonitorIconToMenu(item)
     })
@@ -134,9 +135,13 @@ function toggleSideBarMenuHide(){
         floatingHideButton.hide()
         if(tabTree.back)floatingBackButton.show()
     }
+    onToggleSideBarMenuHideExtensions.forEach(function(extender){
+        extender(isHidden)
+    })
 }
 function makeMonitorListSortable(){
     var monitorSideList = $('#monitorSideList')
+    if(isMobile)return;
     var options = {
         cellHeight: 80,
         verticalMargin: 10,

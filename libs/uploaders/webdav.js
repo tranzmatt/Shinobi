@@ -50,18 +50,22 @@ module.exports = function(s,config,lang){
     var unloadWebDavForUser = function(user){
         s.group[user.ke].webdav = null
     }
-    var deleteVideoFromWebDav = function(e,video,callback){
+    var deleteVideoFromWebDav = function(groupKey,video,callback){
         // e = user
         try{
             var videoDetails = JSON.parse(video.details)
         }catch(err){
             var videoDetails = video.details
         }
+        if(video.type !== 'webdav'){
+            callback()
+            return
+        }
         if(!videoDetails.location){
-            var prefix = s.addUserPassToUrl(s.checkCorrectPathEnding(s.group[e.ke].init.webdav_url),s.group[e.ke].init.webdav_user,s.group[e.ke].init.webdav_pass)
+            var prefix = s.addUserPassToUrl(s.checkCorrectPathEnding(s.group[groupKey].init.webdav_url),s.group[groupKey].init.webdav_user,s.group[groupKey].init.webdav_pass)
             videoDetails.location = video.href.replace(prefix,'')
         }
-        s.group[e.ke].webdav.unlink(videoDetails.location, function(err) {
+        s.group[groupKey].webdav.unlink(videoDetails.location, function(err) {
             if (err) console.log(videoDetails.location,err)
             callback()
         })
@@ -88,13 +92,13 @@ module.exports = function(s,config,lang){
                            ke: e.ke,
                            time: k.startTime,
                            status: 1,
+                           type : 'webdav',
                            details: s.s({
-                               type : 'webdav',
                                location : webdavUploadDir + k.filename
                            }),
                            size: k.filesize,
                            end: k.endTime,
-                           href: webdavRemoteUrl
+                           href: ''
                        }
                    })
                    s.setCloudDiskUsedForGroup(e.ke,{
@@ -157,6 +161,63 @@ module.exports = function(s,config,lang){
            }
        }
     }
+    function onInsertTimelapseFrame(monitorObject,queryInfo,filePath){
+        var e = monitorObject
+        if(s.group[e.ke].webdav && s.group[e.ke].init.use_webdav !== '0' && s.group[e.ke].init.webdav_save === '1'){
+            const wfs = s.group[e.ke].webdav
+            const saveLocation = s.group[e.ke].init.webdav_dir+e.ke+'/'+e.mid+'_timelapse/' + queryInfo.filename
+            fs.createReadStream(filePath).pipe(wfs.createWriteStream(saveLocation))
+            if(s.group[e.ke].init.webdav_log === '1'){
+                s.knexQuery({
+                    action: "insert",
+                    table: "Cloud Timelapse Frames",
+                    insert: {
+                        mid: queryInfo.mid,
+                        ke: queryInfo.ke,
+                        time: queryInfo.time,
+                        filename: queryInfo.filename,
+                        type : 'webdav',
+                        details: s.s({
+                            location : saveLocation
+                        }),
+                        size: queryInfo.size,
+                        href: ''
+                    }
+                })
+                s.setCloudDiskUsedForGroup(e.ke,{
+                    amount : s.kilobyteToMegabyte(queryInfo.size),
+                    storageType : 'webdav'
+                },'timelapseFrames')
+                s.purgeCloudDiskForGroup(e,'webdav','timelapseFrames')
+            }
+        }
+    }
+    function onDeleteTimelapseFrameFromCloud(e,frame,callback){
+        // e = user
+        try{
+            var frameDetails = JSON.parse(frame.details)
+        }catch(err){
+            var frameDetails = frame.details
+        }
+        if(frame.type !== 'webdav'){
+            callback()
+            return
+        }
+        if(!frameDetails.location){
+            frameDetails.location = frame.href.split(locationUrl)[1]
+        }
+        s.group[e.ke].webdav.unlink(frameDetails.location, function(err) {
+            if (err) console.log(frameDetails.location,err)
+            callback()
+        })
+    }
+    async function onGetVideoData(video){
+        const wfs = s.group[video.ke].webdav
+        const videoDetails = s.parseJSON(video.details)
+        const saveLocation = videoDetails.location
+        const fileStream = wfs.createReadStream(saveLocation);
+        return fileStream
+    }
     //webdav
     s.addCloudUploader({
         name: 'webdav',
@@ -167,6 +228,9 @@ module.exports = function(s,config,lang){
         cloudDiskUseStartupExtensions: cloudDiskUseStartupForWebDav,
         beforeAccountSave: beforeAccountSaveForWebDav,
         onAccountSave: cloudDiskUseStartupForWebDav,
+        onInsertTimelapseFrame: () => {},
+        onDeleteTimelapseFrameFromCloud: () => {},
+        onGetVideoData
     })
     return {
        "evaluation": "details.use_webdav !== '0'",

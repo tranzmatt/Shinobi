@@ -8,3 +8,7 @@ var accountSettings = {
         accountSettings.onSaveFieldsExtensions.push(...extender)
     },
 }
+var onToggleSideBarMenuHideExtensions = [];
+function onToggleSideBarMenuHide(...extender){
+    onToggleSideBarMenuHideExtensions.push(...extender)
+}

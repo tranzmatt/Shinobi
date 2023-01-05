@@ -97,7 +97,7 @@ function startConnection(p2pServerAddress,subscriptionId){
 
                 clearInterval(socketCheckTimer)
                 socketCheckTimer = setInterval(() => {
-                    s.debugLog('Tunnel Ready State :',tunnelToP2P.readyState)
+                    // s.debugLog('Tunnel Ready State :',tunnelToP2P.readyState)
                     if(tunnelToP2P.readyState !== 1){
                         s.debugLog('Tunnel NOT Ready! Reconnecting...')
                         disconnectedConnection()
@@ -240,7 +240,7 @@ function startConnection(p2pServerAddress,subscriptionId){
     })
     onIncomingMessage('pong',function(data,requestId){
         refreshHeartBeatCheck()
-        s.debugLog('Heartbeat')
+        // s.debugLog('Heartbeat')
     })
     onIncomingMessage('init',function(data,requestId){
         console.log(`P2P : Authenticated!`)

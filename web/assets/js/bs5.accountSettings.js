@@ -5,7 +5,6 @@ $(document).ready(function(){
     var theForm = $('#settings')
     var addStorageMaxAmounts = $('#add_storage_max_amounts')
     var addStorageMaxAmountsField = theForm.find('[detail="addStorage"]')
-    var monitorGroups = $('#settings_mon_groups')
     function drawAddStorageFields(){
         try{
             var addStorageData = JSON.parse($user.details.addStorage || '{}')
@@ -17,67 +16,13 @@ $(document).ready(function(){
                 }
                 html += `<div class="form-group">
                             <div class="mb-2"><span>${lang['Max Storage Amount']} : ${storage.name}</span></div>
-                            <div><input class="form-control" placeholder="${$user.details.size || 10000}" addStorageLimit="${storage.path}" value="${limit}"></div>
+                            <div><input class="form-control" placeholder="10000" addStorageLimit="${storage.path}" value="${limit}"></div>
                         </div>`
             })
             addStorageMaxAmounts.html(html)
         }catch(err){
             console.log(err)
         }
-    }
-    function writewMonGroups(){
-        theForm.find('[detail="mon_groups"]').val(JSON.stringify($user.mon_groups)).change()
-    }
-    window.getMonitorGroups = function(){
-        return $user.mon_groups ? $user.mon_groups : safeJsonParse($user.details.mon_groups)
-    }
-    window.reDrawMonGroupsInAccountSettings = function(){
-        $user.mon_groups = getMonitorGroups()
-        var monitorList = Object.values($user.mon_groups).map(function(item){
-            return {
-                value: item.id,
-                label: item.name,
-            }
-        });
-        monitorGroups.html(createOptionListHtml(monitorList))
-        monitorGroups.change()
-    }
-    function getAndWriteMonitorGroups(){
-        var theValue = monitorGroups.val().trim()
-        if(!theValue){
-            var el = theForm.find('[group="name"]')
-            theValue = el.val()
-            theForm.find('.mon_groups .add').click();
-            var selectedGroup = monitorGroups.val()
-            el.val(name)
-        }
-        var selectedGroup = $user.mon_groups[theValue];
-        theForm.find('[group]').each(function(n,v){
-            var el = $(v)
-            var groupName = el.attr('group')
-            selectedGroup[groupName] = el.val()
-        })
-        $user.mon_groups[theValue] = selectedGroup;
-        monitorGroups.find(`option[value="${monitorGroups.val()}"]`).text(selectedGroup.name)
-        writewMonGroups()
-    }
-    function createNewMonitorGroup(){
-        var newId = generateId(5);
-        var newGroup = {
-            id: newId,
-            name: newId
-        }
-        $user.mon_groups[newId] = newGroup
-        monitorGroups.append(createOptionHtml({
-            value: newGroup.id,
-            label: newGroup.name,
-        }))
-        monitorGroups.val(newId)
-        monitorGroups.change()
-    }
-    function deleteMonitorGroup(theValue){
-        delete($user.mon_groups[theValue])
-        reDrawMonGroupsInAccountSettings()
     }
     function fillFormFields(){
         $.each($user,function(n,v){
@@ -86,7 +31,6 @@ $(document).ready(function(){
         $.each($user.details,function(n,v){
             theForm.find(`[detail="${n}"]`).val(v).change()
         })
-        reDrawMonGroupsInAccountSettings()
         accountSettings.onLoadFieldsExtensions.forEach(function(extender){
             extender(theForm)
         })
@@ -113,10 +57,8 @@ $(document).ready(function(){
     theForm.find('[selector]').change(function(){
         onSelectorChange(this,theForm)
     })
-    theForm.find('[group]').change(getAndWriteMonitorGroups)
     theForm.submit(function(e){
         e.preventDefault()
-        writewMonGroups()
         var formData = theForm.serializeObject()
         var errors = []
         if(formData.pass !== '' && formData.password_again !== formData.pass){
@@ -154,23 +96,10 @@ $(document).ready(function(){
         }
         return false
     })
-    monitorGroups.change(function(e){
-        var selectedValue = $(this).val()
-        var selectedGroup = $user.mon_groups[selectedValue];
-        if(!selectedGroup){return}
-        $.each(selectedGroup,function(key,value){
-            theForm.find(`[group="${key}"]`).val(value)
-        })
-    })
-    theForm.on('click','.mon_groups .delete',function(e){
-        var theValue = monitorGroups.val()
-        deleteMonitorGroup(theValue)
-    })
-    theForm.on('click','.mon_groups .add',createNewMonitorGroup)
     fillFormFields()
     drawAddStorageFields()
     drawSubMenuItems('accountSettings',definitions['Account Settings'])
-    mainSocket.on('f',function (d){
+    onWebSocketEvent(function (d){
         switch(d.f){
             case'user_settings_change':
                 new PNotify({
@@ -194,6 +123,5 @@ $(document).ready(function(){
             accountSettingsWereSaved = false;
             fillFormFields()
         }
-        reDrawMonGroupsInAccountSettings()
     })
 })

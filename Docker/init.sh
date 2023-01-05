@@ -1,10 +1,8 @@
 #!/bin/sh
 set -e
 
-cp sql/framework.sql sql/framework1.sql
 OLD_SQL_USER_TAG="ccio"
 NEW_SQL_USER_TAG="$DB_DATABASE"
-sed -i "s/$OLD_SQL_USER_TAG/$NEW_SQL_USER_TAG/g" sql/framework1.sql
 if [ "$SSL_ENABLED" = "true" ]; then
     if [ -d /config/ssl ]; then
         echo "Using provided SSL Key"
@@ -59,17 +57,11 @@ if [ "$DB_DISABLE_INCLUDED" = "false" ]; then
         done
     fi
 
-    echo "Setting up MySQL database if it does not exists ..."
-
-    echo "Create database schema if it does not exists ..."
-    mysql -e "source /home/Shinobi/sql/framework1.sql" || true
-
     echo "Create database user if it does not exists ..."
     mysql -e "source /home/Shinobi/sql/user.sql" || true
 
 else
     echo "Create database schema if it does not exists ..."
-    mysql -u "$DB_USER" -h "$DB_HOST" -p"$DB_PASSWORD" --port="$DB_PORT" --database="$DB_DATABASE" -e "source /home/Shinobi/sql/framework1.sql" || true
 fi
 
 DATABASE_CONFIG='{"host": "'$DB_HOST'","user": "'$DB_USER'","password": "'$DB_PASSWORD'","database": "'$DB_DATABASE'","port":'$DB_PORT'}'
@@ -84,7 +76,7 @@ elif [ ! -e "./conf.json" ]; then
     cp conf.sample.json conf.json
 fi
 sudo sed -i -e 's/change_this_to_something_very_random__just_anything_other_than_this/'"$cronKey"'/g' conf.json
-# node tools/modifyConfiguration.js cpuUsageMarker=CPU subscriptionId=$SUBSCRIPTION_ID thisIsDocker=true pluginKeys="$PLUGIN_KEYS" db="$DATABASE_CONFIG" ssl="$SSL_CONFIG"
+node tools/modifyConfiguration.js cpuUsageMarker=CPU subscriptionId=$SUBSCRIPTION_ID thisIsDocker=true pluginKeys="$PLUGIN_KEYS" db="$DATABASE_CONFIG" ssl="$SSL_CONFIG"
 
 
 echo "============="

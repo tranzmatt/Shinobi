@@ -36,7 +36,6 @@ if ( $mysqlagreeData == "y" ) then
     pkg install -y mariadb102-client
     echo "Installing database schema..."
     mysql -h $sqlhost -u $sqluser -p$sqlpass -e "source sql/user.sql" || true
-    mysql -h $sqlhost -u $sqluser -p$sqlpass -e "source sql/framework.sql" || true
     echo "Shinobi - Use the /super endpoint to create your super user."
 endif
 echo "============="

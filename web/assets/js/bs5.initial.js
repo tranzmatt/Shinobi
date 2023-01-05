@@ -5,4 +5,7 @@ onWebSocketEvent(function (d){
             setInterfaceCounts()
         break;
     }
-})
+});
+$(document).ready(function(){
+    createWebsocket();
+});

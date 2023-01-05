@@ -22,7 +22,7 @@ if [ "$disableIpv6" = "y" ] || [ "$disableIpv6" = "Y" ]; then
     sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1
     sudo sysctl -w net.ipv6.conf.lo.disable_ipv6=1
 fi
-if [ "$getubuntuversion" = "18" ] || [ "$getubuntuversion" > "18" ]; then
+if [ "$getubuntuversion" = "18" ] || [ "$getubuntuversion" -gt "18" ]; then
     apt install sudo wget -y
     sudo apt install -y software-properties-common
     sudo add-apt-repository universe -y
@@ -66,11 +66,11 @@ if ! [ -x "$(command -v npm)" ]; then
 fi
 sudo apt install make zip -y
 if ! [ -x "$(command -v ffmpeg)" ]; then
-    if [ "$getubuntuversion" = "16" ] || [ "$getubuntuversion" < "16" ]; then
+    if [ "$getubuntuversion" = "16" ] || [ "$getubuntuversion" -le "16" ]; then
         echo "============="
         echo "Shinobi - Get FFMPEG 3.x from ppa:jonathonf/ffmpeg-3"
         sudo add-apt-repository ppa:jonathonf/ffmpeg-3 -y
-        sudo apt update -y && sudo apt install ffmpeg libav-tools x264 x265 -y
+        sudo apt update -y && sudo apt install ffmpeg x264 x265 -y
     else
         echo "============="
         echo "Shinobi - Installing FFMPEG"
@@ -92,7 +92,6 @@ echo "============="
 echo "Shinobi - Installing Database..."
 sqluser="root"
 sudo mysql -e "source sql/user.sql" || true
-sudo mysql -e "source sql/framework.sql" || true
 echo "============="
 echo "Shinobi - Install NPM Libraries"
 sudo npm i npm -g
@@ -104,13 +103,13 @@ sudo npm install pm2@latest -g
 echo "Shinobi - Finished"
 sudo chmod -R 755 .
 touch INSTALL/installed.txt
-dos2unix /home/Shinobi/INSTALL/shinobi
-ln -s /home/Shinobi/INSTALL/shinobi /usr/bin/shinobi
+dos2unix INSTALL/shinobi
+ln -s INSTALL/shinobi /usr/bin/shinobi
 echo "Shinobi - Randomizing cron key"
-node /home/Shinobi/tools/modifyConfiguration.js addToConfig="{\"cron\":{\"key\":\"$(head -c 64 < /dev/urandom | sha256sum | awk '{print substr($1,1,60)}')\"}}"
+node tools/modifyConfiguration.js addToConfig="{\"cron\":{\"key\":\"$(head -c 64 < /dev/urandom | sha256sum | awk '{print substr($1,1,60)}')\"}}"
 echo "Shinobi - Starting Shinobi and setting to start on boot"
 sudo pm2 start camera.js
-sudo pm2 start cron.js
+#sudo pm2 start cron.js
 sudo pm2 startup
 sudo pm2 save
 sudo pm2 list

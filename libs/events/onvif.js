@@ -72,11 +72,11 @@ module.exports = function(s,config,lang){
             }
             try{
                 onvifEventControllers[onvifIdKey].close()
-                delete(onvifEventControllers[onvifIdKey])
                 s.debugLog('ONVIF Event Module Warning : This could cause a memory leak?')
             }catch(err){
-                console.log('ONVIF Event Module Error', err);
+                s.debugLog('ONVIF Event Module Error', err);
             }
+            delete(onvifEventControllers[onvifIdKey])
             if(monitorMode !== 'stop'){
                 startMotion(onvifId,monitorConfig).then((detector) => {
                     onvifEventControllers[onvifIdKey] = detector;

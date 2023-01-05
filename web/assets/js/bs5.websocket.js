@@ -15,10 +15,10 @@ function onWebSocketEvent(theAction){
     onWebSocketEventFunctions.push(theAction)
 }
 var queuedCallbacks = {}
-$(document).ready(function(){
-    mainSocket = io(location.origin,{
-        path: websocketPath,
-        query: websocketQuery
+function createWebsocket(theURL,thePath){
+    mainSocket = io(theURL || location.origin, thePath instanceof Object ? thePath : {
+        path: thePath || websocketPath,
+        query: websocketQuery,
     })
     mainSocket.f = function(data,callback){
         if(!data.ke)data.ke = $user.ke;
@@ -73,4 +73,4 @@ $(document).ready(function(){
             theAction(d)
         })
     })
-})
+}

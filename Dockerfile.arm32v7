@@ -1,4 +1,4 @@
-FROM arm32v7/node:12.18.3-buster-slim
+FROM arm32v7/node:16-buster-slim
 
 ENV DB_USER=majesticflame \
     DB_PASSWORD='' \
@@ -97,7 +97,6 @@ COPY ./Docker/pm2.yml ./
 RUN chmod -f +x /home/Shinobi/Docker/init.sh
 
 VOLUME ["/home/Shinobi/videos"]
-VOLUME ["/home/Shinobi/plugins"]
 VOLUME ["/home/Shinobi/libs/customAutoLoad"]
 VOLUME ["/config"]
 VOLUME ["/var/lib/mysql"]

@@ -208,7 +208,7 @@ $(document).ready(function(e){
         })
     })
     loadLocalOptions()
-    mainSocket.on('f',function(d){
+    onWebSocketEvent(function (d){
         switch(d.f){
             case'onvif':
                 drawProbeResult(d)
