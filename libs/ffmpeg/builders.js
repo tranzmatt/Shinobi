@@ -579,7 +579,7 @@ module.exports = (s,config,lang) => {
                 case'h264':case'hls':case'mp4':case'local':
                     if(audioCodec === 'no'){
                         recordingFlags.push(`-an`)
-                    }else if(audioCodec !== 'none'){
+                    }else if(audioCodec !== 'none' || audioCodec !== 'no'){
                         recordingFlags.push(`-acodec ` + audioCodec)
                     }
                 break;
@@ -624,6 +624,7 @@ module.exports = (s,config,lang) => {
             const recordingFlags = []
             const recordingFilters = []
             const customRecordingFlags = []
+            const videoExtIsMp4 = e.ext === 'mp4'
             const defaultAudioCodec = videoExtIsMp4 ? 'aac' : 'libvorbis'
             const audioCodec = e.details.acodec === 'default' ? 'aac' : e.details.acodec ? e.details.acodec : defaultAudioCodec
             const segmentLengthInMinutes = !isNaN(parseFloat(e.details.cutoff)) ? parseFloat(e.details.cutoff) : '15'
@@ -634,15 +635,13 @@ module.exports = (s,config,lang) => {
             if(customRecordingFlags.indexOf('-strict -2') === -1)customRecordingFlags.push(`-strict -2`)
             switch(e.type){
                 case'h264':case'hls':case'mp4':case'local':
-                    if(audioCodec !== 'none'){
-                        recordingFlags.push(`-acodec ` + audioCodec)
-                    }
+                    recordingFlags.push(`-acodec ${!audioCodec || audioCodec === 'no' ? defaultAudioCodec : audioCodec}`)
                 break;
             }
             if(customRecordingFlags.length > 0){
                 recordingFlags.push(...customRecordingFlags)
             }
-            recordingFlags.push(`-f segment -segment_atclocktime 1 -reset_timestamps 1 -strftime 1 -segment_list pipe:8 -segment_time ${(60 * segmentLengthInMinutes)} "${e.dir}%Y-%m-%dT%H-%M-%S.${e.ext || 'mp4'}"`);
+            recordingFlags.push(`-vn -f segment -segment_atclocktime 1 -reset_timestamps 1 -strftime 1 -segment_list pipe:8 -segment_time ${(60 * segmentLengthInMinutes)} "${e.dir}%Y-%m-%dT%H-%M-%S.${e.ext || 'mp4'}"`);
             return recordingFlags.join(' ')
         }
         return ``
