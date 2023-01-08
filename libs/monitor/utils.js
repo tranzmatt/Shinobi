@@ -1081,15 +1081,12 @@ module.exports = (s,config,lang) => {
                     f: 'trigger',
                     id: monitorId,
                     ke: groupKey,
-                    name: 'db',
-                    details:{
+                    details: {
                         plug: 'audio',
                         name: 'db',
                         reason: 'soundChange',
                         confidence: dB
-                    },
-                    imgHeight: e.details.detector_scale_y,
-                    imgWidth: e.details.detector_scale_x
+                    }
                 })
             })
             activeMonitor.audioDetector = audioDetector
