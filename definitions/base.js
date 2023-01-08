@@ -565,6 +565,22 @@ module.exports = function(s,config,lang){
                       ]
                    },
                    {
+                      "name": "detail=audio_only",
+                      "field": lang['Audio Only'],
+                      "default": "0",
+                      "fieldType": "select",
+                      "possible": [
+                          {
+                             "name": lang.No,
+                             "value": "0"
+                          },
+                          {
+                             "name": lang.Yes,
+                             "value": "1"
+                          }
+                      ]
+                   },
+                   {
                       "name": "detail=sfps",
                       "field": lang['Monitor Capture Rate'],
                       "description": lang["fieldTextSfps"],

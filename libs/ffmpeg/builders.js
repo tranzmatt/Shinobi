@@ -381,15 +381,31 @@ module.exports = (s,config,lang) => {
         //x = temporary values
         const streamFlags = []
         const streamType = e.details.stream_type ? e.details.stream_type : 'hls'
-        if(streamType !== 'jpeg' && streamType !== 'useSubstream'){
-            const isCudaEnabled = hasCudaEnabled(e)
+        const outputIsAudioOnly = e.details.audio_only === '1'
+        const audioCodec = e.details.stream_acodec ? e.details.stream_acodec : 'no'
+        if(outputIsAudioOnly){
+            streamFlags.push(`-vn`)
+            switch(streamType){
+                case'mp4':
+                    streamFlags.push('-f mp4 -movflags +frag_keyframe+empty_moov+default_base_moof -metadata title="Poseidon Stream from Shinobi" -reset_timestamps 1 pipe:1')
+                break;
+                case'flv':
+                    streamFlags.push(`-f flv`,'pipe:1')
+                break;
+                case'hls':
+                    const hlsTime = !isNaN(parseInt(e.details.hls_time)) ? `${parseInt(e.details.hls_time)}` : '2'
+                    const hlsListSize = !isNaN(parseInt(e.details.hls_list_size)) ? `${parseInt(e.details.hls_list_size)}` : '2'
+                    streamFlags.push(`-f hls -hls_time ${hlsTime} -hls_list_size ${hlsListSize} -start_number 0 -hls_allow_cache 0 -hls_flags +delete_segments+omit_endlist+discont_start "${e.sdir}s.m3u8"`)
+                break;
+            }
+        }else if(streamType !== 'jpeg' && streamType !== 'useSubstream'){
             const streamFilters = []
-            const videoCodecisCopy = e.details.stream_vcodec === 'copy'
-            const videoCodec = e.details.stream_vcodec ? e.details.stream_vcodec : 'no'
-            const audioCodec = e.details.stream_acodec ? e.details.stream_acodec : 'no'
-            const videoQuality = e.details.stream_quality ? e.details.stream_quality : '1'
-            const videoFps = !isNaN(parseFloat(e.details.stream_fps)) && e.details.stream_fps !== '0' ? parseFloat(e.details.stream_fps) : null
+            const isCudaEnabled = hasCudaEnabled(e)
             const inputMap = buildInputMap(e,e.details.input_map_choices.stream)
+            const videoFps = !isNaN(parseFloat(e.details.stream_fps)) && e.details.stream_fps !== '0' ? parseFloat(e.details.stream_fps) : null
+            const videoCodecisCopy = e.details.stream_vcodec === 'copy'
+            const videoQuality = e.details.stream_quality ? e.details.stream_quality : '1'
+            const videoCodec = e.details.stream_vcodec ? e.details.stream_vcodec : 'no'
             const outputCanHaveAudio = config.outputsWithAudio.indexOf(streamType) > -1;
             const outputRequiresEncoding = streamType === 'mjpeg' || streamType === 'b64'
             const outputIsPresetCapable = outputCanHaveAudio
@@ -491,7 +507,8 @@ module.exports = (s,config,lang) => {
         return streamFlags.join(' ')
     }
     const buildJpegApiOutput = function(e){
-        if(e.details.snap === '1'){
+        const outputIsAudioOnly = e.details.audio_only === '1'
+        if(e.details.snap === '1' && !outputIsAudioOnly){
             const isCudaEnabled = hasCudaEnabled(e)
             const videoFlags = []
             const videoFilters = []
@@ -515,6 +532,10 @@ module.exports = (s,config,lang) => {
     const buildMainRecording = function(e){
         //e = monitor object
         //x = temporary values
+        const outputIsAudioOnly = e.details.audio_only === '1'
+        if(outputIsAudioOnly){
+            return buildMainRecordingAsAudioOnly(e)
+        }
         if(e.mode === 'record'){
             const recordingFlags = []
             const recordingFilters = []
@@ -595,6 +616,37 @@ module.exports = (s,config,lang) => {
         }
         return ``
     }
+    const buildMainRecordingAsAudioOnly = function(e){
+        //e = monitor object
+        //x = temporary values
+        const outputIsAudioOnly = e.details.audio_only === '1'
+        if(e.mode === 'record' && outputIsAudioOnly){
+            const recordingFlags = []
+            const recordingFilters = []
+            const customRecordingFlags = []
+            const defaultAudioCodec = videoExtIsMp4 ? 'aac' : 'libvorbis'
+            const audioCodec = e.details.acodec === 'default' ? 'aac' : e.details.acodec ? e.details.acodec : defaultAudioCodec
+            const segmentLengthInMinutes = !isNaN(parseFloat(e.details.cutoff)) ? parseFloat(e.details.cutoff) : '15'
+            const inputMap = buildInputMap(e,e.details.input_map_choices.record)
+            if(inputMap)recordingFlags.push(inputMap)
+            if(e.details.cust_record)customRecordingFlags.push(e.details.cust_record)
+            //record - resolution
+            if(customRecordingFlags.indexOf('-strict -2') === -1)customRecordingFlags.push(`-strict -2`)
+            switch(e.type){
+                case'h264':case'hls':case'mp4':case'local':
+                    if(audioCodec !== 'none'){
+                        recordingFlags.push(`-acodec ` + audioCodec)
+                    }
+                break;
+            }
+            if(customRecordingFlags.length > 0){
+                recordingFlags.push(...customRecordingFlags)
+            }
+            recordingFlags.push(`-f segment -segment_atclocktime 1 -reset_timestamps 1 -strftime 1 -segment_list pipe:8 -segment_time ${(60 * segmentLengthInMinutes)} "${e.dir}%Y-%m-%dT%H-%M-%S.${e.ext || 'mp4'}"`);
+            return recordingFlags.join(' ')
+        }
+        return ``
+    }
     const buildAudioDetector = function(e){
         const outputFlags = []
         if(e.details.detector_audio === '1'){
@@ -611,6 +663,8 @@ module.exports = (s,config,lang) => {
     const buildMainDetector = function(e){
         //e = monitor object
         //x = temporary values
+        const outputIsAudioOnly = e.details.audio_only === '1'
+        if(outputIsAudioOnly)return ``;
         const isCudaEnabled = hasCudaEnabled(e)
         const detectorFlags = []
         const inputMapsRequired = (e.details.input_map_choices && e.details.input_map_choices.detector)
@@ -688,6 +742,7 @@ module.exports = (s,config,lang) => {
             var videoCodec = e.details.detector_buffer_vcodec
             var liveStartIndex = e.details.detector_buffer_live_start_index || '-3'
             var audioCodec = e.details.detector_buffer_acodec ? e.details.detector_buffer_acodec : 'no'
+            const outputIsAudioOnly = e.details.audio_only === '1'
             const videoCodecisCopy = videoCodec === 'copy'
             const videoFps = !isNaN(parseFloat(e.details.stream_fps)) && e.details.stream_fps !== '0' ? parseFloat(e.details.stream_fps) : null
             const inputMap = buildInputMap(e,e.details.input_map_choices.detector_sip_buffer)
@@ -708,13 +763,15 @@ module.exports = (s,config,lang) => {
                     videoCodec = 'libx264'
                 }
             }
-            if(audioCodec === 'auto'){
+            if(outputIsAudioOnly){
+                audioCodec = 'aac'
+            }else if(audioCodec === 'auto'){
                 if(e.type === 'mjpeg' || e.type === 'jpeg' || e.type === 'socket'){
-                    videoCodec = `no`
+                    audioCodec = `no`
                 }else if(e.type === 'h264' || e.type === 'hls' || e.type === 'mp4'){
-                    videoCodec = 'copy'
+                    audioCodec = 'copy'
                 }else{
-                    videoCodec = 'aac'
+                    audioCodec = 'aac'
                 }
             }
             if(videoCodec !== 'copy'){
@@ -731,7 +788,9 @@ module.exports = (s,config,lang) => {
                     outputFlags.push(`-s ${videoWidth}x${videoHeight}`)
                 }
             }
-            if(videoCodec !== 'none'){
+            if(outputIsAudioOnly){
+                outputFlags.push(`-vn`)
+            }else if(videoCodec !== 'none'){
                 outputFlags.push(`-vcodec ` + videoCodec)
             }
             if(audioCodec === 'no'){
@@ -755,7 +814,8 @@ module.exports = (s,config,lang) => {
         return outputFlags.join(' ')
     }
     const buildTimelapseOutput = function(e){
-        if(e.details.record_timelapse === '1'){
+        const outputIsAudioOnly = e.details.audio_only === '1'
+        if(!outputIsAudioOnly && e.details.record_timelapse === '1'){
             const videoFilters = []
             const videoFlags = []
             const inputMap = buildInputMap(e,e.details.input_map_choices.record_timelapse)
