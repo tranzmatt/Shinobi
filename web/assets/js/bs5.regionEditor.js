@@ -154,7 +154,7 @@ $(document).ready(function(e){
             }
             var apiUrl = `${getApiPrefix(apiPoint)}/${monitorId}`
             if(apiPoint === 'embed'){
-                apiUrl += `/fullscreen|jquery|relative?host=${location.pathname}`
+                apiUrl += `/fullscreen|jquery|gui|relative?host=${location.pathname}`
             }else{
                 apiUrl += '/s.jpg'
             }
