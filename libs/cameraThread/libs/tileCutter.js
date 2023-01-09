@@ -1,51 +1,3 @@
-const SAT = require('sat')
-const V = SAT.Vector;
-const P = SAT.Polygon;
-const B = SAT.Box;
-
-function intersectionY(edge, y) {
-    const [[x1, y1], [x2, y2]] = edge;
-    const dir = Math.sign(y2 - y1);
-    if (dir && (y1 - y)*(y2 - y) <= 0) return { x: x1 + (y-y1)/(y2-y1) * (x2-x1), dir };
-}
-
-
-function tilePolygon(points, tileSize){
-    // https://stackoverflow.com/questions/56827208/spilliting-polygon-into-square
-    const minY = Math.min(...points.map(p => p[1]));
-    const maxY = Math.max(...points.map(p => p[1]));
-    const minX = Math.min(...points.map(p => p[0]));
-    const gridPoints = [];
-    for (let y = minY; y <= maxY; y += tileSize) {
-        // Collect x-coordinates where polygon crosses this horizontal line (y)
-        const cuts = [];
-        let prev = null;
-        for (let i = 0; i < points.length; i++) {
-            const cut = intersectionY([points[i], points[(i+1)%points.length]], y);
-            if (!cut) continue;
-            if (!prev || prev.dir !== cut.dir) cuts.push(cut);
-            prev = cut;
-        }
-        if (prev && prev.dir === cuts[0].dir) cuts.pop();
-        // Now go through those cuts from left to right toggling whether we are in/out the polygon
-        let dirSum = 0;
-        let startX = null;
-        for (let cut of cuts.sort((a, b) => a.x - b.x)) {
-            dirSum += cut.dir;
-            if (dirSum % 2) { // Entering polygon
-                if (startX === null) startX = cut.x;
-            } else if (startX !== null) { // Exiting polygon
-                // Genereate grid points on this horizontal line segement
-                for (let x = minX + Math.ceil((startX - minX) / tileSize)*tileSize; x <= cut.x; x += tileSize) {
-                    gridPoints.push([x, y]);
-                }
-                startX = null;
-            }
-        }
-    }
-    return gridPoints;
-}
-
 function convertStringPoints(oldPoints){
     // [["0","0"],["0","150"],["300","150"],["300","0"]]
     var newPoints = []
@@ -53,53 +5,6 @@ function convertStringPoints(oldPoints){
         newPoints.push([parseInt(point[0]),parseInt(point[1])])
     })
     return newPoints
-}
-
-function createSquares(gridPoints,imgWidth,imgHeight){
-    var rows = [];
-    var n = 0;
-    var curentLine = gridPoints[0][1]
-    gridPoints.forEach((point) => {
-        if(!rows[n])rows[n] = []
-        rows[n].push(point)
-        if(curentLine !== point[1]){
-            curentLine = point[1];
-            ++n;
-        }
-    });
-    var squares = [];
-    rows.forEach((row,n) => {
-        for (let i = 0; i < row.length; i += 2) {
-            if(!rows[n + 1] || !row[i + 1])return;
-            var square = [row[i],row[i + 1],rows[n + 1][i],rows[n + 1][i + 1]]
-            squares.push(square)
-        }
-    })
-    return squares
-}
-const getAllSquaresTouchingRegion = function(region,squares){
-    var matrixPoints = []
-    var collisions = []
-    var polyPoints = []
-    region.points.forEach(function(point){
-        polyPoints.push(new V(parseInt(point[0]),parseInt(point[1])))
-    })
-    var regionPoly = new P(new V(0,0), polyPoints)
-    squares.forEach(function(squarePoints){
-        var firstPoint = squarePoints[0]
-        var thirdPoint = squarePoints[2]
-        var squareX = firstPoint[0]
-        var squareY = firstPoint[1]
-        var squareWidth = thirdPoint[0] - firstPoint[0]
-        var squareHeight = thirdPoint[1] - firstPoint[1]
-        var squarePoly = new B(new V(squareX, squareY), squareWidth, squareHeight).toPolygon()
-        var response = new SAT.Response()
-        var collided = SAT.testPolygonPolygon(squarePoly, regionPoly, response)
-        if(collided === true){
-            collisions.push(squarePoints)
-        }
-    })
-    return collisions
 }
 function makeBigMatricesFromSmallOnes(matrices){
     var bigMatrices = {}
@@ -134,12 +39,111 @@ function makeBigMatricesFromSmallOnes(matrices){
     })
     return allBigMatrices
 }
+function isPointInPolygon(point, polygon) {
+  let x = point[0];
+  let y = point[1];
+
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    let xi = polygon[i][0], yi = polygon[i][1];
+    let xj = polygon[j][0], yj = polygon[j][1];
+
+    let intersect = ((yi > y) != (yj > y))
+      && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+    if (intersect) inside = !inside;
+  }
+
+  return inside;
+}
+function getTiles(points, tileSize, frameWidth, frameHeight) {
+  // Create an array to store the tiles
+  let tiles = [];
+
+  // Iterate through each tile in the frame
+  for (let x = 0; x < frameWidth; x += tileSize) {
+    for (let y = 0; y < frameHeight; y += tileSize) {
+      // Create an array to store the points for this tile
+      let tilePoints = [        [Math.round(x), Math.round(y)],
+        [Math.round(x + tileSize), Math.round(y)],
+        [Math.round(x + tileSize), Math.round(y + tileSize)],
+        [Math.round(x), Math.round(y + tileSize)]
+      ];
+
+      // Check if all points in the tile are inside the polygon
+      let inside = true;
+      for (let i = 0; i < tilePoints.length; i++) {
+        if (!isPointInPolygon(tilePoints[i], points)) {
+          inside = false;
+          break;
+        }
+      }
+
+      if (inside) {
+        // If all points are inside the polygon, add the tile to the array
+        tiles.push(tilePoints);
+      } else {
+        // If any points are outside the polygon, find the intersection points
+        let intersectPoints = [];
+        for (let i = 0; i < tilePoints.length; i++) {
+          let p1 = tilePoints[i];
+          let p2 = tilePoints[(i+1) % tilePoints.length];
+          let intersect = getIntersection(p1, p2, points);
+          if (intersect) {
+            intersectPoints.push(intersect);
+          }
+        }
+
+        // If there are at least 3 intersection points, create a new set of points for the partially inside tile
+        if (intersectPoints.length >= 3) {
+          tiles.push(intersectPoints);
+        }
+      }
+    }
+  }
+  return tiles;
+}
+function getIntersection(p1, p2, points) {
+  // Iterate through each side of the polygon
+  for (let i = 0; i < points.length; i++) {
+    let p3 = points[i];
+    let p4 = points[(i+1) % points.length];
+
+    // Check if the line segment intersects with this side of the polygon
+    let intersect = getLineSegmentIntersection(p1, p2, p3, p4);
+    if (intersect) {
+      return intersect;
+    }
+  }
+  return null;
+}
+function getLineSegmentIntersection(p1, p2, p3, p4) {
+  // Calculate the intersection point using the line segment intersection formula
+  let x1 = p1[0];
+  let y1 = p1[1];
+  let x2 = p2[0];
+  let y2 = p2[1];
+  let x3 = p3[0];
+  let y3 = p3[1];
+  let x4 = p4[0];
+  let y4 = p4[1];
+  let denominator = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+  if (denominator == 0) {
+    return null;
+  }
+  let t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / denominator;
+  let u = -((x1 - x2) * (y1 - y3) - (y1 - y2) * (x1 - x3)) / denominator;
+  if (t >= 0 && t <= 1 && u >= 0 && u <= 1) {
+    let x = x1 + t * (x2 - x1);
+    let y = y1 + t * (y2 - y1);
+    return [parseInt(x), parseInt(y)];
+  }
+  return null;
+}
 function convertRegionsToTiles(monitorDetails){
+    process.logData(`Building Accuracy Mode Detection Tiles...`)
+    const width = parseInt(monitorDetails.detector_scale_x) || 640
+    const height = parseInt(monitorDetails.detector_scale_y) || 480
     let originalCords;
-    //force full frame detection to be use for tracking blobs
-    monitorDetails.detector_frame = '1'
-    monitorDetails.detector_sensitivity = '1'
-    monitorDetails.detector_color_threshold = monitorDetails.detector_color_threshold || '7'
     try{
         monitorDetails.cords = JSON.parse(monitorDetails.cords)
     }catch(err){
@@ -151,15 +155,8 @@ function convertRegionsToTiles(monitorDetails){
     try{
         regionKeys.forEach(function(regionKey){
             const region = monitorDetails.cords[regionKey]
-            const tileSize = parseInt(region.detector_tile_size) || 20;
-            const gridPoints = tilePolygon([
-                [0,0],
-                [0,height],
-                [width,height],
-                [width,0]
-            ],tileSize)
-            const squares = createSquares(gridPoints,width,height)
-            const squaresInRegion = getAllSquaresTouchingRegion(region,squares)
+            const tileSize = parseInt(region.detector_tile_size) || parseInt(monitorDetails.detector_tile_size) || 20;
+            const squaresInRegion = getTiles(convertStringPoints(region.points),tileSize,width,height)
             squaresInRegion.forEach((square,n) => {
                 newRegionsBySquares[`${regionKey}_${n}`] = Object.assign({},region,{
                    "points": square
@@ -168,7 +165,8 @@ function convertRegionsToTiles(monitorDetails){
         })
         // jsonData.rawMonitorConfig.details.cords = newRegionsBySquares;
     }catch(err){
-        process.logData(err)
+        process.logData('ERROR!')
+        process.logData(err.stack)
     }
     // detectorUtils.originalCords = originalCords;
     return {
@@ -177,9 +175,11 @@ function convertRegionsToTiles(monitorDetails){
     }
 }
 module.exports = {
-    tilePolygon,
-    createSquares,
+    getTiles,
+    getIntersection,
+    isPointInPolygon,
+    convertStringPoints,
     convertRegionsToTiles,
-    getAllSquaresTouchingRegion,
+    getLineSegmentIntersection,
     makeBigMatricesFromSmallOnes,
 }
