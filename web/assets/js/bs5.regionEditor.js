@@ -9,6 +9,8 @@ $(document).ready(function(e){
     var regionEditorMonitorsList = $('#region_editor_monitors')
     var regionEditorLiveView = $('#region_editor_live')
     var regionEditorGridOverlay = regionEditorWindow.find('.grid')
+    var accuracyModeToggle = regionEditorWindow.find('[detail="detector_motion_tile_mode"]')
+    var tileSizeField = regionEditorWindow.find('[detail="detector_tile_size"]')
     var getRegionEditorCanvas = function(){
         return regionEditorWindow.find('canvas')
     }
@@ -125,6 +127,18 @@ $(document).ready(function(e){
         });
         regionEditorRegionsList.change();
     }
+    function displayGridOverCanvas(isOn,tileSize){
+        if(isOn){
+            regionEditorGridOverlay.css('background-size',`${tileSize}px ${tileSize}px`).show()
+        }else{
+            regionEditorGridOverlay.hide()
+        }
+    }
+    function setGridDisplayBasedOnFields(){
+        var isOn = accuracyModeToggle.val() === '1'
+        var tileSize = tileSizeField.val()
+        displayGridOverCanvas(isOn,tileSize)
+    }
     function initLiveStream(monitorId){
         var monitorId = monitorId || getCurrentlySelectedMonitorId()
         var liveElement = regionEditorLiveView.find('iframe,img')
@@ -141,12 +155,8 @@ $(document).ready(function(e){
             var apiPoint = 'embed'
             regionEditorLiveView.find('iframe,img').attr('src','').hide()
             regionEditorGridOverlay.css('background-size',`71px 71px`).show()
-            if(monitorDetails.detector_motion_tile_mode === '1'){
-                var tileSize = monitorDetails.detector_tile_size || 20
-                regionEditorGridOverlay.css('background-size',`${tileSize}px ${tileSize}px`).show()
-            }else{
-                regionEditorGridOverlay.hide()
-            }
+            var tileSize = monitorDetails.detector_tile_size || 20
+            displayGridOverCanvas(monitorDetails.detector_motion_tile_mode === '1',tileSize)
             if(getRegionStillImageSwitch()){
                 apiPoint = 'jpeg'
             }else{
@@ -226,6 +236,8 @@ $(document).ready(function(e){
     regionEditorRegionsList.change(function(e){
         initCanvas(true);
     })
+    accuracyModeToggle.change(setGridDisplayBasedOnFields)
+    tileSizeField.change(setGridDisplayBasedOnFields)
     regionEditorWindow.on('change','[name]',function(){
         var currentRegionId = getCurrentlySelectedRegionId()
         var el = $(this)
