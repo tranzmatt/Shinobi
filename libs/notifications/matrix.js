@@ -16,11 +16,8 @@ module.exports = function(s,config,lang,getSnapshot){
                     name,
                     type,
                 } = file;
-                client.uploadContent({
-                    file: buffer,
-                    opts: {
-                        name: name,
-                    }
+                client.uploadContent(buffer, {
+                    name: name
                 }).then(function(url) {
                     const content = {
                         msgtype: type || "m.file",
