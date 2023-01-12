@@ -1,8 +1,8 @@
 module.exports = function(s){
-    const conifgLocation = process.argv[2]
+    const configLocation = process.argv[2]
     s.location = {
         super : s.mainDirectory+'/super.json',
-        config : conifgLocation && conifgLocation.endsWith('.json') ? conifgLocation : s.mainDirectory+'/conf.json',
+        config : configLocation && configLocation.endsWith('.json') ? configLocation : s.mainDirectory+'/conf.json',
         languages : s.mainDirectory+'/languages'
     }
     try{
