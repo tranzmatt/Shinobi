@@ -4360,7 +4360,6 @@ module.exports = function(s,config,lang){
              "Notifications": {
                 "name": lang['Notifications'],
                 "color": "blue",
-                isAdvanced: true,
                 "isSection": true,
                 "id": "monSectionNotifications",
                 "info": [
