@@ -65,12 +65,25 @@ module.exports = function(s,config,lang,app,io){
         }
     }
     s.insertTimelapseFrameDatabaseRow = function(e,queryInfo,filePath){
+        const groupKey = e.ke
+        const theGroup = s.group[groupKey]
+        const frameDetails = Object.assign({},s.parseJSON(queryInfo.details) || {})
+        const storageId = e.details.dir
+        const storageIndex = theGroup.addStorageUse[storageId]
+        const fileSize = queryInfo.size / 1048576
         s.knexQuery({
             action: "insert",
             table: "Timelapse Frames",
             insert: queryInfo
         })
-        s.setDiskUsedForGroup(e.ke,queryInfo.size / 1048576,'timelapeFrames')
+        if(storageIndex){
+            s.setDiskUsedForGroupAddStorage(groupKey,{
+                size: fileSize,
+                storageIndex: storageIndex
+            },'timelapseFrames')
+        }else{
+            s.setDiskUsedForGroup(groupKey, fileSize, 'timelapseFrames')
+        }
         s.purgeDiskForGroup(e.ke)
         s.onInsertTimelapseFrameExtensions.forEach(function(extender){
             extender(e,queryInfo,filePath)
@@ -149,7 +162,7 @@ module.exports = function(s,config,lang,app,io){
                     where: frameSelector,
                     limit: 1
                 },async function(){
-                    s.setDiskUsedForGroup(e.ke,-(r.size / 1048576),'timelapeFrames')
+                    s.setDiskUsedForGroup(e.ke,-(r.size / 1048576),'timelapseFrames')
                     s.file('delete',e.fileLocation)
                     const fileDirectory = getFileDirectory(folderPath);
                     const folderIsEmpty = (await fs.promises.readdir(folderPath)).filter(file => file.indexOf('.jpg') > -1).length === 0;

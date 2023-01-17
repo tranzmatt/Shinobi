@@ -186,7 +186,7 @@ module.exports = function(s,config,lang){
                         //change global size value
                         cloudDisk.usedSpace = cloudDisk.usedSpace + amount
                         switch(storagePoint){
-                            case'timelapeFrames':
+                            case'timelapseFrames':
                                 cloudDisk.usedSpaceTimelapseFrames += amount
                             break;
                             case'fileBin':
@@ -221,7 +221,7 @@ module.exports = function(s,config,lang){
                         s.group[e.ke].usedSpace += currentChange
                         s.group[e.ke].usedSpace = s.group[e.ke].usedSpace < 0 ? 0 : s.group[e.ke].usedSpace
                         switch(storageType){
-                            case'timelapeFrames':
+                            case'timelapseFrames':
                                 s.group[e.ke].usedSpaceTimelapseFrames += currentChange
                                 s.group[e.ke].usedSpaceTimelapseFrames = s.group[e.ke].usedSpaceTimelapseFrames < 0 ? 0 : s.group[e.ke].usedSpaceTimelapseFrames
                             break;
@@ -252,7 +252,7 @@ module.exports = function(s,config,lang){
                         //change global size value
                         storageIndex.usedSpace += currentSize
                         switch(storageType){
-                            case'timelapeFrames':
+                            case'timelapseFrames':
                                 storageIndex.usedSpaceTimelapseFrames += currentSize
                             break;
                             case'fileBin':

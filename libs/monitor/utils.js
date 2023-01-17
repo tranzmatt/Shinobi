@@ -550,7 +550,7 @@ module.exports = (s,config,lang) => {
         const binDir = s.dir.fileBin + `${groupKey}/${monitorId}`
 
         // videos and addStorage
-        await adjustSpaceCounterForTableWithAddStorage('Timelapse Frames','timelapeFrames')
+        await adjustSpaceCounterForTableWithAddStorage('Timelapse Frames','timelapseFrames')
         await adjustSpaceCounterForTableWithAddStorage('Videos')
         await deleteFromTable('Videos')
         await deletePath(videosDir)
@@ -562,7 +562,7 @@ module.exports = (s,config,lang) => {
         }
 
         // timelapse frames
-        await adjustSpaceCounter('Timelapse Frames','timelapeFrames')
+        await adjustSpaceCounter('Timelapse Frames','timelapseFrames')
         await deleteFromTable('Timelapse Frames')
         await deletePath(videosDir + '_timelapse')
 

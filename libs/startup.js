@@ -171,7 +171,7 @@ module.exports = function(s,config,lang,io){
                         var addStorageData = {
                             files: [],
                             videos: [],
-                            timelapeFrames: [],
+                            timelapseFrames: [],
                         }
                         if(videos && videos[0]){
                             videos.forEach(function(video){
@@ -189,7 +189,7 @@ module.exports = function(s,config,lang,io){
                                 if(!frame.details.dir){
                                     usedSpaceTimelapseFrames += frame.size
                                 }else{
-                                    addStorageData.timelapeFrames.push(frame)
+                                    addStorageData.timelapseFrames.push(frame)
                                 }
                             })
                         }
@@ -326,7 +326,7 @@ module.exports = function(s,config,lang,io){
                 }
                 if(timelapseFrames && timelapseFrames[0]){
                     timelapseFrames.forEach(function(frame){
-                        if(video.details.dir === storage.value){
+                        if(frame.details.dir === storage.value){
                             usedSpaceTimelapseFrames += frame.size
                         }
                     })
