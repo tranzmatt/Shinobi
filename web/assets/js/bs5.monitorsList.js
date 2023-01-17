@@ -45,61 +45,6 @@ $(document).ready(function(){
           </div>
       </div>`)
     }
-    function createMonitorVideosTab(monitor){
-        var startDate = moment().subtract(32, 'hour').utc()
-        var endDate = moment().add(1, 'hour').utc()
-        var newTabId = `monitorVideos-${monitor.mid}`
-        var tabLabel = `<b>${lang['Videos']}</b> : ${monitor.name}`
-        var baseHtml = `<main class="container page-tab" id="tab-${newTabId}">
-            <div class="my-3 p-3 ${definitions.Theme.isDark ? 'bg-dark text-white' : 'bg-light text-dark'} rounded shadow-sm">
-                  <h6 class="border-bottom-dotted border-bottom-dark pb-2 mb-0 row">
-                    <div class="col-md-8">${lang['Videos']} : ${monitor.name}</div>
-                    <div class="col-md-4"><input class="form-control form-control-sm btn-dark text-md-end text-sm-center" type="text" id="daterange-${newTabId}" value="01/01/2018 - 01/15/2018" /></div>
-                  </h6>
-                  <div class="video-list flex-table flex-table-dark mx-n3 pt-2 px-3 row">
-
-                  </div>
-            </div>
-        </main>`
-        createNewTab(newTabId,tabLabel,baseHtml,{},null,'videosList')
-        getVideos({
-            monitorId: monitor.mid,
-            startDate: startDate._d,
-            endDate: endDate._d,
-        },function(data){
-            var videos = data.videos
-            if(videos.length === 0){
-                getVideos({
-                    monitorId: monitor.mid,
-                    limit: 20,
-                },function(data){
-                    var videos = data.videos
-                    drawVideoRowsToList(`#tab-monitorVideos-${monitor.mid} .video-list`,videos)
-                })
-            }else{
-                drawVideoRowsToList(`#tab-monitorVideos-${monitor.mid} .video-list`,videos)
-            }
-        })
-        $(`#daterange-${newTabId}`).daterangepicker({
-            timePicker: true,
-            startDate: startDate,
-            endDate: endDate,
-            locale: {
-              format: 'YYYY-MM-DD hh:mm:ss A'
-            }
-        }, function(start, end, label) {
-            var startDate = start.clone().utc()
-            var endDate = end.clone().utc()
-            getVideos({
-                monitorId: monitor.mid,
-                startDate: startDate._d,
-                endDate: endDate._d,
-            },function(data){
-                var videos = data.videos
-                drawVideoRowsToList(`#tab-monitorVideos-${monitor.mid} .video-list`,videos)
-            })
-        })
-    }
     function loadMonitorsFromMemory(options,callback){
         theList.empty();
         $.each(getLoadedMonitorsAlphabetically(),function(n,row){
@@ -167,12 +112,6 @@ $(document).ready(function(){
         $.getJSON(`${getApiPrefix('monitor')}/${monitorId}/${mode}`,function(data){
             console.log(data)
         })
-    })
-    .on('click','.open-videos',function(){
-        var monitorId = getRowsMonitorId(this)
-        var monitor = loadedMonitors[monitorId]
-        createMonitorVideosTab(monitor)
-        console.log(monitorId)
     })
     .on('click','.export-this-monitor-settings',function(){
         var monitorId = getRowsMonitorId(this)
