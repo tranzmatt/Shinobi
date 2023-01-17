@@ -11,6 +11,7 @@ module.exports = function(s,config,lang){
         deleteAddStorageVideos,
         deleteMainVideos,
         deleteTimelapseFrames,
+        deleteAddStorageTimelapseFrames,
         deleteFileBinFiles,
         deleteCloudVideos,
         deleteCloudTimelapseFrames,
@@ -29,13 +30,16 @@ module.exports = function(s,config,lang){
                     deleteMainVideos(groupKey,() => {
                         s.debugLog(`${groupKey} deleteTimelapseFrames`)
                         deleteTimelapseFrames(groupKey,() => {
-                            s.debugLog(`${groupKey} deleteFileBinFiles`)
-                            deleteFileBinFiles(groupKey,() => {
-                                s.debugLog(`${groupKey} deleteAddStorageVideos`)
-                                deleteAddStorageVideos(groupKey,() => {
-                                    s.group[groupKey].sizePurging = false
-                                    s.sendDiskUsedAmountToClients(groupKey)
-                                    callback();
+                            s.debugLog(`${groupKey} deleteAddStorageTimelapseFrames`)
+                            deleteAddStorageTimelapseFrames(groupKey,() => {
+                                s.debugLog(`${groupKey} deleteFileBinFiles`)
+                                deleteFileBinFiles(groupKey,() => {
+                                    s.debugLog(`${groupKey} deleteAddStorageVideos`)
+                                    deleteAddStorageVideos(groupKey,() => {
+                                        s.group[groupKey].sizePurging = false
+                                        s.sendDiskUsedAmountToClients(groupKey)
+                                        callback();
+                                    })
                                 })
                             })
                         })

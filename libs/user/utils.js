@@ -240,7 +240,7 @@ module.exports = (s,config,lang) => {
     const deleteAddStorageTimelapseFrames = function(groupKey,callback){
         const theGroup = s.group[groupKey]
         reRunCheck = function(){
-            s.debugLog('deleteAddStorageVideos')
+            s.debugLog('deleteAddStorageTimelapseFrames')
             return deleteAddStorageTimelapseFrames(groupKey,callback)
         }
         var currentStorageNumber = 0
@@ -546,6 +546,7 @@ module.exports = (s,config,lang) => {
         deleteAddStorageVideos: deleteAddStorageVideos,
         deleteMainVideos: deleteMainVideos,
         deleteTimelapseFrames: deleteTimelapseFrames,
+        deleteAddStorageTimelapseFrames,
         deleteFileBinFiles: deleteFileBinFiles,
         deleteCloudVideos: deleteCloudVideos,
         deleteCloudTimelapseFrames: deleteCloudTimelapseFrames,
