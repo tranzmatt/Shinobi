@@ -204,8 +204,8 @@ module.exports = (s,config,lang) => {
                 }
                 var storageIndex = theGroup.addStorageUse[storageId]
                 //run purge command
-                const maxSize = (storageIndex.usedSpaceVideos * (theGroup.sizeLimitVideoPercent / 100) * config.cron.deleteOverMaxOffset);
-                if(storageIndex.usedSpace > maxSize){
+                const maxSize = (storageIndex.sizeLimit * (theGroup.sizeLimitVideoPercent / 100) * config.cron.deleteOverMaxOffset);
+                if(storageIndex.usedSpaceVideos > maxSize){
                     s.knexQuery({
                         action: "select",
                         columns: "*",
