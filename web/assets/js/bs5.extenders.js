@@ -12,3 +12,7 @@ var onToggleSideBarMenuHideExtensions = [];
 function onToggleSideBarMenuHide(...extender){
     onToggleSideBarMenuHideExtensions.push(...extender)
 }
+var onDetectorPluginChangeExtensions = [];
+function onDetectorPluginChange(...extender){
+    onDetectorPluginChangeExtensions.push(...extender)
+}

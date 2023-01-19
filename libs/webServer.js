@@ -65,6 +65,7 @@ module.exports = function(s,config,lang,io){
             'home/accountSettings',
             'home/apiKeys',
             'home/monitorSettings',
+            'home/monitorSettingsAudioOnly',
             'home/schedules',
             'home/monitorStates',
             'home/liveGrid',

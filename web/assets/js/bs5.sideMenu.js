@@ -163,6 +163,16 @@ function makeMonitorListSortable(){
         },
     })
 }
+function checkToOpenSideMenu(){
+    if(isSideBarMenuCollapsed()){
+        sideMenuCollapsePoint.collapse('show')
+    }
+}
+function checkToCloseSideMenu(){
+    if(isSideBarMenuCollapsed()){
+        sideMenuCollapsePoint.collapse('hide')
+    }
+}
 $('#monitors_list_search').keyup(function(){
     var monitorBlocks = monitorSideList.find('.monitor_block');
     var searchTerms = $(this).val().toLowerCase().split(' ')

@@ -1,4 +1,3 @@
-var monitorEditorSelectedMonitor = null
 $(document).ready(function(e){
 
 //Monitor Editor
@@ -18,278 +17,6 @@ var triggerTagsInput = monitorEditorWindow.find('[detail=det_trigger_tags]')
 var fieldsLoaded = {}
 var sections = {}
 var loadedPresets = {}
-function generateDefaultMonitorSettings(){
-    var eventFilterId = generateId(5)
-    return {
-       "mode": "start",
-       "mid": generateId(),
-       "name": "Some Stream",
-       "type": "h264",
-       "host": "",
-       "port": "",
-       "path": "/",
-       "height": "480",
-       "width": "640",
-       "ext": "mp4",
-       "protocol": "http",
-       "fps": "1",
-       "details": {
-           "max_keep_days": "",
-           "notes": "",
-           "dir": "",
-           "rtmp_key": "",
-           "auto_host_enable": "1",
-           "auto_host": "",
-           "rtsp_transport": "tcp",
-           "muser": "",
-           "mpass": "",
-           "port_force": "0",
-           "fatal_max": "0",
-           "skip_ping": null,
-           "is_onvif": null,
-           "onvif_port": "",
-           "primary_input": "0",
-           "aduration": "1000000000",
-           "probesize": "1000000000",
-           "stream_loop": "0",
-           "sfps": "",
-           "accelerator": "0",
-           "hwaccel": "auto",
-           "hwaccel_vcodec": "",
-           "hwaccel_device": "",
-           "use_coprocessor": null,
-           "stream_type": "hls",
-           "stream_flv_type": "ws",
-           "stream_flv_maxLatency": "",
-           "stream_mjpeg_clients": "",
-           "stream_vcodec": "copy",
-           "stream_acodec": "no",
-           "hls_time": "2",
-           "hls_list_size": "3",
-           "preset_stream": "ultrafast",
-           "signal_check": "10",
-           "signal_check_log": "0",
-           "stream_quality": "15",
-           "stream_fps": "2",
-           "stream_scale_x": "",
-           "stream_scale_y": "",
-           "rotate_stream": "no",
-           "svf": "",
-           "tv_channel": "0",
-           "tv_channel_id": "",
-           "tv_channel_group_title": "",
-           "stream_timestamp": "0",
-           "stream_timestamp_font": "",
-           "stream_timestamp_font_size": "",
-           "stream_timestamp_color": "",
-           "stream_timestamp_box_color": "",
-           "stream_timestamp_x": "",
-           "stream_timestamp_y": "",
-           "stream_watermark": "0",
-           "stream_watermark_location": "",
-           "stream_watermark_position": "tr",
-           "snap": "0",
-           "snap_fps": "",
-           "snap_scale_x": "",
-           "snap_scale_y": "",
-           "snap_vf": "",
-           "vcodec": "copy",
-           "crf": "1",
-           "acodec": "no",
-           "record_scale_y": "",
-           "record_scale_x": "",
-           "cutoff": "15",
-           "rotate_record": "no",
-           "vf": "",
-           "timestamp": "0",
-           "timestamp_font": "",
-           "timestamp_font_size": "10",
-           "timestamp_color": "white",
-           "timestamp_box_color": "0x00000000@1",
-           "timestamp_x": "(w-tw)/2",
-           "timestamp_y": "0",
-           "watermark": "0",
-           "watermark_location": "",
-           "watermark_position": "tr",
-           "record_timelapse": null,
-           "record_timelapse_mp4": null,
-           "record_timelapse_fps": null,
-           "record_timelapse_scale_x": "",
-           "record_timelapse_scale_y": "",
-           "record_timelapse_vf": "",
-           "record_timelapse_watermark": null,
-           "record_timelapse_watermark_location": "",
-           "record_timelapse_watermark_position": null,
-           "cust_input": "",
-           "cust_stream": "",
-           "cust_snap": "",
-           "cust_record": "",
-           "cust_detect": "",
-           "cust_sip_record": "",
-           "custom_output": "",
-           "detector": "0",
-           "detector_http_api": null,
-           "detector_send_frames": "1",
-           "detector_lock_timeout": "",
-           "detector_save": "1",
-           "detector_fps": "",
-           "detector_scale_x": "640",
-           "detector_scale_y": "480",
-           "detector_record_method": "sip",
-           "detector_trigger": "1",
-           "detector_timeout": "0.5",
-           "detector_send_video_length": "",
-           "watchdog_reset": "1",
-           "detector_delete_motionless_videos": "0",
-           "det_trigger_tags": "",
-           "detector_webhook": "0",
-           "detector_webhook_url": "",
-           "detector_webhook_method": null,
-           "detector_command_enable": "0",
-           "detector_command": "",
-           "detector_command_timeout": "",
-           "detector_mail": "0",
-           "detector_mail_timeout": "",
-           "detector_discordbot": null,
-           "detector_discordbot_send_video": null,
-           "detector_discordbot_timeout": "",
-           "use_detector_filters": "0",
-           "use_detector_filters_object": "1",
-           "cords": "[]",
-           "detector_filters": {
-              [eventFilterId]: {
-                "id": eventFilterId,
-                "enabled": "1",
-                "filter_name": "Standard Object Detection Filter",
-                "where": [
-                  {
-                    "p1": "tag",
-                    "p2": "!indexOf",
-                    "p3": "person",
-                    "p4": "&&"
-                  },
-                  {
-                    "p1": "tag",
-                    "p2": "!indexOf",
-                    "p3": "car",
-                    "p4": "&&"
-                  },
-                  {
-                    "p1": "tag",
-                    "p2": "!indexOf",
-                    "p3": "truck",
-                    "p4": "&&"
-                  }
-                ],
-                "actions": {
-                  "halt": "1",
-                  "save": "",
-                  "indifference": "",
-                  "webhook": "",
-                  "command": "",
-                  "record": "",
-                  "emailClient": "",
-                  "global_webhook": ""
-                }
-              }
-           },
-           "detector_pam": "1",
-           "detector_show_matrix": null,
-           "detector_sensitivity": "",
-           "detector_max_sensitivity": "",
-           "detector_threshold": "1",
-           "detector_color_threshold": "",
-           "detector_frame": "0",
-           "detector_noise_filter": null,
-           "detector_noise_filter_range": "",
-           "detector_notrigger": "0",
-           "detector_notrigger_mail": "0",
-           "detector_notrigger_timeout": "",
-           "detector_audio": null,
-           "detector_audio_min_db": "",
-           "detector_audio_max_db": "",
-           "detector_use_detect_object": "0",
-           "detector_send_frames_object": null,
-           "detector_obj_region": null,
-           "detector_use_motion": "1",
-           "detector_fps_object": "",
-           "detector_scale_x_object": "",
-           "detector_scale_y_object": "",
-           "detector_lisence_plate": "0",
-           "detector_lisence_plate_country": "us",
-           "detector_buffer_vcodec": "auto",
-           "detector_buffer_acodec": null,
-           "detector_buffer_fps": "",
-           "detector_buffer_hls_time": "",
-           "detector_buffer_hls_list_size": "",
-           "detector_buffer_start_number": "",
-           "detector_buffer_live_start_index": "",
-           "control": "0",
-           "control_base_url": "",
-           "control_url_method": null,
-           "control_digest_auth": null,
-           "control_stop": "0",
-           "control_url_stop_timeout": "",
-           "control_url_center": "",
-           "control_url_left": "",
-           "control_url_left_stop": "",
-           "control_url_right": "",
-           "control_url_right_stop": "",
-           "control_url_up": "",
-           "control_url_up_stop": "",
-           "control_url_down": "",
-           "control_url_down_stop": "",
-           "control_url_enable_nv": "",
-           "control_url_disable_nv": "",
-           "control_url_zoom_out": "",
-           "control_url_zoom_out_stop": "",
-           "control_url_zoom_in": "",
-           "control_url_zoom_in_stop": "",
-           "loglevel": "warning",
-           "sqllog": "0",
-           "detector_cascades": "",
-           "stream_channels": "",
-           "input_maps": "",
-           "input_map_choices": "",
-           "substream": {
-                "input": {
-                    "type": "h264",
-                    "fulladdress": "",
-                    "sfps": "",
-                    "aduration": "",
-                    "probesize": "",
-                    "stream_loop": null,
-                    "rtsp_transport": "",
-                    "accelerator": "0",
-                    "hwaccel": null,
-                    "hwaccel_vcodec": "",
-                    "hwaccel_device": "",
-                    "cust_input": ""
-                },
-                "output": {
-                    "stream_type": "hls",
-                    "rtmp_server_url": "",
-                    "rtmp_stream_key": "",
-                    "stream_mjpeg_clients": "",
-                    "stream_vcodec": "copy",
-                    "stream_acodec": "no",
-                    "hls_time": "",
-                    "hls_list_size": "",
-                    "preset_stream": "",
-                    "stream_quality": "",
-                    "stream_v_br": "",
-                    "stream_a_br": "",
-                    "stream_fps": "",
-                    "stream_scale_x": "640",
-                    "stream_scale_y": "480",
-                    "stream_rotate": null,
-                    "svf": "",
-                    "cust_stream": ""
-                }
-            }
-        }
-    }
-}
 var getHumanizedMonitorConfig = function(monitor){
     var humanizedMonitorKeys = {}
     $.each(monitor,function(key,value){
@@ -414,41 +141,6 @@ var copyMonitorSettingsToSelected = function(monitorConfig){
         chosenMonitors[monitor.mid] = monitor;
     })
 }
-window.getMonitorEditFormFields = function(){
-    var response = {ok: true}
-    var monitorConfig = editorForm.serializeObject()
-    var errorsFound = []
-    $.each(monitorConfig,function(n,v){monitorConfig[n]=v.trim()});
-    $.each(['fps','width','height','port'],function(n,key){
-        monitorConfig[key] = !isNaN(monitorConfig[key]) ? parseFloat(monitorConfig[key]) : monitorConfig[key]
-    })
-    monitorConfig.mid = monitorConfig.mid.replace(/[^\w\s]/gi,'').replace(/ /g,'')
-    if(monitorConfig.mid.length < 3){errorsFound.push('Monitor ID too short')}
-    if(monitorConfig.port == ''){
-        if(monitorConfig.protocol === 'https'){
-            monitorConfig.port = 443
-        }else{
-            monitorConfig.port = 80
-        }
-    }
-    if(monitorConfig.name == ''){errorsFound.push('Monitor Name cannot be blank')}
-    //edit details
-    monitorConfig.details = safeJsonParse(monitorConfig.details)
-    monitorConfig.details.substream = getSubStreamChannelFields()
-    monitorConfig.details.input_map_choices = monitorSectionInputMapsave()
-    // TODO : Input Maps and Stream Channels (does old way at the moment)
-
-
-//    if(monitorConfig.protocol=='rtsp'){monitorConfig.ext='mp4',monitorConfig.type='rtsp'}
-    if(errorsFound.length > 0){
-        response.ok = false
-        response.errors = errorsFound
-        return response;
-    }
-    response.monitorConfig = monitorConfig
-    return response
-}
-
 function drawMonitorSettingsSubMenu(){
     drawSubMenuItems('monitorSettings',definitions['Monitor Settings'])
 }
@@ -462,16 +154,6 @@ function getAdditionalStreamChannelFields(tempID,channelId){
     var fieldInfo = monitorSettingsAdditionalStreamChannelFieldHtml.replaceAll('$[TEMP_ID]',tempID).replaceAll('$[NUMBER]',channelId)
     return fieldInfo
 }
-
-addOnTabOpen('monitorSettings', function () {
-    setFieldVisibility()
-    drawMonitorSettingsSubMenu()
-})
-
-addOnTabReopen('monitorSettings', function () {
-    setFieldVisibility()
-    drawMonitorSettingsSubMenu()
-})
 function drawInputMapHtml(options){
     var tmp = ''
     var tempID = generateId()
@@ -480,7 +162,7 @@ function drawInputMapHtml(options){
         var numberOfChannelsDrawn = $('#monSectionInputMaps .input-map').length
         options.channel = numberOfChannelsDrawn+1
     }
-    tmp+=getAdditionalInputMapFields(tempID,options.channel)
+    tmp += getAdditionalInputMapFields(tempID,options.channel)
     monitorSectionInputMaps.append(tmp)
     monitorSectionInputMaps.find('.input-map').last().find('[map-detail="aduration"]').change()
     return tempID;
@@ -493,7 +175,7 @@ function drawStreamChannelHtml(options){
         var numberOfChannelsDrawn = $('#monSectionStreamChannels .stream-channel').length
         options.channel=numberOfChannelsDrawn
     }
-    tmp+=`${getAdditionalStreamChannelFields(tempID,options.channel)}`
+    tmp += `${getAdditionalStreamChannelFields(tempID,options.channel)}`
     monitorStreamChannels.append(tmp)
     monitorStreamChannels.find('.stream-channel').last().find('[channel-detail="stream_vcodec"]').change()
     return tempID;
@@ -561,7 +243,7 @@ function importIntoMonitorEditor(options){
     var monitorTags = monitorConfig.tags ? monitorConfig.tags.split(',') : []
     var monitorGroups = monitorDetails.groups ? safeJsonParse(monitorDetails.groups) : []
     monitorTags = monitorTags.concat(monitorGroups)
-    loadMonitorGroupTriggerList()
+    loadMonitorGroupTriggerList(monitorEditorSelectedMonitor,triggerTagsInput)
     $.get(getApiPrefix()+'/hls/'+monitorConfig.ke+'/'+monitorConfig.mid+'/detectorStream.m3u8',function(data){
         $('#monEditBufferPreview').html(data)
     })
@@ -685,16 +367,16 @@ function importIntoMonitorEditor(options){
         }
     })
     monitorsForCopy.find('optgroup').html(tmp)
-    setFieldVisibility()
+    setFieldVisibility(editorForm)
     drawMonitorSettingsSubMenu()
 }
 //parse "Automatic" field in "Input" Section
 monitorEditorWindow.on('change','.auto_host_fill input,.auto_host_fill select',function(e){
     var theSwitch = monitorEditorWindow.find('[detail="auto_host_enable"]').val()
-    if(!theSwitch||theSwitch===''){
-        theSwitch='1'
+    if(!theSwitch || theSwitch === ''){
+        theSwitch = '1'
     }
-    if(theSwitch==='1'){
+    if(theSwitch === '1'){
         return
     }
     if(monitorEditorWindow.find('[name="host"]').val() !== ''){
@@ -758,28 +440,7 @@ monitorEditorWindow.on('change','[detail="auto_host"]',function(e){
 })
 editorForm.submit(function(e){
     e.preventDefault();
-    var validation = getMonitorEditFormFields()
-    if(!validation.ok){
-        var errorsFound = validation.errors
-        $.sM.e.find('.msg').html(errorsFound.join('<br>'));
-        new PNotify({title:'Configuration Invalid',text:errorsFound.join('<br>'),type:'error'});
-    }
-    var monitorConfig = validation.monitorConfig
-    $.post(getApiPrefix()+'/configureMonitor/'+$user.ke+'/'+monitorConfig.mid,{data:JSON.stringify(monitorConfig)},function(d){
-        if(d.ok === false){
-            new PNotify({
-                title: lang['Action Failed'],
-                text: d.msg,
-                type: 'danger'
-            })
-        }
-        debugLog(d)
-    })
-    //
-    if(copySettingsSelector.val() === '1'){
-        copyMonitorSettingsToSelected(monitorConfig)
-    }
-    monitorEditorWindow.modal('hide')
+    saveMonitorSettingsForm(editorForm)
     return false;
 });
 //////////////////
@@ -877,7 +538,6 @@ var getPseudoFields = function(fieldKey,parent){
         var value = el.val()
         fields[paramKey] = value
     });
-    console.log(fields)
     return fields
 }
 var buildMonitorURL = function(){
@@ -914,66 +574,10 @@ var showInputMappingFields = function(showMaps){
     }else{
         el.hide()
     }
-    setFieldVisibility()
+    setFieldVisibility(editorForm)
     drawMonitorSettingsSubMenu()
 }
-function setFieldVisibilityNewWay(){
-    var validation = getMonitorEditFormFields()
-    if(!validation.ok){
-        return console.log('Failed setFieldVisibilityNewWay',new Error(),validation)
-    }
-    var monitorConfig = validation.monitorConfig
-    var monitorDetails = safeJsonParse(monitorConfig.details)
-    var commonChecks = {
-        streamSectionCopyModeVisibilities: `monitorDetails.stream_vcodec === 'libx264' ||
-        monitorDetails.stream_vcodec === 'libx265' ||
-        monitorDetails.stream_vcodec === 'h264_nvenc' ||
-        monitorDetails.stream_vcodec === 'hevc_nvenc' ||
-        monitorDetails.stream_vcodec === 'no' ||
 
-        monitorDetails.stream_type === 'mjpeg' ||
-        monitorDetails.stream_type === 'b64' ||
-        ((monitorDetails.stream_type === 'hls' || monitorDetails.stream_type === 'mp4') && monitorDetails.stream_vcodec !== 'copy') ||
-        monitorDetails.stream_type === 'gif' ||
-        monitorDetails.stream_type === 'flv'`
-    }
-    editorForm.find('[visibility-conditions]').each(function(n,v){
-        var el = $(v)
-        var visibilityConditions = el.attr('visibility-conditions')
-        var response = true
-        var commonCheck = commonChecks[visibilityConditions]
-        if(commonCheck){
-            response = eval(commonCheck)
-        }else{
-            response = eval(visibilityConditions)
-        }
-        if(response){
-            el.show()
-        }else{
-            el.hide()
-        }
-    })
-}
-function setFieldVisibilityOldWay(formElement){
-    var listToShow = []
-    formElement.find('[selector]').each(function(n,v){
-        var el = $(this)
-        var keyName = el.attr('selector')
-        var value = el.val()
-        var toShow = `${keyName}_${value}`
-        listToShow.push(toShow)
-        formElement.find(`.${keyName}_input`).hide()
-    })
-    for (let i = 0; i < listToShow.length; i++) {
-        var item = listToShow[i];
-        var elements = formElement.find(`[class*="${item}"]`)
-        elements.show()
-    }
-}
-function setFieldVisibility(){
-    setFieldVisibilityOldWay(editorForm)
-    setFieldVisibilityNewWay()
-}
 monitorStreamChannels.on('click','.delete',function(){
     $(this).parents('.stream-channel').remove()
     monitorStreamChannelsave()
@@ -985,17 +589,6 @@ monitorEditorWindow.on('change','[channel-detail]',function(){
 monitorEditorWindow.find('.probe-monitor-settings').click(function(){
     $.pB.submit(buildMonitorURL())
 })
-monitorEditorWindow.find('.save_config').click(function(e){
-    //export monior config in view
-  var el = $(this);
-  var monitorId = el.parents('[mid]').attr('mid');
-  var form = editorForm.serializeObject();
-    if(!monitorId||monitorId===''){
-        monitorId='NewMonitor'
-    }
-    form.details = safeJsonParse(form.details)
-    downloadJSON(form,'Shinobi_'+monitorId+'_config.json')
-});
 monitorEditorWindow.find('.add-input-to-monitor-settings').click(function(e){
     showInputMappingFields()
     drawInputMapHtml()
@@ -1003,102 +596,10 @@ monitorEditorWindow.find('.add-input-to-monitor-settings').click(function(e){
 monitorEditorWindow.find('.add-channel-to-monitor-settings').click(function(e){
     drawStreamChannelHtml()
 });
-editorForm.find('[detail="stream_type"]').change(function(e){
-    var el = $(this);
-    if(el.val()==='jpeg')editorForm.find('[detail="snap"]').val('1').change()
+monitorEditorWindow.find('.save_config').click(function(){
+    saveFormCurrentState(editorForm)
 })
-editorForm.find('[name="type"]').change(function(e){
-    var el = $(this);
-    if(el.val()==='h264')editorForm.find('[name="protocol"]').val('rtsp').change()
-})
-editorForm.find('[detail]').change(function(){
-    onDetailFieldChange(this)
-})
-editorForm.on('change','[selector]',function(){
-    var el = $(this);
-    onSelectorChange(el,editorForm)
-    setFieldVisibilityNewWay()
-    drawMonitorSettingsSubMenu()
-});
-editorForm.find('[name="type"]').change(function(e){
-    var el = $(this);
-    var value = el.val();
-    var pathField = editorForm.find('[name="path"]');
-    switch(value){
-        case'local':case'socket':
-            pathField.attr('placeholder','/dev/video0')
-        break;
-        default:
-            pathField.attr('placeholder','/videostream.cgi?1')
-        break;
-    }
-});
-    var connectedDetectorPlugins = {}
-    function addDetectorPlugin(name,d){
-        connectedDetectorPlugins[d.plug] = {
-            id: d.id,
-            plug: d.plug,
-            notice: d.notice,
-            connectionType: d.connectionType
-        }
-        drawPluginElements()
-    }
-    function removeDetectorPlugin(name){
-        delete(connectedDetectorPlugins[name])
-        drawPluginElements(name)
-    }
-    function drawPluginElements(){
-        if(Object.keys(connectedDetectorPlugins).length === 0){
-            $('.stream-objects .stream-detected-object').remove()
-            $('.shinobi-detector').hide()
-            $('.shinobi-detector-msg').empty()
-            $('.shinobi-detector_name').empty()
-            $('.shinobi-detector_plug').hide()
-            $('.shinobi-detector-invert').show()
-            setFieldVisibility()
-            drawMonitorSettingsSubMenu()
-        }else{
-            var pluginTitle = []
-            var pluginNotice = []
-            $.each(connectedDetectorPlugins,function(name,d){
-                pluginTitle.push(name)
-                if(d.notice){
-                    pluginNotice.push('<b>' + d.plug + '</b> : ' + d.notice)
-                }
-                $('.shinobi-detector-'+d.plug).show()
-            })
-            $('.shinobi-detector').show()
-            $('.shinobi-detector-invert').hide()
-            $('.shinobi-detector_name').text(pluginTitle.join(', '))
-            if(pluginNotice.length > 0)$('.shinobi-detector-msg').text(pluginNotice.join('<br>'))
-            setFieldVisibility()
-            drawMonitorSettingsSubMenu()
-        }
-    }
-    window.openMonitorEditorPage = function(monitorId){
-        var monitorConfigToLoad;
-        monitorEditorWindow.find('.am_notice').hide()
-        monitorEditorWindow.find('[detailcontainer="detector_cascades"]').prop('checked',false).parents('.mdl-js-switch').removeClass('is-checked')
-        if(!loadedMonitors[monitorId]){
-            //new monitor
-            monitorEditorWindow.find('.am_notice_new').show()
-            monitorEditorWindow.find('[monitor="delete"]').hide()
-            monitorEditorTitle.find('span').text(lang['Add New'])
-            monitorEditorTitle.find('i').attr('class','fa fa-plus')
-            monitorConfigToLoad = generateDefaultMonitorSettings()
-        }else{
-            //edit monitor
-            monitorConfigToLoad = loadedMonitors[monitorId]
-            monitorEditorWindow.find('.am_notice_edit').show()
-            monitorEditorWindow.find('[monitor="delete"]').show()
-            monitorEditorTitle.find('span').html(`${monitorConfigToLoad.name} <small>${monitorConfigToLoad.mid}</small>`)
-            monitorEditorTitle.find('i').attr('class','fa fa-wrench')
-        }
-        monitorEditorSelectedMonitor = monitorConfigToLoad
-        importIntoMonitorEditor(monitorConfigToLoad)
-        openTab(`monitorSettings`,{},null)
-        monitorsList.val(monitorConfigToLoad.mid || '')
-    }
+
     function onMonitorEdit(d){
         var monitorId = d.mid || d.id
         var newMonitorData = d.mon
@@ -1172,14 +673,7 @@ editorForm.find('[name="type"]').change(function(e){
             }
         })
     }
-    function loadMonitorGroupTriggerList(){
-        var monitorTriggerTags = (monitorEditorSelectedMonitor && monitorEditorSelectedMonitor.details.det_trigger_tags ? monitorEditorSelectedMonitor.details.det_trigger_tags : '').split(',')
-        var listOftags = Object.keys(getListOfTagsFromMonitors())
-        triggerTagsInput.tagsinput('removeAll');
-        monitorTriggerTags.forEach((tag) => {
-            triggerTagsInput.tagsinput('add',tag);
-        });
-    }
+
     window.writeToMonitorSettingsWindow = function(monitorValues){
         $.each(monitorValues,function(key,value){
             if(key === `details`){
@@ -1197,7 +691,7 @@ editorForm.find('[name="type"]').change(function(e){
     });
     tagsInput.on('itemAdded', function(event) {
         drawMonitorGroupList()
-        loadMonitorGroupTriggerList()
+        loadMonitorGroupTriggerList(monitorEditorSelectedMonitor,triggerTagsInput)
     });
     triggerTagsInput.on('itemAdded', function(event) {
         var listOftags = getListOfTagsFromMonitors()
@@ -1212,12 +706,6 @@ editorForm.find('[name="type"]').change(function(e){
         }
     });
     $('body')
-    .on('tab-open-monitorSettings',function(){
-        console.log('Opened Account Settings')
-        if(!monitorEditorSelectedMonitor){
-            openMonitorEditorPage()
-        }
-    })
     .on('click','.reset-monitor-settings-form',function(){
         resetMonitorEditor()
     })
@@ -1308,11 +796,6 @@ editorForm.find('[name="type"]').change(function(e){
             break;
         }
     })
-    function checkToOpenSideMenu(){
-        if(isSideBarMenuCollapsed()){
-            sideMenuCollapsePoint.collapse('show')
-        }
-    }
     function onTabMove(){
         var theSelected = `${monitorsList.val() || ''}`
         drawMonitorListToSelector(monitorsList.find('optgroup'),false,'host')
@@ -1320,12 +803,22 @@ editorForm.find('[name="type"]').change(function(e){
         checkToOpenSideMenu()
     }
     addOnTabAway('monitorSettings', function(){
-        if(isSideBarMenuCollapsed()){
-            sideMenuCollapsePoint.collapse('hide')
-        }
+        checkToCloseSideMenu()
     })
-    addOnTabOpen('monitorSettings', onTabMove)
-    addOnTabReopen('monitorSettings', onTabMove)
-    window.generateDefaultMonitorSettings = generateDefaultMonitorSettings
+    addOnTabOpen('monitorSettings', function () {
+        setFieldVisibility(editorForm)
+        drawMonitorSettingsSubMenu()
+        onTabMove()
+    })
+    addOnTabReopen('monitorSettings', function () {
+        setFieldVisibility(editorForm)
+        drawMonitorSettingsSubMenu()
+        onTabMove()
+    })
+    onDetectorPluginChange(function(){
+        setFieldVisibility(editorForm)
+        drawMonitorSettingsSubMenu()
+    })
     window.importIntoMonitorEditor = importIntoMonitorEditor
+    attachEditorFormFieldChangeEvents(monitorEditorWindow,editorForm)
 })
