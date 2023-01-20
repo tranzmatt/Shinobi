@@ -31,3 +31,20 @@ form.modal-body{margin:0}
     height: 0;
     overflow: hidden;
 }
+
+.bootstrap-tagsinput {
+    width: 100%;
+    background: #2b3c4b;
+    border-color: #2b3c4b;
+    padding: 0.375rem 0.55rem;
+}
+
+.bootstrap-tagsinput input {
+    color: #fff;
+}
+
+.bootstrap-tagsinput .tag {
+    background: #1e2b37;
+    padding: 2px 7px 5px 7px;
+    border-radius: 5px;
+}

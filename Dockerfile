@@ -93,7 +93,6 @@ RUN npm i npm@latest -g && \
 COPY ./Docker/pm2.yml ./
 
 # Copy default configuration files
-# COPY ./config/conf.json ./config/super.json /home/Shinobi/
 RUN chmod -f +x /home/Shinobi/Docker/init.sh
 RUN sed -i -e 's/\r//g' /home/Shinobi/Docker/init.sh
 # RUN chmod -f +x /home/Shinobi/shinobi

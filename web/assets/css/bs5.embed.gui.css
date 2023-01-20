@@ -100,3 +100,10 @@ iframe.stream-element {
 .shinobi_ws_http_toggle label:active:after {
 	width: 10px;
 }
+
+.unmute-embed-audio {
+	position: absolute;
+	bottom: 5px;
+	right: 5px;
+	z-index: 1000;
+}

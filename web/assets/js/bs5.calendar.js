@@ -26,7 +26,7 @@ $(document).ready(function(e){
         $.getJSON(apiURL + '?' + queryString.join('&'),function(data){
             $.each(data.videos,function(n,v){
                 if(v.status !== 0){
-                    loadedVideosInMemory[`${v.mid}${v.time}`] = Object.assign({},v)
+                    loadedVideosInMemory[`${v.mid}${v.time}${v.type}`] = Object.assign({},v)
                     var loadedMonitor = loadedMonitors[v.mid]
                     if(loadedMonitor){
                         v.title = loadedMonitor.name+' - '+(parseInt(v.size)/1048576).toFixed(2)+'mb';
@@ -53,7 +53,7 @@ $(document).ready(function(e){
                 eventLimit: true,
                 events: calendarData,
                 eventClick: function(v){
-                    var video = loadedVideosInMemory[`${v.mid}${v.time}`]
+                    var video = loadedVideosInMemory[`${v.mid}${v.time}${v.type}`]
                     var href = video.href
                     createVideoPlayerTab(Object.assign({},video,{href: href}))
                     $(this).css('border-color', 'red');

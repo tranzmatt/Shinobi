@@ -974,6 +974,22 @@ function setPreviewedVideoHighlight(buttonEl,tableEl){
     tableEl.find('tr').removeClass('bg-gradient-blue')
     buttonEl.parents('tr').addClass('bg-gradient-blue')
 }
+function convertJsonToAccordionHtml(theJson){
+    var finalHtml = ''
+    function recurseJson(innerJson,hideByDefault){
+        const keys = Object.keys(innerJson)
+        let html = `<ul class="accordion-list" style="list-style:none;${hideByDefault ? `display:none;` : 'padding-left:0px;'}">`
+        keys.forEach((key) => {
+            var value = innerJson[key]
+            var isObject = typeof value === 'object' || typeof value === 'array'
+            if(value)html += `<li><a class="badge btn btn-sm ${isObject ? `toggle-accordion-list btn-primary` : `btn-default`}"><i class="fa fa-${isObject ? `plus` : `circle`}"></i></a> ${key} ${isObject ? recurseJson(value,true) : `: ${value}`}</li>`
+        })
+        html += `</ul>`
+        return html
+    }
+    finalHtml = recurseJson(theJson,false)
+    return finalHtml
+}
 // on page load
 var readyFunctions = []
 function onDashboardReady(theAction){
@@ -1002,6 +1018,29 @@ $(document).ready(function(){
     // .on('tab-close',function(){
     //
     // })
+    .on('click','.toggle-accordion-list',function(e){
+        e.preventDefault();
+        var el = $(this)
+        var iconEl = el.find('i')
+        var targetEl = el.parent().find('.accordion-list').first()
+        targetEl.toggle()
+        el.toggleClass('btn-primary btn-success')
+        iconEl.toggleClass('fa-plus fa-minus')
+        return false;
+    })
+    .on('click','.toggle-display-of-el',function(e){
+        e.preventDefault();
+        var el = $(this)
+        var target = el.attr('data-target')
+        var targetFirstOnly = el.attr('data-get') === 'first'
+        var startIsParent = el.attr('data-start') === 'parent'
+        var targetEl = startIsParent ? el.parent().find(target) : $(target)
+        if(targetFirstOnly){
+            targetEl = targetEl.first()
+        }
+        targetEl.toggle()
+        return false;
+    })
     .on('click','.pop-image',function(){
         var imageSrc = $(this).attr('src')
         if(!imageSrc){

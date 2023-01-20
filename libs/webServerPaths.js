@@ -413,25 +413,6 @@ module.exports = function(s,config,lang,app,io){
                             ['uid','=',user.uid],
                         ]
                     })
-                    if(user.details.sub){
-                        const adminUserCheckResponse = await s.knexQueryPromise({
-                            action: "select",
-                            columns: "details",
-                            table: "Users",
-                            where: [
-                                ['ke','=',user.ke],
-                                ['details','NOT LIKE','%"sub"%'],
-                            ],
-                            limit: 1,
-                        })
-                        if(adminUserCheckResponse.rows && adminUserCheckResponse.rows[0]){
-                            const adminUser = adminUserCheckResponse.rows[0];
-                            const adminUserDetails = s.parseJSON(adminUser.details);
-                            user.details.mon_groups = adminUserDetails.mon_groups;
-                        }else{
-                            return failedAuthentication(req.body.function,req.body.mail)
-                        }
-                    }
                     if(user.details.factorAuth === "1"){
                         const factorAuthCreationResponse = createTwoFactorAuth(
                             user,
@@ -1379,6 +1360,7 @@ module.exports = function(s,config,lang,app,io){
                 where: [
                     ['ke','=',groupKey],
                     ['mid','=',req.params.id],
+                    ['type','=', s.getPostData(req,'type') || 's3'],
                     ['time','=',time]
                 ],
                 limit: 1
@@ -1386,7 +1368,7 @@ module.exports = function(s,config,lang,app,io){
                 if(r&&r[0]){
                     r = r[0]
                     const videoDetails = JSON.parse(r.details)
-                    const storageType = videoDetails.type
+                    const storageType = videoDetails.type || r.type
                     const onGetVideoData = s.cloudDiskUseOnGetVideoDataExtensions[storageType]
                     if(onGetVideoData){
                         onGetVideoData(r).then((dataPipe) => {
@@ -1803,15 +1785,17 @@ module.exports = function(s,config,lang,app,io){
                     videoSet = 'Cloud Videos'
                 break;
             }
+            const whereQuery = [
+                ['ke','=',groupKey],
+                ['mid','=',req.params.id],
+                ['time','=',time]
+            ]
+            if(videoParam === 'cloudVideos')whereQuery.push(['type','=',s.getPostData(req,'type') || 's3']);
             s.knexQuery({
                 action: "select",
                 columns: "*",
                 table: videoSet,
-                where: [
-                    ['ke','=',groupKey],
-                    ['mid','=',req.params.id],
-                    ['time','=',time]
-                ],
+                where: whereQuery,
                 limit: 1
             },async (err,r) => {
                 if(r && r[0]){
@@ -1884,7 +1868,7 @@ module.exports = function(s,config,lang,app,io){
                             response.ok = true;
                             switch(videoParam){
                                 case'cloudVideos':
-                                    s.deleteVideoFromCloud(r,details.type || 's3')
+                                    s.deleteVideoFromCloud(r,details.type || r.type || 's3')
                                 break;
                                 default:
                                     s.deleteVideo(r)

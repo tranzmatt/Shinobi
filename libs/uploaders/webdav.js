@@ -57,6 +57,10 @@ module.exports = function(s,config,lang){
         }catch(err){
             var videoDetails = video.details
         }
+        if(video.type !== 'webdav'){
+            callback()
+            return
+        }
         if(!videoDetails.location){
             var prefix = s.addUserPassToUrl(s.checkCorrectPathEnding(s.group[groupKey].init.webdav_url),s.group[groupKey].init.webdav_user,s.group[groupKey].init.webdav_pass)
             videoDetails.location = video.href.replace(prefix,'')
@@ -88,8 +92,8 @@ module.exports = function(s,config,lang){
                            ke: e.ke,
                            time: k.startTime,
                            status: 1,
+                           type : 'webdav',
                            details: s.s({
-                               type : 'webdav',
                                location : webdavUploadDir + k.filename
                            }),
                            size: k.filesize,
@@ -172,8 +176,8 @@ module.exports = function(s,config,lang){
                         ke: queryInfo.ke,
                         time: queryInfo.time,
                         filename: queryInfo.filename,
+                        type : 'webdav',
                         details: s.s({
-                            type : 'webdav',
                             location : saveLocation
                         }),
                         size: queryInfo.size,
@@ -195,7 +199,8 @@ module.exports = function(s,config,lang){
         }catch(err){
             var frameDetails = frame.details
         }
-        if(frameDetails.type !== 'webdav'){
+        if(frame.type !== 'webdav'){
+            callback()
             return
         }
         if(!frameDetails.location){
@@ -223,8 +228,8 @@ module.exports = function(s,config,lang){
         cloudDiskUseStartupExtensions: cloudDiskUseStartupForWebDav,
         beforeAccountSave: beforeAccountSaveForWebDav,
         onAccountSave: cloudDiskUseStartupForWebDav,
-        onInsertTimelapseFrame,
-        onDeleteTimelapseFrameFromCloud,
+        onInsertTimelapseFrame: () => {},
+        onDeleteTimelapseFrameFromCloud: () => {},
         onGetVideoData
     })
     return {

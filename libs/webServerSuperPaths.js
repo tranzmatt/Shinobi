@@ -212,7 +212,8 @@ module.exports = function(s,config,lang,app){
             }
             var form = s.getPostData(req)
             if(form){
-                var currentSuperUserList = JSON.parse(fs.readFileSync(s.location.super))
+                const configPath = config.thisIsDocker ? "/config/super.json" : s.location.super;
+                var currentSuperUserList = JSON.parse(fs.readFileSync(configPath))
                 var currentSuperUser = {}
                 var currentSuperUserPosition = -1
                 //find this user in current list
@@ -250,13 +251,11 @@ module.exports = function(s,config,lang,app){
                     currentSuperUserList.push(currentSuperUser)
                 }
                 //update master list in system
-                const configPath = config.thisIsDocker ? "/config/super.json" : s.location.super;
-                const configData = JSON.stringify(postBody,null,3);
-                
+                const configData = JSON.stringify(currentSuperUserList,null,3);
                 fs.writeFile(configPath, configData, () => {
                     s.tx({f: 'save_preferences'},'$')
                 });
-                
+
             }else{
                 endData.ok = false
                 endData.msg = lang.postDataBroken
@@ -478,7 +477,9 @@ module.exports = function(s,config,lang,app){
                         ke: account.ke,
                     }
                 })
-                fs.rmdir(s.dir.videos+account.ke,function(err){})
+                fs.rm(s.dir.videos+account.ke,function(err){
+                    s.debugLog(err)
+                })
             }
             if(s.getPostData(req,'deleteEvents',false) == '1'){
                 s.knexQuery({

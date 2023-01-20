@@ -6,7 +6,7 @@ var spawn = require('child_process').spawn;
 var execSync = require('child_process').execSync;
 module.exports = function(s,config,lang,app){
     const {
-        deleteMonitorData,
+        deleteMonitor,
     } = require('./monitor/utils.js')(s,config,lang)
     /**
     * API : Administrator : Edit Sub-Account (Account to share cameras with)
@@ -293,11 +293,10 @@ module.exports = function(s,config,lang,app){
         config.webPaths.adminApiPrefix+':auth/configureMonitor/:ke/:id',
         config.webPaths.adminApiPrefix+':auth/configureMonitor/:ke/:id/:f'
     ], function (req,res){
-        var endData = {
-            ok: false
-        }
-        res.setHeader('Content-Type', 'application/json');
-        s.auth(req.params,function(user){
+        s.auth(req.params,async function(user){
+            let endData = {
+                ok: false
+            }
             const groupKey = req.params.ke
             const monitorId = req.params.id
             const {
@@ -318,55 +317,33 @@ module.exports = function(s,config,lang,app){
                 s.closeJsonResponse(res,{ok: false, msg: lang['Not Authorized']});
                 return
             }
-            if(req.params.f !== 'delete'){
-                var form = s.getPostData(req)
-                if(!form){
-                   endData.msg = user.lang.monitorEditText1;
-                   res.end(s.prettyPrint(endData))
-                   return
-                }
-                form.mid = req.params.id.replace(/[^\w\s]/gi,'').replace(/ /g,'')
-                if(form && form.name){
-                    s.checkDetails(form)
-                    form.ke = req.params.ke
-                    s.addOrEditMonitor(form,function(err,endData){
-                        res.end(s.prettyPrint(endData))
-                    },user)
-                }else{
-                    endData.msg = user.lang.monitorEditText1;
-                    res.end(s.prettyPrint(endData))
-                }
-            }else{
-                s.userLog({
-                    ke: req.params.ke,
-                    mid: req.params.id
-                },{
-                    type: 'Monitor Deleted',
-                    msg: 'by user : '+user.uid
-                });
-                req.params.delete=1;
-                s.camera('stop',req.params);
-                s.tx({f:'monitor_delete',uid:user.uid,mid:req.params.id,ke:req.params.ke},'GRP_'+req.params.ke);
-                s.knexQuery({
-                    action: "delete",
-                    table: "Monitors",
-                    where: {
-                        ke: req.params.ke,
-                        mid: req.params.id,
+            switch(req.params.f){
+                case'delete':
+                    endData = await deleteMonitor({
+                        ke: groupKey,
+                        mid: monitorId,
+                        user: user,
+                        deleteFiles: req.query.deleteFiles === 'true',
+                    });
+                break;
+                default:
+                    var form = s.getPostData(req)
+                    if(!form){
+                       endData.msg = user.lang.monitorEditText1;
+                       s.closeJsonResponse(res,endData)
+                       return
                     }
-                })
-                if(req.query.deleteFiles === 'true'){
-                    deleteMonitorData(req.params.ke,req.params.id).then(() => {
-                        s.debugLog(`Deleted Monitor Data`,{
-                            ke: req.params.ke,
-                            mid: req.params.id,
-                        })
-                    })
-                }
-                endData.ok=true;
-                endData.msg='Monitor Deleted by user : '+user.uid
-                res.end(s.prettyPrint(endData))
+                    form.mid = req.params.id.replace(/[^\w\s]/gi,'').replace(/ /g,'')
+                    if(form && form.name){
+                        s.checkDetails(form)
+                        form.ke = req.params.ke
+                        endData = await s.addOrEditMonitor(form,null,user)
+                    }else{
+                        endData.msg = user.lang.monitorEditText1;
+                    }
+                break;
             }
+            s.closeJsonResponse(res,endData)
         },res,req)
     })
     /**

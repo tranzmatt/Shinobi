@@ -1,4 +1,3 @@
-var availableMonitorGroups = {}
 var monitorGroupSelections = $('#monitor-group-selections')
 var onGetSnapshotByStreamExtensions = []
 function onGetSnapshotByStream(callback){
@@ -292,8 +291,6 @@ function getDbColumnsForMonitor(monitor){
         'mid',
         'ke',
         'name',
-        'shto',
-        'shfr',
         'details',
         'type',
         'ext',
@@ -303,6 +300,8 @@ function getDbColumnsForMonitor(monitor){
         'port',
         'fps',
         'mode',
+        'saveDir',
+        'tags',
         'width',
         'height'
     ]
@@ -680,47 +679,31 @@ function muteMonitorAudio(monitorId,buttonEl){
     var volumeIcon = monitorMutes[monitorId] !== 1 ? 'volume-up' : 'volume-off'
     if(buttonEl)buttonEl.find('i').removeClass('fa-volume-up fa-volume-off').addClass('fa-' + volumeIcon)
 }
-function getAvailableMonitorGroups(){
-    var theGroups = {}
-    $.each(loadedMonitors,function(n,monitor){
-        var monitorsGroups = safeJsonParse(monitor.details.groups)
-        $.each(monitorsGroups,function(m,groupId){
-            if(!theGroups[groupId])theGroups[groupId]={}
-            theGroups[groupId][monitor.mid] = monitor
-        })
-    })
-    availableMonitorGroups = theGroups
-    return theGroups;
-}
-function drawMonitorGroupList(){
-    var html = ''
-    getAvailableMonitorGroups()
-    $.each(availableMonitorGroups,function(groupId,v){
-        if($user.mon_groups[groupId]){
-           html += `<li class="cursor-pointer"><a class="dropdown-item" monitor-group="${groupId}">${$user.mon_groups[groupId].name}</a></li>`
+function getListOfTagsFromMonitors(){
+    var listOftags = {}
+    $.each(loadedMonitors,function(monitorId,monitor){
+        if(monitor.tags){
+           monitor.tags.split(',').forEach((tag) => {
+               if(!listOftags[tag])listOftags[tag] = [];
+               listOftags[tag].push(monitorId)
+           })
         }
     })
-    monitorGroupSelections.html(html)
+    return listOftags
 }
-function loadMonitorGroup(groupId){
-    $.each(dashboardOptions().watch_on,function(groupKey,groupData){
-      $.each(groupData,function(monitorId,isOn){
-          if(isOn)mainSocket.f({
-              f: 'monitor',
-              ff: 'watch_off',
-              id: monitorId,
-              ke: $user.ke
-          })
-      })
+function buildMonitorGroupListFromTags(){
+    var html = ``
+    var listOftags = getListOfTagsFromMonitors()
+    $.each(listOftags,function(tagName,monitorIds){
+        html += `<li class="cursor-pointer"><a class="dropdown-item monitor-live-group-open" monitor-ids="${monitorIds.join(',')}">${tagName}</a></li>`
     })
-    $.each(availableMonitorGroups[groupId],function(n,monitor){
-      mainSocket.f({
-          f: 'monitor',
-          ff: 'watch_on',
-          id: monitor.mid,
-          ke: $user.ke
-      })
-    })
+    return html
+}
+function drawMonitorGroupList(){
+    var html = `<li><hr class="dropdown-divider"></li>
+    <li class="pl-4"><small class="text-muted">${lang.Tags}</small></li>`
+    html += buildMonitorGroupListFromTags()
+    monitorGroupSelections.html(html)
 }
 function buildDefaultMonitorMenuItems(){
     return `
@@ -911,22 +894,6 @@ var miniCardSettingsFields = [
             fieldType: 'toggle',
         }
     },
-    function(monitorAlreadyAdded){
-        var monitorGroups = Object.values($user.mon_groups).map(function(item){
-            return {
-                value: item.id,
-                name: item.name,
-                selected: monitorAlreadyAdded.details.groups.indexOf(item.id) > -1,
-            }
-        });
-        return  {
-            label: lang['Grouping'],
-            name: `monitor-groups-selected="${monitorAlreadyAdded.mid}"`,
-            fieldType: 'select',
-            attributes: 'multiple',
-            possible: monitorGroups,
-        }
-    },
 ]
 function buildMiniMonitorCardBody(monitorAlreadyAdded,monitorConfigPartial,additionalInfo,doOpenVideosInsteadOfDelete){
     if(!monitorConfigPartial)monitorConfigPartial = monitorAlreadyAdded;
@@ -1027,6 +994,9 @@ function getRowsMonitorId(rowEl){
     var monitorId = el.attr('data-mid')
     return monitorId
 }
+function getMonitorEmbedLink(monitorConfig){
+    return `${getApiPrefix('embed')}/${monitorConfig.mid}/fullscreen|jquery|relative`
+}
 $(document).ready(function(){
     $('body')
     .on('click','[system]',function(){
@@ -1063,10 +1033,4 @@ $(document).ready(function(){
         parent.find(`[card-page-container="${pageSelection}"]`).show()
         return false;
     });
-    monitorGroupSelections
-    .on('click','[monitor-group]',function(){
-        var groupId = $(this).attr('monitor-group');
-        loadMonitorGroup(groupId)
-        openLiveGrid()
-    })
 })

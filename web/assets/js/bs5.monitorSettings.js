@@ -11,10 +11,10 @@ var monSectionPresets = $('#monSectionPresets')
 var copySettingsSelector = $('#copy_settings')
 var monitorPresetsSelection = $('#monitorPresetsSelection')
 var monitorPresetsNameField = $('#monitorPresetsName')
-var monitorGroupSelectors = $('#monitor_groups')
 var monitorsList = monitorEditorWindow.find('.monitors_list')
-var monitorGroupMutliTriggerSelectContainer = $('#monitor_group_detector_multi')
 var editorForm = monitorEditorWindow.find('form')
+var tagsInput = monitorEditorWindow.find('[name="tags"]')
+var triggerTagsInput = monitorEditorWindow.find('[detail=det_trigger_tags]')
 var fieldsLoaded = {}
 var sections = {}
 var loadedPresets = {}
@@ -141,8 +141,7 @@ function generateDefaultMonitorSettings(){
            "detector_send_video_length": "",
            "watchdog_reset": "1",
            "detector_delete_motionless_videos": "0",
-           "det_multi_trig": null,
-           "group_detector_multi": "",
+           "det_trigger_tags": "",
            "detector_webhook": "0",
            "detector_webhook_url": "",
            "detector_webhook_method": null,
@@ -246,7 +245,6 @@ function generateDefaultMonitorSettings(){
            "control_url_zoom_out_stop": "",
            "control_url_zoom_in": "",
            "control_url_zoom_in_stop": "",
-           "groups": "[]",
            "loglevel": "warning",
            "sqllog": "0",
            "detector_cascades": "",
@@ -289,9 +287,7 @@ function generateDefaultMonitorSettings(){
                     "cust_stream": ""
                 }
             }
-        },
-       "shto": "[]",
-       "shfr": "[]"
+        }
     }
 }
 var getHumanizedMonitorConfig = function(monitor){
@@ -317,22 +313,6 @@ var getSelectedMonitorInfo = function(){
         auth: $user.auth_token,
     }
 }
-function getMonitorGroupsSelected(){
-    var monitorGroupsInSelection = []
-    monitorGroupSelectors.find('input:checked').each(function(n,v){
-        var monitorId = $(v).val()
-        monitorGroupsInSelection.push(monitorId)
-    })
-    return monitorGroupsInSelection
-}
-function getMonitorTriggerGroupsSelected(){
-    var monitorGroupsInSelection = []
-    monitorGroupMutliTriggerSelectContainer.find('input:checked').each(function(n,v){
-        var groupId = $(v).val()
-        monitorGroupsInSelection.push(groupId)
-    })
-    return monitorGroupsInSelection
-}
 var differentiateMonitorConfig = function(firstConfig,secondConfig){
     console.log(firstConfig,secondConfig)
     var diffedConfig = {}
@@ -344,7 +324,9 @@ var differentiateMonitorConfig = function(firstConfig,secondConfig){
 }
 var copyMonitorSettingsToSelected = function(monitorConfig){
     var monitorDetails = safeJsonParse(monitorConfig.details);
-    var copyMonitors = monitorsForCopy.val();
+    var copyMonitors = monitorsForCopy.val().filter((monitorId) => {
+        return monitorConfig.mid !== monitorId
+    });
     var chosenSections = [];
     var chosenMonitors = {};
 
@@ -453,8 +435,6 @@ window.getMonitorEditFormFields = function(){
     //edit details
     monitorConfig.details = safeJsonParse(monitorConfig.details)
     monitorConfig.details.substream = getSubStreamChannelFields()
-    monitorConfig.details.groups = getMonitorGroupsSelected()
-    monitorConfig.details.group_detector_multi = getMonitorTriggerGroupsSelected()
     monitorConfig.details.input_map_choices = monitorSectionInputMapsave()
     // TODO : Input Maps and Stream Channels (does old way at the moment)
 
@@ -577,15 +557,23 @@ function drawInputMapSelectorHtml(options,parent){
 function importIntoMonitorEditor(options){
     var monitorConfig = options.values || options
     var monitorId = monitorConfig.mid
+    var monitorDetails = safeJsonParse(monitorConfig.details);
+    var monitorTags = monitorConfig.tags ? monitorConfig.tags.split(',') : []
+    var monitorGroups = monitorDetails.groups ? safeJsonParse(monitorDetails.groups) : []
+    monitorTags = monitorTags.concat(monitorGroups)
+    loadMonitorGroupTriggerList()
     $.get(getApiPrefix()+'/hls/'+monitorConfig.ke+'/'+monitorConfig.mid+'/detectorStream.m3u8',function(data){
         $('#monEditBufferPreview').html(data)
     })
+    tagsInput.tagsinput('removeAll');
+    monitorTags.forEach((tag) => {
+        tagsInput.tagsinput('add',tag);
+    });
     monitorEditorWindow.find('.edit_id').text(monitorConfig.mid);
     monitorEditorWindow.attr('data-mid',monitorConfig.mid).attr('data-ke',monitorConfig.ke)
     $.each(monitorConfig,function(n,v){
         monitorEditorWindow.find('[name="'+n+'"]').val(v).change()
     })
-    var monitorDetails = safeJsonParse(monitorConfig.details);
     //get maps
     monitorSectionInputMaps.empty()
     if(monitorDetails.input_maps && monitorDetails.input_maps !== ''){
@@ -686,31 +674,7 @@ function importIntoMonitorEditor(options){
             }
         }
     });
-    try{
-        $.each(['groups','group_detector_multi'],function(m,b){
-            var html = ''
-            $.each($user.mon_groups,function(n,v){
-                var isSelected = monitorDetails[b] && monitorDetails[b].indexOf(v.id) > -1
-                html += `<div class="mdl-list__item card btn-default mb-2">
-                    <div class="card-body d-flex flex-row">
-                        <div class="flex-grow-1 pr-3">
-                            ${v.name} <span class="text-muted">(${v.id})</span>
-                        </div>
-                        <div class="pr-3">
-                            <span><input class="form-check-input no-abs" ${b} type="checkbox" value="${v.id}" ${isSelected ? 'checked' : ''}/></span>
-                        </div>
-                    </div>
-                </div>`
-            })
-            $('#monitor_'+b).html(html)
-        })
-        console.log(`!!!!!!!\ncomponentHandler.upgradeAllRegistered\n!!!!!!!`)
-    }catch(er){
-        console.log(er)
-        //no group, this 'try' will be removed in future.
-    };
     copySettingsSelector.val('0').change()
-
     var tmp = '';
     $.each(loadedMonitors,function(n,monitor){
         if(monitor.ke === $user.ke){
@@ -936,7 +900,7 @@ var buildMonitorURL = function(){
             host: host,
             protocol: protocol,
             port: port,
-            path: encodeURIComponent(path),
+            path: encodeURI(path),
             type: type,
         });
     }
@@ -1208,6 +1172,14 @@ editorForm.find('[name="type"]').change(function(e){
             }
         })
     }
+    function loadMonitorGroupTriggerList(){
+        var monitorTriggerTags = (monitorEditorSelectedMonitor && monitorEditorSelectedMonitor.details.det_trigger_tags ? monitorEditorSelectedMonitor.details.det_trigger_tags : '').split(',')
+        var listOftags = Object.keys(getListOfTagsFromMonitors())
+        triggerTagsInput.tagsinput('removeAll');
+        monitorTriggerTags.forEach((tag) => {
+            triggerTagsInput.tagsinput('add',tag);
+        });
+    }
     window.writeToMonitorSettingsWindow = function(monitorValues){
         $.each(monitorValues,function(key,value){
             if(key === `details`){
@@ -1219,40 +1191,26 @@ editorForm.find('[name="type"]').change(function(e){
             }
         })
     }
-    monSectionPresets.find('.add-new').click(function(){
-        addNewPreset()
-    })
-    monSectionPresets.on('click','.delete-preset',function(){
-        var presetName = $(this).parents('[preset-name]').attr('preset-name')
-        deletePreset(presetName)
-    })
-    monSectionPresets.on('click','.import-monitor-preset',function(e){
-        e.preventDefault()
-        var presetName = $(this).parents('[preset-name]').attr('preset-name')
-        var preset = loadedPresets[presetName]
-        var currentMonitorInEditor = getSelectedMonitorInfo()
-        loadMonitorPartialFromPreset(preset,currentMonitorInEditor.mid)
-        return false
-    })
-    monitorPresetsSelection.on('change','.mdl-switch__input',function(){
-        var el = $(this)
-        var name = el.val()
-        if(el.is(':checked')){
-            addMonitorToPreset(name,function(err,d){
-                if(err){
-                    el.prop("checked", false)
-                    el.parents('.is-checked').removeClass('is-checked')
-                }
-            })
-        }else{
-            removeMonitorFromPreset(name,function(d){
-            })
-        }
-    })
     monitorsList.change(function(){
         var monitorId = monitorsList.val()
         openMonitorEditorPage(monitorId ? monitorId : null)
-    })
+    });
+    tagsInput.on('itemAdded', function(event) {
+        drawMonitorGroupList()
+        loadMonitorGroupTriggerList()
+    });
+    triggerTagsInput.on('itemAdded', function(event) {
+        var listOftags = getListOfTagsFromMonitors()
+        var newTag = event.item
+        if(!listOftags[newTag]){
+            new PNotify({
+                title: lang.tagsCannotAddText,
+                text: lang.tagsTriggerCannotAddText,
+                type: 'warning'
+            })
+            triggerTagsInput.tagsinput('remove', newTag);
+        }
+    });
     $('body')
     .on('tab-open-monitorSettings',function(){
         console.log('Opened Account Settings')

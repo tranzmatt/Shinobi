@@ -112,7 +112,6 @@ echo "(y)es or (N)o"
 read -r mysqlagreeData
 if [ "$mysqlagreeData" = "y" ]; then
     mysql -e "source sql/user.sql" || true
-    mysql -e "source sql/framework.sql" || true
     echo "Shinobi - Do you want to Install Default Data (default_data.sql)?"
     echo "(y)es or (N)o"
     read -r mysqlDefaultData

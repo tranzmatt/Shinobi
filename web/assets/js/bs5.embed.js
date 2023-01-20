@@ -114,6 +114,20 @@ function drawLiveGridBlock(monitorConfig,subStreamChannel){
     }
     initiateLiveGridPlayer(loadedMonitors[monitorId],subStreamChannel)
 }
+function unmuteVideoPlayer(){
+    console.log('Unmuting...')
+    setTimeout(function(){
+        try{
+            var videoEl = $(`video`)
+            if(videoEl.length > 0){
+                videoEl[0].muted = false;
+            }
+        }catch(err){
+            console.log(err)
+        }
+    },3000)
+    $('.unmute-embed-audio').remove()
+}
 function initiateLiveGridPlayer(monitor,subStreamChannel){
     var livePlayerElement = loadedLiveGrids[monitor.mid]
     var details = monitor.details
@@ -492,19 +506,6 @@ $(document).ready(function(e){
         var monitorItem = $(this).parents('[data-mid]');
         fullScreenLiveGridStream(monitorItem)
     })
-    .on('click','.launch-live-grid-monitor',function(){
-        var monitorId = $(this).parents('[data-mid]').attr('data-mid')
-        // if(isMobile){
-        //     createLivePlayerTab(loadedMonitors[monitorId])
-        // }else{
-            mainSocket.f({
-                f: 'monitor',
-                ff: 'watch_on',
-                id: monitorId
-            })
-            openLiveGrid()
-        // }
-    })
     .on('click','.reconnect-live-grid-monitor',function(){
         var monitorId = $(this).parents('[data-mid]').attr('data-mid')
         mainSocket.f({
@@ -614,4 +615,11 @@ $(document).ready(function(e){
     onInitWebsocket(function(){
         requestMonitorInit();
     });
+    $(window)
+    .focus(function(){
+        unmuteVideoPlayer()
+    })
+    $('.unmute-embed-audio').click(function(){
+        unmuteVideoPlayer()
+    })
 });

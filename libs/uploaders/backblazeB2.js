@@ -1,5 +1,6 @@
 const fs = require('fs');
 const { Readable } = require('stream');
+const B2 = require('backblaze-b2')
 module.exports = function(s,config,lang){
     //Backblaze B2
     var beforeAccountSaveForBackblazeB2 = function(d){
@@ -37,7 +38,6 @@ module.exports = function(s,config,lang){
                userDetails.bb_b2_bucket !== '' &&
                userDetails.bb_b2_save === '1'
               ){
-                var B2 = require('backblaze-b2')
                 if(!userDetails.bb_b2_dir || userDetails.bb_b2_dir === '/'){
                   userDetails.bb_b2_dir = ''
                 }
@@ -48,37 +48,21 @@ module.exports = function(s,config,lang){
                     // console.log(err)
                     s.userLog({mid:'$USER',ke:e.ke},{type:lang['Backblaze Error'],msg:err.stack || err.data || err})
                 }
-                var createB2Connection = function(){
-                    var b2 = new B2({
+                async function createB2Connection(){
+                    const b2 = new B2({
                         accountId: userDetails.bb_b2_accountId,
                         applicationKey: userDetails.bb_b2_applicationKey
-                    })
-                    b2.authorize().then(function(resp){
-                        s.group[e.ke].bb_b2_downloadUrl = resp.downloadUrl
-                        b2.listBuckets().then(function(resp){
-                            var buckets = resp.buckets
-                            var bucketN = -2
-                            if(!buckets){
-                                s.userLog({mid:'$USER',ke:e.ke},{type: lang['Backblaze Error'],msg: lang['Not Authorized']})
-                                return
-                            }
-                            buckets.forEach(function(item,n){
-                                if(item.bucketName === userDetails.bb_b2_bucket){
-                                    bucketN = n
-                                }
-                            })
-                            if(bucketN > -1){
-                                s.group[e.ke].bb_b2_bucketId = buckets[bucketN].bucketId
-                            }else{
-                                b2.createBucket(
-                                    userDetails.bb_b2_bucket,
-                                    'allPublic'
-                                ).then(function(resp){
-                                    s.group[e.ke].bb_b2_bucketId = resp.bucketId
-                                }).catch(backblazeErr)
-                            }
-                        }).catch(backblazeErr)
-                    }).catch(backblazeErr)
+                    });
+                    const bucketName = userDetails.bb_b2_bucket
+                    try{
+                        const authResponse = await b2.authorize();
+                        const getBucketResponse = await b2.getBucket({bucketName: bucketName})
+                        const bucketId = getBucketResponse.data.buckets[0].bucketId
+                        s.group[e.ke].bb_b2_bucketId = bucketId
+                    }catch(err){
+                        console.error('b2.authorize',err)
+                        backblazeErr(err)
+                    }
                     s.group[e.ke].bb_b2 = b2
                 }
                 createB2Connection()
@@ -99,13 +83,19 @@ module.exports = function(s,config,lang){
         }catch(err){
             var videoDetails = video.details
         }
+        if(video.type !== 'b2'){
+            callback()
+            return
+        }
         s.group[e.ke].bb_b2.deleteFileVersion({
             fileId: videoDetails.fileId,
             fileName: videoDetails.fileName
         }).then(function(resp){
             // console.log('deleteFileVersion',resp)
+            callback()
         }).catch(function(err){
             console.log('deleteFileVersion',err)
+            callback()
         })
     }
     var uploadVideoToBackblazeB2 = function(e,k){
@@ -113,28 +103,31 @@ module.exports = function(s,config,lang){
         //k = temporary values
         if(!k)k={};
         //cloud saver - Backblaze B2
-        if(s.group[e.ke].bb_b2 && s.group[e.ke].init.use_bb_b2 !== '0' && s.group[e.ke].init.bb_b2_save === '1'){
-            var backblazeErr = function(err){
-                // console.log(err)
-                s.userLog({mid:'$USER',ke:e.ke},{type:lang['Backblaze Error'],msg:err.data})
+        const theGroup = s.group[e.ke]
+        if(theGroup.bb_b2 && theGroup.init.use_bb_b2 !== '0' && theGroup.init.bb_b2_save === '1'){
+            function backblazeErr(err){
+                s.userLog({mid:'$USER',ke:e.ke},{type:lang['Backblaze Error'],msg:err})
+                s.debugLog(err)
             }
             fs.readFile(k.dir+k.filename,function(err,data){
-                var backblazeSavePath = s.group[e.ke].init.bb_b2_dir+e.ke+'/'+e.mid+'/'+k.filename
+                var backblazeSavePath = theGroup.init.bb_b2_dir+e.ke+'/'+e.mid+'/'+k.filename
                 var getUploadUrl = function(bucketId,callback){
-                    s.group[e.ke].bb_b2.getUploadUrl(bucketId).then(function(resp){
+                    theGroup.bb_b2.getUploadUrl(bucketId).then(function(resp){
                         callback(resp)
                     }).catch(backblazeErr)
                 }
-                getUploadUrl(s.group[e.ke].bb_b2_bucketId,function(req){
-                    s.group[e.ke].bb_b2.uploadFile({
-                        uploadUrl: req.uploadUrl,
-                        uploadAuthToken: req.authorizationToken,
+                getUploadUrl(theGroup.bb_b2_bucketId,function(req){
+                    const uploadUrl = req.data.uploadUrl
+                    const authorizationToken = req.data.authorizationToken
+                    theGroup.bb_b2.uploadFile({
+                        uploadUrl: uploadUrl,
+                        uploadAuthToken: authorizationToken,
                         filename: backblazeSavePath,
                         data: data,
                         onUploadProgress: null
                     }).then(function(resp){
-                        if(s.group[e.ke].init.bb_b2_log === '1' && resp.fileId){
-                            var backblazeDownloadUrl = s.group[e.ke].bb_b2_downloadUrl + '/file/' + s.group[e.ke].init.bb_b2_bucket + '/' + backblazeSavePath
+                        const uploadResponse = resp.data
+                        if(theGroup.init.bb_b2_log === '1' && uploadResponse.fileId){
                             s.knexQuery({
                                 action: "insert",
                                 table: "Cloud Videos",
@@ -143,11 +136,11 @@ module.exports = function(s,config,lang){
                                     ke: e.ke,
                                     time: k.startTime,
                                     status: 1,
+                                    type : 'b2',
                                     details: s.s({
-                                        type : 'b2',
-                                        bucketId : resp.bucketId,
-                                        fileId : resp.fileId,
-                                        fileName : resp.fileName
+                                        bucketId : uploadResponse.bucketId,
+                                        fileId : uploadResponse.fileId,
+                                        fileName : uploadResponse.fileName
                                     }),
                                     size: k.filesize,
                                     end: k.endTime,
@@ -183,6 +176,7 @@ module.exports = function(s,config,lang){
                 const fileStream = Readable.from(response.data);
                 resolve(fileStream)
             }).catch((err) => {
+                s.debugLog(err)
                 reject(err)
             });
         })
@@ -225,7 +219,7 @@ module.exports = function(s,config,lang){
            },
            {
                "hidden": true,
-              "field": lang.Bucket,
+              "field": lang['Bucket ID'],
               "name": "detail=bb_b2_bucket",
               "placeholder": "Example : slippery-seal",
               "form-group-class": "autosave_bb_b2_input autosave_bb_b2_1",

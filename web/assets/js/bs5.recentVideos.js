@@ -93,22 +93,13 @@ $(document).ready(function(){
         },function(){
             liveStamp()
         })
-    })
-    onWebSocketEvent(function(d){
-        switch(d.f){
-            case'init_success':
-                drawMonitorListToSelector(monitorList.find('optgroup'))
-                loadVideos({
-                    limit: 20,
-                },function(){
-                    liveStamp()
-                })
-            break;
-            // case'video_build_success':
-            //     loadVideoData(d)
-            //     var createdCardCarrier = drawRowToList(createVideoLinks(d),true)
-            //     bindFrameFindingByMouseMove(createdCardCarrier,row)
-            // break;
-        }
+    });
+    onDashboardReady(function(){
+        drawMonitorListToSelector(monitorList.find('optgroup'))
+        loadVideos({
+            limit: 20,
+        },function(){
+            liveStamp()
+        })
     })
 })

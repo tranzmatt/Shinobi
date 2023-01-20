@@ -710,11 +710,11 @@ module.exports = (s,config,lang) => {
             }
             if(audioCodec === 'auto'){
                 if(e.type === 'mjpeg' || e.type === 'jpeg' || e.type === 'socket'){
-                    videoCodec = `no`
+                    audioCodec = `no`
                 }else if(e.type === 'h264' || e.type === 'hls' || e.type === 'mp4'){
-                    videoCodec = 'copy'
+                    audioCodec = 'copy'
                 }else{
-                    videoCodec = 'aac'
+                    audioCodec = 'aac'
                 }
             }
             if(videoCodec !== 'copy'){

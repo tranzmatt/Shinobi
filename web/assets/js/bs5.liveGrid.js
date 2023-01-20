@@ -83,7 +83,7 @@ function buildStreamElementHtml(streamType){
     }else{
         switch(streamType){
             case'hls':case'flv':case'mp4':
-                html = `<video class="stream-element" playsinline autoplay></video>`;
+                html = `<video class="stream-element" playsinline autoplay muted></video>`;
             break;
             case'mjpeg':
                 html = '<iframe class="stream-element"></iframe>';
@@ -893,6 +893,17 @@ $(document).ready(function(e){
             openLiveGrid()
         // }
     })
+    .on('click','.monitor-live-group-open',function(){
+        var monitorIds = $(this).attr('monitor-ids').split(',')
+        monitorIds.forEach((monitorId) => {
+            mainSocket.f({
+                f: 'monitor',
+                ff: 'watch_on',
+                id: monitorId
+            })
+        })
+        openLiveGrid()
+    })
     .on('click','.reconnect-live-grid-monitor',function(){
         var monitorId = $(this).parents('[data-mid]').attr('data-mid')
         mainSocket.f({
@@ -1056,7 +1067,7 @@ $(document).ready(function(e){
                 d.mid = d.id || d.mid
                 var monitorId = d.mid
                 var videoTime = d.time
-                loadedVideosInMemory[`${monitorId}${videoTime}`] = d
+                loadedVideosInMemory[`${monitorId}${videoTime}${d.type}`] = d
                 if(liveGridElements[monitorId] && liveGridElements[monitorId].streamElement)drawVideoCardToMiniList(monitorId,createVideoLinks(d),false)
             break;
             case'monitor_watch_off':case'monitor_stopping':

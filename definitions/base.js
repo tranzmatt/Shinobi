@@ -102,6 +102,11 @@ module.exports = function(s,config,lang){
                       "example": "Home-Front"
                    },
                    {
+                      "name": "tags",
+                      "field": lang['Tags'],
+                      "description": lang.tagsFieldText,
+                   },
+                   {
                       "name": "detail=max_keep_days",
                       "field": lang["Number of Days to keep"] + ' ' + lang['Videos'],
                       "placeholder": "Default is Global value.",
@@ -137,20 +142,6 @@ module.exports = function(s,config,lang){
                      ]
                   }
                 ]
-             },
-             "Presets": {
-                id: "monSectionPresets",
-               "name": lang.Presets,
-               "color": "purple",
-                isSection: true,
-               "info": [
-                   {
-                      "fieldType": "a",
-                      "attribute": `page-open="monitorStates"`,
-                      "class": `btn-info`,
-                      "btnContent": `<i class="fa fa-align-right"></i> &nbsp; ${lang['Monitor States']}`,
-                   },
-               ],
              },
              "Connection": {
                 "name": lang.Connection,
@@ -2791,6 +2782,12 @@ module.exports = function(s,config,lang){
                       ]
                    },
                    {
+                       hidden: true,
+                      "name": "detail=det_trigger_tags",
+                      "field": lang['Trigger Group to Record'],
+                      "form-group-class": "h_det_input h_det_1",
+                   },
+                   {
                        isAdvanced: true,
                       "name": "detail=detector_http_api",
                       "field": lang["Allow API Trigger"],
@@ -2904,54 +2901,6 @@ module.exports = function(s,config,lang){
                    {
                        hidden: true,
                       "name": "detail=detector_filters",
-                   },
-                   {
-                       isAdvanced: true,
-                       hidden: true,
-                      "name": "detail=det_multi_trig",
-                      "field": lang['Trigger Camera Groups'],
-                      "description": "",
-                      "default": "1",
-                      "example": "",
-                      "selector": "det_multi_trig",
-                      "form-group-class": "h_det_input h_det_1",
-                      "fieldType": "select",
-                      "possible": [
-                         {
-                            "name": lang.No,
-                            "value": "0"
-                         },
-                         {
-                            "name": lang.Yes,
-                            "value": "1"
-                         }
-                      ]
-                   },
-                   {
-                       isAdvanced: true,
-                       hidden: true,
-                       id: "monSectionDetectorGroupMulti",
-                      "name": lang['Trigger Camera Groups'],
-                      "color": "forestgreen",
-                       isFormGroupGroup: true,
-                      "section-class": "det_multi_trig_input det_multi_trig_1",
-                      "section-pre-class": "h_det_input h_det_1",
-                      "info": [
-                          {
-                              "fieldType": 'ul',
-                              "id": "monitor_group_detector_multi",
-                              "class": "mdl-list"
-                          },
-                          {
-                             hidden: true,
-                             "name": "detail=group_detector_multi",
-                             "field": "",
-                             "description": "",
-                             "default": "0",
-                             "example": "",
-                             "possible": ""
-                          },
-                      ],
                    },
                    {
                        hidden: true,
@@ -4411,7 +4360,6 @@ module.exports = function(s,config,lang){
              "Notifications": {
                 "name": lang['Notifications'],
                 "color": "blue",
-                isAdvanced: true,
                 "isSection": true,
                 "id": "monSectionNotifications",
                 "info": [
@@ -4642,15 +4590,7 @@ module.exports = function(s,config,lang){
                     {
                        "name": "details",
                        "preFill": "{}",
-                    },
-                    {
-                       "name": "shto",
-                       "preFill": "[]",
-                    },
-                    {
-                       "name": "shfr",
-                       "preFill": "[]",
-                    },
+                    }
                 ]
              }
           }
@@ -4898,59 +4838,6 @@ module.exports = function(s,config,lang){
                         }
                      ]
                   }
-                ]
-             },
-             "Monitor Groups": {
-                "notForSubAccount": true,
-                "name": lang["Monitor Groups"],
-                "color": "blue",
-                "headerClass": "mon_groups",
-                "headerButtons": [
-                    {
-                        "icon": "plus",
-                        "class": "btn-success add"
-                    },
-                    {
-                        "icon": "trash-o",
-                        "class": "btn-danger delete"
-                    }
-                ],
-                "info": [
-                   {
-                      "field": lang["Monitor Groups"],
-                      "id":"settings_mon_groups",
-                      "description": "",
-                      "default": "",
-                      "example": "",
-                      "fieldType": "select",
-                      "possible": []
-                   },
-                   {
-                      "field": lang["Group Name"],
-                      "description": "Name of selected group.",
-                      "attribute":"group=\"name\"",
-                      "default": "",
-                      "example": "",
-                      "possible": ""
-                   },
-                   {
-                      "hidden": true,
-                      "field": "Group ID",
-                      "description": "",
-                      "attribute":"group=\"id\"",
-                      "default": "",
-                      "example": "",
-                      "possible": ""
-                   },
-                   {
-                      "hidden": true,
-                      "field": "mon_groups",
-                      "name": "detail=mon_groups",
-                      "description": "",
-                      "default": "",
-                      "example": "",
-                      "possible": ""
-                   }
                 ]
              },
              "Uploaders": {
