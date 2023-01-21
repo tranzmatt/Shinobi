@@ -478,6 +478,18 @@ module.exports = function(s,config,lang){
         s.checkDetails(e)
         if(e.ke && config.doSnapshot === true){
             if(s.group[e.ke] && s.group[e.ke].rawMonitorConfigurations && s.group[e.ke].rawMonitorConfigurations[e.mid] && s.group[e.ke].rawMonitorConfigurations[e.mid].mode !== 'stop'){
+                const monitorConfig = s.group[e.ke].rawMonitorConfigurations[e.mid]
+                const isAudioOnly = monitorConfig.details.audio_only === '1'
+                if(isAudioOnly){
+                    s.tx({
+                        f: 'monitor_snapshot',
+                        snapshot: monitorConfig.name,
+                        snapshot_format: 'plc',
+                        mid: e.mid,
+                        ke: e.ke
+                    },'GRP_'+e.ke);
+                    return
+                }
                 async function getRaw(){
                     var pathDir = s.dir.streams+e.ke+'/'+e.mid+'/'
                     const {screenShot, isStaticFile} = await s.getRawSnapshotFromMonitor(s.group[e.ke].rawMonitorConfigurations[e.mid],options)

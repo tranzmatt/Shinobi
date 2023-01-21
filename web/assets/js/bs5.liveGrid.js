@@ -176,6 +176,7 @@ function buildLiveGridBlock(monitor){
     >
         <div style="height:100%" class="d-flex">
             <div class="stream-block no-padding mdl-card__media mdl-color-text--grey-50 ${wasLiveGridLogStreamOpenBefore ? 'col-md-6' : 'col-md-12'}">
+                <div class="overlay-image" style="background-image:url(${getPlaceholderImage(monitor.name,true,'#021B79')})"></div>
                 ${streamBlockInfo.streamBlockPreHtml || ''}
                 <div class="stream-objects"></div>
                 <div class="stream-hud">
@@ -316,6 +317,7 @@ function drawLiveGridBlock(monitorConfig,subStreamChannel){
             width: streamElement.width(),
             height: streamElement.height(),
             miniVideoList: theBlock.find('.videos-mini'),
+            overlayImage: theBlock.find('.overlay-image'),
         }
         try{
             if(safeJsonParse(monitorConfig.details).control === "1"){
@@ -338,6 +340,7 @@ function drawLiveGridBlock(monitorConfig,subStreamChannel){
 }
 function initiateLiveGridPlayer(monitor,subStreamChannel){
     var livePlayerElement = loadedLiveGrids[monitor.mid]
+    var livePlayerBlocks = liveGridElements[monitor.mid]
     var details = monitor.details
     var groupKey = monitor.ke
     var monitorId = monitor.mid
@@ -346,9 +349,8 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
     var websocketPath = checkCorrectPathEnding(location.pathname) + 'socket.io'
     var containerElement = $(`#monitor_live_${monitor.mid}`)
     var streamType = subStreamChannel ? details.substream ? details.substream.output.stream_type : 'hls' : details.stream_type
-    if(location.search === '?p2p=1'){
-        websocketPath = '/socket.io'
-        // websocketQuery.machineId = machineId
+    if(details.audio_only === '1'){
+        livePlayerBlocks.overlayImage.show()
     }
     switch(streamType){
         case'jpeg':
@@ -623,9 +625,10 @@ function closeLiveGridPlayer(monitorId,killElement){
             clearInterval(loadedPlayer.signal)
         }
         if(liveGridElements[monitorId]){
+            var livePlayerElement = liveGridElements[monitorId]
             revokeVideoPlayerUrl(monitorId)
+            livePlayerElement.overlayImage.hide()
             if(killElement){
-                var livePlayerElement = liveGridElements[monitorId]
                 var theElement = livePlayerElement.monitorItem.parents('.grid-stack-item')[0]
                 getLiveGridData().removeWidget(theElement, true)
                 setLiveGridOpenCount(-1)

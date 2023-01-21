@@ -1003,6 +1003,12 @@ function onDashboardReadyExecute(theAction){
 function popImage(imageSrc){
     $('body').append(`<div class="popped-image"><img src="${imageSrc}"></div>`)
 }
+function getPlaceholderImage(text,processText,bgColor){
+    if(processText){
+        text = text.toUpperCase().split('').join(' ')
+    }
+    return placeholder.getData(placeholder.plcimg({text: text, fsize: 25, bgcolor: bgColor || '#1462a5'}))
+}
 $(document).ready(function(){
     onInitWebsocket(function(){
         loadMonitorsIntoMemory(function(data){
