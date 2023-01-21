@@ -12,6 +12,7 @@ module.exports = function(s,config,lang){
         deleteAddStorageVideos,
         deleteMainVideos,
         deleteTimelapseFrames,
+        deleteAddStorageTimelapseFrames,
         deleteFileBinFiles,
         deleteCloudVideos,
         deleteCloudTimelapseFrames,
@@ -30,13 +31,16 @@ module.exports = function(s,config,lang){
                     deleteMainVideos(groupKey,() => {
                         s.debugLog(`${groupKey} deleteTimelapseFrames`)
                         deleteTimelapseFrames(groupKey,() => {
-                            s.debugLog(`${groupKey} deleteFileBinFiles`)
-                            deleteFileBinFiles(groupKey,() => {
-                                s.debugLog(`${groupKey} deleteAddStorageVideos`)
-                                deleteAddStorageVideos(groupKey,() => {
-                                    s.group[groupKey].sizePurging = false
-                                    s.sendDiskUsedAmountToClients(groupKey)
-                                    callback();
+                            s.debugLog(`${groupKey} deleteAddStorageTimelapseFrames`)
+                            deleteAddStorageTimelapseFrames(groupKey,() => {
+                                s.debugLog(`${groupKey} deleteFileBinFiles`)
+                                deleteFileBinFiles(groupKey,() => {
+                                    s.debugLog(`${groupKey} deleteAddStorageVideos`)
+                                    deleteAddStorageVideos(groupKey,() => {
+                                        s.group[groupKey].sizePurging = false
+                                        s.sendDiskUsedAmountToClients(groupKey)
+                                        callback();
+                                    })
                                 })
                             })
                         })
@@ -190,7 +194,7 @@ module.exports = function(s,config,lang){
                         //change global size value
                         cloudDisk.usedSpace = cloudDisk.usedSpace + amount
                         switch(storagePoint){
-                            case'timelapeFrames':
+                            case'timelapseFrames':
                                 cloudDisk.usedSpaceTimelapseFrames += amount
                             break;
                             case'fileBin':
@@ -225,7 +229,7 @@ module.exports = function(s,config,lang){
                         s.group[e.ke].usedSpace += currentChange
                         s.group[e.ke].usedSpace = s.group[e.ke].usedSpace < 0 ? 0 : s.group[e.ke].usedSpace
                         switch(storageType){
-                            case'timelapeFrames':
+                            case'timelapseFrames':
                                 s.group[e.ke].usedSpaceTimelapseFrames += currentChange
                                 s.group[e.ke].usedSpaceTimelapseFrames = s.group[e.ke].usedSpaceTimelapseFrames < 0 ? 0 : s.group[e.ke].usedSpaceTimelapseFrames
                             break;
@@ -256,7 +260,7 @@ module.exports = function(s,config,lang){
                         //change global size value
                         storageIndex.usedSpace += currentSize
                         switch(storageType){
-                            case'timelapeFrames':
+                            case'timelapseFrames':
                                 storageIndex.usedSpaceTimelapseFrames += currentSize
                             break;
                             case'fileBin':
@@ -342,6 +346,7 @@ module.exports = function(s,config,lang){
                         if(details.size){formDetails.size = details.size;}
                         if(details.days){formDetails.days = details.days;}
                     }
+                    const theGroup = s.group[d.ke]
                     var newSize = parseFloat(formDetails.size) || 10000
                     //load addStorageUse
                     var currentStorageNumber = 0
@@ -365,11 +370,10 @@ module.exports = function(s,config,lang){
                         storageIndex.name = storage.name
                         storageIndex.path = path
                         storageIndex.usedSpace = storageIndex.usedSpace || 0
-                        if(detailsContainerAddStorage && detailsContainerAddStorage[path] && detailsContainerAddStorage[path].limit){
-                            storageIndex.sizeLimit = parseFloat(detailsContainerAddStorage[path].limit)
-                        }else{
-                            storageIndex.sizeLimit = newSize
-                        }
+                        const storageInfoToSave = detailsContainerAddStorage && detailsContainerAddStorage[path] ? detailsContainerAddStorage[path] : {}
+                        storageIndex.sizeLimit = parseFloat(storageInfoToSave.limit) || newSize
+                        storageIndex.videoPercent = parseFloat(storageInfoToSave.videoPercent) || theGroup.sizeLimitVideoPercent
+                        storageIndex.timelapsePercent = parseFloat(storageInfoToSave.timelapsePercent) || theGroup.sizeLimitTimelapseFramesPercent
                     }
                     readStorageArray()
                     ///

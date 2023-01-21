@@ -172,7 +172,7 @@ module.exports = function(s,config,lang,io){
                         var addStorageData = {
                             files: [],
                             videos: [],
-                            timelapeFrames: [],
+                            timelapseFrames: [],
                         }
                         if(videos && videos[0]){
                             videos.forEach(function(video){
@@ -190,7 +190,7 @@ module.exports = function(s,config,lang,io){
                                 if(!frame.details.dir){
                                     usedSpaceTimelapseFrames += frame.size
                                 }else{
-                                    addStorageData.timelapeFrames.push(frame)
+                                    addStorageData.timelapseFrames.push(frame)
                                 }
                             })
                         }
@@ -315,6 +315,8 @@ module.exports = function(s,config,lang,io){
                 storageIndex.path = path
                 storageIndex.usedSpace = 0
                 storageIndex.sizeLimit = parseFloat(storageData.limit) || parseFloat(userDetails.size) || 10000
+                storageIndex.videoPercent = parseFloat(storageData.videoPercent) || parseFloat(userDetails.size_video_percent) || 95
+                storageIndex.timelapsePercent = parseFloat(storageData.timelapsePercent) || parseFloat(userDetails.size_timelapse_percent) || 5
                 var usedSpaceVideos = 0
                 var usedSpaceTimelapseFrames = 0
                 var usedSpaceFilebin = 0
@@ -327,7 +329,7 @@ module.exports = function(s,config,lang,io){
                 }
                 if(timelapseFrames && timelapseFrames[0]){
                     timelapseFrames.forEach(function(frame){
-                        if(video.details.dir === storage.value){
+                        if(frame.details.dir === storage.value){
                             usedSpaceTimelapseFrames += frame.size
                         }
                     })

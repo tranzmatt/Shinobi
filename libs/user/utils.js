@@ -92,13 +92,6 @@ module.exports = (s,config,lang) => {
                 whereGroup.push(queryGroup)
                 fs.rm(fileLocationMid,function(err){
                     ++completedCheck
-                    if(err){
-                        fs.stat(fileLocationMid,function(err){
-                            if(!err){
-                                fs.unlink(fileLocationMid)
-                            }
-                        })
-                    }
                     const whereGroupLength = whereGroup.length
                     if(whereGroupLength > 0 && whereGroupLength === completedCheck){
                         whereQuery[1] = whereGroup
@@ -115,9 +108,9 @@ module.exports = (s,config,lang) => {
                     s.setDiskUsedForGroupAddStorage(groupKey,{
                         size: -(frame.size/1048576),
                         storageIndex: storageIndex
-                    },'timelapeFrames')
+                    },'timelapseFrames')
                 }else{
-                    s.setDiskUsedForGroup(groupKey,-(frame.size/1048576),'timelapeFrames')
+                    s.setDiskUsedForGroup(groupKey,-(frame.size/1048576),'timelapseFrames')
                 }
                 // s.tx({
                 //     f: 'timelapse_frame_delete',
@@ -193,7 +186,8 @@ module.exports = (s,config,lang) => {
             return deleteAddStorageVideos(groupKey,callback)
         }
         var currentStorageNumber = 0
-        var readStorageArray = function(){
+        function readStorageArray(){
+            const theGroup = s.group[groupKey]
             setTimeout(function(){
                 reRunCheck = readStorageArray
                 var storage = s.listOfStorage[currentStorageNumber]
@@ -203,14 +197,15 @@ module.exports = (s,config,lang) => {
                     return
                 }
                 var storageId = storage.value
-                if(storageId === '' || !s.group[groupKey].addStorageUse[storageId]){
+                if(storageId === '' || !theGroup.addStorageUse[storageId]){
                     ++currentStorageNumber
                     readStorageArray()
                     return
                 }
-                var storageIndex = s.group[groupKey].addStorageUse[storageId]
+                var storageIndex = theGroup.addStorageUse[storageId]
                 //run purge command
-                if(storageIndex.usedSpace > (storageIndex.sizeLimit * (storageIndex.deleteOffset || config.cron.deleteOverMaxOffset))){
+                const maxSize = (storageIndex.sizeLimit * (storageIndex.videoPercent / 100) * config.cron.deleteOverMaxOffset);
+                if(storageIndex.usedSpaceVideos > maxSize){
                     s.knexQuery({
                         action: "select",
                         columns: "*",
@@ -242,19 +237,62 @@ module.exports = (s,config,lang) => {
         }
         readStorageArray()
     }
+    const deleteAddStorageTimelapseFrames = function(groupKey,callback){
+        const theGroup = s.group[groupKey]
+        reRunCheck = function(){
+            s.debugLog('deleteAddStorageTimelapseFrames')
+            return deleteAddStorageTimelapseFrames(groupKey,callback)
+        }
+        var currentStorageNumber = 0
+        function readStorageArray(){
+            setTimeout(function(){
+                reRunCheck = readStorageArray
+                var storage = s.listOfStorage[currentStorageNumber]
+                if(!storage){
+                    //done all checks, move on to next user
+                    callback()
+                    return
+                }
+                var storageId = storage.value
+                if(storageId === '' || !theGroup.addStorageUse[storageId]){
+                    ++currentStorageNumber
+                    readStorageArray()
+                    return
+                }
+                var storageIndex = theGroup.addStorageUse[storageId]
+                //run purge command
+                const maxSize = (storageIndex.sizeLimit * (storageIndex.timelapsePercent / 100) * config.cron.deleteOverMaxOffset);
+                if(storageIndex.usedSpaceTimelapseFrames > maxSize){
+                    s.knexQuery({
+                        action: "select",
+                        columns: "*",
+                        table: "Timelapse Frames",
+                        where: [
+                            ['ke','=',groupKey],
+                            ['details','LIKE',`%"dir":"${storage.value}"%`],
+                        ],
+                        orderBy: ['time','asc'],
+                        limit: 3
+                    },(err,frames) => {
+                        deleteSetOfTimelapseFrames({
+                            groupKey: groupKey,
+                            err: err,
+                            frames: frames,
+                            storageIndex: storageIndex,
+                            reRunCheck: () => {
+                                return readStorageArray()
+                            }
+                        },callback)
+                    })
+                }else{
+                    ++currentStorageNumber
+                    readStorageArray()
+                }
+            })
+        }
+        readStorageArray()
+    }
     const deleteMainVideos = function(groupKey,callback){
-        // //run purge command
-        // s.debugLog('!!!!!!!!!!!deleteMainVideos')
-        // s.debugLog('s.group[groupKey].usedSpaceVideos > (s.group[groupKey].sizeLimit * (s.group[groupKey].sizeLimitVideoPercent / 100) * config.cron.deleteOverMaxOffset)')
-        // s.debugLog(s.group[groupKey].usedSpaceVideos > (s.group[groupKey].sizeLimit * (s.group[groupKey].sizeLimitVideoPercent / 100) * config.cron.deleteOverMaxOffset))
-        // s.debugLog('s.group[groupKey].usedSpaceVideos')
-        // s.debugLog(s.group[groupKey].usedSpaceVideos)
-        // s.debugLog('s.group[groupKey].sizeLimit * (s.group[groupKey].sizeLimitVideoPercent / 100) * config.cron.deleteOverMaxOffset')
-        // s.debugLog(s.group[groupKey].sizeLimit * (s.group[groupKey].sizeLimitVideoPercent / 100) * config.cron.deleteOverMaxOffset)
-        // s.debugLog('s.group[groupKey].sizeLimitVideoPercent / 100')
-        // s.debugLog(s.group[groupKey].sizeLimitVideoPercent / 100)
-        // s.debugLog('s.group[groupKey].sizeLimit')
-        // s.debugLog(s.group[groupKey].sizeLimit)
         if(s.group[groupKey].usedSpaceVideos > (s.group[groupKey].sizeLimit * (s.group[groupKey].sizeLimitVideoPercent / 100) * config.cron.deleteOverMaxOffset)){
             s.knexQuery({
                 action: "select",
@@ -295,7 +333,7 @@ module.exports = (s,config,lang) => {
                 table: "Timelapse Frames",
                 where: [
                     ['ke','=',groupKey],
-                    ['archive','!=',`1`],
+                    ['details','NOT LIKE',`%"dir"%`],
                 ],
                 orderBy: ['time','asc'],
                 limit: 3
@@ -508,6 +546,7 @@ module.exports = (s,config,lang) => {
         deleteAddStorageVideos: deleteAddStorageVideos,
         deleteMainVideos: deleteMainVideos,
         deleteTimelapseFrames: deleteTimelapseFrames,
+        deleteAddStorageTimelapseFrames,
         deleteFileBinFiles: deleteFileBinFiles,
         deleteCloudVideos: deleteCloudVideos,
         deleteCloudTimelapseFrames: deleteCloudTimelapseFrames,
