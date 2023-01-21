@@ -1047,13 +1047,14 @@ module.exports = (s,config,lang) => {
         const groupKey = e.ke
         const monitorId = e.mid || e.id
         const activeMonitor = getActiveMonitor(groupKey,monitorId)
+        const detectorEnabled = e.details.detector === '1'
         activeMonitor.spawn.stdio[5].on('data',function(data){
             resetStreamCheck(e)
         })
         //emitter for mjpeg
         if(!e.details.stream_mjpeg_clients||e.details.stream_mjpeg_clients===''||isNaN(e.details.stream_mjpeg_clients)===false){e.details.stream_mjpeg_clients=20;}else{e.details.stream_mjpeg_clients=parseInt(e.details.stream_mjpeg_clients)}
         activeMonitor.emitter = new events.EventEmitter().setMaxListeners(e.details.stream_mjpeg_clients);
-        if(e.details.detector_audio === '1'){
+        if(detectorEnabled && e.details.detector_audio === '1'){
             if(activeMonitor.audioDetector){
               activeMonitor.audioDetector.stop()
               delete(activeMonitor.audioDetector)
