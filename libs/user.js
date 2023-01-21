@@ -342,6 +342,7 @@ module.exports = function(s,config,lang){
                         if(details.size){formDetails.size = details.size;}
                         if(details.days){formDetails.days = details.days;}
                     }
+                    const theGroup = s.group[d.ke]
                     var newSize = parseFloat(formDetails.size) || 10000
                     //load addStorageUse
                     var currentStorageNumber = 0
@@ -365,11 +366,10 @@ module.exports = function(s,config,lang){
                         storageIndex.name = storage.name
                         storageIndex.path = path
                         storageIndex.usedSpace = storageIndex.usedSpace || 0
-                        if(detailsContainerAddStorage && detailsContainerAddStorage[path] && detailsContainerAddStorage[path].limit){
-                            storageIndex.sizeLimit = parseFloat(detailsContainerAddStorage[path].limit)
-                        }else{
-                            storageIndex.sizeLimit = newSize
-                        }
+                        const storageInfoToSave = detailsContainerAddStorage && detailsContainerAddStorage[path] ? detailsContainerAddStorage[path] : {}
+                        storageIndex.sizeLimit = parseFloat(storageInfoToSave.limit) || newSize
+                        storageIndex.videoPercent = parseFloat(storageInfoToSave.videoPercent) || theGroup.sizeLimitVideoPercent
+                        storageIndex.timelapsePercent = parseFloat(storageInfoToSave.timelapsePercent) || theGroup.sizeLimitTimelapseFramesPercent
                     }
                     readStorageArray()
                     ///
