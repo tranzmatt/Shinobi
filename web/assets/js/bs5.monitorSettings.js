@@ -439,6 +439,10 @@ monitorEditorWindow.on('change','[detail="auto_host"]',function(e){
     }
 })
 editorForm.submit(function(e){
+    function setSubmitButton(text,icon,toggle){
+        var submitButtons = editorForm.find('[type="submit"]').prop('disabled',toggle)
+        submitButtons.html(`<i class="fa fa-${icon}"></i> ${text}`)
+    }
     e.preventDefault();
     saveMonitorSettingsForm(editorForm)
     return false;

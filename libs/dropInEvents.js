@@ -230,7 +230,7 @@ module.exports = function(s,config,lang,app,io){
                             var firstDroppedPart = pathPieces[2]
                             var monitorEventDropDir = s.dir.dropInEvents + ke + '/' + mid + '/'
                             var deleteKey = monitorEventDropDir + firstDroppedPart
-                            onFileOrFolderFound(monitorEventDropDir + firstDroppedPart,deleteKey,Object.assign(s.group[ke].rawMonitorConfigurations[mid],{}))
+                            onFileOrFolderFound(monitorEventDropDir + firstDroppedPart,deleteKey,Object.assign({},s.group[ke].rawMonitorConfigurations[mid]))
                         })
                         resolve({root: s.dir.dropInEvents + user.ke})
                     }else{
