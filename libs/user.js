@@ -3,6 +3,7 @@ var events = require('events');
 var spawn = require('child_process').spawn;
 var exec = require('child_process').exec;
 var async = require("async");
+const { createQueueAwaited } = require('./common.js')
 module.exports = function(s,config,lang){
     const {
         deleteSetOfVideos,
@@ -128,22 +129,25 @@ module.exports = function(s,config,lang){
         if(!s.group[e.ke].init){
             s.group[e.ke].init={}
         }
-        if(!s.group[e.ke].addStorageUse){s.group[e.ke].addStorageUse={}};
-        if(!s.group[e.ke].fileBin){s.group[e.ke].fileBin={}};
-        if(!s.group[e.ke].users){s.group[e.ke].users={}}
-        if(!s.group[e.ke].dashcamUsers){s.group[e.ke].dashcamUsers={}}
-        if(!s.group[e.ke].sizePurgeQueue){s.group[e.ke].sizePurgeQueue=[]}
-        if(!s.group[e.ke].addStorageUse){s.group[e.ke].addStorageUse = {}}
+        const theGroup = s.group[e.ke]
+        if(!theGroup.addStorageUse){theGroup.addStorageUse={}};
+        if(!theGroup.fileBin){theGroup.fileBin={}};
+        if(!theGroup.users){theGroup.users={}}
+        if(!theGroup.dashcamUsers){theGroup.dashcamUsers={}}
+        if(!theGroup.sizePurgeQueue){theGroup.sizePurgeQueue=[]}
+        if(!theGroup.addStorageUse){theGroup.addStorageUse = {}}
         if(!e.limit||e.limit===''){e.limit=10000}else{e.limit=parseFloat(e.limit)}
         //save global space limit for group key (mb)
-        s.group[e.ke].sizeLimit = e.limit || s.group[e.ke].sizeLimit || 10000
-        s.group[e.ke].sizeLimitVideoPercent = parseFloat(s.group[e.ke].init.size_video_percent) || 90
-        s.group[e.ke].sizeLimitTimelapseFramesPercent = parseFloat(s.group[e.ke].init.size_timelapse_percent) || 5
-        s.group[e.ke].sizeLimitFileBinPercent = parseFloat(s.group[e.ke].init.size_filebin_percent) || 5
+        theGroup.sizeLimit = e.limit || theGroup.sizeLimit || 10000
+        theGroup.sizeLimitVideoPercent = parseFloat(theGroup.init.size_video_percent) || 90
+        theGroup.sizeLimitTimelapseFramesPercent = parseFloat(theGroup.init.size_timelapse_percent) || 5
+        theGroup.sizeLimitFileBinPercent = parseFloat(theGroup.init.size_filebin_percent) || 5
         //save global used space as megabyte value
-        s.group[e.ke].usedSpace = s.group[e.ke].usedSpace || ((e.size || 0) / 1048576)
+        theGroup.usedSpace = theGroup.usedSpace || ((e.size || 0) / 1048576)
         //emit the changes to connected users
         s.sendDiskUsedAmountToClients(e.ke)
+        // create monitor management queue
+        theGroup.startMonitorInQueue = createQueueAwaited(0.5, 1)
     }
     s.loadGroupApps = function(e){
         // e = user
