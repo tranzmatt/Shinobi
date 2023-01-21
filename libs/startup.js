@@ -76,7 +76,7 @@ module.exports = function(s,config,lang,io){
                             }
                         }
                         if(checkedAdminUsers[monitor.ke]){
-                            setTimeout(function(){
+                            setTimeout(async function(){
                                 if(!orphanedVideosForMonitors[monitor.ke])orphanedVideosForMonitors[monitor.ke] = {}
                                 if(!orphanedVideosForMonitors[monitor.ke][monitor.mid])orphanedVideosForMonitors[monitor.ke][monitor.mid] = 0
                                 s.initiateMonitorObject(monitor)
@@ -88,7 +88,8 @@ module.exports = function(s,config,lang,io){
                                     code: 5
                                 });
                                 const monObj = Object.assign({},monitor,{id : monitor.mid})
-                                s.camera(monitor.mode,monObj)
+                                await s.camera('stop',monObj);
+                                await s.camera(monitor.mode,monObj);
                                 checkAnother()
                             },1000)
                         }else{
