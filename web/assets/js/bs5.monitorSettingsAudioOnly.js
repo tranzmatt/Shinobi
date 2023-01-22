@@ -1,7 +1,5 @@
 $(document).ready(function(e){
-    //Monitor Editor
     var monitorEditorWindow = $('#tab-monitorSettingsAudioOnly')
-    var monitorsForCopy = $('#copy_settings_monitors')
     var monitorsList = monitorEditorWindow.find('.monitors_list')
     var editorForm = monitorEditorWindow.find('form')
     var tagsInput = monitorEditorWindow.find('[name="tags"]')
