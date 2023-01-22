@@ -9,7 +9,7 @@ module.exports = function(s,config,lang){
         "blocks": {
             "Page Control": {
                name: lang.Monitor,
-               headerTitle: `<div id="tab-monitorSettings-title">Monitor Settings : <span>Add New</span></div>`,
+               headerTitle: `<div class="monitorSettings-title">Monitor Settings : <span>Add New</span></div>`,
               "color": "blue",
                isSection: false,
               "info": [
@@ -88,6 +88,11 @@ module.exports = function(s,config,lang){
                     "field": lang.Notes,
                     "description": lang["fieldTextNotes"],
                     "fieldType": "textarea",
+                 },
+                 {
+                    "name": "detail=icon",
+                    "field": lang['Custom Icon'],
+                    "example": "http://my.website/icon.jpg",
                  },
                  {
                     "name": "detail=dir",

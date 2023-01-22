@@ -1,4 +1,4 @@
-module.exports = function(s,config,lang,Theme){
+module.exports = function(s,config,lang){
     const Theme = {
         isDark: true,
     }

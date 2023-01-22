@@ -480,7 +480,17 @@ module.exports = function(s,config,lang){
             if(s.group[e.ke] && s.group[e.ke].rawMonitorConfigurations && s.group[e.ke].rawMonitorConfigurations[e.mid] && s.group[e.ke].rawMonitorConfigurations[e.mid].mode !== 'stop'){
                 const monitorConfig = s.group[e.ke].rawMonitorConfigurations[e.mid]
                 const isAudioOnly = monitorConfig.details.audio_only === '1'
-                if(isAudioOnly){
+                const customIcon = monitorConfig.details.icon
+                if(customIcon){
+                    s.tx({
+                        f: 'monitor_snapshot',
+                        snapshot: customIcon,
+                        snapshot_format: 'url',
+                        mid: e.mid,
+                        ke: e.ke
+                    },'GRP_'+e.ke);
+                    return
+                }else if(isAudioOnly){
                     s.tx({
                         f: 'monitor_snapshot',
                         snapshot: monitorConfig.name,

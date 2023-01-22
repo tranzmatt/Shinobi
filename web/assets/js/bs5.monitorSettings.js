@@ -2,7 +2,6 @@ $(document).ready(function(e){
 
 //Monitor Editor
 var monitorEditorWindow = $('#tab-monitorSettings')
-var monitorEditorTitle = $('#tab-monitorSettings-title')
 var monitorsForCopy = $('#copy_settings_monitors')
 var monitorSectionInputMaps = $('#monSectionInputMaps')
 var monitorStreamChannels = $('#monSectionStreamChannels')
@@ -438,15 +437,6 @@ monitorEditorWindow.on('change','[detail="auto_host"]',function(e){
         delete(parsedURL)
     }
 })
-editorForm.submit(function(e){
-    function setSubmitButton(text,icon,toggle){
-        var submitButtons = editorForm.find('[type="submit"]').prop('disabled',toggle)
-        submitButtons.html(`<i class="fa fa-${icon}"></i> ${text}`)
-    }
-    e.preventDefault();
-    saveMonitorSettingsForm(editorForm)
-    return false;
-});
 //////////////////
 //Input Map (Feed)
 var mapPlacementInit = function(){
@@ -455,23 +445,7 @@ var mapPlacementInit = function(){
         _this.find('.place').text(n+1)
     })
 }
-var monitorSectionInputMapsave = function(){
-    var mapContainers = monitorEditorWindow.find('[input-mapping]');
-    var stringForSave = {}
-    mapContainers.each(function(q,t){
-        var mapRowElement = $(t).find('.map-row');
-        var mapRow = []
-        mapRowElement.each(function(n,v){
-            var map={}
-            $.each($(v).find('[map-input]'),function(m,b){
-                map[$(b).attr('map-input')]=$(b).val()
-            });
-            mapRow.push(map)
-        });
-        stringForSave[$(t).attr('input-mapping')] = mapRow;
-    });
-    return stringForSave
-}
+
 monitorSectionInputMaps.on('click','.delete',function(){
     $(this).parents('.input-map').remove()
     var inputs = $('[map-detail]')
@@ -523,26 +497,6 @@ var channelPlacementInit = function(){
         _this.find('.place').text(n)
         _this.find('[input-mapping]').attr('input-mapping','stream_channel-'+n)
     })
-}
-var getSubStreamChannelFields = function(){
-    var selectedChannels = {
-        input: getPseudoFields('detail-substream-input'),
-        output: getPseudoFields('detail-substream-output')
-    }
-    return selectedChannels
-}
-var getPseudoFields = function(fieldKey,parent){
-    parent = parent || monitorEditorWindow
-    fieldKey = fieldKey || 'detail-substream-input'
-    var fields = {}
-    var fieldsAssociated = parent.find(`[${fieldKey}]`)
-    $.each(fieldsAssociated,function(m,b){
-        var el = $(b);
-        var paramKey = el.attr(fieldKey)
-        var value = el.val()
-        fields[paramKey] = value
-    });
-    return fields
 }
 var buildMonitorURL = function(){
     var user = monitorEditorWindow.find('[detail="muser"]').val();
@@ -601,7 +555,7 @@ monitorEditorWindow.find('.add-channel-to-monitor-settings').click(function(e){
     drawStreamChannelHtml()
 });
 monitorEditorWindow.find('.save_config').click(function(){
-    saveFormCurrentState(editorForm)
+    downloadFormCurrentState(editorForm)
 })
 
     function onMonitorEdit(d){
@@ -738,7 +692,7 @@ monitorEditorWindow.find('.save_config').click(function(){
         })
     })
     .on('click','.delete-monitor-in-settings-window',function(){
-        var validation = getMonitorEditFormFields()
+        var validation = getMonitorEditFormFields(editorForm)
         var monitorConfig = validation.monitorConfig
         if(loadedMonitors[monitorConfig.mid]){
             deleteMonitors([monitorConfig],function(){
@@ -750,7 +704,7 @@ monitorEditorWindow.find('.save_config').click(function(){
         }
     })
     .on('click','.export-from-monitor-settings-window',function(){
-        var validation = getMonitorEditFormFields()
+        var validation = getMonitorEditFormFields(editorForm)
         var monitorConfig = validation.monitorConfig
         monitorConfig.details = safeJsonParse(monitorConfig.details)
         downloadJSON(monitorConfig,`${monitorConfig.name}_${monitorConfig.mid}_${formattedTime(new Date(),true)}.json`)
@@ -769,6 +723,12 @@ monitorEditorWindow.find('.save_config').click(function(){
     });
     monitorEditorWindow.find('.probe_config').click(function(){
         $.pB.submit(buildMonitorURL(),true)
+    });
+    monitorEditorWindow.find('.save_config').click(function(){
+        downloadFormCurrentState(editorForm)
+    });
+    editorForm.on('change','[selector]',function(){
+        drawMonitorSettingsSubMenu()
     });
     onWebSocketEvent(function (d){
         //     new PNotify({
@@ -824,5 +784,5 @@ monitorEditorWindow.find('.save_config').click(function(){
         drawMonitorSettingsSubMenu()
     })
     window.importIntoMonitorEditor = importIntoMonitorEditor
-    attachEditorFormFieldChangeEvents(monitorEditorWindow,editorForm)
+    attachEditorFormFieldChangeEvents(editorForm)
 })

@@ -1348,8 +1348,8 @@ function getMonitorEditFormFields(editorForm){
     if(monitorConfig.name == ''){errorsFound.push('Monitor Name cannot be blank')}
     //edit details
     monitorConfig.details = safeJsonParse(monitorConfig.details)
-    monitorConfig.details.substream = getSubStreamChannelFields()
-    monitorConfig.details.input_map_choices = monitorSectionInputMapsave()
+    monitorConfig.details.substream = getSubStreamChannelFields(editorForm)
+    monitorConfig.details.input_map_choices = monitorSectionInputMapsave(editorForm)
     // TODO : Input Maps and Stream Channels (does old way at the moment)
 
 
@@ -1411,13 +1411,17 @@ function loadMonitorGroupTriggerList(monitor,triggerTagsInput){
         triggerTagsInput.tagsinput('add',tag);
     });
 }
-function saveFormCurrentState(editorForm){
+function downloadFormCurrentState(editorForm){
     var form = editorForm.serializeObject();
     var monitorId = form.mid
     if(form.details)form.details = safeJsonParse(form.details);
     downloadJSON(form,`Shinobi_${monitorId}_config.json`)
 }
-function saveMonitorSettingsForm(e,editorForm){
+function saveMonitorSettingsForm(editorForm){
+    function setSubmitButton(text,icon,toggle){
+        var submitButtons = editorForm.find('[type="submit"]').prop('disabled',toggle)
+        submitButtons.html(`<i class="fa fa-${icon}"></i> ${text}`)
+    }
     var validation = getMonitorEditFormFields(editorForm)
     if(!validation.ok){
         var errorsFound = validation.errors
@@ -1426,6 +1430,7 @@ function saveMonitorSettingsForm(e,editorForm){
         return;
     }
     var monitorConfig = validation.monitorConfig
+    setSubmitButton(lang[`Please Wait...`], `spinner fa-pulse`, true)
     $.post(getApiPrefix()+'/configureMonitor/'+$user.ke+'/'+monitorConfig.mid,{data:JSON.stringify(monitorConfig)},function(d){
         if(d.ok === false){
             new PNotify({
@@ -1435,9 +1440,10 @@ function saveMonitorSettingsForm(e,editorForm){
             })
         }
         debugLog(d)
+        setSubmitButton(lang.Save, `check`, false)
     })
 }
-function attachEditorFormFieldChangeEvents(monitorEditorWindow,editorForm){
+function attachEditorFormFieldChangeEvents(editorForm){
     editorForm.find('[detail="stream_type"]').change(function(e){
         var el = $(this);
         if(el.val()==='jpeg')editorForm.find('[detail="snap"]').val('1').change()
@@ -1453,7 +1459,6 @@ function attachEditorFormFieldChangeEvents(monitorEditorWindow,editorForm){
         var el = $(this);
         onSelectorChange(el,editorForm)
         setFieldVisibilityConditions(editorForm)
-        drawMonitorSettingsSubMenu(editorForm)
     });
     editorForm.find('[name="type"]').change(function(e){
         var el = $(this);
@@ -1473,9 +1478,69 @@ function attachEditorFormFieldChangeEvents(monitorEditorWindow,editorForm){
         saveMonitorSettingsForm(editorForm)
         return false;
     });
-    monitorEditorWindow.find('.save_config').click(function(){
-        saveFormCurrentState(editorForm)
-    })
+}
+function getSubStreamChannelFields(editorForm){
+    var selectedChannels = {
+        input: getPseudoFields('detail-substream-input',editorForm),
+        output: getPseudoFields('detail-substream-output',editorForm)
+    }
+    return selectedChannels
+}
+function getPseudoFields(fieldKey,parent){
+    parent = parent || monitorEditorWindow
+    fieldKey = fieldKey || 'detail-substream-input'
+    var fields = {}
+    var fieldsAssociated = parent.find(`[${fieldKey}]`)
+    $.each(fieldsAssociated,function(m,b){
+        var el = $(b);
+        var paramKey = el.attr(fieldKey)
+        var value = el.val()
+        fields[paramKey] = value
+    });
+    return fields
+}
+function monitorSectionInputMapsave(editorForm){
+    var mapContainers = editorForm.find('[input-mapping]');
+    var stringForSave = {}
+    mapContainers.each(function(q,t){
+        var mapRowElement = $(t).find('.map-row');
+        var mapRow = []
+        mapRowElement.each(function(n,v){
+            var map={}
+            $.each($(v).find('[map-input]'),function(m,b){
+                map[$(b).attr('map-input')]=$(b).val()
+            });
+            mapRow.push(map)
+        });
+        stringForSave[$(t).attr('input-mapping')] = mapRow;
+    });
+    return stringForSave
+}
+function openMonitorEditorPage(monitorId, editorForm){
+    editorForm = editorForm || $('#tab-monitorSettings form')
+    var monitorConfigToLoad;
+    var monitorEditorTitle = editorForm.find('.monitorSettings-title')
+    editorForm.find('.am_notice').hide()
+    editorForm.find('[detailcontainer="detector_cascades"]').prop('checked',false).parents('.mdl-js-switch').removeClass('is-checked')
+    if(!loadedMonitors[monitorId]){
+        //new monitor
+        editorForm.find('.am_notice_new').show()
+        editorForm.find('[monitor="delete"]').hide()
+        monitorEditorTitle.find('span').text(lang['Add New'])
+        monitorEditorTitle.find('i').attr('class','fa fa-plus')
+        monitorConfigToLoad = generateDefaultMonitorSettings()
+    }else{
+        //edit monitor
+        monitorConfigToLoad = loadedMonitors[monitorId]
+        editorForm.find('.am_notice_edit').show()
+        editorForm.find('[monitor="delete"]').show()
+        monitorEditorTitle.find('span').html(`${monitorConfigToLoad.name} <small>${monitorConfigToLoad.mid}</small>`)
+        monitorEditorTitle.find('i').attr('class','fa fa-wrench')
+    }
+    monitorEditorSelectedMonitor = monitorConfigToLoad
+    importIntoMonitorEditor(monitorConfigToLoad)
+    openTab(`monitorSettings`,{},null)
+    editorForm.find('.monitors_list').val(monitorConfigToLoad.mid || '')
 }
 $(document).ready(function(){
     $('body')

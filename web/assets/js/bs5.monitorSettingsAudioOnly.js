@@ -1,7 +1,6 @@
 $(document).ready(function(e){
     //Monitor Editor
     var monitorEditorWindow = $('#tab-monitorSettingsAudioOnly')
-    var monitorEditorTitle = $('#tab-monitorSettingsAudioOnly-title')
     var monitorsForCopy = $('#copy_settings_monitors')
     var monitorsList = monitorEditorWindow.find('.monitors_list')
     var editorForm = monitorEditorWindow.find('form')
@@ -100,7 +99,12 @@ $(document).ready(function(e){
             triggerTagsInput.tagsinput('remove', newTag);
         }
     });
-
+    monitorEditorWindow.find('.save_config').click(function(){
+        downloadFormCurrentState(editorForm)
+    });
+    editorForm.on('change','[selector]',function(){
+        drawMonitorSettingsSubMenu()
+    });
     function onTabMove(){
         var theSelected = `${monitorsList.val() || ''}`
         drawMonitorListToSelector(monitorsList,false,'host')
@@ -120,5 +124,5 @@ $(document).ready(function(e){
         drawMonitorSettingsSubMenu()
         onTabMove()
     })
-    attachEditorFormFieldChangeEvents(monitorEditorWindow,editorForm)
+    attachEditorFormFieldChangeEvents(editorForm)
 })

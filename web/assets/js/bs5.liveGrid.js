@@ -176,7 +176,7 @@ function buildLiveGridBlock(monitor){
     >
         <div style="height:100%" class="d-flex">
             <div class="stream-block no-padding mdl-card__media mdl-color-text--grey-50 ${wasLiveGridLogStreamOpenBefore ? 'col-md-6' : 'col-md-12'}">
-                <div class="overlay-image" style="background-image:url(${getPlaceholderImage(monitor.name,true,'#021B79')})"></div>
+                <div class="overlay-image" style="background-image:url(${monitorDetails.icon || getPlaceholderImage(monitor.name,true,'#021B79')})"></div>
                 ${streamBlockInfo.streamBlockPreHtml || ''}
                 <div class="stream-objects"></div>
                 <div class="stream-hud">

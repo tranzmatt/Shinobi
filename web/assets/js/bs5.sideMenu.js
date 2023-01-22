@@ -234,9 +234,13 @@ onWebSocketEvent(function(d){
             monitorSideList.find('[data-mid="'+d.id+'"]').attr('data-status-code',d.code);
         break;
         case'monitor_snapshot':
+            console.error(d)
             setTimeout(function(){
                 var snapElement = $(`[data-mid="${d.mid}"] .snapshot`)
                 switch(d.snapshot_format){
+                    case'url':
+                        snapElement.attr('src',d.snapshot)
+                    break;
                     case'plc':
                         snapElement.attr('src',getPlaceholderImage(d.snapshot,true))
                     break;
