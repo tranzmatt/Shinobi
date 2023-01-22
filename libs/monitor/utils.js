@@ -136,6 +136,8 @@ module.exports = (s,config,lang) => {
             delete(activeMonitor.recordingChecker);
             clearTimeout(activeMonitor.streamChecker);
             delete(activeMonitor.streamChecker);
+            clearTimeout(activeMonitor.timelapseFramesChecker);
+            delete(activeMonitor.timelapseFramesChecker);
             clearTimeout(activeMonitor.checkSnap);
             delete(activeMonitor.checkSnap);
             clearTimeout(activeMonitor.watchdog_stop);
@@ -956,6 +958,27 @@ module.exports = (s,config,lang) => {
             }
         },60000*1);
     }
+    function resetTimelapseFramesCheck(e){
+        const groupKey = e.ke
+        const monitorId = e.mid || e.id
+        const activeMonitor = getActiveMonitor(groupKey,monitorId)
+        const monitorConfig = s.group[groupKey].rawMonitorConfigurations[monitorId]
+        const creationInterval = parseFloat(monitorConfig.details.record_timelapse_fps) || 900;
+        clearTimeout(activeMonitor.timelapseFramesChecker)
+        activeMonitor.timelapseFramesChecker = setTimeout(function(){
+            if(activeMonitor && activeMonitor.isStarted === true){
+                forceMonitorRestart({
+                    ke: groupKey,
+                    mid: monitorId,
+                },{
+                    type: lang['Camera is not recording'],
+                    msg: {
+                        msg: lang['Restarting Process']
+                    }
+                })
+            }
+        }, (1000 * creationInterval) + 10000);
+    }
     function onDetectorJpegOutputAlone(e,d){
         if(s.isAtleatOneDetectorPluginConnected){
             const groupKey = e.ke
@@ -1109,6 +1132,7 @@ module.exports = (s,config,lang) => {
                     fileStream.on('close', function () {
                         activeMonitor.recordTimelapseWriter = null
                         s.createTimelapseFrameAndInsert(e,location,filename)
+                        resetTimelapseFramesCheck(e)
                     })
                     activeMonitor.recordTimelapseWriter = fileStream
                 }
