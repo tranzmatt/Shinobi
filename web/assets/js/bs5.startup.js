@@ -91,6 +91,7 @@ function loadBoxWrappers() {
 function drawAddStorageIndicators(){
     $.each(addStorage,function(n,storage){
         drawIndicatorBar({
+            multiple: true,
             icon: 'hdd-o',
             name: storage.name,
             label: `<span style="text-transform:capitalize">${storage.name}</span> : <span class="value"></span>`,
@@ -199,16 +200,25 @@ onWebSocketEvent(function (d){
             diskIndicatorBar[2].title = `${lang['FileBin Share']} : ${fileBinPercent}`
             if(d.addStorage){
                 $.each(d.addStorage,function(n,storage){
-                    var percent = parseInt((storage.usedSpace/storage.sizeLimit)*100)+'%'
+                    var diskIndicator = loadedIndicators[storage.name]
+                    var diskIndicatorBars = diskIndicator.progressBar
+                    var diskLimit = storage.sizeLimit
+                    var percent = parseDiskUsePercent(storage.usedSpace,diskLimit);
+                    var videosPercent = parseDiskUsePercent(storage.usedSpaceVideos,diskLimit);
+                    var timelapsePercent = parseDiskUsePercent(storage.usedSpaceTimelapseFrames,diskLimit);
+                    //
                     var humanValue = parseFloat(storage.usedSpace)
                     if(humanValue > 1000){
                         humanValue = (humanValue/1000).toFixed(2)+' GB'
                     }else{
                         humanValue = humanValue.toFixed(2)+' MB'
                     }
-                    loadedIndicators[storage.name].value.html(humanValue)
-                    loadedIndicators[storage.name].percent.html(percent)
-                    loadedIndicators[storage.name].progressBar.css('width',percent)
+                    diskIndicator.value.html(humanValue)
+                    diskIndicator.percent.html(percent)
+                    diskIndicatorBars[0].style.width = videosPercent
+                    diskIndicatorBars[0].title = `${lang['Video Share']} : ${videosPercent}`
+                    diskIndicatorBars[1].style.width = timelapsePercent
+                    diskIndicatorBars[1].title = `${lang['Timelapse Frames Share']} : ${timelapsePercent}`
                 })
             }
         break;

@@ -136,6 +136,8 @@ module.exports = (s,config,lang) => {
             delete(activeMonitor.recordingChecker);
             clearTimeout(activeMonitor.streamChecker);
             delete(activeMonitor.streamChecker);
+            clearTimeout(activeMonitor.timelapseFramesChecker);
+            delete(activeMonitor.timelapseFramesChecker);
             clearTimeout(activeMonitor.checkSnap);
             delete(activeMonitor.checkSnap);
             clearTimeout(activeMonitor.watchdog_stop);
@@ -582,7 +584,7 @@ module.exports = (s,config,lang) => {
         const binDir = s.dir.fileBin + `${groupKey}/${monitorId}`
 
         // videos and addStorage
-        await adjustSpaceCounterForTableWithAddStorage('Timelapse Frames','timelapeFrames')
+        await adjustSpaceCounterForTableWithAddStorage('Timelapse Frames','timelapseFrames')
         await adjustSpaceCounterForTableWithAddStorage('Videos')
         await deleteFromTable('Videos')
         await deletePath(videosDir)
@@ -594,7 +596,7 @@ module.exports = (s,config,lang) => {
         }
 
         // timelapse frames
-        await adjustSpaceCounter('Timelapse Frames','timelapeFrames')
+        await adjustSpaceCounter('Timelapse Frames','timelapseFrames')
         await deleteFromTable('Timelapse Frames')
         await deletePath(videosDir + '_timelapse')
 
@@ -956,6 +958,27 @@ module.exports = (s,config,lang) => {
             }
         },60000*1);
     }
+    function resetTimelapseFramesCheck(e){
+        const groupKey = e.ke
+        const monitorId = e.mid || e.id
+        const activeMonitor = getActiveMonitor(groupKey,monitorId)
+        const monitorConfig = s.group[groupKey].rawMonitorConfigurations[monitorId]
+        const creationInterval = parseFloat(monitorConfig.details.record_timelapse_fps) || 900;
+        clearTimeout(activeMonitor.timelapseFramesChecker)
+        activeMonitor.timelapseFramesChecker = setTimeout(function(){
+            if(activeMonitor && activeMonitor.isStarted === true){
+                forceMonitorRestart({
+                    ke: groupKey,
+                    mid: monitorId,
+                },{
+                    type: lang['Camera is not recording'],
+                    msg: {
+                        msg: lang['Restarting Process']
+                    }
+                })
+            }
+        }, (1000 * creationInterval) + 10000);
+    }
     function onDetectorJpegOutputAlone(e,d){
         if(s.isAtleatOneDetectorPluginConnected){
             const groupKey = e.ke
@@ -1047,13 +1070,14 @@ module.exports = (s,config,lang) => {
         const groupKey = e.ke
         const monitorId = e.mid || e.id
         const activeMonitor = getActiveMonitor(groupKey,monitorId)
+        const detectorEnabled = e.details.detector === '1'
         activeMonitor.spawn.stdio[5].on('data',function(data){
             resetStreamCheck(e)
         })
         //emitter for mjpeg
         if(!e.details.stream_mjpeg_clients||e.details.stream_mjpeg_clients===''||isNaN(e.details.stream_mjpeg_clients)===false){e.details.stream_mjpeg_clients=20;}else{e.details.stream_mjpeg_clients=parseInt(e.details.stream_mjpeg_clients)}
         activeMonitor.emitter = new events.EventEmitter().setMaxListeners(e.details.stream_mjpeg_clients);
-        if(e.details.detector_audio === '1'){
+        if(detectorEnabled && e.details.detector_audio === '1'){
             if(activeMonitor.audioDetector){
               activeMonitor.audioDetector.stop()
               delete(activeMonitor.audioDetector)
@@ -1108,6 +1132,7 @@ module.exports = (s,config,lang) => {
                     fileStream.on('close', function () {
                         activeMonitor.recordTimelapseWriter = null
                         s.createTimelapseFrameAndInsert(e,location,filename)
+                        resetTimelapseFramesCheck(e)
                     })
                     activeMonitor.recordTimelapseWriter = fileStream
                 }
