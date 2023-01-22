@@ -234,7 +234,6 @@ onWebSocketEvent(function(d){
             monitorSideList.find('[data-mid="'+d.id+'"]').attr('data-status-code',d.code);
         break;
         case'monitor_snapshot':
-            console.error(d)
             setTimeout(function(){
                 var snapElement = $(`[data-mid="${d.mid}"] .snapshot`)
                 switch(d.snapshot_format){
