@@ -112,6 +112,7 @@ module.exports = function(s,config,lang,getSnapshot){
                 sendMessage({
                     title: lang.Event+' - '+d.screenshotName,
                     description: lang.EventText1+' '+d.currentTimestamp,
+                    eventDetails: d.details
                 },[
                     {
                         type: 'photo',
