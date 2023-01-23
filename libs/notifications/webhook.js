@@ -112,6 +112,8 @@ module.exports = function(s,config,lang,getSnapshot){
                 sendMessage({
                     title: lang.Event+' - '+d.screenshotName,
                     description: lang.EventText1+' '+d.currentTimestamp,
+                    ke: d.ke,
+                    mid: d.id,
                     eventDetails: d.details
                 },[
                     {
@@ -126,6 +128,8 @@ module.exports = function(s,config,lang,getSnapshot){
                 sendMessage({
                     title: lang.Event,
                     description: lang.EventText1+' '+d.currentTimestamp,
+                    ke: d.ke,
+                    mid: d.id,
                     eventDetails: d.details
                 },[],d.ke)
             }
