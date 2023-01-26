@@ -44,64 +44,86 @@ module.exports = async (s,config,lang,onFinish) => {
                 buildTimelapseOutput(e),
             ];
             if(allOutputs.filter(output => !!output).length > 0){
-                ([
-                    buildMainInput(e),
-                ]).concat(allOutputs).forEach(function(commandStringPart){
-                    ffmpegCommand.push(commandStringPart)
-                })
-                s.onFfmpegCameraStringCreationExtensions.forEach(function(extender){
-                    extender(e,ffmpegCommand)
-                })
-                const stdioPipes = createPipeArray(e)
-                const ffmpegCommandString = ffmpegCommand.join(' ')
-                //hold ffmpeg command for log stream
-                activeMonitor.ffmpeg = sanitizedFfmpegCommand(e,ffmpegCommandString)
-                //clean the string of spatial impurities and split for spawn()
-                const ffmpegCommandParsed = splitForFFPMEG(ffmpegCommandString)
-                try{
-                    fs.rmSync(e.sdir + 'cmd.txt')
-                }catch(err){
-
-                }
-                fs.writeFileSync(e.sdir + 'cmd.txt',JSON.stringify({
-                    dataPortToken: dataPortToken,
-                    cmd: ffmpegCommandParsed,
-                    pipes: stdioPipes.length,
-                    rawMonitorConfig: s.group[e.ke].rawMonitorConfigurations[e.id],
-                    globalInfo: {
-                        config: config,
-                        isAtleatOneDetectorPluginConnected: s.isAtleatOneDetectorPluginConnected
-                    }
-                },null,3),'utf8')
-                var cameraCommandParams = [
-                  config.monitorDaemonPath ? config.monitorDaemonPath : __dirname + '/cameraThread/singleCamera.js',
-                  config.ffmpegDir,
-                  e.sdir + 'cmd.txt'
-                ]
-                const cameraProcess = spawn('node',cameraCommandParams,{detached: true,stdio: stdioPipes})
-                if(config.debugLog === true && config.debugLogMonitors === true){
-                    cameraProcess.stderr.on('data',(data) => {
-                        const string = data.toString()
-                        var checkLog = function(x){return string.indexOf(x)>-1}
-                        switch(true){
-                            case checkLog('pkt->duration = 0'):
-                            case checkLog('[hls @'):
-                            case checkLog('Past duration'):
-                            case checkLog('Last message repeated'):
-                            case checkLog('Non-monotonous DTS'):
-                            case checkLog('NULL @'):
-                            case checkLog('RTP: missed'):
-                            case checkLog('deprecated pixel format used'):
-                                if(!config.debugLogMonitorsVerbose){
-                                    return;
-                                }
-                            break;
+                return new Promise((resolve) => {
+                    var hasResolved = false
+                    var completionTimer = null;
+                    function completeResolve(data){
+                        clearTimeout(completionTimer)
+                        if(!hasResolved){
+                            hasResolved = true
+                            resolve(data)
                         }
-                        console.log(`${e.ke} ${e.name} (${e.mid})`)
-                        console.log(data.toString())
-                    })
-                }
-                return cameraProcess
+                    }
+                    try{
+                        ([
+                            buildMainInput(e),
+                        ]).concat(allOutputs).forEach(function(commandStringPart){
+                            ffmpegCommand.push(commandStringPart)
+                        })
+                        s.onFfmpegCameraStringCreationExtensions.forEach(function(extender){
+                            extender(e,ffmpegCommand)
+                        })
+                        const stdioPipes = createPipeArray(e)
+                        const ffmpegCommandString = ffmpegCommand.join(' ')
+                        //hold ffmpeg command for log stream
+                        activeMonitor.ffmpeg = sanitizedFfmpegCommand(e,ffmpegCommandString)
+                        //clean the string of spatial impurities and split for spawn()
+                        const ffmpegCommandParsed = splitForFFPMEG(ffmpegCommandString)
+                        try{
+                            fs.rmSync(e.sdir + 'cmd.txt')
+                        }catch(err){
+
+                        }
+                        fs.writeFileSync(e.sdir + 'cmd.txt',JSON.stringify({
+                            dataPortToken: dataPortToken,
+                            cmd: ffmpegCommandParsed,
+                            pipes: stdioPipes.length,
+                            rawMonitorConfig: s.group[e.ke].rawMonitorConfigurations[e.id],
+                            globalInfo: {
+                                config: config,
+                                isAtleatOneDetectorPluginConnected: s.isAtleatOneDetectorPluginConnected
+                            }
+                        },null,3),'utf8')
+                        var cameraCommandParams = [
+                          config.monitorDaemonPath ? config.monitorDaemonPath : __dirname + '/cameraThread/singleCamera.js',
+                          config.ffmpegDir,
+                          e.sdir + 'cmd.txt'
+                        ]
+                        const cameraProcess = spawn('node',cameraCommandParams,{detached: true,stdio: stdioPipes})
+                        if(config.debugLog === true && config.debugLogMonitors === true){
+                            cameraProcess.stderr.on('data',(data) => {
+                                const string = data.toString()
+                                var checkLog = function(x){return string.indexOf(x)>-1}
+                                switch(true){
+                                    case checkLog('pkt->duration = 0'):
+                                    case checkLog('[hls @'):
+                                    case checkLog('Past duration'):
+                                    case checkLog('Last message repeated'):
+                                    case checkLog('Non-monotonous DTS'):
+                                    case checkLog('NULL @'):
+                                    case checkLog('RTP: missed'):
+                                    case checkLog('deprecated pixel format used'):
+                                        if(!config.debugLogMonitorsVerbose){
+                                            return;
+                                        }
+                                    break;
+                                }
+                                console.log(`${e.ke} ${e.name} (${e.mid})`)
+                                console.log(data.toString())
+                            })
+                        }
+                        cameraProcess.stdio[5].once('data',(data) => {
+                            completeResolve(cameraProcess)
+                        })
+                        completionTimer = setTimeout(() => {
+                            completeResolve(cameraProcess)
+                        },20000)
+                    }catch(err){
+                        completeResolve(null)
+                        s.systemLog(err)
+                        return null
+                    }
+                })
             }else{
                 return null
             }

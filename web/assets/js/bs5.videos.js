@@ -457,7 +457,9 @@ function getVideos(options,callback){
         var monitorId = options.monitorId
         var archived = options.archived
         var customVideoSet = options.customVideoSet
-        var limit = options.limit || 300
+        var limit = options.limit
+        var eventLimit = options.eventLimit || 300
+        var doLimitOnFames = options.doLimitOnFames || false
         var eventStartTime
         var eventEndTime
         // var startDate = options.startDate
@@ -476,14 +478,14 @@ function getVideos(options,callback){
         if(archived){
             requestQueries.push(`archived=1`)
         }
-        $.getJSON(`${getApiPrefix(customVideoSet ? customVideoSet : searchQuery ? `videosByEventTag` : `videos`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`noLimit=1`]).join('&')}`,function(data){
+        $.getJSON(`${getApiPrefix(customVideoSet ? customVideoSet : searchQuery ? `videosByEventTag` : `videos`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([limit ? `limit=${limit}` : `noLimit=1`]).join('&')}`,function(data){
             var videos = data.videos.map((video) => {
                 return Object.assign({},video,{
                     href: getFullOrigin(true) + video.href
                 })
             })
             $.getJSON(`${getApiPrefix(`timelapse`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`noLimit=1`]).join('&')}`,function(timelapseFrames){
-                $.getJSON(`${getApiPrefix(`events`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`limit=${limit}`]).join('&')}`,function(eventData){
+                $.getJSON(`${getApiPrefix(`events`)}${monitorId ? `/${monitorId}` : ''}?${requestQueries.concat([`limit=${eventLimit}`]).join('&')}`,function(eventData){
                     var theEvents = eventData.events || eventData;
                     var newVideos = applyDataListToVideos(videos,theEvents)
                     newVideos = applyTimelapseFramesListToVideos(newVideos,timelapseFrames.frames || timelapseFrames,'timelapseFrames',true).map((video) => {

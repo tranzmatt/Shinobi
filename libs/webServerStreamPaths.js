@@ -69,7 +69,7 @@ module.exports = function(s,config,lang,app){
                         define: s.getDefinitonFile(user.details ? user.details.lang : config.lang),
                         lang: lang,
                         $user: $user,
-                        mon: Object.assign(s.group[req.params.ke].rawMonitorConfigurations[req.params.id],{}),
+                        mon: Object.assign({},s.group[req.params.ke].rawMonitorConfigurations[req.params.id]),
                         originalURL: s.getOriginalUrl(req)
                     });
                 }else{

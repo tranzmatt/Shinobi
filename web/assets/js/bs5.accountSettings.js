@@ -10,14 +10,22 @@ $(document).ready(function(){
             var addStorageData = JSON.parse($user.details.addStorage || '{}')
             var html = ''
             $.each(addStorage,function(n,storage){
-                var limit = ""
-                if(addStorageData[storage.path] && addStorageData[storage.path].limit){
-                    limit = addStorageData[storage.path].limit
-                }
-                html += `<div class="form-group">
-                            <div class="mb-2"><span>${lang['Max Storage Amount']} : ${storage.name}</span></div>
-                            <div><input class="form-control" placeholder="10000" addStorageLimit="${storage.path}" value="${limit}"></div>
-                        </div>`
+                var theStorage = addStorageData[storage.path]
+                html += `
+                <div addStorageFields="${storage.path}">
+                    <div class="form-group">
+                        <div class="mb-2"><span>${lang['Max Storage Amount']} : ${storage.name}</span></div>
+                        <div><input class="form-control" placeholder="10000" addStorageItem="limit" value="${theStorage.limit || ''}"></div>
+                    </div>
+                    <div class="form-group">
+                        <div class="mb-2"><span>${lang["Video Share"]} : ${storage.name}</span></div>
+                        <div><input class="form-control" placeholder="95" addStorageItem="videoPercent" value="${theStorage.videoPercent || ''}"></div>
+                    </div>
+                    <div class="form-group">
+                        <div class="mb-2"><span>${lang["Timelapse Frames Share"]} : ${storage.name}</span></div>
+                        <div><input class="form-control" placeholder="5" addStorageItem="timelapsePercent" value="${theStorage.timelapsePercent || ''}"></div>
+                    </div>
+                </div>`
             })
             addStorageMaxAmounts.html(html)
         }catch(err){
@@ -35,20 +43,25 @@ $(document).ready(function(){
             extender(theForm)
         })
     }
-    addStorageMaxAmounts.on('change','[addStorageLimit]',function(){
+    function getAddStorageFields(){
         var json = {}
         $.each(addStorage,function(n,storage){
             var storageId = storage.path
-            var el = addStorageMaxAmounts.find('[addStorageLimit="' + storageId + '"]')
-            var value = el.val()
+            var miniContainer = addStorageMaxAmounts.find(`[addStorageFields="${storageId}"]`)
+            var fields = miniContainer.find('[addStorageItem]')
             json[storageId] = {
                 name: storage.name,
                 path: storage.path,
-                limit: value
             }
+            $.each(fields,function(n,el){
+                var field = $(el)
+                var keyName = field.attr('addStorageItem')
+                var value = field.val()
+                json[storageId][keyName] = value
+            })
         })
-        addStorageMaxAmountsField.val(JSON.stringify(json))
-    })
+        return json
+    }
     $('body')
     theForm.find('[detail]').change(onDetailFieldChange)
     theForm.find('[detail]').change(function(){
@@ -77,6 +90,7 @@ $(document).ready(function(){
         })
         var details = getDetailValues(theForm)
         formData.details = details
+        formData.details.addStorage = getAddStorageFields()
         accountSettings.onSaveFieldsExtensions.forEach(function(extender){
             extender(formData)
         })
