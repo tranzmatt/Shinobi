@@ -117,7 +117,7 @@ module.exports = async (s,config,lang,onFinish) => {
                         })
                         completionTimer = setTimeout(() => {
                             completeResolve(cameraProcess)
-                        },20000)
+                        },2500)
                     }catch(err){
                         completeResolve(null)
                         s.systemLog(err)
