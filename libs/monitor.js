@@ -174,7 +174,7 @@ module.exports = function(s,config,lang){
                 })
             }
             const noIconChecks = function(){
-                const runExtraction = function(){
+                const runExtraction = async function(){
                     var sendTempImage = function(){
                       fs.readFile(temporaryImageFile,function(err,buffer){
                          if(!err){
@@ -197,11 +197,11 @@ module.exports = function(s,config,lang){
                         const snapRawFilters = monitor.details.cust_snap_raw
                         if(snapRawFilters)outputOptions.push(snapRawFilters);
                         var ffmpegCmd = splitForFFPMEG(`-y -loglevel warning ${isDetectorStream ? '-live_start_index 2' : ''} -re ${inputOptions.join(' ')} -i "${url}" ${outputOptions.join(' ')} -f image2 -an -frames:v 1 "${temporaryImageFile}"`)
-                        checkExists(streamDir, function(success) {
-                            if (success === false) {
-                                fs.mkdirSync(streamDir, {recursive: true}, (err) => {s.debugLog(err)})
-                            }
-                        })
+                        try{
+                            await fs.promises.mkdir(streamDir, {recursive: true}, (err) => {s.debugLog(err)})
+                        }catch(err){
+                            console.error(err)
+                        }
                         const snapProcess = new Worker(__dirname + '/cameraThread/snapshot.js', {
                             workerData: {
                                 jsonData: {
