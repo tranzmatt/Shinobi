@@ -45,6 +45,15 @@ module.exports = async (s,config,lang,onFinish) => {
             ];
             if(allOutputs.filter(output => !!output).length > 0){
                 return new Promise((resolve) => {
+                    var hasResolved = false
+                    var completionTimer = null;
+                    function completeResolve(data){
+                        clearTimeout(completionTimer)
+                        if(!hasResolved){
+                            hasResolved = true
+                            resolve(data)
+                        }
+                    }
                     try{
                         ([
                             buildMainInput(e),
@@ -104,9 +113,13 @@ module.exports = async (s,config,lang,onFinish) => {
                             })
                         }
                         cameraProcess.stdio[5].once('data',(data) => {
-                            resolve(cameraProcess)
+                            completeResolve(cameraProcess)
                         })
+                        completionTimer = setTimeout(() => {
+                            completeResolve(cameraProcess)
+                        },20000)
                     }catch(err){
+                        completeResolve(null)
                         s.systemLog(err)
                         return null
                     }
