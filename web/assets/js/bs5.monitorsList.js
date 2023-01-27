@@ -5,11 +5,12 @@ $(document).ready(function(){
     var apiKeySelector = $('#multi_mon_api_key_selector')
     var multiMonitorSelect = $('#multimon_select_all')
     function drawRowToList(row){
+        var monitorDetails = row.details
         var streamUrl = libURL + buildStreamUrl(row.mid).replace($user.auth_token,selectedApiKey)
         theList.append(`
         <div data-mid="${row.mid}" class="col-md-4 card-page-selection glM${row.mid}">
             <div class="${definitions.Theme.isDark ? 'text-white' : 'text-dark'} mb-3 card shadow-sm btn-default">
-                <div class="card monitor-card-preview snapshot launch-live-grid-monitor cursor-pointer" style="background-image:url(${getApiPrefix('icon') + '/' + row.mid})"></div>
+                <div class="card monitor-card-preview snapshot launch-live-grid-monitor cursor-pointer" style="background-image:url(${monitorDetails.icon || (getApiPrefix('icon') + '/' + row.mid)})"></div>
                 ${buildMiniMonitorCardBody(loadedMonitors[row.mid],null,`<div>
                 <div class="mb-2">
                     <div class="d-flex flex-row">
