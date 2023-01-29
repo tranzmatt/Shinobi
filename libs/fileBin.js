@@ -20,6 +20,13 @@ module.exports = function(s,config,lang,app,io){
             })
         })
     }
+    const getFileBinBuffer = (file) => {
+        const filePath = getFileBinPath(file);
+        return fs.promises.readFile(filePath)
+    }
+    const getFileBinPath = (file) => {
+        return getFileBinDirectory(file) + file.name;
+    }
     const getFileBinEntries = (options) => {
         return new Promise((resolve, reject) => {
             s.knexQuery({
@@ -187,6 +194,8 @@ module.exports = function(s,config,lang,app,io){
     }
     s.getFileBinDirectory = getFileBinDirectory
     s.getFileBinEntry = getFileBinEntry
+    s.getFileBinBuffer = getFileBinBuffer
+    s.getFileBinPath = getFileBinPath
     s.insertFileBinEntry = insertFileBinEntry
     s.updateFileBinEntry = updateFileBinEntry
     s.deleteFileBinEntry = deleteFileBinEntry

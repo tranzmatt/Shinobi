@@ -1731,6 +1731,10 @@ module.exports = (s,config,lang) => {
         const maxCamerasAllowed = parseInt(initData.max_camera) || false;
         return (!maxCamerasAllowed || Object.keys(theGroup.activeMonitors).length <= parseInt(maxCamerasAllowed))
     }
+    function getStreamDirectory(options){
+        const streamDir = s.dir.streams + options.ke + '/' + options.mid + '/'
+        return streamDir
+    }
     return {
         monitorStop,
         monitorIdle,
@@ -1745,6 +1749,7 @@ module.exports = (s,config,lang) => {
         deleteMonitorData,
         checkObjectsInMonitorDetails,
         getActiveMonitor,
+        getStreamDirectory,
         copyMonitorConfiguration,
         getMonitorConfiguration,
         isGroupBelowMaxMonitorCount,

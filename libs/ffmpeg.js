@@ -46,9 +46,7 @@ module.exports = async (s,config,lang,onFinish) => {
             if(allOutputs.filter(output => !!output).length > 0){
                 return new Promise((resolve) => {
                     var hasResolved = false
-                    var completionTimer = null;
                     function completeResolve(data){
-                        clearTimeout(completionTimer)
                         if(!hasResolved){
                             hasResolved = true
                             resolve(data)
@@ -112,12 +110,11 @@ module.exports = async (s,config,lang,onFinish) => {
                                 console.log(data.toString())
                             })
                         }
-                        cameraProcess.stdio[5].once('data',(data) => {
-                            completeResolve(cameraProcess)
-                        })
-                        completionTimer = setTimeout(() => {
-                            completeResolve(cameraProcess)
-                        },20000)
+                        for (let i = 0; i < stdioPipes.length; i++) {
+                            cameraProcess.stdio[i].once('data',(data) => {
+                                completeResolve(cameraProcess)
+                            })
+                        }
                     }catch(err){
                         completeResolve(null)
                         s.systemLog(err)
