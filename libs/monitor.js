@@ -74,16 +74,14 @@ module.exports = function(s,config,lang){
     s.getMonitorCpuUsage = function(e,callback){
         if(s.group[e.ke].activeMonitors[e.mid] && s.group[e.ke].activeMonitors[e.mid].spawn){
             const getUsage = function(callback2){
-                s.readFile("/proc/" + s.group[e.ke].activeMonitors[e.mid].spawn.pid + "/stat", function(err, data){
-                    if(!err){
-                        const elems = data.toString().split(' ');
-                        const utime = parseInt(elems[13]);
-                        const stime = parseInt(elems[14]);
-
-                        callback2(utime + stime);
-                    }else{
-                        clearInterval(0)
-                    }
+                fs.promises.readFile("/proc/" + s.group[e.ke].activeMonitors[e.mid].spawn.pid + "/stat").then((data) => {
+                    const elems = data.toString().split(' ');
+                    const utime = parseInt(elems[13]);
+                    const stime = parseInt(elems[14]);
+                    callback2(utime + stime);
+                }).catch((err) => {
+                    s.debugLog(err)
+                    clearInterval(0)
                 })
             }
             getUsage(function(startTime){
@@ -271,15 +269,13 @@ module.exports = function(s,config,lang){
                                 }
                             })
                         }else{
-                            s.readFile(streamDir + 's.jpg',function(err,snapBuffer){
-                                if(err){
-                                    sendTempImage()
-                                }else{
-                                    resolve({
-                                        screenShot: snapBuffer,
-                                        isStaticFile: true
-                                    })
-                                }
+                            fs.promises.readFile(streamDir + 's.jpg').then(function(snapBuffer){
+                                resolve({
+                                    screenShot: snapBuffer,
+                                    isStaticFile: true
+                                })
+                            }).catch(() => {
+                                sendTempImage()
                             })
                         }
                     })
