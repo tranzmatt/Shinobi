@@ -110,11 +110,7 @@ module.exports = async (s,config,lang,onFinish) => {
                                 console.log(data.toString())
                             })
                         }
-                        for (let i = 0; i < stdioPipes.length; i++) {
-                            cameraProcess.stdio[i].once('data',(data) => {
-                                completeResolve(cameraProcess)
-                            })
-                        }
+                        completeResolve(cameraProcess)
                     }catch(err){
                         completeResolve(null)
                         s.systemLog(err)

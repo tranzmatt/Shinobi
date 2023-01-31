@@ -1010,7 +1010,7 @@ module.exports = (s,config,lang) => {
     async function createCameraFfmpegProcess(e){
         const groupKey = e.ke
         const monitorId = e.mid || e.id
-        const activeMonitor = getActiveMonitor(groupKey,monitorId)
+        var activeMonitor = getActiveMonitor(groupKey,monitorId)
         //launch ffmpeg (main)
         s.tx({
             f: 'monitor_starting',
@@ -1022,7 +1022,7 @@ module.exports = (s,config,lang) => {
         if(activeMonitor.spawn){
             attachMainProcessHandlers(e,fatalError)
         }else{
-            s.debugLog(`Failed to Laucnh Monitor!`,)
+            s.debugLog(`Failed to Launch Monitor!`)
         }
         return activeMonitor.spawn
     }

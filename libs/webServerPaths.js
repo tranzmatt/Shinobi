@@ -1437,7 +1437,11 @@ module.exports = function(s,config,lang,app,io){
                             s.streamMp4FileOverHttp(filePath,req,res,!!req.query.pureStream)
                         }
                     }else{
-                        res.end(user.lang['File Not Found in Filesystem'])
+                        s.closeJsonResponse(res,{
+                            ok: false,
+                            msg: lang['File Not Found in Filesystem'],
+                            err: err
+                        })
                     }
                 })
             }
