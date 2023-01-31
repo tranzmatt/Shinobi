@@ -414,9 +414,6 @@ module.exports = (s,config,lang,app,io) => {
                 }
             })
         }
-        if(monitorDetails.detector === '1' && monitorDetails.detector_notrigger === '1'){
-            s.setNoEventsDetector(monitorConfig)
-        }
         var detector_timeout
         if(!monitorDetails.detector_timeout||monitorDetails.detector_timeout===''){
             detector_timeout = 10
