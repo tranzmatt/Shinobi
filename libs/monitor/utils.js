@@ -1753,6 +1753,7 @@ module.exports = (s,config,lang) => {
         copyMonitorConfiguration,
         getMonitorConfiguration,
         isGroupBelowMaxMonitorCount,
+        setNoEventsDetector,
         cameraDestroy: cameraDestroy,
         createSnapshot: createSnapshot,
         processKill: processKill,
