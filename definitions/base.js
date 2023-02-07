@@ -673,27 +673,6 @@ module.exports = function(s,config,lang){
                               ]
                            },
                            {
-                              "name": lang.NVIDIA-Jetson,
-                              "optgroup": [
-                                  {
-                                     "name": lang.h264_nvv4l2dec,
-                                     "value": "h264_nvv4l2dec"
-                                  },
-                                  {
-                                     "name": lang.hevc_nvv4l2dec,
-                                     "value": "hevc_nvv4l2dec"
-                                  },
-                                  {
-                                     "name": lang.mpeg2_nvv4l2dec,
-                                     "value": "mpeg2_nvv4l2dec"
-                                  },
-                                  {
-                                     "name": lang.mpeg4_nvv4l2dec,
-                                     "value": "mpeg4_nvv4l2dec"
-                                  },
-                              ]
-                           },
-                           {
                               "name": lang["Quick Sync Video"],
                               "optgroup": [
                                   {
@@ -922,22 +901,6 @@ module.exports = function(s,config,lang){
                                  {
                                     "name": "H.264 openMAX (Raspberry Pi)",
                                     "value": "h264_omx"
-                                 },
-                                 {
-                                  "name": "H.264 nvv4l2 (NVIDIA Jetson)",
-                                  "value": "h264_nvv4l2dec"
-                                 },
-                                 {
-                                  "name": "H.265 nvv4l2 (NVIDIA Jetson)",
-                                  "value": "h265_nvv4l2dec"
-                                 },
-                                 {
-                                  "name": "MPEG2 nvv4l2 (NVIDIA Jetson)",
-                                  "value": "mpeg2_nvv4l2dec"
-                                 },
-                                 {
-                                  "name": "MPEG4 nvv4l2 (NVIDIA Jetson)",
-                                  "value": "mpeg4_nvv4l2dec"
                                  }
                              ]
                          },
@@ -1547,27 +1510,6 @@ module.exports = function(s,config,lang){
                                       ]
                                    },
                                    {
-                                    "name": lang.NVIDIA-Jetson,
-                                    "optgroup": [
-                                        {
-                                           "name": lang.h264_nvv4l2dec,
-                                           "value": "h264_nvv4l2dec"
-                                        },
-                                        {
-                                           "name": lang.hevc_nvv4l2dec,
-                                           "value": "hevc_nvv4l2dec"
-                                        },
-                                        {
-                                           "name": lang.mpeg2_nvv4l2dec,
-                                           "value": "mpeg2_nvv4l2dec"
-                                        },
-                                        {
-                                           "name": lang.mpeg4_nvv4l2dec,
-                                           "value": "mpeg4_nvv4l2dec"
-                                        },
-                                    ]
-                                   },
-                                   {
                                       "name": lang["Quick Sync Video"],
                                       "optgroup": [
                                           {
@@ -1737,22 +1679,6 @@ module.exports = function(s,config,lang){
                                          {
                                             "name": "H.264 openMAX (Raspberry Pi)",
                                             "value": "h264_omx"
-                                         },
-                                         {
-                                            "name": "H.264 nvv4l2 (NVIDIA Jetson)",
-                                            "value": "h264_nvv4l2dec"
-                                         },
-                                         {
-                                            "name": "H.265 nvv4l2 (NVIDIA Jetson)",
-                                            "value": "h265_nvv4l2dec"
-                                         },
-                                         {
-                                            "name": "MPEG2 nvv4l2 (NVIDIA Jetson)",
-                                            "value": "mpeg2_nvv4l2dec"
-                                         },
-                                         {
-                                            "name": "MPEG4 nvv4l2 (NVIDIA Jetson)",
-                                            "value": "mpeg4_nvv4l2dec"
                                          }
                                      ]
                                  },
@@ -2130,22 +2056,6 @@ module.exports = function(s,config,lang){
                                  {
                                     "name": "H.264 openMAX (Raspberry Pi)",
                                     "value": "h264_omx"
-                                 },
-                                 {
-                                 "name": "H.264 nvv4l2 (NVIDIA Jetson)",
-                                 "value": "h264_nvv4l2dec"
-                                 },
-                                 {
-                                 "name": "H.265 nvv4l2 (NVIDIA Jetson)",
-                                 "value": "h265_nvv4l2dec"
-                                 },
-                                 {
-                                 "name": "MPEG2 nvv4l2 (NVIDIA Jetson)",
-                                 "value": "mpeg2_nvv4l2dec"
-                                 },
-                                 {
-                                 "name": "MPEG4 nvv4l2 (NVIDIA Jetson)",
-                                 "value": "mpeg4_nvv4l2dec"
                                  }
                               ]
                            },
@@ -7114,27 +7024,6 @@ module.exports = function(s,config,lang){
                                 ]
                              },
                              {
-                              "name": lang.NVIDIA-Jetson,
-                              "optgroup": [
-                                  {
-                                     "name": lang.h264_nvv4l2dec,
-                                     "value": "h264_nvv4l2dec"
-                                  },
-                                  {
-                                     "name": lang.hevc_nvv4l2dec,
-                                     "value": "hevc_nvv4l2dec"
-                                  },
-                                  {
-                                     "name": lang.mpeg2_nvv4l2dec,
-                                     "value": "mpeg2_nvv4l2dec"
-                                  },
-                                  {
-                                     "name": lang.mpeg4_nvv4l2dec,
-                                     "value": "mpeg4_nvv4l2dec"
-                                  },
-                              ]
-                             },
-                             {
                                 "name": lang["Quick Sync Video"],
                                 "optgroup": [
                                     {
@@ -7336,22 +7225,6 @@ module.exports = function(s,config,lang){
                                    {
                                       "name": "H.264 openMAX (Raspberry Pi)",
                                       "value": "h264_omx"
-                                   },
-                                   {
-                                    "name": "H.264 nvv4l2 (NVIDIA Jetson)",
-                                    "value": "h264_nvv4l2dec"
-                                   },
-                                   {
-                                    "name": "H.265 nvv4l2 (NVIDIA Jetson)",
-                                    "value": "h265_nvv4l2dec"
-                                   },
-                                   {
-                                    "name": "MPEG2 nvv4l2 (NVIDIA Jetson)",
-                                    "value": "mpeg2_nvv4l2dec"
-                                   },
-                                   {
-                                    "name": "MPEG4 nvv4l2 (NVIDIA Jetson)",
-                                    "value": "mpeg4_nvv4l2dec"
                                    }
                                ]
                            },
