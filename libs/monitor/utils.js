@@ -73,6 +73,7 @@ module.exports = (s,config,lang) => {
                 doResolve(response)
             }
             try{
+                proc.removeAllListeners()
                 proc.on('exit',() => {
                     response.msg = 'proc.on.exit'
                     clearTimeout(killTimer)
