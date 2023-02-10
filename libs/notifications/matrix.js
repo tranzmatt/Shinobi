@@ -1,3 +1,4 @@
+cat Shinobi/libs/notifications/matrix.js
 const fs = require("fs")
 const fetch = require("node-fetch")
 module.exports = function(s,config,lang,getSnapshot){
@@ -15,13 +16,17 @@ module.exports = function(s,config,lang,getSnapshot){
                     buffer,
                     name,
                     type,
+		            info,
+		            opttype,
                 } = file;
                 client.uploadContent(buffer, {
-                    name: name
+                        name: name,
+			type: opttype,
                 }).then(function(url) {
                     const content = {
                         msgtype: type || "m.file",
                         body: name,
+			info: info,
                         url: url.content_uri
                     };
                     client.sendMessage(roomId, content);
@@ -92,6 +97,10 @@ module.exports = function(s,config,lang,getSnapshot){
                                 buffer: d.screenshotBuffer,
                                 name: d.screenshotName+'.jpg',
                                 type: 'm.image',
+				                opttype: 'image/jpeg',
+				                info: {
+					                mimetype: 'image/jpeg',
+				                },
                             }
                         ],d.ke)
                     }
@@ -116,6 +125,10 @@ module.exports = function(s,config,lang,getSnapshot){
                                     buffer: await fs.promises.readFile(videoPath),
                                     name: videoName,
                                     type: 'm.video',
+				                    opttype: 'video/mp4',
+                                    info: {
+                                    mimetype: 'video/mp4',
+                                    },
                                 }
                             ],d.ke)
                         }
