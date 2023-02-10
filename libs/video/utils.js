@@ -559,7 +559,9 @@ module.exports = (s,config,lang) => {
             const fileBinFolder = s.getFileBinDirectory(video)
             const inputFilePath = `${videoFolder}${filename}`
             const fileBinFilePath = `${fileBinFolder}${finalFilename}`
-            const cutLength = parseFloat(endTime) - parseFloat(startTime);
+            const parsedStart = parseFloat(startTime)
+            const parsedEnd = parseFloat(endTime)
+            const cutLength = parsedEnd - parsedStart;
             s.debugLog(`sliceVideo start slice...`)
             const cutProcessResponse = await cutVideoLength({
                 ke: groupKey,
@@ -578,7 +580,12 @@ module.exports = (s,config,lang) => {
                 mid: monitorId,
                 name: finalFilename,
                 size: fileSize,
-                details: video.details,
+                details: Object.assign({
+                    from: new Date(video.time).getTime(),
+                    at: parsedStart,
+                    to: parsedEnd,
+                    length: cutLength,
+                }, s.parseJSON(video.details) || {}),
                 status: 1,
                 time: video.time,
             }
