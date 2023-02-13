@@ -30,7 +30,7 @@
     <script src="<%-window.libURL%>assets/js/bs5.confirm.js" type="text/javascript"></script>
 
     <script>
-        var superApiPrefix = location.pathname.indexOf('/s/') > -1 ? (location.pathname.endsWith('/') ? location.pathname : location.pathname + '/') : "<%- `${originalURL}${config.webPaths.superApiPrefix}` %>"
+        var superApiPrefix = location.pathname.indexOf('/s/') > -1 ? (location.pathname.endsWith('/') ? location.pathname : location.pathname + '/') : "<%- `${originalURL.endsWith('/') ? originalURL.slice(0, -1) : originalURL}${config.webPaths.superApiPrefix}` %>"
     </script>
     <% customAutoLoad.superLibsCss.forEach(function(lib){ %>
         <link rel="stylesheet" href="<%-window.libURL%>libs/css/<%-lib%>">

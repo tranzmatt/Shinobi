@@ -80,10 +80,12 @@ module.exports = function(s,config,lang,getSnapshot){
             } : undefined)
                 .then(res => res.text())
                 .then((text) => {
+                    console.error(`Webhook Response`,text)
                     response.response = text;
                     resolve(response)
                 })
                 .catch((err) => {
+                    console.error(`Webhook Fail`)
                     response.ok = false;
                     response.error = err;
                     s.userLog({
@@ -104,23 +106,15 @@ module.exports = function(s,config,lang,getSnapshot){
     const onEventTriggerForGlobalWebhook = async (d,filter) => {
         let filesSent = 0;
         const monitorConfig = s.group[d.ke].rawMonitorConfigurations[d.id]
-        // d = event object
-        if((filter.global_webhook || monitorConfig.details.notify_global_webhook === '1') && !s.group[d.ke].activeMonitors[d.id].detector_global_webhook){
-            var detector_global_webhook_timeout
-            if(!monitorConfig.details.detector_global_webhook_timeout||monitorConfig.details.detector_global_webhook_timeout===''){
-                detector_global_webhook_timeout = 1000 * 60 * 10;
-            }else{
-                detector_global_webhook_timeout = parseFloat(monitorConfig.details.detector_global_webhook_timeout) * 1000 * 60;
-            }
-            s.group[d.ke].activeMonitors[d.id].detector_global_webhook = setTimeout(function(){
-                clearTimeout(s.group[d.ke].activeMonitors[d.id].detector_global_webhook);
-                s.group[d.ke].activeMonitors[d.id].detector_global_webhook = null
-            },detector_global_webhook_timeout)
+        if((filter.global_webhook || monitorConfig.details.notify_global_webhook === '1')){
             await getSnapshot(d,monitorConfig)
             if(d.screenshotBuffer){
                 sendMessage({
                     title: lang.Event+' - '+d.screenshotName,
                     description: lang.EventText1+' '+d.currentTimestamp,
+                    ke: d.ke,
+                    mid: d.id,
+                    eventDetails: d.details
                 },[
                     {
                         type: 'photo',
@@ -134,6 +128,8 @@ module.exports = function(s,config,lang,getSnapshot){
                 sendMessage({
                     title: lang.Event,
                     description: lang.EventText1+' '+d.currentTimestamp,
+                    ke: d.ke,
+                    mid: d.id,
                     eventDetails: d.details
                 },[],d.ke)
             }
@@ -197,13 +193,12 @@ module.exports = function(s,config,lang,getSnapshot){
                  "value": "1"
               }
            ]
-        },
-    )
+        }
+    );
     s.definitions["Account Settings"].blocks["2-Factor Authentication"].info.push({
         "name": "detail=factor_global_webhook",
         "field": lang.Webhook,
         "default": "1",
-        "example": "",
         "fieldType": "select",
         "possible": [
            {
@@ -215,7 +210,7 @@ module.exports = function(s,config,lang,getSnapshot){
               "value": "1"
            }
         ]
-    })
+    });
     s.definitions["Account Settings"].blocks["Webhook"] = {
         "evaluation": "$user.details.use_global_webhook !== '0'",
         "name": lang.Webhook,
@@ -245,45 +240,27 @@ module.exports = function(s,config,lang,getSnapshot){
                "placeholder": "http://your-webhook-point/onEvent/{{INNER_EVENT_TITLE}}?info={{INNER_EVENT_INFO}}",
                "field": lang["Webhook URL"],
                "form-group-class":"u_global_webhook_input u_global_webhook_1",
-            },
-            {
-                hidden: true,
-                "name": "detail=factor_global_webhook",
-                "field": lang["2-Factor Authentication"],
-                "form-group-class":"u_global_webhook_input u_global_webhook_1",
-                "default": "1",
-                "example": "",
-                "fieldType": "select",
-                "possible": [
-                   {
-                      "name": lang.No,
-                      "value": "0"
-                   },
-                   {
-                      "name": lang.Yes,
-                      "value": "1"
-                   }
-                ]
             }
         ]
     }
     s.definitions["Event Filters"].blocks["Action for Selected"].info.push({
-         "name": "actions=global_webhook",
-         "field": lang['Webhook'],
-         "fieldType": "select",
-         "form-group-class": "actions-row",
-         "default": "",
-         "example": "1",
-         "possible": [
-            {
-               "name": lang['Original Choice'],
-               "value": "",
-               "selected": true
-            },
-            {
-               "name": lang.Yes,
-               "value": "1",
-            }
-         ]
-    })
+             "name": "actions=global_webhook",
+             "field": lang['Webhook'],
+             "fieldType": "select",
+             "form-group-class": "actions-row",
+             "default": "",
+             "example": "1",
+             "possible": [
+                {
+                   "name": lang['Original Choice'],
+                   "value": "",
+                   "selected": true
+                },
+                {
+                   "name": lang.Yes,
+                   "value": "1",
+                }
+             ]
+        },
+    )
 }

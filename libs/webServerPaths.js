@@ -1231,7 +1231,7 @@ module.exports = function(s,config,lang,app,io){
                     ['mid','=',req.params.id],
                 ],
                 limit: 1
-            },(err,r) => {
+            },async (err,r) => {
                 if(r && r[0]){
                     r = r[0];
                     if(req.query.reset==='1'||(s.group[r.ke]&&s.group[r.ke].rawMonitorConfigurations[r.mid].mode!==req.params.f)||req.query.fps&&(!s.group[r.ke].activeMonitors[r.mid].currentState||!s.group[r.ke].activeMonitors[r.mid].currentState.trigger_on)){
@@ -1261,7 +1261,7 @@ module.exports = function(s,config,lang,app,io){
                             s.group[r.ke].rawMonitorConfigurations[r.mid]=r;
                             s.tx({f:'monitor_edit',mid:r.mid,ke:r.ke,mon:r},'GRP_'+r.ke);
                             s.tx({f:'monitor_edit',mid:r.mid,ke:r.ke,mon:r},'STR_'+r.ke);
-                            s.camera('stop',s.cleanMonitorObject(r));
+                            await s.camera('stop',s.cleanMonitorObject(r));
                             if(req.params.f!=='stop'){
                                 s.camera(req.params.f,s.cleanMonitorObject(r));
                             }
@@ -1288,7 +1288,7 @@ module.exports = function(s,config,lang,app,io){
                                     req.timeout=req.params.ff*1000
                                 break;
                             }
-                            s.group[r.ke].activeMonitors[r.mid].trigger_timer=setTimeout(function(){
+                            s.group[r.ke].activeMonitors[r.mid].trigger_timer=setTimeout(async function(){
                                 delete(s.group[r.ke].activeMonitors[r.mid].trigger_timer)
                                 s.knexQuery({
                                     action: "update",
@@ -1304,12 +1304,11 @@ module.exports = function(s,config,lang,app,io){
                                 r.neglectTriggerTimer=1;
                                 r.mode=s.group[r.ke].activeMonitors[r.mid].currentState.mode;
                                 r.fps=s.group[r.ke].activeMonitors[r.mid].currentState.fps;
-                                s.camera('stop',s.cleanMonitorObject(r),function(){
-                                    if(s.group[r.ke].activeMonitors[r.mid].currentState.mode!=='stop'){
-                                        s.camera(s.group[r.ke].activeMonitors[r.mid].currentState.mode,s.cleanMonitorObject(r));
-                                    }
-                                    s.group[r.ke].rawMonitorConfigurations[r.mid]=r;
-                                });
+                                await s.camera('stop',s.cleanMonitorObject(r));
+                                if(s.group[r.ke].activeMonitors[r.mid].currentState.mode!=='stop'){
+                                    s.camera(s.group[r.ke].activeMonitors[r.mid].currentState.mode,s.cleanMonitorObject(r));
+                                }
+                                s.group[r.ke].rawMonitorConfigurations[r.mid]=r;
                                 s.tx({f:'monitor_edit',mid:r.mid,ke:r.ke,mon:r},'GRP_'+r.ke);
                                 s.tx({f:'monitor_edit',mid:r.mid,ke:r.ke,mon:r},'STR_'+r.ke);
                             },req.timeout);
@@ -1438,7 +1437,11 @@ module.exports = function(s,config,lang,app,io){
                             s.streamMp4FileOverHttp(filePath,req,res,!!req.query.pureStream)
                         }
                     }else{
-                        res.end(user.lang['File Not Found in Filesystem'])
+                        s.closeJsonResponse(res,{
+                            ok: false,
+                            msg: lang['File Not Found in Filesystem'],
+                            err: err
+                        })
                     }
                 })
             }

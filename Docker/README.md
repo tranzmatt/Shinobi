@@ -87,11 +87,11 @@ docker run -d --name='Shinobi' -p '8080:8080/tcp' -v "/dev/shm/Shinobi/streams":
 
  ### Volumes
 
- | Volumes                     | Description                                                                                                                                         |
- |-----------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+ | Volumes                      | Description                                                                                                                                         |
+ |------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
  | /dev/shm/Shinobi/streams     | **IMPORTANT!** This must be mapped to somewhere in the host's RAM. When running this image on Windows you will need to select a different location. |
- | $HOME/Shinobi/config         | Put `conf.json` or `super.json` files in here to override the default. values.                                                                           |
- | $HOME/Shinobi/customAutoLoad | Maps to the `/home/Shinobi/libs/customAutoLoad` folder for loading your own modules into Shinobi.                                                                 |
+ | /config                      | Put `conf.json` or `super.json` files in here to override the default. values.                                                                      |
+ | $HOME/Shinobi/customAutoLoad | Maps to the `/home/Shinobi/libs/customAutoLoad` folder for loading your own modules into Shinobi.                                                   |
  | $HOME/Shinobi/database       | A map to `/var/lib/mysql` in the container. This is the database's core files.                                                                      |
  | $HOME/Shinobi/videos         | A map to `/home/Shinobi/videos`. The storage location of your recorded videos.                                                                      |
  | $HOME/Shinobi/plugins        | A map to `/home/Shinobi/plugins`. Mapped so that plugins can easily be modified or swapped.                                                         |

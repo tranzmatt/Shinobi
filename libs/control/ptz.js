@@ -413,6 +413,41 @@ module.exports = function(s,config,lang){
             setHomePositionTimeout(event)
         }
     }
+    function setHomePositionPreset(e){
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                setPresetForCurrentPosition({
+                    ke: e.ke,
+                    id: monitorId
+                },(endData) => {
+                    if(endData.ok === false){
+                        setTimeout(() => {
+                            setPresetForCurrentPosition({
+                                ke: e.ke,
+                                id: monitorId
+                            },(endData) => {
+                                if(endData.ok === false){
+                                    setTimeout(() => {
+                                        setPresetForCurrentPosition({
+                                            ke: e.ke,
+                                            id: monitorId
+                                        },(endData) => {
+                                            console.log(endData)
+                                            resolve()
+                                        })
+                                    },5000)
+                                }else{
+                                    resolve()
+                                }
+                            })
+                        },5000)
+                    }else{
+                        resolve()
+                    }
+                })
+            },5000)
+        })
+    }
     return {
         startMove,
         stopMove,
@@ -421,5 +456,6 @@ module.exports = function(s,config,lang){
         setPresetForCurrentPosition,
         moveToPresetPosition,
         moveCameraPtzToMatrix,
+        setHomePositionPreset,
     }
 }

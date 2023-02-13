@@ -27,7 +27,7 @@ module.exports = function(s,config){
             {name: 'ip', type: 'string'},
             {name: 'code', length: 100, type: 'string'},
             {name: 'details', type: 'text'},
-            {name: 'time', type: 'timestamp'},
+            {name: 'time', type: 'timestamp', defaultTo: currentTimestamp()},
         ]);
         await createTable('LoginTokens',[
             isMySQL ? {name: 'utf8', type: 'charset'} : null,
@@ -50,7 +50,7 @@ module.exports = function(s,config){
             {name: 'details', type: 'text'},
             {name: 'status', type: 'integer', length: 1, defaultTo: 0},
             {name: 'archive', type: 'tinyint', length: 1, defaultTo: 0},
-            {name: 'time', type: 'timestamp'},
+            {name: 'time', type: 'timestamp', defaultTo: currentTimestamp()},
         ]);
         await createTable('Videos',[
             isMySQL ? {name: 'utf8', type: 'charset'} : null,
@@ -63,8 +63,8 @@ module.exports = function(s,config){
             {name: 'archive', type: 'tinyint', length: 1, defaultTo: 0},
             {name: 'objects', length: 510, type: 'string'},
             {name: 'saveDir', length: 255, type: 'string'},
-            {name: 'time', type: 'timestamp'},
-            {name: 'end', type: 'timestamp'},
+            {name: 'time', type: 'timestamp', defaultTo: currentTimestamp()},
+            {name: 'end', type: 'timestamp', defaultTo: currentTimestamp()},
             {name: 'details', type: 'text'},
             // KEY `videos_index` (`time`)
             {name: ['time'], type: 'index', length: 'videos_index'},
@@ -80,8 +80,8 @@ module.exports = function(s,config){
             {name: 'status', type: 'integer', length: 1, defaultTo: 0},
             {name: 'archive', type: 'tinyint', length: 1, defaultTo: 0},
             {name: 'objects', length: 510, type: 'string'},
-            {name: 'time', type: 'timestamp'},
-            {name: 'end', type: 'timestamp'},
+            {name: 'time', type: 'timestamp', defaultTo: currentTimestamp()},
+            {name: 'end', type: 'timestamp', defaultTo: currentTimestamp()},
         ]);
         await createTable('Events',[
             isMySQL ? {name: 'utf8', type: 'charset'} : null,
@@ -90,7 +90,7 @@ module.exports = function(s,config){
             {name: 'mid', length: 100, type: 'string'},
             {name: 'details', type: 'text'},
             {name: 'archive', type: 'tinyint', length: 1, defaultTo: 0},
-            {name: 'time', type: 'timestamp'},
+            {name: 'time', type: 'timestamp', defaultTo: currentTimestamp()},
             // KEY `events_index` (`ke`,`mid`,`time`)
             {name: ['ke', 'mid', 'time'], type: 'index', length: 'events_index'},
         ]);
@@ -102,8 +102,8 @@ module.exports = function(s,config){
             {name: 'tag', length: 30, type: 'string'},
             {name: 'details', type: 'text'},
             {name: 'count', type: 'integer', length: 10, defaultTo: 1},
-            {name: 'time', type: 'timestamp'},
-            {name: 'end', type: 'timestamp'},
+            {name: 'time', type: 'timestamp', defaultTo: currentTimestamp()},
+            {name: 'end', type: 'timestamp', defaultTo: currentTimestamp()},
         ]);
         await createTable('Timelapse Frames',[
             isMySQL ? {name: 'utf8', type: 'charset'} : null,
@@ -111,7 +111,7 @@ module.exports = function(s,config){
             {name: 'ke', length: 50, type: 'string'},
             {name: 'mid', length: 100, type: 'string'},
             {name: 'filename', length: 50, type: 'string'},
-            {name: 'time', type: 'timestamp'},
+            {name: 'time', type: 'timestamp', defaultTo: currentTimestamp()},
             {name: 'size', type: 'integer'},
             {name: 'archive', length: 1, type: 'tinyint', defaultTo: 0},
             {name: 'saveDir', length: 255, type: 'string'},
@@ -126,7 +126,7 @@ module.exports = function(s,config){
             {name: 'mid', length: 100, type: 'string'},
             {name: 'href', type: 'text'},
             {name: 'filename', length: 50, type: 'string'},
-            {name: 'time', type: 'timestamp'},
+            {name: 'time', type: 'timestamp', defaultTo: currentTimestamp()},
             {name: 'size', type: 'integer'},
             {name: 'details', type: 'text'},
         ]);
@@ -150,8 +150,8 @@ module.exports = function(s,config){
             {name: 'type', type: 'string', length: 25, defaultTo: 'h264'},
             {name: 'ext', type: 'string', length: 10, defaultTo: 'mp4'},
             {name: 'protocol', type: 'string', length: 10, defaultTo: 'rtsp'},
-            {name: 'host', type: 'string', length: 100, defaultTo: '0.0.0.0'},
-            {name: 'path', type: 'string', length: 100, defaultTo: '/'},
+            {name: 'host', type: 'string', length: 255, defaultTo: '0.0.0.0'},
+            {name: 'path', type: 'string', length: 255, defaultTo: '/'},
             {name: 'port', type: 'integer', length: 8, defaultTo: 554},
             {name: 'fps', type: 'integer', length: 8},
             {name: 'mode', type: 'string', length: 15},
