@@ -1374,6 +1374,7 @@ module.exports = function(s,config,lang,app,io){
                             dataPipe.pipe(res)
                         }).catch((err) => {
                             console.error('onGetVideoData ERROR',err,videoDetails)
+                            res.status(404)
                             res.end(user.lang['File Not Found in Database'])
                         })
                     }else{
@@ -1383,6 +1384,7 @@ module.exports = function(s,config,lang,app,io){
                         })
                     }
                 }else{
+                    res.status(404)
                     res.end(user.lang['File Not Found in Database'])
                 }
             })
@@ -1463,6 +1465,7 @@ module.exports = function(s,config,lang,app,io){
                     if(videoRow){
                         sendVideo(videoRow)
                     }else{
+                        res.status(404)
                         res.end(user.lang['File Not Found in Database'])
                     }
                 })
