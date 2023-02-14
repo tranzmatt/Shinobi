@@ -1,12 +1,12 @@
 const fs = require("fs")
 const fetch = require("node-fetch")
 module.exports = function(s,config,lang,getSnapshot){
-    const sdk = require("matrix-js-sdk")
     const {
         getEventBasedRecordingUponCompletion,
     } = require('../events/utils.js')(s,config,lang)
     //matrix bot
     if(config.matrixBot === true){
+        const sdk = require("matrix-js-sdk")
         try{
             function sendFile(file,groupKey){
                 const client = s.group[groupKey].matrixBot
