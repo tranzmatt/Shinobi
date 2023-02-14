@@ -3,8 +3,8 @@ const path = require('path');
 const moment = require('moment');
 const exec = require('child_process').exec;
 const spawn = require('child_process').spawn;
-const { parentPort, isMainThread } = require('worker_threads');
-const config = require(process.cwd() + '/conf.json')
+const { parentPort, isMainThread, workerData } = require('worker_threads');
+const config = workerData
 process.on('uncaughtException', function (err) {
     errorLog('uncaughtException',err);
 });
