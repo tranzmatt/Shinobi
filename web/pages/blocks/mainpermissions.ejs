@@ -35,9 +35,36 @@ function saveAccountSettings(){
         postData.account = $.aN.selected
     }
     $.post(superApiPrefix + $user.sessionKey+'/accounts/'+webPath,postData,function(data){
-        console.log(data)
-        if(data.ok === true){
-            $.aN.e.modal('hide')
+        if(webPath === 'editAdmin'){
+            if(data.ok === true){
+                $.aN.e.modal('hide')
+                new PNotify({
+                    title: lang['Account Edited'],
+                    text: lang.adminAccountEditedMsg,
+                    type: 'success'
+                })
+            }else{
+                new PNotify({
+                    title: lang.accountEditError,
+                    text: lang['Failed to Edit Account'],
+                    type: 'error'
+                })
+            }
+        }else{
+            if(data.ok === true){
+                $.aN.e.modal('hide')
+                new PNotify({
+                    title: lang['Account Created'],
+                    text: lang.adminAccountCreatedMsg,
+                    type: 'success'
+                })
+            }else{
+                new PNotify({
+                    title: lang.accountCreationError,
+                    text: data.msg + '<br>' + lang.createSubAccountsInfo,
+                    type: 'error'
+                })
+            }
         }
     })
 }
@@ -54,7 +81,11 @@ $.aN.e.on('change','[name="mail"]',function(){
     var thisVal = $(this).val()
     $.each(loadedUsers,function(n,user){
         if($.aN.selected && user.ke !== $.aN.selected.ke && thisVal.toLowerCase() === user.mail.toLowerCase()){
-            new PNotify({text:lang['Email address is in use.'],type:'error'})
+            new PNotify({
+                title: lang.accountCreationError,
+                text: lang['Email address is in use.'],
+                type: 'error'
+            })
         }
     })
 })
@@ -63,7 +94,11 @@ $.aN.e.on('change','[name="ke"]',function(){
     var thisVal = $(this).val()
     $.each(loadedUsers,function(n,user){
         if(!$.aN.modeIsEdit() && user.ke === thisVal){
-            new PNotify({text:lang['Group Key is in use.'] + ' ' + lang['Create Sub-Accounts at /admin'],type:'error'})
+            new PNotify({
+                title: lang.accountCreationError,
+                text: lang['Group Key is in use.'] + ' ' + lang.createSubAccountsInfo,
+                type: 'error'
+            })
         }
     })
 })

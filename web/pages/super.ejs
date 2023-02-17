@@ -54,8 +54,7 @@
                 <ul class="nav navbar-nav navbar-right">
                     <li class="nav-item">
                         <a class="nav-link logout">
-                            <i class="fa fa-sign-out-alt"></i>
-                            <p class="d-lg-none d-xl-none"><%-lang.Logout%></p>
+                            <p><%-lang.Logout%></p>
                         </a>
                     </li>
                 </ul>
@@ -244,14 +243,12 @@ $.ccio.ws.on('f',function(d){
             d.msg = 'Saved Preferences'
         break;
         case'edit_account':
-            d.msg='Account Edited';
             $.each(d.form,function(n,v){
                 $.ccio.accounts[d.ke][n]=v
             })
             $('[ke="'+d.ke+'"] .mail').text(d.form.mail)
         break;
         case'add_account':
-            d.msg='Account Created';
             $.ccio.tm(0,d,'#accounts-list')
             $.aN.selected = $.ccio.accounts[d.ke]
         break;
