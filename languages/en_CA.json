@@ -562,6 +562,8 @@
    "Email address is in use.": "Email address is in use.",
    "Account Created": "Account Created",
    "Account Edited": "Account Edited",
+   "Compression Info": "Compression Info",
+   "Compression Error": "Compression Error",
    "Group Key is in use.": "Group Key is in use.",
    "adminAccountCreatedMsg": "Your account has been created. Access the account at the primary login page (Non-Superuser).",
    "adminAccountEditedMsg": "Your account has been edited. You may need to restart Shinobi for some changes to take effect.",

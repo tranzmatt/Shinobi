@@ -427,6 +427,8 @@ module.exports = (s,config,lang) => {
                             },'GRP_'+groupKey);
                             onPercentChange(percent)
                             s.debugLog('stderr',outputFilePath,`${percent}%`)
+                        }else{
+                            s.debugLog('stderr',lang['Compression Info'],text)
                         }
                     })
                     videoBuildProcess.on('exit',async function(data){
