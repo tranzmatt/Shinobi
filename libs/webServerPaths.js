@@ -1848,9 +1848,6 @@ module.exports = function(s,config,lang,app,io){
                             response.ok = true
                             reEncodeVideoAndBinOriginalAddToQueue({
                                 video: r,
-                                targetVideoCodec: 'vp9',
-                                targetAudioCodec: 'libopus',
-                                targetQuality: '-q:v 1 -q:a 1',
                                 targetExtension: 'webm',
                                 doSlowly: false
                             }).then((encodeResponse) => {
