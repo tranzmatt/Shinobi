@@ -292,36 +292,40 @@ module.exports = function(s,config,lang,app){
                                 //found address already exists
                                 endData.msg = lang['Email address is in use.'];
                             }else{
-                                endData.ok = true
                                 //create new
                                 //user id
                                 form.uid = s.gid()
                                 //check to see if custom key set
-                                if(!form.ke||form.ke===''){
-                                    form.ke=s.gid()
+                                if(!form.ke){
+                                    form.ke = s.gid()
                                 }else{
-                                    form.ke = form.ke.replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, '')
+                                    form.ke = form.ke.replace(/[`~!@#$%^&*()_|+\-=?;:'",.<>\{\}\[\]\\\/]/gi, '').trim()
                                 }
-                                //check if "details" is object
-                                if(form.details instanceof Object){
-                                    form.details = JSON.stringify(form.details)
-                                }
-                                //write user to db
-                                s.knexQuery({
-                                    action: "insert",
-                                    table: "Users",
-                                    insert: {
-                                        ke: form.ke,
-                                        uid: form.uid,
-                                        mail: form.mail,
-                                        pass: s.createHash(form.pass),
-                                        details: form.details
+                                if(!s.group[form.ke]){
+                                    endData.ok = true
+                                    //check if "details" is object
+                                    if(form.details instanceof Object){
+                                        form.details = JSON.stringify(form.details)
                                     }
-                                })
-                                s.tx({f:'add_account',details:form.details,ke:form.ke,uid:form.uid,mail:form.mail},'$')
-                                endData.user = Object.assign(form,{})
-                                //init user
-                                s.loadGroup(form)
+                                    //write user to db
+                                    s.knexQuery({
+                                        action: "insert",
+                                        table: "Users",
+                                        insert: {
+                                            ke: form.ke,
+                                            uid: form.uid,
+                                            mail: form.mail,
+                                            pass: s.createHash(form.pass),
+                                            details: form.details
+                                        }
+                                    });
+                                    s.tx({f:'add_account',details:form.details,ke:form.ke,uid:form.uid,mail:form.mail},'$')
+                                    endData.user = Object.assign(form,{})
+                                    //init user
+                                    s.loadGroup(form)
+                                }else{
+                                    endData.msg = lang["Group with this key exists already"]
+                                }
                             }
                             close()
                         })

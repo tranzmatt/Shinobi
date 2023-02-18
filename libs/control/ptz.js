@@ -360,10 +360,19 @@ module.exports = function(s,config,lang){
             })
         },7000)
     }
-    const getLargestMatrix = (matrices) => {
+    const getLargestMatrix = (matrices,imgWidth,imgHeight) => {
         var largestMatrix = {width: 0, height: 0}
+        const maxWidth = imgWidth * 0.95;
+        const maxHeight = imgHeight * 0.95;
         matrices.forEach((matrix) => {
-            if(matrix.width > largestMatrix.width && matrix.height > largestMatrix.height)largestMatrix = matrix
+            const matrixWidth = matrix.width
+            const matrixHeight = matrix.height
+            if(
+                matrixWidth > largestMatrix.width &&
+                matrixHeight > largestMatrix.height &&
+                matrixWidth <= maxWidth &&
+                matrixHeight <= maxHeight
+            )largestMatrix = matrix;
         })
         return largestMatrix.x ? largestMatrix : null
     }
@@ -377,7 +386,7 @@ module.exports = function(s,config,lang){
         const imageCenterX = imgWidth / 2
         const imageCenterY = imgHeight / 2
         const matrices = event.details.matrices || []
-        const largestMatrix = getLargestMatrix(matrices.filter(matrix => trackingTarget.indexOf(matrix.tag) > -1))
+        const largestMatrix = getLargestMatrix(matrices.filter(matrix => trackingTarget.indexOf(matrix.tag) > -1),imgWidth,imgHeight)
         if(!largestMatrix)return;
         const monitorConfig = s.group[event.ke].rawMonitorConfigurations[event.id]
         const invertedVerticalAxis = monitorConfig.details.control_invert_y === '1'
@@ -414,6 +423,7 @@ module.exports = function(s,config,lang){
         }
     }
     function setHomePositionPreset(e){
+        const monitorId = e.mid || e.id
         return new Promise((resolve) => {
             setTimeout(() => {
                 setPresetForCurrentPosition({
