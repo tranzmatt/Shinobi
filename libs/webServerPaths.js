@@ -790,8 +790,9 @@ module.exports = function(s,config,lang,app,io){
                         r[n].status = activeMonitor.monitorStatus
                         r[n].code = activeMonitor.monitorStatusCode
                         r[n].subStreamChannel = activeMonitor.subStreamChannel
+                        r[n].subStreamActive = !!activeMonitor.subStreamProcess
                     }
-                    var buildStreamURL = function(type,channelNumber){
+                    function getStreamUrl(type,channelNumber){
                         var streamURL
                         if(channelNumber){channelNumber = '/'+channelNumber}else{channelNumber=''}
                         switch(type){
@@ -810,7 +811,22 @@ module.exports = function(s,config,lang,app,io){
                             case'mp4':
                                 streamURL='/'+req.params.auth+'/mp4/'+v.ke+'/'+v.mid+channelNumber+'/s.mp4'
                             break;
+                            case'useSubstream':
+                                try{
+                                    const monitorConfig = s.group[v.ke].rawMonitorConfigurations[v.mid]
+                                    const monitorDetails = monitorConfig.details
+                                    const subStreamChannelNumber = 1 + (monitorDetails.stream_channels || []).length
+                                    const subStreamType = monitorConfig.details.substream.output.stream_type
+                                    streamURL = getStreamUrl(subStreamType,subStreamChannelNumber)
+                                }catch(err){
+                                    s.debugLog(err)
+                                }
+                            break;
                         }
+                        return streamURL
+                    }
+                    var buildStreamURL = function(type,channelNumber){
+                        var streamURL = getStreamUrl(type,channelNumber)
                         if(streamURL){
                             if(!r[n].streamsSortedByType[type]){
                                 r[n].streamsSortedByType[type]=[]
@@ -1374,6 +1390,7 @@ module.exports = function(s,config,lang,app,io){
                             dataPipe.pipe(res)
                         }).catch((err) => {
                             console.error('onGetVideoData ERROR',err,videoDetails)
+                            res.status(404)
                             res.end(user.lang['File Not Found in Database'])
                         })
                     }else{
@@ -1383,6 +1400,7 @@ module.exports = function(s,config,lang,app,io){
                         })
                     }
                 }else{
+                    res.status(404)
                     res.end(user.lang['File Not Found in Database'])
                 }
             })
@@ -1463,6 +1481,7 @@ module.exports = function(s,config,lang,app,io){
                     if(videoRow){
                         sendVideo(videoRow)
                     }else{
+                        res.status(404)
                         res.end(user.lang['File Not Found in Database'])
                     }
                 })
@@ -1829,9 +1848,6 @@ module.exports = function(s,config,lang,app,io){
                             response.ok = true
                             reEncodeVideoAndBinOriginalAddToQueue({
                                 video: r,
-                                targetVideoCodec: 'vp9',
-                                targetAudioCodec: 'libopus',
-                                targetQuality: '-q:v 1 -q:a 1',
                                 targetExtension: 'webm',
                                 doSlowly: false
                             }).then((encodeResponse) => {

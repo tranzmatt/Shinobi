@@ -590,9 +590,6 @@ module.exports = (s,config,lang,app,io) => {
                         if(autoCompressionEnabled){
                             reEncodeVideoAndBinOriginalAddToQueue({
                                 video: response.insertQuery,
-                                targetVideoCodec: 'vp9',
-                                targetAudioCodec: 'libopus',
-                                targetQuality: '-q:v 1 -q:a 1',
                                 targetExtension: 'webm',
                                 doSlowly: false,
                                 automated: true,

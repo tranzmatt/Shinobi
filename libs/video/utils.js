@@ -323,13 +323,14 @@ module.exports = (s,config,lang) => {
     function reEncodeVideoAndBinOriginalAddToQueue(data){
         const groupKey = data.video.ke
         if(!reEncodeVideoAndBinOriginalQueue[groupKey]){
-            reEncodeVideoAndBinOriginalQueue[groupKey] = async.queue(async function(data, callback) {
-                const response = await reEncodeVideoAndBinOriginal(data)
-                callback(response)
+            reEncodeVideoAndBinOriginalQueue[groupKey] = async.queue(function(data, callback) {
+                reEncodeVideoAndBinOriginal(data).then((response) => {
+                    callback(response)
+                })
             }, 1);
         }
         return new Promise((resolve) => {
-            reEncodeVideoAndBinOriginalQueue[groupKey].push(data,(response) => {
+            reEncodeVideoAndBinOriginalQueue[groupKey].push(data, function(response){
                 resolve(response)
             })
         })
@@ -348,7 +349,7 @@ module.exports = (s,config,lang) => {
         targetAudioCodec = targetAudioCodec || `copy`
         targetQuality = targetQuality || ``
         onPercentChange = onPercentChange || function(){};
-        if(!targetVideoCodec || !targetAudioCodec){
+        if(!targetVideoCodec || !targetAudioCodec || !targetQuality){
             switch(targetExtension){
                 case'mp4':
                     targetVideoCodec = `libx264`
@@ -359,7 +360,7 @@ module.exports = (s,config,lang) => {
                 case'mkv':
                     targetVideoCodec = `vp9`
                     targetAudioCodec = `libopus`
-                    targetQuality = `-q:v 1 -q:a 1`
+                    targetQuality = `-q:v 1 -b:a 96K`
                 break;
             }
         }
@@ -427,6 +428,8 @@ module.exports = (s,config,lang) => {
                             },'GRP_'+groupKey);
                             onPercentChange(percent)
                             s.debugLog('stderr',outputFilePath,`${percent}%`)
+                        }else{
+                            s.debugLog('stderr',lang['Compression Info'],text)
                         }
                     })
                     videoBuildProcess.on('exit',async function(data){

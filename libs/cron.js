@@ -7,7 +7,9 @@ module.exports = (s,config,lang) => {
     if(config.doCronAsWorker===undefined)config.doCronAsWorker = true;
     const startWorker = () => {
         const pathToWorkerScript = __dirname + `/cron/worker.js`
-        const workerProcess = new Worker(pathToWorkerScript)
+        const workerProcess = new Worker(pathToWorkerScript,{
+            workerData: config
+        })
         workerProcess.on('message',function(data){
             if(data.time === 'moment()')data.time = moment();
             switch(data.f){
