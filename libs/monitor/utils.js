@@ -73,6 +73,7 @@ module.exports = (s,config,lang) => {
                 doResolve(response)
             }
             try{
+                proc.removeAllListeners()
                 proc.on('exit',() => {
                     response.msg = 'proc.on.exit'
                     clearTimeout(killTimer)
@@ -148,6 +149,7 @@ module.exports = (s,config,lang) => {
             clearInterval(activeMonitor.getMonitorCpuUsage);
             clearInterval(activeMonitor.objectCountIntervals);
             clearTimeout(activeMonitor.timeoutToRestart)
+            clearTimeout(activeMonitor.fatalErrorTimeout);
             delete(activeMonitor.onvifConnection)
             // if(activeMonitor.onChildNodeExit){
             //     activeMonitor.onChildNodeExit()
@@ -709,7 +711,7 @@ module.exports = (s,config,lang) => {
             clearTimeout(activeMonitor.trigger_timer)
             delete(activeMonitor.trigger_timer)
             clearInterval(activeMonitor.detector_notrigger_timeout)
-            clearTimeout(activeMonitor.err_fatal_timeout);
+            clearTimeout(activeMonitor.fatalErrorTimeout);
             activeMonitor.isStarted = false
             activeMonitor.isRecording = false
             s.tx({f:'monitor_stopping',mid:monitorId,ke:groupKey,time:s.formattedTime()},'GRP_'+groupKey);
@@ -1119,7 +1121,7 @@ module.exports = (s,config,lang) => {
         }
         if(e.details.record_timelapse === '1'){
             var timelapseRecordingDirectory = s.getTimelapseFrameDirectory(e)
-            activeMonitor.spawn.stdio[7].on('data',function(data){
+            activeMonitor.spawn.stdio[7].on('data', async function(data){
                 var fileStream = activeMonitor.recordTimelapseWriter
                 if(!fileStream){
                     var currentDate = s.formattedTime(null,'YYYY-MM-DD')
@@ -1219,7 +1221,7 @@ module.exports = (s,config,lang) => {
             activeMonitor.spawn.stdout.on('data',frameToStreamPrimary)
         }
         if(e.details.stream_channels && e.details.stream_channels !== ''){
-            e.details.stream_channels.forEach((fields,number) => {
+            s.parseJSON(e.details.stream_channels,{}).forEach((fields,number) => {
                 attachStreamChannelHandlers({
                     ke: groupKey,
                     mid: monitorId,
@@ -1267,9 +1269,6 @@ module.exports = (s,config,lang) => {
                         s.debugLog('Queue Automatic Compression',response.insertQuery)
                         reEncodeVideoAndBinOriginalAddToQueue({
                             video: response.insertQuery,
-                            targetVideoCodec: 'vp9',
-                            targetAudioCodec: 'libopus',
-                            targetQuality: '-q:v 1 -q:a 1',
                             targetExtension: 'webm',
                             doSlowly: false,
                             automated: true,
@@ -1284,6 +1283,19 @@ module.exports = (s,config,lang) => {
                 resetRecordingCheck(e)
             }
         })
+    }
+    async function doFatalErrorCatch(e,d){
+        const groupKey = e.ke
+        const monitorId = e.mid || e.id
+        if(activeMonitor.isStarted === true){
+            const activeMonitor = getActiveMonitor(groupKey,monitorId)
+            activeMonitor.isStarted = false
+            await cameraDestroy(e)
+            activeMonitor.isStarted = true
+            fatalError(e,d)
+        }else{
+            await cameraDestroy(e)
+        }
     }
     function cameraFilterFfmpegLog(e){
         var checkLog = function(d,x){return d.indexOf(x)>-1}
@@ -1323,30 +1335,18 @@ module.exports = (s,config,lang) => {
                 break;
                 case checkLog(d,'Connection refused'):
                 case checkLog(d,'Connection timed out'):
-                    //restart
-                    activeMonitor.timeoutToRestart = setTimeout(function(){
-                        s.userLog(e,{type:lang['Connection timed out'],msg:lang['Retrying...']});
-                        fatalError(e,'Connection timed out');
-                    },1000)
-                break;
                 case checkLog(d,'Immediate exit requested'):
-                    await cameraDestroy(e)
-                    activeMonitor.timeoutToRestart = setTimeout(() => {
-                        launchMonitorProcesses(e)
-                    },15000)
-                break;
                 case checkLog(d,'mjpeg_decode_dc'):
                 case checkLog(d,'bad vlc'):
+                case checkLog(d,'does not contain an image sequence pattern or a pattern is invalid.'):
                 case checkLog(d,'error dc'):
-                    await cameraDestroy(e)
-                    activeMonitor.timeoutToRestart = setTimeout(() => {
-                        launchMonitorProcesses(e)
-                    },15000)
+                    // activeMonitor.timeoutToRestart = setTimeout(() => {
+                    //     doFatalErrorCatch(e,d)
+                    // },15000)
                 break;
                 case checkLog(d,'No route to host'):
-                    await cameraDestroy(e)
-                    activeMonitor.timeoutToRestart = setTimeout(() => {
-                        launchMonitorProcesses(e)
+                    activeMonitor.timeoutToRestart = setTimeout(async () => {
+                        doFatalErrorCatch(e,d)
                     },60000)
                 break;
             }
@@ -1425,6 +1425,7 @@ module.exports = (s,config,lang) => {
         const monitorConfig = theGroup.rawMonitorConfigurations[monitorId]
         const doPingTest = e.type !== 'socket' && e.type !== 'dashcam' && e.protocol !== 'udp' && e.type !== 'local' && e.details.skip_ping !== '1';
         const startMonitorInQueue = theGroup.startMonitorInQueue
+        if(!activeMonitor.isStarted)return;
         // e = monitor object
         clearTimeout(activeMonitor.resetFatalErrorCountTimer)
         activeMonitor.resetFatalErrorCountTimer = setTimeout(()=>{
@@ -1601,17 +1602,18 @@ module.exports = (s,config,lang) => {
         const groupKey = e.ke
         const monitorId = e.mid || e.id
         const activeMonitor = getActiveMonitor(groupKey,monitorId)
-        const monitorDetails = getMonitorConfiguration(groupKey,monitorId).details
+        const monitorConfig = copyMonitorConfiguration(groupKey,monitorId)
+        const monitorDetails = monitorConfig.details
         const maxCount = !monitorDetails.fatal_max || isNaN(monitorDetails.fatal_max) ? 0 : parseFloat(monitorDetails.fatal_max);
-        clearTimeout(activeMonitor.err_fatal_timeout);
+        clearTimeout(activeMonitor.fatalErrorTimeout);
         ++activeMonitor.errorFatalCount;
         if(activeMonitor.isStarted === true){
-            activeMonitor.err_fatal_timeout = setTimeout(function(){
+            activeMonitor.fatalErrorTimeout = setTimeout(function(){
                 if(maxCount !== 0 && activeMonitor.errorFatalCount > maxCount){
                     s.userLog(e,{type:lang["Fatal Error"],msg:lang.onFatalErrorExit});
                     s.camera('stop',{mid:monitorId,ke:groupKey})
                 }else{
-                    launchMonitorProcesses(s.cleanMonitorObject(e))
+                    launchMonitorProcesses(monitorConfig)
                 };
             },5000);
         }else{
@@ -1623,7 +1625,6 @@ module.exports = (s,config,lang) => {
             status: lang.Died,
             code: 7
         });
-        const monitorConfig = copyMonitorConfiguration(groupKey,monitorId)
         s.onMonitorDiedExtensions.forEach(function(extender){
             extender(monitorConfig,e)
         })
@@ -1753,6 +1754,7 @@ module.exports = (s,config,lang) => {
         copyMonitorConfiguration,
         getMonitorConfiguration,
         isGroupBelowMaxMonitorCount,
+        setNoEventsDetector,
         cameraDestroy: cameraDestroy,
         createSnapshot: createSnapshot,
         processKill: processKill,
