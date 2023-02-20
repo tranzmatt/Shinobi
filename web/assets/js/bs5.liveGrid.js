@@ -340,13 +340,13 @@ function drawLiveGridBlock(monitorConfig,subStreamChannel){
 }
 function initiateLiveGridPlayer(monitor,subStreamChannel){
     var monitorId = monitor.mid
-    var livePlayerElement = loadedLiveGrids[monitorId]
-    var monitorItem = liveGridElements[monitorId].monitorItem
     var details = monitor.details
     var groupKey = monitor.ke
     var monitorId = monitor.mid
+    var livePlayerBlocks = liveGridElements[monitorId]
+    var monitorItem = livePlayerBlocks.monitorItem
     var loadedMonitor = loadedMonitors[monitorId]
-    var loadedPlayer = loadedLiveGrids[monitor.mid]
+    var loadedPlayer = loadedLiveGrids[monitorId]
     var websocketPath = checkCorrectPathEnding(location.pathname) + 'socket.io'
     var containerElement = $(`#monitor_live_${monitor.mid}`)
     var streamType = subStreamChannel ? details.substream ? details.substream.output.stream_type : 'hls' : details.stream_type
