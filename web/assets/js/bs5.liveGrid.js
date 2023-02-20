@@ -7,7 +7,7 @@ var liveGridData = null
 var liveGridOpenCountElements = $('.liveGridOpenCount')
 var liveGridOpenCount = 0
 var liveGridPauseScrollTimeout = null;
-var liveGridPauseStates = {};
+var liveGridPlayingNow = {};
 //
 var onLiveStreamInitiateExtensions = []
 function onLiveStreamInitiate(callback){
@@ -351,13 +351,10 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
     var containerElement = $(`#monitor_live_${monitor.mid}`)
     var streamType = subStreamChannel ? details.substream ? details.substream.output.stream_type : 'hls' : details.stream_type
     var isInView = isScrolledIntoView(monitorItem[0])
-    if(location.search === '?p2p=1'){
-        websocketPath = '/socket.io'
-        // websocketQuery.machineId = machineId
-    }
     if(!isInView){
         return;
     }
+    liveGridPlayingNow[monitorId] = true
     switch(streamType){
             case'jpeg':
                 startJpegStream(monitorId)
@@ -882,12 +879,12 @@ function signalCheckLiveStream(options){
 }
 
 function pauseMonitorItem(monitorId){
-    liveGridPauseStates[monitorId] = false
+    liveGridPlayingNow[monitorId] = false
     closeLiveGridPlayer(monitorId,false)
 }
 function resumeMonitorItem(monitorId){
     // needs to know about substream
-    liveGridPauseStates[monitorId] = true
+    liveGridPlayingNow[monitorId] = true
     resetMonitorCanvas(monitorId,true,null)
 }
 function isScrolledIntoView(elem){
@@ -920,7 +917,7 @@ function setPauseStatusForMonitorItems(){
         var isVisible = isScrolledIntoView(el)
         console.log(monitorId,isVisible)
         if(isVisible){
-            if(!liveGridPauseStates[monitorId])resumeMonitorItem(monitorId);
+            if(!liveGridPlayingNow[monitorId])resumeMonitorItem(monitorId);
         }else{
             pauseMonitorItem(monitorId)
         }
@@ -931,7 +928,7 @@ function setPauseScrollTimeout(){
     if(tabTree.name === 'liveGrid'){
         liveGridPauseScrollTimeout = setTimeout(function(){
             setPauseStatusForMonitorItems()
-        },1500)
+        },700)
     }
 }
 $(document).ready(function(e){
