@@ -331,16 +331,16 @@ module.exports = function(s,config,lang){
                       "value": "us-west-1"
                    },
                    {
-                      "name": "US West 2)",
+                      "name": "US West 2",
                       "value": "us-west-2"
                    },
                    {
                       "name": "US East 1",
-                      "value": "us-east-2"
+                      "value": "us-east-1"
                    },
                    {
                       "name": "US East 2",
-                      "value": "us-east-1"
+                      "value": "us-east-2"
                    },
                    {
                       "name": "Asia Pacific 1",
