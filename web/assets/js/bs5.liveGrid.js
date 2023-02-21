@@ -6,6 +6,8 @@ var liveGrid = $('#monitors_live')
 var liveGridData = null
 var liveGridOpenCountElements = $('.liveGridOpenCount')
 var liveGridOpenCount = 0
+var liveGridPauseScrollTimeout = null;
+var liveGridPlayingNow = {};
 //
 var onLiveStreamInitiateExtensions = []
 function onLiveStreamInitiate(callback){
@@ -337,222 +339,225 @@ function drawLiveGridBlock(monitorConfig,subStreamChannel){
     }
 }
 function initiateLiveGridPlayer(monitor,subStreamChannel){
-    var livePlayerElement = loadedLiveGrids[monitor.mid]
+    var monitorId = monitor.mid
     var details = monitor.details
     var groupKey = monitor.ke
     var monitorId = monitor.mid
+    var livePlayerBlocks = liveGridElements[monitorId]
+    var monitorItem = livePlayerBlocks.monitorItem
     var loadedMonitor = loadedMonitors[monitorId]
-    var loadedPlayer = loadedLiveGrids[monitor.mid]
+    var loadedPlayer = loadedLiveGrids[monitorId]
     var websocketPath = checkCorrectPathEnding(location.pathname) + 'socket.io'
     var containerElement = $(`#monitor_live_${monitor.mid}`)
     var streamType = subStreamChannel ? details.substream ? details.substream.output.stream_type : 'hls' : details.stream_type
-    if(location.search === '?p2p=1'){
-        websocketPath = '/socket.io'
-        // websocketQuery.machineId = machineId
+    var isInView = isScrolledIntoView(monitorItem[0])
+    if(!isInView){
+        return;
     }
+    liveGridPlayingNow[monitorId] = true
     switch(streamType){
-        case'jpeg':
-            startJpegStream(monitorId)
-        break;
-        case'b64':
-            if(loadedPlayer.Base64 && loadedPlayer.Base64.connected){
-                loadedPlayer.Base64.disconnect()
-            }
-            loadedPlayer.Base64 = io(location.origin,{ path: websocketPath, query: websocketQuery, transports: ['websocket'], forceNew: false})
-            var ws = loadedPlayer.Base64
-            var buffer
-            ws.on('diconnect',function(){
-                console.log('Base64 Stream Disconnected')
-            })
-            ws.on('connect',function(){
-                ws.emit('Base64',{
-                    auth: $user.auth_token,
-                    uid: $user.uid,
-                    ke: monitor.ke,
-                    id: monitor.mid,
-                    channel: subStreamChannel
+            case'jpeg':
+                startJpegStream(monitorId)
+            break;
+            case'b64':
+                if(loadedPlayer.Base64 && loadedPlayer.Base64.connected){
+                    loadedPlayer.Base64.disconnect()
+                }
+                loadedPlayer.Base64 = io(location.origin,{ path: websocketPath, query: websocketQuery, transports: ['websocket'], forceNew: false})
+                var ws = loadedPlayer.Base64
+                var buffer
+                ws.on('diconnect',function(){
+                    console.log('Base64 Stream Disconnected')
                 })
-                if(!loadedPlayer.ctx || loadedPlayer.ctx.length === 0){
-                    loadedPlayer.ctx = containerElement.find('canvas');
-                }
-                var ctx = loadedPlayer.ctx[0]
-                var ctx2d = ctx.getContext("2d")
-                loadedPlayer.image = new Image()
-                var image = loadedPlayer.image
-                image.onload = function() {
-                    loadedPlayer.imageLoading = false
-                    var x = 0
-                    var y = 0
-                    ctx.getContext("2d").drawImage(image,x,y,ctx.width,ctx.height)
-                    URL.revokeObjectURL(loadedPlayer.imageUrl)
-                }
-                ws.on('data',function(imageData){
-                    try{
-                        if(loadedPlayer.imageLoading === true)return console.log('drop');
-                        loadedPlayer.imageLoading = true
-                        var arrayBufferView = new Uint8Array(imageData);
-                        var blob = new Blob( [ arrayBufferView ], { type: "image/jpeg" } );
-                        loadedPlayer.imageUrl = URL.createObjectURL( blob );
-                        loadedPlayer.image.src = loadedPlayer.imageUrl
-                        loadedPlayer.last_frame = 'data:image/jpeg;base64,'+base64ArrayBuffer(imageData)
-                    }catch(er){
-                        debugLog('base64 frame')
+                ws.on('connect',function(){
+                    ws.emit('Base64',{
+                        auth: $user.auth_token,
+                        uid: $user.uid,
+                        ke: monitor.ke,
+                        id: monitor.mid,
+                        channel: subStreamChannel
+                    })
+                    if(!loadedPlayer.ctx || loadedPlayer.ctx.length === 0){
+                        loadedPlayer.ctx = containerElement.find('canvas');
                     }
-                    // $.ccio.init('signal',d);
+                    var ctx = loadedPlayer.ctx[0]
+                    var ctx2d = ctx.getContext("2d")
+                    loadedPlayer.image = new Image()
+                    var image = loadedPlayer.image
+                    image.onload = function() {
+                        loadedPlayer.imageLoading = false
+                        var x = 0
+                        var y = 0
+                        ctx.getContext("2d").drawImage(image,x,y,ctx.width,ctx.height)
+                        URL.revokeObjectURL(loadedPlayer.imageUrl)
+                    }
+                    ws.on('data',function(imageData){
+                        try{
+                            if(loadedPlayer.imageLoading === true)return console.log('drop');
+                            loadedPlayer.imageLoading = true
+                            var arrayBufferView = new Uint8Array(imageData);
+                            var blob = new Blob( [ arrayBufferView ], { type: "image/jpeg" } );
+                            loadedPlayer.imageUrl = URL.createObjectURL( blob );
+                            loadedPlayer.image.src = loadedPlayer.imageUrl
+                            loadedPlayer.last_frame = 'data:image/jpeg;base64,'+base64ArrayBuffer(imageData)
+                        }catch(er){
+                            debugLog('base64 frame')
+                        }
+                        // $.ccio.init('signal',d);
+                    })
                 })
-            })
-        break;
-        case'mp4':
-            setTimeout(function(){
-                var stream = containerElement.find('.stream-element');
-                var onPoseidonError = function(){
-                    // setTimeout(function(){
-                    //     mainSocket.f({f:'monitor',ff:'watch_on',id:monitorId})
-                    // },2000)
-                }
-                if(!loadedPlayer.PoseidonErrorCount)loadedPlayer.PoseidonErrorCount = 0
-                if(loadedPlayer.PoseidonErrorCount >= 5)return
-                if(subStreamChannel ? details.substream.output.stream_flv_type === 'ws' : monitor.details.stream_flv_type === 'ws'){
-                    if(loadedPlayer.Poseidon){
-                        loadedPlayer.Poseidon.stop()
+            break;
+            case'mp4':
+                setTimeout(function(){
+                    var stream = containerElement.find('.stream-element');
+                    var onPoseidonError = function(){
+                        // setTimeout(function(){
+                        //     mainSocket.f({f:'monitor',ff:'watch_on',id:monitorId})
+                        // },2000)
+                    }
+                    if(!loadedPlayer.PoseidonErrorCount)loadedPlayer.PoseidonErrorCount = 0
+                    if(loadedPlayer.PoseidonErrorCount >= 5)return
+                    if(subStreamChannel ? details.substream.output.stream_flv_type === 'ws' : monitor.details.stream_flv_type === 'ws'){
+                        if(loadedPlayer.Poseidon){
+                            loadedPlayer.Poseidon.stop()
+                            revokeVideoPlayerUrl(monitorId)
+                        }
+                        try{
+                            loadedPlayer.Poseidon = new Poseidon({
+                                video: stream[0],
+                                auth_token: $user.auth_token,
+                                ke: monitor.ke,
+                                uid: $user.uid,
+                                id: monitor.mid,
+                                url: location.origin,
+                                path: websocketPath,
+                                query: websocketQuery,
+                                onError : onPoseidonError,
+                                channel : subStreamChannel
+                            })
+                            loadedPlayer.Poseidon.start();
+                        }catch(err){
+                            // onPoseidonError()
+                            console.log('onTryPoseidonError',err)
+                        }
+                    }else{
+                        stream.attr('src',getApiPrefix(`mp4`)+'/'+monitor.mid + (subStreamChannel ? `/${subStreamChannel}` : '')+'/s.mp4?time=' + (new Date()).getTime())
+                        stream[0].onerror = function(err){
+                            console.error(err)
+                        }
+                    }
+                },1000)
+            break;
+            case'flv':
+                if (flvjs.isSupported()) {
+                    if(loadedPlayer.flv){
+                        loadedPlayer.flv.destroy()
                         revokeVideoPlayerUrl(monitorId)
                     }
-                    try{
-                        loadedPlayer.Poseidon = new Poseidon({
-                            video: stream[0],
+                    var options = {};
+                    if(monitor.details.stream_flv_type==='ws'){
+                        if(monitor.details.stream_flv_maxLatency&&monitor.details.stream_flv_maxLatency!==''){
+                            monitor.details.stream_flv_maxLatency = parseInt(monitor.details.stream_flv_maxLatency)
+                        }else{
+                            monitor.details.stream_flv_maxLatency = 20000;
+                        }
+                        options = {
+                            type: 'flv',
+                            isLive: true,
                             auth_token: $user.auth_token,
                             ke: monitor.ke,
                             uid: $user.uid,
                             id: monitor.mid,
+                            maxLatency: monitor.details.stream_flv_maxLatency,
+                            hasAudio:false,
                             url: location.origin,
                             path: websocketPath,
-                            query: websocketQuery,
-                            onError : onPoseidonError,
-                            channel : subStreamChannel
-                        })
-                        loadedPlayer.Poseidon.start();
-                    }catch(err){
-                        // onPoseidonError()
-                        console.log('onTryPoseidonError',err)
-                    }
-                }else{
-                    stream.attr('src',getApiPrefix(`mp4`)+'/'+monitor.mid + (subStreamChannel ? `/${subStreamChannel}` : '')+'/s.mp4?time=' + (new Date()).getTime())
-                    stream[0].onerror = function(err){
-                        console.error(err)
-                    }
-                }
-            },1000)
-        break;
-        case'flv':
-            if (flvjs.isSupported()) {
-                if(loadedPlayer.flv){
-                    loadedPlayer.flv.destroy()
-                    revokeVideoPlayerUrl(monitorId)
-                }
-                var options = {};
-                if(monitor.details.stream_flv_type==='ws'){
-                    if(monitor.details.stream_flv_maxLatency&&monitor.details.stream_flv_maxLatency!==''){
-                        monitor.details.stream_flv_maxLatency = parseInt(monitor.details.stream_flv_maxLatency)
+                            channel : subStreamChannel,
+                            query: websocketQuery
+                        }
                     }else{
-                        monitor.details.stream_flv_maxLatency = 20000;
-                    }
-                    options = {
-                        type: 'flv',
-                        isLive: true,
-                        auth_token: $user.auth_token,
-                        ke: monitor.ke,
-                        uid: $user.uid,
-                        id: monitor.mid,
-                        maxLatency: monitor.details.stream_flv_maxLatency,
-                        hasAudio:false,
-                        url: location.origin,
-                        path: websocketPath,
-                        channel : subStreamChannel,
-                        query: websocketQuery
-                    }
-                }else{
-                    options = {
-                        type: 'flv',
-                        isLive: true,
-                        url: getApiPrefix(`flv`)+'/'+monitor.mid + (subStreamChannel ? `/${subStreamChannel}` : '')+'/s.flv'
-                    }
-                }
-                loadedPlayer.flv = flvjs.createPlayer(options);
-                loadedPlayer.flv.attachMediaElement(containerElement.find('.stream-element')[0]);
-                loadedPlayer.flv.on('error',function(err){
-                    console.log(err)
-                });
-                loadedPlayer.flv.load();
-                loadedPlayer.flv.play();
-            }else{
-                new PNotify({title:'Stream cannot be started',text:'FLV.js is not supported on this browser. Try another stream type.',type:'error'});
-            }
-        break;
-        case'hls':
-            function createSteamNow(){
-                clearTimeout(loadedPlayer.m3uCheck)
-                var url = getApiPrefix(`hls`) + '/' + monitor.mid + (subStreamChannel ? `/${subStreamChannel}` : '') + '/s.m3u8'
-                $.get(url,function(m3u){
-                    if(m3u == 'File Not Found'){
-                        loadedPlayer.m3uCheck = setTimeout(function(){
-                            createSteamNow()
-                        },2000)
-                    }else{
-                        var video = containerElement.find('.stream-element')[0]
-                        if (isAppleDevice) {
-                            video.src = url;
-                            video.addEventListener('loadedmetadata', function() {
-                              setTimeout(function(){
-                                video.play();
-                              },3000)
-                            }, false);
-                        }else{
-                            var hlsOptions = safeJsonParse(dashboardOptions().hlsOptions) || {}
-                            if(hlsOptions instanceof String){
-                                hlsOptions = {}
-                                new PNotify({
-                                    title: lang['Invalid JSON'],
-                                    text: lang.hlsOptionsInvalid,
-                                    type: `warning`,
-                                })
-                            }
-                            if(loadedPlayer.hls){
-                                loadedPlayer.hls.destroy()
-                                revokeVideoPlayerUrl(monitorId)
-                            }
-                            loadedPlayer.hls = new Hls(hlsOptions)
-                            loadedPlayer.hls.loadSource(url)
-                            loadedPlayer.hls.attachMedia(video)
-                            loadedPlayer.hls.on(Hls.Events.MANIFEST_PARSED,function() {
-                                if (video.paused) {
-                                    video.play();
-                                }
-                            });
+                        options = {
+                            type: 'flv',
+                            isLive: true,
+                            url: getApiPrefix(`flv`)+'/'+monitor.mid + (subStreamChannel ? `/${subStreamChannel}` : '')+'/s.flv'
                         }
                     }
-                })
-            }
-            createSteamNow()
-        break;
-        case'mjpeg':
-            var liveStreamElement = containerElement.find('.stream-element')
-            var setSource = function(){
-                liveStreamElement.attr('src',getApiPrefix(`mjpeg`)+'/'+monitorId + (subStreamChannel ? `/${subStreamChannel}` : ''))
-                liveStreamElement.unbind('ready')
-                liveStreamElement.ready(function(){
+                    loadedPlayer.flv = flvjs.createPlayer(options);
+                    loadedPlayer.flv.attachMediaElement(containerElement.find('.stream-element')[0]);
+                    loadedPlayer.flv.on('error',function(err){
+                        console.log(err)
+                    });
+                    loadedPlayer.flv.load();
+                    loadedPlayer.flv.play();
+                }else{
+                    new PNotify({title:'Stream cannot be started',text:'FLV.js is not supported on this browser. Try another stream type.',type:'error'});
+                }
+            break;
+            case'hls':
+                function createSteamNow(){
+                    clearTimeout(loadedPlayer.m3uCheck)
+                    var url = getApiPrefix(`hls`) + '/' + monitor.mid + (subStreamChannel ? `/${subStreamChannel}` : '') + '/s.m3u8'
+                    $.get(url,function(m3u){
+                        if(m3u == 'File Not Found'){
+                            loadedPlayer.m3uCheck = setTimeout(function(){
+                                createSteamNow()
+                            },2000)
+                        }else{
+                            var video = containerElement.find('.stream-element')[0]
+                            if (isAppleDevice) {
+                                video.src = url;
+                                video.addEventListener('loadedmetadata', function() {
+                                  setTimeout(function(){
+                                    video.play();
+                                  },3000)
+                                }, false);
+                            }else{
+                                var hlsOptions = safeJsonParse(dashboardOptions().hlsOptions) || {}
+                                if(hlsOptions instanceof String){
+                                    hlsOptions = {}
+                                    new PNotify({
+                                        title: lang['Invalid JSON'],
+                                        text: lang.hlsOptionsInvalid,
+                                        type: `warning`,
+                                    })
+                                }
+                                if(loadedPlayer.hls){
+                                    loadedPlayer.hls.destroy()
+                                    revokeVideoPlayerUrl(monitorId)
+                                }
+                                loadedPlayer.hls = new Hls(hlsOptions)
+                                loadedPlayer.hls.loadSource(url)
+                                loadedPlayer.hls.attachMedia(video)
+                                loadedPlayer.hls.on(Hls.Events.MANIFEST_PARSED,function() {
+                                    if (video.paused) {
+                                        video.play();
+                                    }
+                                });
+                            }
+                        }
+                    })
+                }
+                createSteamNow()
+            break;
+            case'mjpeg':
+                var liveStreamElement = containerElement.find('.stream-element')
+                var setSource = function(){
+                    liveStreamElement.attr('src',getApiPrefix(`mjpeg`)+'/'+monitorId + (subStreamChannel ? `/${subStreamChannel}` : ''))
+                    liveStreamElement.unbind('ready')
+                    liveStreamElement.ready(function(){
+                        setTimeout(function(){
+                            liveStreamElement.contents().find("body").append('<style>img{width:100%;height:100%}</style>')
+                        },1000)
+                    })
+                }
+                setSource()
+                liveStreamElement.on('error',function(err){
                     setTimeout(function(){
-                        liveStreamElement.contents().find("body").append('<style>img{width:100%;height:100%}</style>')
-                    },1000)
+                        setSource()
+                    },4000)
                 })
-            }
-            setSource()
-            liveStreamElement.on('error',function(err){
-                setTimeout(function(){
-                    setSource()
-                },4000)
-            })
-        break;
-    }
+            break;
+        }
     $.each(onLiveStreamInitiateExtensions,function(n,extender){
         extender(streamType,monitor,loadedPlayer,subStreamChannel)
     })
@@ -662,13 +667,15 @@ function loadPreviouslyOpenedLiveGridBlocks(){
     })
 }
 function closeAllLiveGridPlayers(rememberClose){
-    var watchedOn = dashboardOptions().watch_on || {}
-    $.each(watchedOn,function(n,groupOfMons){
-        $.each(groupOfMons,function(monitorId,monitor){
-            if(monitor === 1){
-                mainSocket.f({f:'monitor',ff:'watch_off',id: monitorId})
-            }
+    $.each(loadedMonitors,function(monitorId,monitor){
+        mainSocket.f({
+            f: 'monitor',
+            ff: 'watch_off',
+            id: monitor.mid
         })
+        setTimeout(function(){
+            saveLiveGridBlockOpenState(monitorId,$user.ke,0)
+        },1000)
     })
 }
 function saveLiveGridBlockOpenState(monitorId,groupKey,state){
@@ -870,6 +877,60 @@ function signalCheckLiveStream(options){
         delete(liveGridData.signal);
     }
 }
+
+function pauseMonitorItem(monitorId){
+    liveGridPlayingNow[monitorId] = false
+    closeLiveGridPlayer(monitorId,false)
+}
+function resumeMonitorItem(monitorId){
+    // needs to know about substream
+    liveGridPlayingNow[monitorId] = true
+    resetMonitorCanvas(monitorId,true,null)
+}
+function isScrolledIntoView(elem){
+    var el = $(elem)
+    var theWindow = $(window)
+    var docViewTop = theWindow.scrollTop();
+    var docViewBottom = docViewTop + theWindow.height();
+
+    var elemTop = el.offset().top;
+    var elemBottom = elemTop + el.height();
+
+    return (
+        elemTop >= docViewTop && elemTop <= docViewBottom ||
+        elemBottom >= docViewTop && elemBottom <= docViewBottom
+    );
+}
+function pauseAllLiveGridPlayers(unpause){
+    $('.monitor_item').each(function(n,el){
+        var monitorId = $(el).attr('data-mid')
+        if(!unpause){
+            pauseMonitorItem(monitorId)
+        }else{
+            resumeMonitorItem(monitorId)
+        }
+    })
+}
+function setPauseStatusForMonitorItems(){
+    $('.monitor_item').each(function(n,el){
+        var monitorId = $(el).attr('data-mid')
+        var isVisible = isScrolledIntoView(el)
+        console.log(monitorId,isVisible)
+        if(isVisible){
+            if(!liveGridPlayingNow[monitorId])resumeMonitorItem(monitorId);
+        }else{
+            pauseMonitorItem(monitorId)
+        }
+    })
+}
+function setPauseScrollTimeout(){
+    clearTimeout(liveGridPauseScrollTimeout)
+    if(tabTree.name === 'liveGrid'){
+        liveGridPauseScrollTimeout = setTimeout(function(){
+            setPauseStatusForMonitorItems()
+        },700)
+    }
+}
 $(document).ready(function(e){
     liveGrid
     .on('dblclick','.stream-block',function(){
@@ -882,16 +943,16 @@ $(document).ready(function(e){
     })
     .on('click','.launch-live-grid-monitor',function(){
         var monitorId = $(this).parents('[data-mid]').attr('data-mid')
-        // if(isMobile){
-        //     createLivePlayerTab(loadedMonitors[monitorId])
-        // }else{
+        if(isMobile){
+            createLivePlayerTab(loadedMonitors[monitorId])
+        }else{
             mainSocket.f({
                 f: 'monitor',
                 ff: 'watch_on',
                 id: monitorId
             })
             openLiveGrid()
-        // }
+        }
     })
     .on('click','.monitor-live-group-open',function(){
         var monitorIds = $(this).attr('monitor-ids').split(',')
@@ -1022,16 +1083,7 @@ $(document).ready(function(e){
         })
     })
     $('.close-all-monitors').click(function(){
-        $.each(loadedMonitors,function(monitorId,monitor){
-            mainSocket.f({
-                f: 'monitor',
-                ff: 'watch_off',
-                id: monitor.mid
-            })
-            setTimeout(function(){
-                saveLiveGridBlockOpenState(monitorId,$user.ke,0)
-            },1000)
-        })
+        closeAllLiveGridPlayers()
     });
     var dontShowDetectionSelectionOnStart = dashboardOptions().dontShowDetection != 1
     liveGridData = GridStack.init();
@@ -1046,10 +1098,10 @@ $(document).ready(function(e){
         saveLiveGridBlockPositions()
     });
     addOnTabReopen('liveGrid', function () {
-        loadPreviouslyOpenedLiveGridBlocks()
+        pauseAllLiveGridPlayers(true)
     })
     addOnTabAway('liveGrid', function () {
-        closeAllLiveGridPlayers()
+        pauseAllLiveGridPlayers(false)
     })
     onInitWebsocket(function (d){
         loadPreviouslyOpenedLiveGridBlocks()
@@ -1059,9 +1111,6 @@ $(document).ready(function(e){
     })
     onWebSocketEvent(function (d){
         switch(d.f){
-            case'init_success':
-                // loadPreviouslyOpenedLiveGridBlocks()
-            break;
             case'video_build_success':
                 d.status = 1
                 d.mid = d.id || d.mid
@@ -1185,12 +1234,14 @@ $(document).ready(function(e){
     })
     $(window).focus(function(){
         if(canBackgroundStream()){
-            loadPreviouslyOpenedLiveGridBlocks()
+            pauseAllLiveGridPlayers(true)
         }
     }).blur(function(){
         if(canBackgroundStream()){
-            closeAllLiveGridPlayers()
+            pauseAllLiveGridPlayers(false)
         }
+    }).scroll(function(){
+        setPauseScrollTimeout()
     })
     dashboardSwitchCallbacks.monitorOrder = function(toggleState){
         if(toggleState !== 1){
