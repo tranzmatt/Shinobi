@@ -8,6 +8,7 @@ var liveGridOpenCountElements = $('.liveGridOpenCount')
 var liveGridOpenCount = 0
 var liveGridPauseScrollTimeout = null;
 var liveGridPlayingNow = {};
+var liveGridStickSelection = null
 //
 var onLiveStreamInitiateExtensions = []
 function onLiveStreamInitiate(callback){
@@ -354,6 +355,7 @@ function initiateLiveGridPlayer(monitor,subStreamChannel){
     if(!isInView){
         return;
     }
+    liveGridStickSelection = monitorId
     liveGridPlayingNow[monitorId] = true
     switch(streamType){
             case'jpeg':
@@ -792,8 +794,8 @@ function signalCheckLiveStream(options){
     try{
         var monitorId = options.mid
         var monitorConfig = loadedMonitors[monitorId]
-        var liveGridData = liveGridElements[monitorId]
-        var monitorItem = liveGridData.monitorItem
+        var liveGridEl = liveGridElements[monitorId]
+        var monitorItem = liveGridEl.monitorItem
         var monitorDetails = monitorConfig.details
         var checkCount = 0
         var base64Data = null;
@@ -873,8 +875,8 @@ function signalCheckLiveStream(options){
         if(phraseFoundInErrorStack("The HTMLImageElement provided is in the 'broken' state.")){
             mainSocket.f({f:'monitor',ff:'watch_on',id:monitorId});
         }
-        clearInterval(liveGridData.signal);
-        delete(liveGridData.signal);
+        clearInterval(liveGridEl.signal);
+        delete(liveGridEl.signal);
     }
 }
 
@@ -929,6 +931,47 @@ function setPauseScrollTimeout(){
         liveGridPauseScrollTimeout = setTimeout(function(){
             setPauseStatusForMonitorItems()
         },700)
+    }
+}
+function getLiveGridBlock(monitorId){
+    return $(`#monitor_live_${monitorId}`).parents('.grid-stack-item')
+}
+function getGridStackId(gridEl){
+    return gridEl.attr('data-gs-id')
+}
+function getMonitorIdFromLiveGridBlock(elem){
+    return elem.find('.monitor_item').attr('data-mid')
+}
+function liveGridLeftStickController(position){
+    if(liveGridStickSelection){
+        var allLiveGridItems = liveGridData.getGridItems()
+        var currentGridBlock = getLiveGridBlock(liveGridStickSelection).css('border','')
+        var gsId = getGridStackId(currentGridBlock)
+        var currentGsBlock = allLiveGridItems[gsId];
+        var newSelection = currentGridBlock;
+        var newBlock = allLiveGridItems[0]
+        switch(position){
+            case'l':
+                newBlock = liveGridData.getNeighbor(currentGsBlock, {x: 1, y: 0})
+            break;
+            case'r':
+                newBlock = liveGridData.getNeighbor(currentGsBlock, {x: -1, y: 0})
+            break;
+            // case'u':
+            //     newSelection = currentGridBlock.next()
+            // break;
+            // case'd':
+            //     newSelection = currentGridBlock.prev()
+            // break;
+        }
+        newSelection = $(liveGridData.getGridElement(newBlock));
+        if(newSelection.length === 0){
+            newSelection = liveGrid.find('.grid-stack-item').first()
+            console.log('first',newSelection.length)
+        }
+        liveGridStickSelection = getMonitorIdFromLiveGridBlock(newSelection)
+        newSelection.css('border','1px solid #eee')
+        console.log(newSelection.length)
     }
 }
 $(document).ready(function(e){
@@ -1096,7 +1139,15 @@ $(document).ready(function(e){
     .on('resizestop', function(){
         // resetAllLiveGridDimensionsInMemory()
         saveLiveGridBlockPositions()
-    });
+    })
+    // .on('click', function(event, block) {
+    //     var elem = $(block.el)
+    //     var monitorId = getMonitorIdFromLiveGridBlock(elem)
+    //     if(liveGridStickSelection)getLiveGridBlock(liveGridStickSelection).css('border','');
+    //     liveGridStickSelection = monitorId
+    //     elem.css('border','1px solid #eee')
+    //     console.log('click',monitorId)
+    // });
     addOnTabReopen('liveGrid', function () {
         pauseAllLiveGridPlayers(true)
     })
