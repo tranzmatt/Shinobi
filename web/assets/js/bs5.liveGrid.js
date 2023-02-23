@@ -931,6 +931,16 @@ function setPauseScrollTimeout(){
         },700)
     }
 }
+function openAllLiveGridPlayers(){
+    $.each(loadedMonitors,function(monitorId,monitor){
+        mainSocket.f({
+            f: 'monitor',
+            ff: 'watch_on',
+            id: monitor.mid
+        })
+        openLiveGrid()
+    })
+}
 $(document).ready(function(e){
     liveGrid
     .on('dblclick','.stream-block',function(){
@@ -1073,14 +1083,7 @@ $(document).ready(function(e){
         });
     })
     $('.open-all-monitors').click(function(){
-        $.each(loadedMonitors,function(monitorId,monitor){
-            mainSocket.f({
-                f: 'monitor',
-                ff: 'watch_on',
-                id: monitor.mid
-            })
-            openLiveGrid()
-        })
+        openAllLiveGridPlayers()
     })
     $('.close-all-monitors').click(function(){
         closeAllLiveGridPlayers()
