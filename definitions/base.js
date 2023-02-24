@@ -362,24 +362,6 @@ module.exports = function(s,config,lang){
                       ]
                   },
                   {
-                      "field": lang['Show Thumbnails in Video List'],
-                      attribute:'localStorage="showThumbnail"',
-                      "description": "",
-                      "default": "0",
-                      "example": "",
-                      "fieldType": "select",
-                      "possible": [
-                          {
-                             "name": lang.No,
-                             "value": "0"
-                          },
-                          {
-                             "name": lang.Yes,
-                             "value": "1"
-                          }
-                      ]
-                  },
-                  {
                       "field": lang.Themes,
                       "name": "detail=theme",
                       "description": "",

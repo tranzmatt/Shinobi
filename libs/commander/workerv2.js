@@ -27,7 +27,7 @@ parentPort.on('message',(data) => {
         case'init':
             config = Object.assign({},data.config)
             lang = Object.assign({},data.lang)
-            remoteConnectionPort = config.ssl ? config.ssl.port || 443 : config.port || 8080
+            remoteConnectionPort = config.ssl && JSON.stringify(config.ssl) !== '{}' ? config.ssl.port || 443 : config.port || 8080
             initialize()
         break;
         case'exit':

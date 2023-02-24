@@ -298,7 +298,7 @@ $(document).ready(function(e){
                 input_map_choices = monitorDetails.input_map_choices;
             }
             $.each(input_map_choices,function(n,v){
-                $.each(v,function(m,b){
+                $.each(safeJsonParse(v),function(m,b){
                     var parent = $('[input-mapping="'+n+'"] .choices')
                     drawInputMapSelectorHtml(b,parent)
                 })
