@@ -62,7 +62,6 @@ $(document).ready(function(){
         })
         return json
     }
-    $('body')
     theForm.find('[detail]').change(onDetailFieldChange)
     theForm.find('[detail]').change(function(){
         onDetailFieldChange(this)

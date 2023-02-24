@@ -49,7 +49,7 @@ module.exports = (s,config,lang) => {
     const getUpdateableFields = require('./updatedFields.js')
     const processKill = (proc) => {
         const response = {ok: true}
-        const processPID = parseInt(`${proc.pid}`)
+        const processPID = proc && proc.pid ? parseInt(`${proc.pid}`) : null
         return new Promise((resolve,reject) => {
             let alreadyResolved = false
             function doResolve(response){
