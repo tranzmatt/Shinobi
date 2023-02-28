@@ -4,12 +4,6 @@ const execSync = require('child_process').execSync;
 const exec = require('child_process').exec;
 const spawn = require('child_process').spawn;
 const imageSaveEventLock = {};
-// Matrix In Region Libs >
-const SAT = require('sat')
-const V = SAT.Vector;
-const P = SAT.Polygon;
-const B = SAT.Box;
-// Matrix In Region Libs />
 module.exports = (s,config,lang,app,io) => {
     // Event Filters >
     const acceptableOperators = ['indexOf','!indexOf','===','!==','>=','>','<','<=']
@@ -97,58 +91,42 @@ module.exports = (s,config,lang,app,io) => {
         }
         return newString
     }
-    const isAtleastOneMatrixInRegion = function(regions,matrices,callback){
-        var regionPolys = []
-        var matrixPoints = []
-        regions.forEach(function(region,n){
-            var polyPoints = []
-            region.points.forEach(function(point){
-                polyPoints.push(new V(parseInt(point[0]),parseInt(point[1])))
-            })
-            regionPolys[n] = new P(new V(0,0), polyPoints)
-        })
-        var collisions = []
-        var foundInRegion = false
-        matrices.forEach(function(matrix){
-            var matrixPoly = new B(new V(matrix.x, matrix.y), matrix.width, matrix.height).toPolygon()
-            regionPolys.forEach(function(region,n){
-                var response = new SAT.Response()
-                var collided = SAT.testPolygonPolygon(matrixPoly, region, response)
-                if(collided === true){
-                    collisions.push({
-                        matrix: matrix,
-                        region: regions[n]
-                    })
-                    foundInRegion = true
-                }
-            })
-        })
-        if(callback)callback(foundInRegion,collisions)
-        return foundInRegion
-    }
-    const scanMatricesforCollisions = function(region,matrices){
-        var matrixPoints = []
-        var collisions = []
-        if (!region || !matrices){
-            if(callback)callback(collisions)
-            return collisions
+    function isAtleastOneMatrixInRegion(regions, matrices) {
+      let intersectedMatrices = [];
+      for (let matrix of matrices) {
+        for (let region of regions) {
+          if (isInsideRegion(matrix, region)) {
+            intersectedMatrices.push(matrix);
+            break;
+          }
         }
-        var polyPoints = []
-        region.points.forEach(function(point){
-            polyPoints.push(new V(parseInt(point[0]),parseInt(point[1])))
-        })
-        var regionPoly = new P(new V(0,0), polyPoints)
-        matrices.forEach(function(matrix){
-            if (matrix){
-                var matrixPoly = new B(new V(matrix.x, matrix.y), matrix.width, matrix.height).toPolygon()
-                var response = new SAT.Response()
-                var collided = SAT.testPolygonPolygon(matrixPoly, regionPoly, response)
-                if(collided === true){
-                    collisions.push(matrix)
-                }
-            }
-        })
-        return collisions
+      }
+      return {ok: intersectedMatrices.length > 0, matrices: intersectedMatrices};
+    }
+    function isInsideRegion(matrix, region) {
+      const vertices = [
+        [matrix.x, matrix.y],
+        [matrix.x + matrix.width, matrix.y],
+        [matrix.x + matrix.width, matrix.y + matrix.height],
+        [matrix.x, matrix.y + matrix.height]
+      ];
+      for (let i = 0; i < vertices.length; i++) {
+        const currentVertex = vertices[i];
+        const nextVertex = i === vertices.length - 1 ? vertices[0] : vertices[i + 1];
+        for (let j = 0; j < region.length; j++) {
+          const currentEdge = region[j];
+          const nextEdge = j === region.length - 1 ? region[0] : region[j + 1];
+          if (intersect(currentVertex, nextVertex, currentEdge, nextEdge)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+    function intersect(a, b, c, d) {
+        const ua = ((d[0] - c[0]) * (a[1] - c[1]) - (d[1] - c[1]) * (a[0] - c[0])) / ((d[1] - c[1]) * (b[0] - a[0]) - (d[0] - c[0]) * (b[1] - a[1]));
+        const ub = ((b[0] - a[0]) * (a[1] - c[1]) - (b[1] - a[1]) * (a[0] - c[0])) / ((d[1] - c[1]) * (b[0] - a[0]) - (d[0] - c[0]) * (b[1] - a[1]));
+        return ua >= 0 && ua <= 1 && ub >= 0 && ub <= 1;
     }
     const getLargestMatrix = (matrices) => {
         var largestMatrix = {width: 0, height: 0}
@@ -372,11 +350,12 @@ module.exports = (s,config,lang,app,io) => {
         if(hasMatrices(eventDetails) && monitorDetails.detector_obj_region === '1'){
             var regions = s.group[monitorConfig.ke].activeMonitors[monitorConfig.mid].parsedObjects.cords
             var isMatrixInRegions = isAtleastOneMatrixInRegion(regions,eventDetails.matrices)
-            if(isMatrixInRegions){
+            if(isMatrixInRegions.ok){
                 s.debugLog('Matrix in region!')
                 if(filter.countObjects && monitorDetails.detector_obj_count === '1' && monitorDetails.detector_obj_count_in_region === '1' && !didCountingAlready){
                     countObjects(d)
                 }
+                return true
             }else{
                 return false
             }
