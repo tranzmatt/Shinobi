@@ -27,6 +27,7 @@ function installModule(filename){
         })
         installProcess.on('close',function(){
             resolve()
+            fs.rm(tempSh)
         })
     })
 }
