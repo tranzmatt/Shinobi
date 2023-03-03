@@ -841,6 +841,7 @@
    "Delete Motionless Video": "Delete Motionless Video",
    "Send Frames": "Send Frames <small>Push frames to be analyzed</small>",
    "Detector Rate": "Detector Rate <small>(FPS)</small>",
+   "Ignore Non-Moving": "Ignore Non-Moving",
    "Feed-in Image Width": "Feed-in Image Width",
    "Feed-in Image Height": "Feed-in Image Height",
    "Check for Motion First": "Check for Motion First",

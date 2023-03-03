@@ -3124,6 +3124,22 @@ module.exports = function(s,config,lang){
                             ]
                          },
                          {
+                            "name": "detail=detector_object_ignore_not_move",
+                            "field": lang["Ignore Non-Moving"],
+                            "default": "0",
+                            "fieldType": "select",
+                            "possible": [
+                               {
+                                  "name": lang.No,
+                                  "value": "0"
+                               },
+                               {
+                                  "name": lang.Yes,
+                                  "value": "1"
+                               }
+                            ]
+                         },
+                         {
                              isAdvanced: true,
                              hidden: true,
                             "name": "detail=detector_obj_count_in_region",

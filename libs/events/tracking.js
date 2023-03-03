@@ -99,8 +99,8 @@ module.exports = (s,config,lang,app,io) => {
     }
     function getAllMatricesThatMoved(monitorConfig,matrices){
         const monitorDetails = monitorConfig.details
-        const imgWidth = parseInt(monitorDetails.detector_scale_x) || 640
-        const imgHeight = parseInt(monitorDetails.detector_scale_y) || 480
+        const imgWidth = parseInt(monitorDetails.detector_scale_x_object) || 1280
+        const imgHeight = parseInt(monitorDetails.detector_scale_y_object) || 720
         const objectMovePercent = parseInt(monitorDetails.detector_object_move_percent) || 2
         const groupKey = monitorConfig.ke
         const monitorId = monitorConfig.mid
