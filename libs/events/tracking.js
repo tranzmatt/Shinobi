@@ -18,7 +18,6 @@ module.exports = (s,config,lang,app,io) => {
     function getTracked(trackerId){
         const theTracker = objectTrackers[trackerId]
         const frameCount = theTracker.frameCount
-        console.log(theTracker.tracker.getJSONOfTrackedItems())
         const trackedObjects = theTracker.tracker.getJSONOfTrackedItems().map((matrix) => {
             return {
                 id: matrix.id,
@@ -60,21 +59,43 @@ module.exports = (s,config,lang,app,io) => {
         trackObject(trackerId,matrices);
     }
     function objectHasMoved(matrices, options = {}) {
-      const { imgHeight = 1, imgWidth = 1, threshold = 2 } = options;
+      const { imgHeight = 1, imgWidth = 1, threshold = 0 } = options;
       for (let i = 0; i < matrices.length; i++) {
         const current = matrices[i];
         if (i < matrices.length - 1) {
           const next = matrices[i + 1];
-          let distanceMoved = null;
+          let totalDistanceMoved = 0;
+          let numPointsCompared = 0;
           if (next) {
-            const dx = next.x - current.x;
-            const dy = next.y - current.y;
-            distanceMoved = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
-            const distanceMovedPercent =
-              (100 * distanceMoved) / Math.max(current.width, current.height);
-            if (distanceMovedPercent < threshold) {
-              return false;
+            // Compare each corner of the matrices
+            const currentCorners = [
+              { x: current.x, y: current.y },
+              { x: current.x + current.width, y: current.y },
+              { x: current.x, y: current.y + current.height },
+              { x: current.x + current.width, y: current.y + current.height }
+            ];
+            const nextCorners = [
+              { x: next.x, y: next.y },
+              { x: next.x + next.width, y: next.y },
+              { x: next.x, y: next.y + next.height },
+              { x: next.x + next.width, y: next.y + next.height }
+            ];
+            for (let j = 0; j < currentCorners.length; j++) {
+              const currentCorner = currentCorners[j];
+              const nextCorner = nextCorners[j];
+              const dx = nextCorner.x - currentCorner.x;
+              const dy = nextCorner.y - currentCorner.y;
+              const distanceMoved = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
+              const distanceMovedPercent =
+                (100 * distanceMoved) / Math.max(current.width, current.height);
+              totalDistanceMoved += distanceMovedPercent;
+              numPointsCompared++;
+            }
+            const averageDistanceMoved = totalDistanceMoved / numPointsCompared;
+            if (averageDistanceMoved < threshold) {
+              continue;
             } else {
+                console.log(averageDistanceMoved)
               return true;
             }
           }
