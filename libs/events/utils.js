@@ -26,8 +26,8 @@ module.exports = (s,config,lang,app,io) => {
     } = require('../video/utils.js')(s,config,lang)
     const {
         getTracked,
-        trackObject,
         setLastTracked,
+        trackObjectWithTimeout,
         getAllMatricesThatMoved,
     } = require('./tracking.js')(s,config,lang,app,io)
     const {
@@ -745,7 +745,7 @@ module.exports = (s,config,lang,app,io) => {
         if(!passedObjectInRegionCheck)return
         if(monitorDetails.detector_object_ignore_not_move === '1' && eventDetails.reason === 'object' && eventDetails.matrices && eventDetails.matrices.length > 0){
             const trackerId = `${groupKey}${monitorId}`
-            trackObject(trackerId,eventDetails.matrices)
+            trackObjectWithTimeout(trackerId,eventDetails.matrices)
             const trackedObjects = getTracked(trackerId)
             const objectsThatMoved = getAllMatricesThatMoved(monitorConfig,trackedObjects)
             setLastTracked(trackerId, trackedObjects)

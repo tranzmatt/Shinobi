@@ -1,9 +1,9 @@
-const movingThings = require('node-moving-things-tracker')
+const movingThings = require('shinobi-node-moving-things-tracker').Tracker
 module.exports = (s,config,lang,app,io) => {
     const objectTrackers = {}
     const objectTrackerTimeouts = {}
     function resetObjectTracker(trackerId,matrices){
-        const Tracker = movingThings.Tracker;
+        const Tracker = movingThings.newTracker();
         objectTrackers[trackerId] = {
             frameCount: 1,
             tracker: Tracker,
@@ -53,6 +53,7 @@ module.exports = (s,config,lang,app,io) => {
     function trackObjectWithTimeout(trackerId,matrices){
         clearTimeout(objectTrackerTimeouts[trackerId]);
         objectTrackerTimeouts[trackerId] = setTimeout(() => {
+            objectTrackers[trackerId].tracker.reset()
             delete(objectTrackers[trackerId])
             delete(objectTrackerTimeouts[trackerId])
         },1000 * 60);
@@ -95,7 +96,6 @@ module.exports = (s,config,lang,app,io) => {
             if (averageDistanceMoved < threshold) {
               continue;
             } else {
-                console.log(averageDistanceMoved)
               return true;
             }
           }
