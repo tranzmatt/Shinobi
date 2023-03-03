@@ -706,8 +706,6 @@ module.exports = (s,config,lang,app,io) => {
         s.onEventTriggerBeforeFilterExtensions.forEach(function(extender){
             extender(d,filter)
         })
-        const eventDetails = d.details
-        const matrices = d.details.matrices
         const passedEventFilters = checkEventFilters(d,activeMonitor.details,filter)
         if(!passedEventFilters)return;
         const eventTime = new Date()
@@ -742,11 +740,12 @@ module.exports = (s,config,lang,app,io) => {
             const passedMotionLock = checkMotionLock(d,monitorDetails)
             if(!passedMotionLock)return
         }
+        const eventDetails = d.details
         const passedObjectInRegionCheck = checkForObjectsInRegions(monitorConfig,eventDetails,filter,d,didCountingAlready)
         if(!passedObjectInRegionCheck)return
-        if(monitorDetails.detector_object_ignore_not_move === '1' && d.details.reason === 'object' && matrices && matrices.length > 0){
+        if(monitorDetails.detector_object_ignore_not_move === '1' && eventDetails.reason === 'object' && eventDetails.matrices && eventDetails.matrices.length > 0){
             const trackerId = `${groupKey}${monitorId}`
-            trackObject(trackerId,matrices)
+            trackObject(trackerId,eventDetails.matrices)
             const trackedObjects = getTracked(trackerId)
             const objectsThatMoved = getAllMatricesThatMoved(monitorConfig,trackedObjects)
             setLastTracked(trackerId, trackedObjects)
