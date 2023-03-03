@@ -25,6 +25,11 @@ module.exports = (s,config,lang,app,io) => {
         reEncodeVideoAndBinOriginalAddToQueue
     } = require('../video/utils.js')(s,config,lang)
     const {
+        getTracked,
+        setLastTracked,
+        getAllMatricesThatMoved,
+    } = require('./tracking.js')(s,config,lang,app,io)
+    const {
         isEven,
         fetchTimeout,
     } = require('../basic/utils.js')(process.cwd(),config)
@@ -674,6 +679,8 @@ module.exports = (s,config,lang,app,io) => {
     }
     const triggerEvent = async (d,forceSave) => {
         var didCountingAlready = false
+        const groupKey = d.ke
+        const monitorId = d.mid || d.id
         const filter = {
             halt : false,
             addToMotionCounter : true,
@@ -699,6 +706,7 @@ module.exports = (s,config,lang,app,io) => {
             extender(d,filter)
         })
         const eventDetails = d.details
+        const matrices = d.details.matrices
         const passedEventFilters = checkEventFilters(d,activeMonitor.details,filter)
         if(!passedEventFilters)return;
         const eventTime = new Date()
@@ -735,7 +743,14 @@ module.exports = (s,config,lang,app,io) => {
         }
         const passedObjectInRegionCheck = checkForObjectsInRegions(monitorConfig,eventDetails,filter,d,didCountingAlready)
         if(!passedObjectInRegionCheck)return
-
+        if(monitorDetails.detector_object_ignore_not_move === '1' && d.details.reason === 'object' && matrices && matrices.length > 0){
+            const trackerId = `${groupKey}${monitorId}`
+            trackObject(trackerId,matrices)
+            const { trackedObjects, frameCount } = getTracked(trackerId)
+            const objectsThatMoved = getAllMatricesThatMoved(monitorConfig,trackedObjects)
+            setLastTracked(trackerId, trackedObjects)
+            if(objectsThatMoved.length === 0)return;
+        }
         //
         d.doObjectDetection = (
             eventDetails.reason !== 'object' &&
