@@ -196,6 +196,8 @@
    "Trigger Camera Groups": "Trigger Camera Groups",
    "Motion Detection": "Motion Detection",
    "Object Detection": "Object Detection",
+   "Minimum Movement": "Minimum Movement",
+   "inPercent": "In Percent",
    "Hide Detection on Stream": "Hide Detection on Stream",
    "JPEG Mode": "JPEG Mode",
    "Reconnect Stream": "Reconnect Stream",
