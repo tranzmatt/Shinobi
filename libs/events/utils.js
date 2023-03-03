@@ -746,10 +746,11 @@ module.exports = (s,config,lang,app,io) => {
         if(monitorDetails.detector_object_ignore_not_move === '1' && d.details.reason === 'object' && matrices && matrices.length > 0){
             const trackerId = `${groupKey}${monitorId}`
             trackObject(trackerId,matrices)
-            const { trackedObjects, frameCount } = getTracked(trackerId)
+            const trackedObjects = getTracked(trackerId)
             const objectsThatMoved = getAllMatricesThatMoved(monitorConfig,trackedObjects)
             setLastTracked(trackerId, trackedObjects)
             if(objectsThatMoved.length === 0)return;
+            eventDetails.matrices = objectsThatMoved
         }
         //
         d.doObjectDetection = (
