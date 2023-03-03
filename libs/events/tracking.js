@@ -18,7 +18,8 @@ module.exports = (s,config,lang,app,io) => {
     function getTracked(trackerId){
         const theTracker = objectTrackers[trackerId]
         const frameCount = theTracker.frameCount
-        const trackedObjects = theTracker.tracker.getJSONOfTrackedItems()[frameCount].map((matrix) => {
+        console.log(theTracker.tracker.getJSONOfTrackedItems())
+        const trackedObjects = theTracker.tracker.getJSONOfTrackedItems().map((matrix) => {
             return {
                 id: matrix.id,
                 tag: matrix.name,
@@ -101,7 +102,7 @@ module.exports = (s,config,lang,app,io) => {
         const monitorDetails = monitorConfig.details
         const imgWidth = parseInt(monitorDetails.detector_scale_x_object) || 1280
         const imgHeight = parseInt(monitorDetails.detector_scale_y_object) || 720
-        const objectMovePercent = parseInt(monitorDetails.detector_object_move_percent) || 2
+        const objectMovePercent = parseInt(monitorDetails.detector_object_move_percent) || 5
         const groupKey = monitorConfig.ke
         const monitorId = monitorConfig.mid
         const trackerId = `${groupKey}${monitorId}`
@@ -122,10 +123,7 @@ module.exports = (s,config,lang,app,io) => {
                 }
             }
         }
-        if(movedMatrices.length > 0){
-            return movedMatrices
-        }
-        return null
+        return movedMatrices
     }
     return {
         trackObjectWithTimeout,

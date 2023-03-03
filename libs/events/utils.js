@@ -26,6 +26,7 @@ module.exports = (s,config,lang,app,io) => {
     } = require('../video/utils.js')(s,config,lang)
     const {
         getTracked,
+        trackObject,
         setLastTracked,
         getAllMatricesThatMoved,
     } = require('./tracking.js')(s,config,lang,app,io)
