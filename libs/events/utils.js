@@ -103,7 +103,7 @@ module.exports = (s,config,lang,app,io) => {
         }
         return newString
     }
-    const isAtleastOneMatrixInRegion = function(regions,matrices,callback){
+    const isAtleastOneMatrixInRegion = function(regions,matrices){
         var regionPolys = []
         var matrixPoints = []
         regions.forEach(function(region,n){
@@ -114,45 +114,19 @@ module.exports = (s,config,lang,app,io) => {
             regionPolys[n] = new P(new V(0,0), polyPoints)
         })
         var collisions = []
-        var foundInRegion = false
         matrices.forEach(function(matrix){
             var matrixPoly = new B(new V(matrix.x, matrix.y), matrix.width, matrix.height).toPolygon()
+            var foundInRegion = false
             regionPolys.forEach(function(region,n){
-                var response = new SAT.Response()
-                var collided = SAT.testPolygonPolygon(matrixPoly, region, response)
-                if(collided === true){
-                    collisions.push({
-                        matrix: matrix,
-                        region: regions[n]
-                    })
-                    foundInRegion = true
+                if(!foundInRegion){
+                    var response = new SAT.Response()
+                    var collided = SAT.testPolygonPolygon(matrixPoly, region, response)
+                    if(collided === true){
+                        foundInRegion = true
+                        collisions.push(matrix)
+                    }
                 }
             })
-        })
-        if(callback)callback(foundInRegion,collisions)
-        return foundInRegion
-    }
-    const scanMatricesforCollisions = function(region,matrices){
-        var matrixPoints = []
-        var collisions = []
-        if (!region || !matrices){
-            if(callback)callback(collisions)
-            return collisions
-        }
-        var polyPoints = []
-        region.points.forEach(function(point){
-            polyPoints.push(new V(parseInt(point[0]),parseInt(point[1])))
-        })
-        var regionPoly = new P(new V(0,0), polyPoints)
-        matrices.forEach(function(matrix){
-            if (matrix){
-                var matrixPoly = new B(new V(matrix.x, matrix.y), matrix.width, matrix.height).toPolygon()
-                var response = new SAT.Response()
-                var collided = SAT.testPolygonPolygon(matrixPoly, regionPoly, response)
-                if(collided === true){
-                    collisions.push(matrix)
-                }
-            }
         })
         return collisions
     }
@@ -372,22 +346,6 @@ module.exports = (s,config,lang,app,io) => {
                 }
             }
         })
-    }
-    const checkForObjectsInRegions = (monitorConfig,eventDetails,filter,d,didCountingAlready) => {
-        const monitorDetails = monitorConfig.details
-        if(hasMatrices(eventDetails) && monitorDetails.detector_obj_region === '1'){
-            var regions = s.group[monitorConfig.ke].activeMonitors[monitorConfig.mid].parsedObjects.cordsForObjectDetection
-            var isMatrixInRegions = isAtleastOneMatrixInRegion(regions,eventDetails.matrices)
-            if(isMatrixInRegions){
-                s.debugLog('Matrix in region!')
-                if(filter.countObjects && monitorDetails.detector_obj_count === '1' && monitorDetails.detector_obj_count_in_region === '1' && !didCountingAlready){
-                    countObjects(d)
-                }
-            }else{
-                return false
-            }
-        }
-        return true
     }
     const runEventExecutions = async (eventTime,monitorConfig,eventDetails,forceSave,filter,d, triggerEvent) => {
         const monitorDetails = monitorConfig.details
@@ -729,20 +687,29 @@ module.exports = (s,config,lang,app,io) => {
         ){
             addToEventCounter(d)
         }
+        const eventDetails = d.details
         if(
             (filter.countObjects || monitorDetails.detector_obj_count === '1') &&
             monitorDetails.detector_obj_count_in_region !== '1'
         ){
             didCountingAlready = true
-            countObjects(d)
+            countObjects(eventDetails.matrices)
         }
         if(filter.useLock){
             const passedMotionLock = checkMotionLock(d,monitorDetails)
             if(!passedMotionLock)return
         }
-        const eventDetails = d.details
-        const passedObjectInRegionCheck = checkForObjectsInRegions(monitorConfig,eventDetails,filter,d,didCountingAlready)
-        if(!passedObjectInRegionCheck)return
+        if(hasMatrices(eventDetails) && monitorDetails.detector_obj_region === '1'){
+            var regions = s.group[monitorConfig.ke].activeMonitors[monitorConfig.mid].parsedObjects.cordsForObjectDetection
+            var matricesInRegions = isAtleastOneMatrixInRegion(regions,eventDetails.matrices)
+            eventDetails.matrices = matricesInRegions
+            if(matricesInRegions.length > 0){
+                s.debugLog('Matrices in region!')
+                if(filter.countObjects && monitorDetails.detector_obj_count === '1' && monitorDetails.detector_obj_count_in_region === '1' && !didCountingAlready){
+                    countObjects(eventDetails.matrices)
+                }
+            }
+        }
         if(monitorDetails.detector_object_ignore_not_move === '1' && eventDetails.reason === 'object' && eventDetails.matrices && eventDetails.matrices.length > 0){
             const trackerId = `${groupKey}${monitorId}`
             trackObjectWithTimeout(trackerId,eventDetails.matrices)
@@ -806,7 +773,6 @@ module.exports = (s,config,lang,app,io) => {
         countObjects: countObjects,
         isAtleastOneMatrixInRegion,
         convertRegionPointsToNewDimensions,
-        scanMatricesforCollisions: scanMatricesforCollisions,
         getLargestMatrix: getLargestMatrix,
         addToEventCounter: addToEventCounter,
         clearEventCounter: clearEventCounter,
@@ -815,7 +781,6 @@ module.exports = (s,config,lang,app,io) => {
         checkEventFilters: checkEventFilters,
         checkMotionLock: checkMotionLock,
         runMultiEventBasedRecord: runMultiEventBasedRecord,
-        checkForObjectsInRegions: checkForObjectsInRegions,
         runEventExecutions: runEventExecutions,
         createEventBasedRecording: createEventBasedRecording,
         closeEventBasedRecording: closeEventBasedRecording,
