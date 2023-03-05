@@ -396,7 +396,7 @@
    "Found Devices": "Found Devices",
    "Switch on for Still Image": "Switch on for Still Image",
    "Live Stream Toggle": "Live Stream Toggle",
-   "RegionNote": "When adding points click on the edge of the polygon. Right click a point to remove.",
+   "RegionNote": "When adding points click on the edge of the polygon. Right click a point to remove it. The dimensions here are based on the Detector Settings of your Monitor. Regions will automatically scale to match Object Detection dimensions.",
    "Points": "Points",
    "Minimum Change": "Minimum Change",
    "Maximum Change": "Maximum Change",

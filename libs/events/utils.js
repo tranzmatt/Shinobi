@@ -376,7 +376,7 @@ module.exports = (s,config,lang,app,io) => {
     const checkForObjectsInRegions = (monitorConfig,eventDetails,filter,d,didCountingAlready) => {
         const monitorDetails = monitorConfig.details
         if(hasMatrices(eventDetails) && monitorDetails.detector_obj_region === '1'){
-            var regions = s.group[monitorConfig.ke].activeMonitors[monitorConfig.mid].parsedObjects.cords
+            var regions = s.group[monitorConfig.ke].activeMonitors[monitorConfig.mid].parsedObjects.cordsForObjectDetection
             var isMatrixInRegions = isAtleastOneMatrixInRegion(regions,eventDetails.matrices)
             if(isMatrixInRegions){
                 s.debugLog('Matrix in region!')
@@ -778,9 +778,34 @@ module.exports = (s,config,lang,app,io) => {
             doObjectDetection: d.doObjectDetection
         },`DETECTOR_${monitorConfig.ke}${monitorConfig.mid}`);
     }
+    function convertRegionPointsToNewDimensions(regions, options) {
+      const { fromWidth, fromHeight, toWidth, toHeight } = options;
+
+      // Compute the conversion factors for x and y coordinates
+      const xFactor = toWidth / fromWidth;
+      const yFactor = toHeight / fromHeight;
+
+      // Clone the regions array and update the points for each region
+      const newRegions = regions.map(region => {
+        const { points } = region;
+
+        // Clone the points array and update the coordinates
+        const newPoints = points.map(([x, y]) => {
+          const newX = Math.round(x * xFactor);
+          const newY = Math.round(y * yFactor);
+          return [newX.toString(), newY.toString()];
+        });
+
+        // Clone the region object and update the points
+        return { ...region, points: newPoints };
+      });
+
+      return newRegions;
+    }
     return {
         countObjects: countObjects,
-        isAtleastOneMatrixInRegion: isAtleastOneMatrixInRegion,
+        isAtleastOneMatrixInRegion,
+        convertRegionPointsToNewDimensions,
         scanMatricesforCollisions: scanMatricesforCollisions,
         getLargestMatrix: getLargestMatrix,
         addToEventCounter: addToEventCounter,
