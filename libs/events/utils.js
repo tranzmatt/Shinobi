@@ -699,18 +699,17 @@ module.exports = (s,config,lang,app,io) => {
             const passedMotionLock = checkMotionLock(d,monitorDetails)
             if(!passedMotionLock)return
         }
-        if(hasMatrices(eventDetails) && monitorDetails.detector_obj_region === '1'){
+        const thisHasMatrices = hasMatrices(eventDetails)
+        if(thisHasMatrices && monitorDetails.detector_obj_region === '1'){
             var regions = s.group[monitorConfig.ke].activeMonitors[monitorConfig.mid].parsedObjects.cordsForObjectDetection
             var matricesInRegions = isAtleastOneMatrixInRegion(regions,eventDetails.matrices)
             eventDetails.matrices = matricesInRegions
-            if(matricesInRegions.length > 0){
-                s.debugLog('Matrices in region!')
-                if(filter.countObjects && monitorDetails.detector_obj_count === '1' && monitorDetails.detector_obj_count_in_region === '1' && !didCountingAlready){
-                    countObjects(eventDetails.matrices)
-                }
+            if(matricesInRegions.length === 0)return;
+            if(filter.countObjects && monitorDetails.detector_obj_count === '1' && monitorDetails.detector_obj_count_in_region === '1' && !didCountingAlready){
+                countObjects(eventDetails.matrices)
             }
         }
-        if(monitorDetails.detector_object_ignore_not_move === '1' && eventDetails.reason === 'object' && eventDetails.matrices && eventDetails.matrices.length > 0){
+        if(thisHasMatrices && monitorDetails.detector_object_ignore_not_move === '1'){
             const trackerId = `${groupKey}${monitorId}`
             trackObjectWithTimeout(trackerId,eventDetails.matrices)
             const trackedObjects = getTracked(trackerId)
