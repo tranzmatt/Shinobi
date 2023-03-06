@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.7.1-cudnn8-runtime-ubuntu20.04
+FROM node:16-buster-slim
 
 ENV DB_USER=majesticflame \
     DB_PASSWORD='' \
@@ -15,37 +15,13 @@ ENV DB_USER=majesticflame \
     SSL_ORGANIZATION='Shinobi Systems' \
     SSL_ORGANIZATION_UNIT='IT Department' \
     SSL_COMMON_NAME='nvr.ninja' \
-    DB_DISABLE_INCLUDED=false
+    DB_DISABLE_INCLUDED=true
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN mkdir -p /home/Shinobi /config /var/lib/mysql
 
 RUN apt update -y
-RUN apt install wget curl net-tools  -y
-
-# Additional packages to support NodeJS as the base build is NVidia CUDA
-RUN curl -sL https://deb.nodesource.com/setup_16.x | bash -
-RUN apt install nodejs -y
-
-RUN node -v
-RUN npm -v
-
-# Install MariaDB server... the debian way
-RUN if [ "$DB_DISABLE_INCLUDED" = "false" ] ; then set -ex; \
-	{ \
-		echo "mariadb-server" mysql-server/root_password password '${DB_ROOT_PASSWORD}'; \
-		echo "mariadb-server" mysql-server/root_password_again password '${DB_ROOT_PASSWORD}'; \
-	} | debconf-set-selections; \
-	apt-get update; \
-	apt-get install -y \
-		"mariadb-server" \
-        socat \
-	; \
-    find /etc/mysql/ -name '*.cnf' -print0 \
-		| xargs -0 grep -lZE '^(bind-address|log)' \
-		| xargs -rt -0 sed -Ei 's/^(bind-address|log)/#&/'; fi
-
-RUN if [ "$DB_DISABLE_INCLUDED" = "false" ] ; then sed -ie "s/^bind-address\s*=\s*127\.0\.0\.1$/#bind-address = 0.0.0.0/" /etc/mysql/my.cnf; fi
+RUN apt install wget curl net-tools -y
 
 # Install FFmpeg
 
@@ -76,6 +52,8 @@ RUN apt install -y \
         tar \
         x264
 
+RUN apt install -y zip
+
 RUN apt install -y \
                 ffmpeg \
                 git \
@@ -100,6 +78,8 @@ RUN npm i npm@latest -g && \
     npm install pm2 -g
 COPY ./Docker/pm2.yml ./
 
+RUN npm i pg --save
+
 # Copy default configuration files
 # COPY ./config/conf.json ./config/super.json /home/Shinobi/
 RUN chmod -f +x /home/Shinobi/Docker/init.sh
@@ -109,7 +89,6 @@ RUN sed -i -e 's/\r//g' /home/Shinobi/Docker/init.sh
 VOLUME ["/home/Shinobi/videos"]
 VOLUME ["/home/Shinobi/libs/customAutoLoad"]
 VOLUME ["/config"]
-VOLUME ["/var/lib/mysql"]
 
 EXPOSE 8080 443 21 25
 

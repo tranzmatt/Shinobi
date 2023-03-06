@@ -5,6 +5,7 @@ ENV DB_USER=majesticflame \
     DB_HOST='localhost' \
     DB_DATABASE=ccio \
     DB_PORT=3306 \
+    DB_TYPE='mysql2' \
     SUBSCRIPTION_ID=sub_XXXXXXXXXXXX \
     PLUGIN_KEYS='{}' \
     SSL_ENABLED='false' \
