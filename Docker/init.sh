@@ -70,13 +70,18 @@ cronKey="$(head -c 1024 < /dev/urandom | sha256sum | awk '{print substr($1,1,29)
 
 cd /home/Shinobi
 mkdir -p libs/customAutoLoad
+
 if [ -e "/config/conf.json" ]; then
     cp /config/conf.json conf.json
 elif [ ! -e "./conf.json" ]; then
     cp conf.sample.json conf.json
 fi
+# Create /config/conf.json if it doesn't exist
+if [ ! -e "/config/conf.json" ]; then
+  node tools/modifyConfiguration.js cpuUsageMarker=CPU subscriptionId=$SUBSCRIPTION_ID thisIsDocker=true pluginKeys="$PLUGIN_KEYS" databaseType="$DB_TYPE" db="$DATABASE_CONFIG" ssl="$SSL_CONFIG"
+  cp /config/conf.json conf.json
+fi
 sudo sed -i -e 's/change_this_to_something_very_random__just_anything_other_than_this/'"$cronKey"'/g' conf.json
-node tools/modifyConfiguration.js cpuUsageMarker=CPU subscriptionId=$SUBSCRIPTION_ID thisIsDocker=true pluginKeys="$PLUGIN_KEYS" db="$DATABASE_CONFIG" ssl="$SSL_CONFIG"
 
 
 echo "============="
