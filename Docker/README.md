@@ -20,7 +20,7 @@ bash <(curl -s https://gitlab.com/Shinobi-Systems/Shinobi-Installer/raw/master/s
 
 Once complete open port `8080` of your Docker host in a web browser.
 
-## Run Way
+## "Run" Way
 
 **Installing Shinobi**
 
@@ -84,6 +84,12 @@ docker run -d --name='Shinobi' -p '8080:8080/tcp' -v "/dev/shm/Shinobi/streams":
 ```
 
  > Host mount paths have been updated in this document.
+
+ ### Running without Included Database (NoDB)
+
+ For information about this please see this Merge Request done by @thtmnisamnstr. It thoroughly documents how to use the NoDB installation method.
+
+ https://gitlab.com/Shinobi-Systems/Shinobi/-/merge_requests/443
 
  ### Volumes
 
