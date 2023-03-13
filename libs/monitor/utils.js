@@ -26,6 +26,7 @@ module.exports = (s,config,lang) => {
     const {
         addEventDetailsToString,
         closeEventBasedRecording,
+        convertRegionPointsToNewDimensions,
         triggerEvent,
     } = require('../events/utils.js')(s,config,lang)
     const {
@@ -49,7 +50,7 @@ module.exports = (s,config,lang) => {
     const getUpdateableFields = require('./updatedFields.js')
     const processKill = (proc) => {
         const response = {ok: true}
-        const processPID = parseInt(`${proc.pid}`)
+        const processPID = proc && proc.pid ? parseInt(`${proc.pid}`) : null
         return new Promise((resolve,reject) => {
             let alreadyResolved = false
             function doResolve(response){
@@ -1703,7 +1704,18 @@ module.exports = (s,config,lang) => {
                     activeMonitor.details = e.details
                     switch(v){
                         case'cords':
-                            activeMonitor.parsedObjects[v] = Object.values(s.parseJSON(e.details[v]))
+                            const fromWidth = parseInt(e.details.detector_scale_x) || 640
+                            const fromHeight = parseInt(e.details.detector_scale_y) || 480
+                            const toWidth = parseInt(e.details.detector_scale_x_object) || 1280
+                            const toHeight = parseInt(e.details.detector_scale_y_object) || 720
+                            const theCords = Object.values(s.parseJSON(e.details[v])) || [];
+                            activeMonitor.parsedObjects.cordsForObjectDetection = convertRegionPointsToNewDimensions(theCords,{
+                                fromWidth,
+                                fromHeight,
+                                toWidth,
+                                toHeight,
+                            });
+                            activeMonitor.parsedObjects.cords = theCords
                         break;
                         default:
                             activeMonitor.parsedObjects[v] = s.parseJSON(e.details[v])
