@@ -1,0 +1,30 @@
+version: "3"
+services:
+    shinobi:
+        #image: registry.gitlab.com/shinobi-systems/shinobi:dev
+        build:
+            dockerfile: Dockerfile.gopro
+            context: .
+        container_name: Shinobi
+        restart: unless-stopped
+        environment:
+           - PLUGIN_KEYS={}
+           - SSL_ENABLED=false
+        volumes:
+           - ./config:/config
+           - ./customAutoLoad:/home/Shinobi/libs/customAutoLoad
+           - ./database:/var/lib/mysql
+           - ./videos:/home/Shinobi/videos
+           - ./plugins:/home/Shinobi/plugins
+           - /dev/shm/Shinobi/streams:/dev/shm/streams
+        ports:
+           - 8080:8080
+        devices:
+            - "/dev/dri:/dev/dri"
+            - "/dev/nvidia0:/dev/nvidia0"
+            - "/dev/nvidiactl:/dev/nvidiactl"
+            - "/dev/nvidia-modeset:/dev/nvidia-modeset"
+            - "/dev/nvidia-uvm:/dev/nvidia-uvm"
+            - "/dev/nvidia-uvm-tools:/dev/nvidia-uvm-tools"
+            - "/dev/video0:/dev/video0"
+
