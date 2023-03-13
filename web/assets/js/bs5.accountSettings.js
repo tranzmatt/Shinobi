@@ -7,7 +7,7 @@ $(document).ready(function(){
     var addStorageMaxAmountsField = theForm.find('[detail="addStorage"]')
     function drawAddStorageFields(){
         try{
-            var addStorageData = JSON.parse($user.details.addStorage || '{}')
+            var addStorageData = safeJsonParse($user.details.addStorage || '{}')
             var html = ''
             $.each(addStorage,function(n,storage){
                 var theStorage = addStorageData[storage.path]
@@ -62,7 +62,6 @@ $(document).ready(function(){
         })
         return json
     }
-    $('body')
     theForm.find('[detail]').change(onDetailFieldChange)
     theForm.find('[detail]').change(function(){
         onDetailFieldChange(this)

@@ -27,7 +27,7 @@ parentPort.on('message',(data) => {
         case'init':
             config = Object.assign({},data.config)
             lang = Object.assign({},data.lang)
-            remoteConnectionPort = config.ssl ? config.ssl.port || 443 : config.port || 8080
+            remoteConnectionPort = config.ssl && JSON.stringify(config.ssl) !== '{}' ? config.ssl.port || 443 : config.port || 8080
             initialize()
         break;
         case'exit':
@@ -332,7 +332,7 @@ function closeResponseTunnel(originalRequestId){
 function initialize(){
     const selectedP2PServerId = config.p2pServerList[config.p2pHostSelected] ? config.p2pHostSelected : Object.keys(config.p2pServerList)[0]
     const p2pServerDetails = config.p2pServerList[selectedP2PServerId]
-    const selectedHost = 'ws://' + p2pServerDetails.host + ':' + p2pServerDetails.p2pPort
+    const selectedHost = `${p2pServerDetails.secure ? `wss` : 'ws'}://` + p2pServerDetails.host + ':' + p2pServerDetails.p2pPort
     config.selectedHost = selectedHost
     startConnection(selectedHost,config.p2pApiKey)
 }

@@ -186,6 +186,10 @@ module.exports = function(s,config,lang,app){
                             res.write("\r\n");
                             res.write(content,'binary');
                             res.write("\r\n");
+                            if(!Emitter){
+                                res.end();
+                                return;
+                            }
                             var ip = s.getClientIp(req)
                             s.camera('watch_on',{
                                 id : req.params.id,

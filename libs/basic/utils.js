@@ -114,14 +114,16 @@ module.exports = (processCwd,config) => {
             method : options.method || 'GET',
             headers: {'Content-Type': 'application/json'}
         }
-        if(typeof options.postData === 'object'){
-            requestOptions.body = JSON.stringify(options.postData)
-        } else if(typeof options.postData === 'string'){
-            try{
-                JSON.parse(options.postData)
-                requestOptions.body = options.postData
-            }catch(err){
-                
+        if(requestOptions.method !== 'GET'){
+            if(typeof options.postData === 'object'){
+                requestOptions.body = JSON.stringify(options.postData)
+            }else if(options.postData && typeof options.postData === 'string'){
+                try{
+                    JSON.parse(options.postData)
+                    requestOptions.body = options.postData
+                }catch(err){
+
+                }
             }
         }
         if(hasUsernameAndPassword && hasDigestAuthEnabled){
