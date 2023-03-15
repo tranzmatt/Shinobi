@@ -64,10 +64,12 @@ RUN apt install -y software-properties-common \
     gnutls-bin \
     libass-dev \
     libfreetype6-dev \
+    libfdk-aac-dev \
     libgnutls28-dev \
     libmp3lame-dev \
     libogg-dev \
     libopus-dev \
+    libnuma-dev \
     librtmp-dev \
     libsdl2-dev \
     libssh2-1-dev \
